@@ -24,6 +24,14 @@ export interface TrCode {
   note?: string | null;
 }
 
+/** 거래코드 + 연결종목·연결문서분류 (AS-IS Ast05_TrCodeModel 중 Ast05_Tab_TrCodeIntrinsic 그리드 열, EE11). 여부는 DB 형태('true'/'false') 그대로 */
+export interface TrCodeIntrinsic extends TrCode {
+  astClassTreeId?: number | null;
+  astClassTreeName?: string | null;
+  dcrClassTreeId?: number | null;
+  dcrClassTreeName?: string | null;
+}
+
 /** 화면별 사용 거래코드 (AS-IS Ast15_TrCodeWindowModel). 화면 행은 trCode가 없고, 거래코드 행(왼쪽·오른쪽 그리드)은 trCode·trName */
 export interface TrCodeWindow {
   trCodeWindowId: number;

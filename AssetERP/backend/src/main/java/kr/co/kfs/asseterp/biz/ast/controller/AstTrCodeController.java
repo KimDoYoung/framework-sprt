@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.ast.controller;
 
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeInitReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.service.AstTrCodeService;
@@ -59,6 +61,21 @@ public class AstTrCodeController {
     @PutMapping
     public ApiResponse<List<TrCodeRes>> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<TrCodeSaveReq> rows) {
         return ApiResponse.ok(service.update(principal, rows));
+    }
+
+    /** EE11 AS-IS ast.Ast05_TrCode.selectByCompanyId (Ast05_Tab_TrCodeIntrinsic, 연결종목·연결문서분류 포함) */
+    @GetMapping("/intrinsic")
+    public ApiResponse<List<TrCodeIntrinsicRes>> searchIntrinsic(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestParam(required = false) String searchText,
+                                                                 @RequestParam(defaultValue = "true") boolean useYn) {
+        return ApiResponse.ok(service.searchIntrinsic(principal, searchText, useYn));
+    }
+
+    /** EE11 AS-IS ast.Ast05_TrCode.update → 저장된 행(요청 순서) */
+    @PutMapping("/intrinsic")
+    public ApiResponse<List<TrCodeIntrinsicRes>> updateIntrinsic(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestBody List<TrCodeIntrinsicSaveReq> rows) {
+        return ApiResponse.ok(service.updateIntrinsic(principal, rows));
     }
 
     /** AS-IS ast.Ast05_TrCode.delete → 지운 건수 */

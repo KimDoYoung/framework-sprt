@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -47,4 +49,17 @@ public interface AstTrCodeMapper {
 
     /** AS-IS insertInitData: 관리자 회사(0)의 그 코드를 대상 회사로 복사 */
     int insertInitData(@Param("companyId") Long companyId, @Param("trCode") String trCode);
+
+    /** EE11 AS-IS selectByCompanyId (연결종목·연결문서분류 포함) */
+    List<TrCodeIntrinsicRes> selectIntrinsicByCompanyId(@Param("companyId") Long companyId, @Param("searchText") String searchText,
+                                                        @Param("useYn") String useYn, @Param("assetType") String assetType);
+
+    /** EE11 AS-IS selectById (연결종목·연결문서분류 포함) */
+    TrCodeIntrinsicRes selectIntrinsicById(@Param("trCodeId") Long trCodeId);
+
+    /** EE11 UpdateDataModel INSERT */
+    int insertIntrinsic(@Param("trCodeId") Long trCodeId, @Param("companyId") Long companyId, @Param("req") TrCodeIntrinsicSaveReq req);
+
+    /** EE11 UpdateDataModel UPDATE */
+    int updateIntrinsic(@Param("companyId") Long companyId, @Param("req") TrCodeIntrinsicSaveReq req);
 }

@@ -50,6 +50,7 @@ import {
   AstPreDeposit,
   AstBookReal,
   TrCode,
+  TrCodeIntrinsic,
   TrCodeWindow,
   AstDepn,
   AstNonDeductTax,
@@ -100,6 +101,18 @@ export const astApi = {
   /** AS-IS ast.Ast05_TrCode.selectByCompanyId: 로그인 회사, 서버가 "%검색어%"로 감싼다 */
   searchTrCodes: async (searchText: string, useYn: boolean): Promise<TrCode[]> => {
     const res = await apiClient.get<ApiResponse<TrCode[]>>('v1/ast/tr-codes', { params: { searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** EE11 AS-IS ast.Ast05_TrCode.selectByCompanyId (Ast05_Tab_TrCodeIntrinsic): 연결종목·연결문서분류 포함 */
+  searchTrCodesIntrinsic: async (searchText: string, useYn: boolean): Promise<TrCodeIntrinsic[]> => {
+    const res = await apiClient.get<ApiResponse<TrCodeIntrinsic[]>>('v1/ast/tr-codes/intrinsic', { params: { searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** EE11 AS-IS ast.Ast05_TrCode.update (Ast05_Tab_TrCodeIntrinsic) → 저장된 행(요청 순서) */
+  updateTrCodesIntrinsic: async (rows: TrCodeIntrinsic[]): Promise<TrCodeIntrinsic[]> => {
+    const res = await apiClient.put<ApiResponse<TrCodeIntrinsic[]>>('v1/ast/tr-codes/intrinsic', rows);
     return res.data.data ?? [];
   },
 

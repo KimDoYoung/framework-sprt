@@ -161,4 +161,72 @@
          WHERE ast05_company_id = 0
            AND ast05_tr_cd      = #{trCode}
     </insert>
+
+    <!-- EE11 AS-IS ast05_tr_code.selectByCompanyId (IDMS-IC) — 연결종목(ast01_class_tree)·연결문서분류(f_class_tree_nm_allpath) 포함, 그리드에 없는 입출고구분은 뺐다 -->
+    <sql id="trCodeIntrinsicColumns">
+        a.ast05_tr_code_id          AS tr_code_id
+      , a.ast05_company_id          AS company_id
+      , a.ast05_tr_cd               AS tr_code
+      , a.ast05_tr_nm               AS tr_name
+      , a.ast05_rcv_pay_cd          AS rcv_pay_code
+      , f_cdnm('RcvPayCode', a.ast05_rcv_pay_cd, a.ast05_company_id, f_sysdate()) AS rcv_pay_name
+      , a.ast05_tr_occ_type         AS tr_occ_type
+      , f_cdnm('TrOccType', a.ast05_tr_occ_type, a.ast05_company_id, f_sysdate()) AS tr_occ_type_name
+      , a.ast05_ast_class_tree_id   AS ast_class_tree_id
+      , t.ast01_class_tree_nm       AS ast_class_tree_name
+      , a.ast05_item_class_group_cd AS item_class_group_code
+      , a.ast05_dcr_class_tree_id   AS dcr_class_tree_id
+      , f_class_tree_nm_allpath(a.ast05_dcr_class_tree_id) AS dcr_class_tree_name
+      , a.ast05_finance_yn          AS finance_yn
+      , a.ast05_lock_yn             AS lock_yn
+      , a.ast05_use_yn              AS use_yn
+      , a.ast05_note                AS note
+    </sql>
+
+    <select id="selectIntrinsicByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicRes">
+        SELECT <include refid="trCodeIntrinsicColumns"/>
+          FROM ast05_tr_code a
+               LEFT OUTER JOIN ast01_class_tree t ON t.ast01_class_tree_id = a.ast05_ast_class_tree_id
+         WHERE a.ast05_company_id = #{companyId}
+           AND a.ast05_tr_cd || UPPER(a.ast05_tr_nm) LIKE UPPER(#{searchText})
+           AND a.ast05_asset_type LIKE #{assetType}
+           AND ( ( #{useYn} = 'true'  AND COALESCE(a.ast05_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false' ) )
+         ORDER BY a.ast05_tr_cd
+    </select>
+
+    <!-- EE11 AS-IS ast05_tr_code.selectById (IDMS-IC) -->
+    <select id="selectIntrinsicById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicRes">
+        SELECT <include refid="trCodeIntrinsicColumns"/>
+          FROM ast05_tr_code a
+               LEFT OUTER JOIN ast01_class_tree t ON t.ast01_class_tree_id = a.ast05_ast_class_tree_id
+         WHERE a.ast05_tr_code_id = #{trCodeId}
+    </select>
+
+    <!-- EE11 UpdateDataModel INSERT: 화면 insertRow()가 회사 ID·사용 켬·자산구분 "1"·금융상품거래/잠금 끔을 넣는다 -->
+    <insert id="insertIntrinsic">
+        INSERT INTO ast05_tr_code (ast05_tr_code_id, ast05_company_id, ast05_tr_cd, ast05_tr_nm, ast05_rcv_pay_cd, ast05_use_yn,
+                                   ast05_note, ast05_asset_type, ast05_finance_yn, ast05_lock_yn, ast05_tr_occ_type, ast05_item_class_group_cd,
+                                   ast05_ast_class_tree_id, ast05_dcr_class_tree_id)
+        VALUES (#{trCodeId}, #{companyId}, #{req.trCode}, #{req.trName}, #{req.rcvPayCode}, #{req.useYn},
+                #{req.note}, '1', #{req.financeYn}, #{req.lockYn}, #{req.trOccType}, #{req.itemClassGroupCode},
+                #{req.astClassTreeId}, #{req.dcrClassTreeId})
+    </insert>
+
+    <update id="updateIntrinsic">
+        UPDATE ast05_tr_code
+           SET ast05_tr_cd               = #{req.trCode},
+               ast05_tr_nm               = #{req.trName},
+               ast05_rcv_pay_cd          = #{req.rcvPayCode},
+               ast05_use_yn              = #{req.useYn},
+               ast05_note                = #{req.note},
+               ast05_finance_yn          = #{req.financeYn},
+               ast05_lock_yn             = #{req.lockYn},
+               ast05_tr_occ_type         = #{req.trOccType},
+               ast05_item_class_group_cd = #{req.itemClassGroupCode},
+               ast05_ast_class_tree_id   = #{req.astClassTreeId},
+               ast05_dcr_class_tree_id   = #{req.dcrClassTreeId}
+         WHERE ast05_tr_code_id = #{req.trCodeId}
+           AND ast05_company_id = #{companyId}
+    </update>
 </mapper>

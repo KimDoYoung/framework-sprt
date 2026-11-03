@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeInitReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicRes;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeIntrinsicSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstTrCodeMapper;
@@ -76,6 +78,43 @@ public class AstTrCodeService {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             }
             saved.add(mapper.selectById(id));
+        }
+        return saved;
+    }
+
+    /** AS-IS Ast05_Tab_TrCodeIntrinsic.retrieve() L247-264: 로그인 회사, "%검색어%", 사용항목만 보기, 자산구분 "1" */
+    public List<TrCodeIntrinsicRes> searchIntrinsic(UserPrincipal user, String searchText, boolean useYn) {
+        return mapper.selectIntrinsicByCompanyId(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%", String.valueOf(useYn), ASSET_TYPE);
+    }
+
+    /** AS-IS Ast05_TrCode.update L66-92 (Ast05_Tab_TrCodeIntrinsic.update L267-313): 검사·저장은 관리자 화면과 같고, 연결종목·연결문서분류도 저장한다 */
+    @Transactional
+    public List<TrCodeIntrinsicRes> updateIntrinsic(UserPrincipal user, List<TrCodeIntrinsicSaveReq> rows) {
+        for (TrCodeIntrinsicSaveReq req : rows) {
+            if (isBlank(req.trCode())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "거래코드는 필수입력 항목입니다.");
+            }
+            if (isBlank(req.trName())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "거래명은 필수입력 항목입니다.");
+            }
+            if (isBlank(req.rcvPayCode())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "수령/지급은 필수입력 항목입니다.");
+            }
+        }
+        List<TrCodeIntrinsicRes> saved = new ArrayList<>();
+        for (TrCodeIntrinsicSaveReq req : rows) {
+            boolean isNew = req.trCodeId() == null || req.trCodeId() <= 0;
+            Long sameCodeId = mapper.checkTrCode(user.getCompanyId(), req.trCode());
+            if (sameCodeId != null && (isNew || !sameCodeId.equals(req.trCodeId()))) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "동일한 거래코드가 존재합니다. 확인하여 주십시오. (거래코드:" + req.trCode() + ")");
+            }
+            Long id = isNew ? mapper.selectNextId() : req.trCodeId();
+            if (isNew) {
+                mapper.insertIntrinsic(id, user.getCompanyId(), req);
+            } else if (mapper.updateIntrinsic(user.getCompanyId(), req) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            saved.add(mapper.selectIntrinsicById(id));
         }
         return saved;
     }

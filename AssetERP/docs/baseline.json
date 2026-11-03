@@ -14946,5 +14946,38 @@
     "note": "docs/변환/work/EE/EE10-작업기록.md",
     "history": [],
     "id": "EE10"
+  },
+  "Ast05_Tab_TrCodeIntrinsic": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast05_Tab_TrCodeIntrinsic.java": "8793d157197477d8133772123d010e76f4ed169e",
+      "application/src/main/java/myApp/client/vi/ast/Ast15_Lookup_TrCodeWindow.java": "96d78a9fca02b367539515f7ad1a80eaaae693f2",
+      "application/src/main/java/myApp/client/vi/ast/Ast15_Page_TrCodeWindow.java": "0034ddd38638f31bbff51ad08c3d58f09055cbfd",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModel.java": "88bd761018ed03deeb4032296eb60cce02d28f83",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModelProperties.java": "f038cc0656fc2304ccabae9ee202ade9916cdb91",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast15_TrCodeWindowModel.java": "f0f35680f1bd562c51b0b7fe2f83ee7a866c5c62",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast15_TrCodeWindowModelProperties.java": "e331d0909d057c94eba91f50d1a4b4fac10b3cd7",
+      "application/src/main/java/myApp/server/ast/Ast05_TrCode.java": "c9e256f098331c1c98bb8da7f3232fa3e934b898",
+      "application/src/main/java/myApp/server/ast/Ast15_TrCodeWindow.java": "1145d703e83980822cf968d8260572069b39cfc2",
+      "application/src/main/java/myApp/server/ast/mapper/ast05_tr_code.xml": "2672ce2593c624e22879a20aba3414ab34ffc728",
+      "application/src/main/java/myApp/server/ast/mapper/ast15_tr_code_window.xml": "94cad9286962b3818a6428b564371b8e23644c8d",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Ast01_Lookup_Info",
+      "Dcr30_Move_DcrClass",
+      "Sys01_Lookup_Company",
+      "Sys06_Lookup_SearchMenu"
+    ],
+    "recorded_at": "2026-11-03T13:28:25+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE11-작업기록.md",
+    "history": [],
+    "id": "EE11"
   }
 }
