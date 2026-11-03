@@ -64,7 +64,7 @@ def split_shell_commands(cmd: str) -> list[tuple[str, bool, str]]:
     return [(r, p, m) for r, p, m in splits if r]
 
 PROT_PATHS_RE = re.compile(
-    r"(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src|docs/as-is/|docs/[0-9]+-)"
+    r"(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src|docs/as-is/|docs/(변환/)?[0-9]+-)"
 )
 # 2026-10-26: 번호 문서(docs/NN-*.md)는 출력이 짧은 head/tail만 허용한다(08 교훈 표 `tail -3` 등). cat/sed/awk/grep 문맥은 계속 막는다
 PROT_NO_DOCS_RE = re.compile(

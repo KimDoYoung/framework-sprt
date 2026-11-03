@@ -1,6 +1,6 @@
 // 화면시험 명세(JSON) 러너 — 화면마다 스크립트를 쓰지 않고 명세 10~20줄로 표준 시나리오를 돌린다.
 // 사용: CHROME_PATH=/usr/bin/google-chrome-stable NODE_PATH=frontend/node_modules node tools/screens/gen.js <명세.json ...|--all-pending> <스크린샷 폴더> [회사]
-//   --all-pending: docs/work/*/*-화면시험.json 중 같은 폴더 `{id}-결과확인.md`의 7행이 `대기(일괄)`인 것 전부(한 브라우저·한 로그인)
+//   --all-pending: docs/변환/work/*/*-화면시험.json 중 같은 폴더 `{id}-결과확인.md`의 7행이 `대기(일괄)`인 것 전부(한 브라우저·한 로그인)
 // 명세 스키마 (모두 선택, 없는 절은 건너뜀):
 //   id, menu: [1차, 메뉴이름], api: ['ast/'],            // trackApi 접두사
 //   opens: { rows: '조회 전용이면 0이 아닌 기대 판정 정규식/숫자', headers: '정규식', buttons: '정규식' },

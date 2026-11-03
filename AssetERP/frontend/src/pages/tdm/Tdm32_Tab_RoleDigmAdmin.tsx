@@ -2,7 +2,7 @@
  * [1498] 기초자료 > 10. 책무 > 책무체계도 재생성 (E12)
  * AS-IS: myApp/client/vi/tdm/Tdm32_Tab_RoleDigmAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L77-108: 가운데 = 툴바(고객사 200 · 조회기간 [시작 100 ~ 종료 100] · 전체보기 · [조회][재생성]) + 책무체계도 그리드(행번호, 체크박스 다중)
- * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(RoleDigmPdfMaker 기본 구현, docs/work/E/E12-작업방법.md "다음 단계")
+ * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(RoleDigmPdfMaker 기본 구현, docs/변환/work/E/E12-작업방법.md "다음 단계")
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useMemo, useRef, useState } from 'react';

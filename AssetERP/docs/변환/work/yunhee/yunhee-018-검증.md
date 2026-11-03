@@ -31,7 +31,7 @@ tools/yunhee-018-check.sh --reindex A-3 A-9 # 색인을 다시 만든 뒤(index-
 ## 4. 판정과 기록
 - 출력이 018 예시와 모양만 다르고 값이 맞으면 통과로 본다. 스크립트는 핵심 값·문자열만 grep한다. 형식이 크게 달라 스크립트 정규식이 안 맞으면 스크립트를 고치고 그 사실을 기록한다.
 - 결과를 `~/work/yunhee-cli/docs/수정사항019.md`(018 시험 결과) 형식으로 남긴다: 통과한 것, 남은 ❌(증상·원인 추정·재현 명령).
-- 통과한 유형은 `docs/05-작업방법.md` §7 명령표의 분석 행을 `yunhee analysis <type>`으로 바꾸고 "한계(0.2.1, C01)" 줄을 지운다. `../CLAUDE.md` yunhee 절에도 `yunhee analysis --list`를 넣는다(03 원칙 10, 작업기록에 남김).
+- 통과한 유형은 `docs/변환/05-작업방법.md` §7 명령표의 분석 행을 `yunhee analysis <type>`으로 바꾸고 "한계(0.2.1, C01)" 줄을 지운다. `../CLAUDE.md` yunhee 절에도 `yunhee analysis --list`를 넣는다(03 원칙 10, 작업기록에 남김).
 - 그다음 화면 작업(A04 또는 C01 2단계)에서 `sed`·`grep`·`cat` 대신 `analysis`를 실제로 쓰고, 토큰(`/context`의 Bash·파일 읽기 비율)을 C01·A03(약 32%)과 비교해 08 교훈에 적는다.
 
 ## 5. 결과 기록

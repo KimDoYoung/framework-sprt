@@ -1,10 +1,10 @@
 // H01 시험 데이터: ~/shared/attach/law 의 PDF를 법규공지(type 10) 실제 제목 11건에 붙인다 (사용자 요청 2026-10-20).
 // kfstest 관리자로 로그인해 앱 업로드 API(POST v1/sys/files)를 쓴다 → DB 행과 실제 파일이 같이 생긴다.
-// 올린 파일 ID는 docs/work/H/H01-seed-files.json 에 남긴다. 지우려면: node H01-seed-files.js --undo
+// 올린 파일 ID는 docs/변환/work/H/H01-seed-files.json 에 남긴다. 지우려면: node H01-seed-files.js --undo
 const fs = require('fs'), path = require('path');
 const { BASE, launch, login } = require('./_common');
 const DIR = process.env.HOME + '/shared/attach/law';
-const OUT = path.join(__dirname, '../../docs/work/H/H01-seed-files.json');
+const OUT = path.join(__dirname, '../../docs/변환/work/H/H01-seed-files.json');
 const NOTICES = [202412302061926, 202412302061928, 202412302061930, 202412302061933, 202412302061936, 202412302061939, 202412302061941, 202501082067490];
 const ONLY = process.argv.includes('--one');
 

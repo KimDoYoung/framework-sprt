@@ -49,4 +49,4 @@ tools/yunhee-018-check.sh --reindex      # 회귀: ✅ 47 / ❌ 0 이어야 한�
 
 ## 5. 결과 기록
 - 결과는 yunhee-cli `docs/수정사항022.md`(021 시험 결과)에 적는다(020이 019 결과를 적은 방식).
-- 통과하면 `docs/05-작업방법.md` §7의 기준 버전을 0.2.5로 올리고, 명령표에 `--section layout`·`yunhee log`·`api --log`를 넣는다(그 세션 작업기록에 남김).
+- 통과하면 `docs/변환/05-작업방법.md` §7의 기준 버전을 0.2.5로 올리고, 명령표에 `--section layout`·`yunhee log`·`api --log`를 넣는다(그 세션 작업기록에 남김).

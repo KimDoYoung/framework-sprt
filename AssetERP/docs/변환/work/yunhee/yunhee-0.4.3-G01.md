@@ -29,7 +29,7 @@
 | 9 | `api -u 29049` | 사원 ID를 주면 사원번호(104)로 바꿔 `admin:104`로 로그인을 시도하다 401 `없는 아이디`, 서버 로그에 WARN 남음. 이 DB의 로그인 ID가 사원번호가 아님 | 중 — 사원 가장 로그인 못 씀 | `mapper-run`으로 사원 ID를 SQL 파라미터에 직접 줌. 제안: 로그인 ID 테이블(사용자·권한)에서 찾기 |
 | 10 | `mapper-run` | ① AS-IS와 TOBE 파라미터 이름이 달라(`empId` / `c.empId`) 두 벌을 다 줘야 함 ② `status=30`처럼 숫자로 보이는 값은 따옴표 없이 들어가 `LIKE 30` 오류 → `'30%'`로 우회 ③ null을 줄 수 없고 값이 없으면 `<if test="c.x != null">`을 참으로 평가(`-- 필요: c.classTreeId`)하며 `null` 문자열은 `'null'`이 됨 ④ 오류 때 실행 SQL 전체를 출력해 매우 김 | 중 — 쓸 수는 있으나 매번 우회 | 위 우회. 제안: `--param-as-is`/접두어 자동, 문자열 강제(`k:s=30`), `null` 지원, 오류 출력 줄이기 |
 | 11 | `analysis ui --later "다음 단계=A,B"` | `Dcr10_Lookup_MailSender`(다른 도메인 연결)가 표에 안 나옴. 연결 클래스의 `E0~E34 미구현` 나열이 길어 잡음 | 소 | 연결 클래스는 `--done`만 쓰고 "다음 단계"는 결과확인에 손으로 적음. 제안: 미구현 나열을 개수로 줄이기 |
-| 12 | PreToolUse 훅 (`hook_guard.py`) | `tail -3 docs/08-회차인계.md`(AssetERP/CLAUDE.md가 시키는 방법)와 `sed -n … docs/05-작업방법.md`가 "AS-IS·TOBE 직접 읽기"로 **차단**됨. AS-IS 색인(`docs/as-is/…`)이 아닌 설계 문서도 막음 | 소 — Read로 대체 가능하지만 CLAUDE.md와 모순 | `Read`(offset/limit). 제안: `docs/as-is/`·`frontend/`·`backend/`·AS-IS 소스만 막기 |
+| 12 | PreToolUse 훅 (`hook_guard.py`) | `tail -3 docs/변환/08-회차인계.md`(AssetERP/CLAUDE.md가 시키는 방법)와 `sed -n … docs/변환/05-작업방법.md`가 "AS-IS·TOBE 직접 읽기"로 **차단**됨. AS-IS 색인(`docs/as-is/…`)이 아닌 설계 문서도 막음 | 소 — Read로 대체 가능하지만 CLAUDE.md와 모순 | `Read`(offset/limit). 제안: `docs/as-is/`·`frontend/`·`backend/`·AS-IS 소스만 막기 |
 
 ## 한 줄 평가
 - 분석(screen·method·grid·sql)은 정확하고 토큰을 크게 아낀다. 이번 화면에서 원본 Java·매퍼 XML은 한 번도 `Read`하지 않았다.

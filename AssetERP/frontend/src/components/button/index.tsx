@@ -12,7 +12,7 @@ import './button.css';
  * 공통 버튼 — type(의미)으로 색·아이콘을 정한다. 이름표: docs/button-types.md (AS-IS ColorButtonBar).
  * 화면에서는 antd Button 대신 이것만 쓴다. antd 원래 type(primary, default, link …)도 그대로 동작한다.
  *
- * UX보강(docs/10-UX보강.md):
+ * UX보강(docs/변환/10-UX보강.md):
  * - UX-01 onClick이 Promise를 돌려주면 끝날 때까지 loading(아이콘 스피너·중복 클릭 무시). `loading` prop을 주면 그 값이 우선.
  * - UX-03 `count`(useGridCrud의 `changes` 또는 숫자)를 주면 문구 `저장(3)`, 0건이면 비활성, 툴팁에 추가·수정 수.
  */
