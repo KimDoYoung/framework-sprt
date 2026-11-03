@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm11_dev_step.xml (selectByDeployPersonId·updateResultDeploy) + scm13_dev_program.xml (selectByDeployTgtDevId·updateDeploy·updateNote) (EE18) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmDeployMapper">
+
+    <!-- AS-IS scm11_dev_step.selectByDeployPersonId (IDMS-IC) — 화면이 안 쓰는 정리용 열(dev_arrange_note·arrange_result)은 뺐다 -->
+    <select id="selectByDeployPersonId" resultType="kr.co.kfs.asseterp.biz.scm.dto.DeployRes"><![CDATA[
+        SELECT a.scm11_dev_step_id AS dev_step_id
+             , a.scm11_dev_id      AS dev_id
+             , a.scm11_sr_date     AS sr_date
+             , a.scm11_system_cd   AS system_cd
+             , a.scm11_system_nm   AS system_nm
+             , a.scm11_dev_note    AS dev_note
+             , a.scm11_dev_person_nm AS dev_person_nm
+             , a.scm11_result_date_str AS result_date_str
+             , a.scm11_deploy_count AS deploy_count
+             , a.scm11_dev_step_result AS dev_step_result
+             , a.scm11_sr_no       AS sr_no
+          FROM (
+                SELECT *
+                     , f_cdnm('DevStepCode', scm11_dev_step_cd, 1, f_sysdate())          AS scm11_dev_step_nm
+                     , f_get_dev_status(scm10_dev_id)                                    AS scm11_dev_step_result
+                     , f_emp_kor_nm(scm11_person_id)                                     AS scm11_person_nm
+                     , f_emp_kor_nm(scm10_person_id)                                     AS scm11_dev_person_nm
+                     , scm01_sr_date                                                     AS scm11_sr_date
+                     , scm01_sr_no                                                       AS scm11_sr_no
+                     , scm01_system_cd                                                   AS scm11_system_cd
+                     , f_cdnm('SystemCode', scm01_system_cd, 1, f_sysdate())             AS scm11_system_nm
+                     , scm10_reg_date                                                    AS scm11_reg_date
+                     , scm10_note                                                        AS scm11_dev_note
+                     , to_char(scm11_result_date, 'YYYY-MM-DD HH24:MI:SS')               AS scm11_result_date_str
+                     , ( SELECT COUNT(*)
+                           FROM scm13_dev_program
+                                INNER JOIN scm30_program ON scm13_program_id = scm30_program_id
+                          WHERE scm13_dev_id = scm11_dev_id )                            AS scm11_deploy_count
+                  FROM scm11_dev_step
+                       INNER JOIN scm10_dev ON scm11_dev_id = scm10_dev_id
+                       INNER JOIN scm01_sr  ON scm10_sr_id = scm01_sr_id
+                 WHERE f_trunc(scm01_sr_date) BETWEEN #{startDate} AND #{closeDate}
+                   AND COALESCE(scm01_system_cd, '%') LIKE #{systemCode}
+                   AND scm11_dev_step_cd IN ('90')
+                   AND scm11_person_id = #{personId}
+                   AND scm10_dev_id IN ( SELECT scm10_dev_id
+                                           FROM scm10_dev
+                                                INNER JOIN scm01_sr ON scm01_sr_id = scm10_sr_id
+                                                LEFT OUTER JOIN ( SELECT *
+                                                                    FROM scm13_dev_program
+                                                                         INNER JOIN scm30_program ON scm30_program_id = scm13_program_id ) t
+                                                             ON scm13_dev_id = scm10_dev_id
+                                          WHERE UPPER(CONCAT(scm10_note, scm30_program_cd, scm30_program_nm, scm01_sr_no)) LIKE UPPER(#{searchText}) )
+               ) a
+         WHERE 1 = 1
+        ]]>
+        <if test="!checkBox">
+           AND a.scm11_dev_step_result LIKE a.scm11_dev_step_nm || '대기중'
+        </if>
+         ORDER BY a.scm11_reg_date DESC, a.scm11_dev_id DESC
+    </select>
+
+    <!-- AS-IS scm13_dev_program.selectByDeployTgtDevId (IDMS-IC) — SELECT * 를 화면·소스보기 창이 쓰는 열로 풀었다 -->
+    <select id="selectByDeployTgtDevId" resultType="kr.co.kfs.asseterp.biz.scm.dto.DeployProgramRes">
+        SELECT scm13_dev_program_id AS dev_program_id
+             , scm13_dev_id         AS dev_id
+             , scm13_program_id     AS program_id
+             , scm13_modi_type      AS modi_type
+             , scm13_deploy_tgt_yn  AS deploy_tgt_yn
+             , scm13_deploy_seq     AS deploy_seq
+             , scm13_deploy_yn      AS deploy_yn
+             , scm13_deployer_id    AS deployer_id
+             , scm13_deploy_date    AS deploy_date
+             , scm13_deploy_note    AS deploy_note
+             , to_char(scm13_deploy_date, 'YYYY-MM-DD HH24:MI:SS') AS deploy_date_str
+             , scm30_system_cd      AS system_cd
+             , scm30_program_type   AS program_type
+             , scm30_program_cd     AS program_cd
+             , scm30_program_nm     AS program_nm
+             , scm30_source         AS source
+             , scm30_version        AS version
+             , scm30_person_id      AS person_id
+             , scm30_reg_date       AS reg_date
+             , scm30_note           AS note
+             , scm30_use_yn         AS use_yn
+             , f_cdnm('SystemCode',  scm30_system_cd,    1, f_sysdate()) AS system_nm
+             , f_cdnm('ProgramType', scm30_program_type, 1, f_sysdate()) AS program_type_nm
+             , to_char(scm30_reg_date, 'YYYY-MM-DD HH24:MI:SS') AS reg_date_str
+             , f_emp_kor_nm(scm30_person_id) AS person_nm
+          FROM scm13_dev_program
+               INNER JOIN scm30_program ON scm13_program_id = scm30_program_id
+         WHERE scm13_dev_id = #{devId}
+           AND scm13_deploy_tgt_yn = 'true'
+         ORDER BY scm13_deploy_seq
+    </select>
+
+    <!-- AS-IS scm13_dev_program.updateDeploy (IDMS-IC) — deployDate 는 서버의 new Date() → f_sysdate() -->
+    <update id="updateDeploy">
+        UPDATE scm13_dev_program
+           SET scm13_deploy_yn   = #{deployYn}
+             , scm13_deploy_date = f_sysdate()
+         WHERE scm13_dev_program_id = #{devProgramId}
+    </update>
+
+    <!-- AS-IS scm13_dev_program.updateNote (IDMS-IC) -->
+    <update id="updateNote">
+        UPDATE scm13_dev_program
+           SET scm13_deploy_note = #{note}
+         WHERE scm13_dev_program_id = #{devProgramId}
+    </update>
+
+    <!-- AS-IS scm11_dev_step.updateResultDeploy (IDMS-IC) -->
+    <update id="updateResultDeploy">
+        UPDATE scm11_dev_step
+           SET scm11_result_date = f_sysdate()
+             , scm11_result_cd   = '1'
+         WHERE scm11_dev_id = #{devId}
+           AND scm11_dev_step_cd = '90'
+    </update>
+
+</mapper>

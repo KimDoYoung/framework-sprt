@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Dev, DevProgram, DevStatus, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
+import { Deploy, DeployProgram, Dev, DevProgram, DevStatus, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
 import { PageRes } from '../types/auth';
 import { FileInfo } from '../types/sys';
 
@@ -234,5 +234,32 @@ export const scmApi = {
   searchDevFiles: async (devId: number): Promise<FileInfo[]> => {
     const res = await apiClient.get<ApiResponse<FileInfo[]>>('v1/sys/files/by-dev', { params: { devId } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS scm.Scm11_DevStep.selectByDeployPersonId — 배포처리 위쪽 목록 (EE18) */
+  searchDeploys: async (p: { startDate: string; closeDate: string; searchText: string; systemCode: string; checkBox: boolean }): Promise<Deploy[]> => {
+    const res = await apiClient.get<ApiResponse<Deploy[]>>('v1/scm/deploys/search', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS scm.Scm13_DevProgram.selectByDeployTgtDevId — 배포처리 아래쪽 목록 */
+  searchDeployPrograms: async (devId: number): Promise<DeployProgram[]> => {
+    const res = await apiClient.get<ApiResponse<DeployProgram[]>>(`v1/scm/deploys/${devId}/programs`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS scm.Scm13_DevProgram.updateDeploy — 고른 프로그램을 배포처리 */
+  deployPrograms: async (devProgramIds: number[]): Promise<void> => {
+    await apiClient.put('v1/scm/deploys/programs/deploy', devProgramIds);
+  },
+
+  /** AS-IS scm.Scm13_DevProgram.updateNote — 배포자 비고 */
+  updateDeployNote: async (devProgramId: number, note: string): Promise<void> => {
+    await apiClient.put(`v1/scm/deploys/programs/${devProgramId}/note`, { note });
+  },
+
+  /** AS-IS scm.Scm13_DevProgram.updateResultDeploy — 모든 대상이 배포되면 배포 단계 완료 */
+  completeDeploy: async (devId: number): Promise<void> => {
+    await apiClient.put(`v1/scm/deploys/${devId}/complete`);
   },
 };

@@ -213,3 +213,24 @@ export interface DevStatus {
   code: string;
   name: string;
 }
+
+/** 배포처리 위쪽 목록 한 줄 (AS-IS Scm11_DevStepModel, scm11_dev_step.selectByDeployPersonId) (EE18) */
+export interface Deploy {
+  devStepId: number;
+  devId: number;
+  srDate?: string | null;
+  systemCd?: string | null;
+  systemNm?: string | null;
+  devNote?: string | null;
+  devPersonNm?: string | null;
+  resultDateStr?: string | null;
+  deployCount?: number | null;
+  devStepResult?: string | null;
+  srNo?: string | null;
+}
+
+/** 배포처리 아래쪽 목록 한 줄 (AS-IS Scm13_DevProgramModel, scm13_dev_program.selectByDeployTgtDevId) (EE18) */
+export interface DeployProgram extends DevProgram {
+  deployDateStr?: string | null;
+  personNm?: string | null;
+}

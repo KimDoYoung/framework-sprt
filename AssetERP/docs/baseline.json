@@ -15219,5 +15219,49 @@
     "note": "docs/변환/work/EE/EE17-작업기록.md",
     "history": [],
     "id": "EE17"
+  },
+  "Scm13_Tab_Deploy": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Grid_ApprFile.java": "493fbe771d934a3ab3908b26c8d6f2b59025d576",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Lookup_Detail.java": "39b64725c1c1b2131fd5c83da2df7b0bb55220f5",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Lookup_SrContent.java": "f1387a173c7d3763f0996b9fecac8f214b1fd03a",
+      "application/src/main/java/myApp/client/vi/scm/Scm11_Lookup_DevStep.java": "9682a004260dfea64b4cc7a7b107af35be8081c2",
+      "application/src/main/java/myApp/client/vi/scm/Scm11_Lookup_Result.java": "04b194eddb53c63aaeca4fcb36ebaa89960141d1",
+      "application/src/main/java/myApp/client/vi/scm/Scm13_Lookup_Note.java": "e6883045ba74b03434bec87fe210cc09b0ea591e",
+      "application/src/main/java/myApp/client/vi/scm/Scm13_Page_Deploy.java": "53ddc160ddf9c06de599c2db253c342b37d2fbfb",
+      "application/src/main/java/myApp/client/vi/scm/Scm13_Tab_Deploy.java": "df2ac044464a99391b5c4d87be9868ccde6077a9",
+      "application/src/main/java/myApp/client/vi/scm/Scm30_Edit_Program.java": "b481cc80af15ce4f793d719650de8e12cd98c96f",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm01_SrModel.java": "ee1d2b008459153518da1773dec268bc8cc700e1",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm11_DevStepModel.java": "214ff0e01bed02694655cb0ab98abfc04669b394",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm11_DevStepModelProperties.java": "b8f4be53533a2f84efe0b69c8c287f151a4a9575",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm13_DevProgramModel.java": "6f9a87692525ca86483f713b022f03e25b4fe945",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm13_DevProgramModelProperties.java": "80161eb305e81ab14e866c4ac128884ff14f3cc0",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm30_ProgramModel.java": "2c84a29e01b2fd4e59be87193eb30cf9a00f974a",
+      "application/src/main/java/myApp/server/scm/Scm01_Sr.java": "ae63814e72b6feead3558b1489d65a13269de2af",
+      "application/src/main/java/myApp/server/scm/Scm11_DevStep.java": "d113ca1f4b656feda79daa56d884c77e84fb5b1c",
+      "application/src/main/java/myApp/server/scm/Scm13_DevProgram.java": "84223c29c6d53a8f54734b34288b7df9ac388f1a",
+      "application/src/main/java/myApp/server/scm/Scm30_Program.java": "56b04c654dec4cc8979afd34e798f20be01a52e3",
+      "application/src/main/java/myApp/server/scm/mapper/scm01_sr.xml": "a38819fb1404264f83a1a4a501b98aa1c2c47815",
+      "application/src/main/java/myApp/server/scm/mapper/scm11_dev_step.xml": "2e682013fd0ec37c89c7435942f2359f0aa16aab",
+      "application/src/main/java/myApp/server/scm/mapper/scm13_dev_program.xml": "ee77f2cd17cae3c613cc362555a33fc0841364c7",
+      "application/src/main/java/myApp/server/scm/mapper/scm30_program.xml": "238f6141b7d0b9a424f38be4b745d0658fe264b4",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle",
+      "Sys10_Lookup_FileViewer",
+      "Sys10_Lookup_FileViewer_AView"
+    ],
+    "recorded_at": "2026-11-03T15:45:05+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE18-작업기록.md",
+    "history": [],
+    "id": "EE18"
   }
 }
