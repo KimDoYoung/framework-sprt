@@ -153,6 +153,15 @@ public class AprApprController {
         return ApiResponse.ok(service.searchPreProvide(principal, startDate, endDate));
     }
 
+    /** AS-IS apr.Apr01_Appr.selectByText (A40 Apr01_Tab_ExternalBiz 대외활동 신청서 작성, searchText01~03 가지). 제목이 title로 시작하는 내 문서 */
+    @GetMapping("/by-title")
+    public ApiResponse<List<AprPreProvideRes>> searchByTitle(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                             @RequestParam String title) {
+        return ApiResponse.ok(service.searchByTitle(principal, startDate, endDate, title));
+    }
+
     /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList → 조회 결과 xlsx) */
     @GetMapping("/my-request/excel")
     public ResponseEntity<byte[]> downloadMyRequest(@AuthenticationPrincipal UserPrincipal principal,

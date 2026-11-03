@@ -1141,6 +1141,28 @@
          ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
     </select>
 
+    <!--
+      AS-IS apr01_appr.selectByText L327 (IDMS-IC) — A40 Apr01_Tab_ExternalBiz(대외활동 신청서 작성).
+      searchText01~03 가지(<otherwise>): 제목이 같은 값 3개 중 하나로 시작(LIKE) — 화면이 셋 다 같은 값을 보내므로 하나로 합쳤다. 열·정렬은 selectPreProvide와 같다
+    -->
+    <select id="selectByTitle" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes">
+        SELECT a.apr01_appr_id                                                               AS appr_id
+             , a.apr01_reg_date                                                              AS reg_date
+             , a.apr01_effect_date                                                           AS effect_date
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)                                  AS class_tree_name_all_path
+             , a.apr01_title                                                                 AS title
+             , f_cdnm('AprStatusCode', a.apr01_status_cd, #{c.companyId}, a.apr01_reg_date)  AS status_name
+          FROM apr01_appr a
+               INNER JOIN dcr01_class_tree b ON a.apr01_class_tree_id = b.dcr01_class_tree_id
+               INNER JOIN emp01_person e     ON a.apr01_reg_emp_id = e.emp01_person_id
+         WHERE 1=1
+           AND apr01_company_id = #{c.companyId}
+           AND apr01_reg_emp_id = #{c.regEmpId}
+           AND apr01_reg_date BETWEEN #{c.startDate} AND #{c.endDate}
+           AND apr01_title LIKE #{c.titleLike}
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
     <!-- AS-IS apr03_relate_fund.selectByClassTreeId L54 (IDMS-IC) — W05 ⓒ Apr05_Grid_RelateAprList.retrieve(). SELECT *·모델 열 중 그리드·미리보기가 쓰는 열만.
          emp00 CTE(common.emp00_trans_info, 회사 조건)는 DB 뷰 emp00_trans_info(emp00_all_title = 0)로 — 상신자의 상신일 기준 발령 구간이 없으면 행이 빠지는 조건 -->
     <select id="selectLoadDocByClassTreeId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes">

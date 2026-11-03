@@ -92,6 +92,7 @@ import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
 import { Apr01_Tab_MyApproveList } from './apr/Apr01_Tab_MyApproveList';
 import { Apr01_Tab_MyRequestList } from './apr/Apr01_Tab_MyRequestList';
 import { Apr01_Tab_BizPriorApproval } from './apr/Apr01_Tab_BizPriorApproval';
+import { Apr01_Tab_ExternalBiz } from './apr/Apr01_Tab_ExternalBiz';
 import { Apr01_Tab_MyReferenceList } from './apr/Apr01_Tab_MyReferenceList';
 import { Apr01_Tab_MyAuthList } from './apr/Apr01_Tab_MyAuthList';
 import { Apr01_Tab_StampSeq } from './apr/Apr01_Tab_StampSeq';
@@ -491,6 +492,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr01_Tab_BizPriorApproval, // L06 1단계 (메뉴 #1134. 승인신청·상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정이 여는 Dcr30_Lookup_Link는 다음 단계)
+  Apr01_Tab_ExternalBiz, // A40 (메뉴 #1343 대외활동 신청서 작성. [승인신청]·[상세보기]는 전자결재 편집창 Apr01_Edit_ApprDoc, 문서분류 조회창은 Dcr30_Move_DcrClass)
   Apr01_Tab_MyRequestList, // G02 1단계 (메뉴 #1019. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·신청의 Ics40_Edit_DcrPreconfirm·준감인의견의 Ics40_Edit_Msg·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr01_Tab_MyReferenceList, // G03 1단계 (메뉴 #1093. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)

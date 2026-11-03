@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.apr.mapper;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprTitleSearchCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
@@ -79,6 +80,9 @@ public interface AprApprMapper {
 
     /** AS-IS apr01_appr.selectByText L327 (L06 이익제공 사전승인신청) — preProvideRcvApprYn=true 가지 */
     List<AprPreProvideRes> selectPreProvide(@Param("c") AprPreProvideCond cond);
+
+    /** AS-IS apr01_appr.selectByText L327 (A40 대외활동 신청서 작성) — searchText01~03 가지(제목 LIKE), 그리드 열은 selectPreProvide와 같다 */
+    List<AprPreProvideRes> selectByTitle(@Param("c") AprTitleSearchCond cond);
 
     /** AS-IS apr01_appr.selectByReferenceEmpId (G03 참조내역 조회) */
     List<AprMyReferenceRes> selectByReferenceEmpId(@Param("c") AprMyReferenceCond cond);

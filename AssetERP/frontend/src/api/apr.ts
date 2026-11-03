@@ -243,6 +243,12 @@ export const aprApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS apr.Apr01_Appr.selectByText (A40 Apr01_Tab_ExternalBiz 대외활동 신청서 작성): 내가 올린 문서 중 제목이 title로 시작하는 것 */
+  searchByTitle: async (startDate: string, endDate: string, title: string): Promise<AprPreProvide[]> => {
+    const res = await apiClient.get<ApiResponse<AprPreProvide[]>>('v1/apr/apprs/by-title', { params: { startDate, endDate, title } });
+    return res.data.data ?? [];
+  },
+
   /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList → xlsx) — 조회 조건 그대로, 브라우저 저장 */
   downloadMyRequestExcel: async (params: MyRequestParams, fileName: string): Promise<void> => {
     try {

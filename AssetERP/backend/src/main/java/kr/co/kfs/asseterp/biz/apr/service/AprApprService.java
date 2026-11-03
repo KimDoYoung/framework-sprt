@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.apr.service;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprTitleSearchCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
@@ -212,6 +213,14 @@ public class AprApprService {
      */
     public List<AprPreProvideRes> searchPreProvide(UserPrincipal user, LocalDate startDate, LocalDate endDate) {
         return mapper.selectPreProvide(new AprPreProvideCond(user.getCompanyId(), user.getUserId(), startDate, endDate));
+    }
+
+    /**
+     * AS-IS Apr01_Appr.selectByText (A40 Apr01_Tab_ExternalBiz 대외활동 신청서 작성). 로그인 사용자가 올린 문서 중 제목이 title로 시작하는 것
+     * (서버가 searchText01~03 뒤에 "%"를 붙인다 — 화면은 셋 다 같은 값을 보낸다)
+     */
+    public List<AprPreProvideRes> searchByTitle(UserPrincipal user, LocalDate startDate, LocalDate endDate, String title) {
+        return mapper.selectByTitle(new AprTitleSearchCond(user.getCompanyId(), user.getUserId(), startDate, endDate, title + "%"));
     }
 
     /** AS-IS downLoadButton(sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
