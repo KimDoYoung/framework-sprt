@@ -58,6 +58,8 @@
 
 견본: `docs/page-style/SGVF/` (`Fnd01_Tab_FundSearch.tsx` + `Fnd01_Edit_FundSearch.tsx`)
 
+적용 화면: `Fnd01_Tab_FundSearch`(견본), `Scm01_Tab_Sr`(EE15 — 아래 폼이 둘이라 분할이 셋: 위 그리드 / 가운데 입력·결재 폼 / 아래 읽기 전용 폼. 가운데 폼은 버튼이 있다). 점검 규칙은 `tools/page-style-check.py`의 `SGVF`(EE15에서 추가).
+
 공통 규칙 4가지(SGVF·SGEF 모두). 2~4번은 **폼이 있는 스타일에서만** 의미가 있다(특히 3번 최소 크기는 폼이 가려지지 않게 하려는 것이라 view/edit 폼일 때만 둔다):
 1. SearchBar와 그리드 사이 세로 간격 8px (그리드를 감싼 div에 `marginTop: 8`)
 2. 폼 라벨은 오른쪽 정렬 (`textAlign: 'right'` + `paddingRight: 10`)
@@ -211,6 +213,7 @@
 - `yunhee page-style`이 AS-IS `Car03_Tab_List`를 `미분류(그리드 하나, 조회 툴바 없음)`로 판별한다 — 판별기에 GCG 규칙이 없다(yunhee 수정사항 제안).
 - 위(높이 300, 여백 20/20/0/20): 제목 줄(`공용차량 예약현황 (기준일자 : yyyy년 MM월 dd일)` + 오른쪽 새로고침 아이콘) 아래 `SingleGrid`. 아래: 왼쪽(폭 300) 달력 + [예약하기], 오른쪽 라디오(MY 예약 / 전체 예약) + `SingleGrid`. 달력 날짜·라디오가 바뀌면 오른쪽 그리드를 다시 조회하고 위 그리드도 같이 조회한다.
 - 행 [상세보기] 아이콘이 예약 팝업(`*_Popup_*`)을 열고, [삭제] 아이콘은 확인창(YES) 뒤에 지운다.
+- 적용 화면: `Car03_Tab_List`(견본), `Mrb01_Tab_List`(EE14 회의실 예약관리 1067 — 달력에 예약 있는 날 표시가 더 있다). `yunhee page-style`은 Mrb01을 `GG`(그리드 둘)로 읽는다 — 구조는 GCG이므로 GCG로 만든다(판별기 규칙 없음, yunhee 수정사항 제안).
 
 ### STP — SearchBar+TabPanel (초안, 2026-10-28 S22에서 등록, 2026-10-29 견본 확정)
 

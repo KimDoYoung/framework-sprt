@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm01_sr.xml (selectByText L128, selectById L96, createSrNo, updateContent, getSystemCodeName L43) + UpdateDataModel(scm01_sr)  (EE15) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmSrMapper">
+
+    <!-- AS-IS scm01_sr.getSystemCodeName (IDMS-IC L43) — 공통코드 한 종류의 이름표(CTE 본문). kind 는 코드 종류 -->
+    <sql id="codeCte"><![CDATA[
+        SELECT sys09_code AS cd
+             , sys09_name AS nm
+          FROM sys08_code_kind
+               INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd    = '${kind}'
+           AND sys09_company_id = 0
+           AND sys09_apply_date <= f_today()
+           AND ( ( COALESCE(sys09_close_yn,'false')  = 'true' AND sys09_close_date >= f_today() ) OR
+                 ( COALESCE(sys09_close_yn,'false') != 'true' ) )
+    ]]></sql>
+
+    <sql id="codeCtes">
+        systemCode AS ( <include refid="codeCte"><property name="kind" value="SystemCode"/></include> )
+      , srType AS ( <include refid="codeCte"><property name="kind" value="SrType"/></include> )
+      , aprStatusCode AS ( <include refid="codeCte"><property name="kind" value="AprStatusCode"/></include> )
+      , srStatus AS ( <include refid="codeCte"><property name="kind" value="SrStatus"/></include> )
+      , devImportanceCode AS ( <include refid="codeCte"><property name="kind" value="DevImportanceCode"/></include> )
+    </sql>
+
+    <!-- personNm·corpNm: selectByText 는 조인한 열(emp01_kor_nm·sys15_corp_nm), selectById 는 함수 -->
+    <sql id="srColumns">
+        scm01_sr_id                  AS sr_id,
+        scm01_system_cd              AS system_cd,
+        scm01_sr_date                AS sr_date,
+        scm01_person_id              AS person_id,
+        scm01_corp_id                AS corp_id,
+        scm01_requestor              AS requestor,
+        scm01_sr_type                AS sr_type,
+        scm01_sr_content             AS sr_content,
+        scm01_appr_status_cd         AS appr_status_cd,
+        scm01_sr_status_cd           AS sr_status_cd,
+        scm01_start_date             AS start_date,
+        scm01_due_date               AS due_date,
+        scm01_close_date             AS close_date,
+        scm01_result_content         AS result_content,
+        scm01_dev_importance_cd      AS dev_importance_cd,
+        scm01_expect_period          AS expect_period,
+        scm01_dev_content            AS dev_content,
+        scm01_dev_target             AS dev_target,
+        scm01_dev_target_etc         AS dev_target_etc,
+        scm01_sr_no                  AS sr_no,
+        regexp_replace(regexp_replace(scm01_sr_content, '&lt;[^&gt;]*&gt;', '', 'g'), E'&amp;#[0-9]+;|&amp;\\w+;', '', 'g') AS sr_arrange_content,
+        ${personNm}                  AS person_nm,
+        ${corpNm}                    AS corp_nm,
+        systemCode.nm                AS system_nm,
+        srType.nm                    AS sr_type_nm,
+        aprStatusCode.nm             AS appr_status_nm,
+        srStatus.nm                  AS sr_status_nm,
+        devImportanceCode.nm         AS dev_importance_nm,
+        ( SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = scm01_sr_id ) AS file_count,
+        scm01_requestor||CASE WHEN scm01_corp_id IS NULL THEN '' ELSE '('||${corpNm}||')' END AS requestor_corp_nm,
+        COALESCE(dev_end_cnt,0)||' / '||COALESCE(dev_total_cnt,0) AS dev_count_str
+    </sql>
+
+    <!-- AS-IS scm01_sr.selectByText (IDMS-IC L128, gubun='sr') — checkBox01·02 는 choose 라 둘 다 켜도 앞의 것만 적용된다(원본 그대로) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.scm.dto.SrRes">
+        WITH <include refid="codeCtes"/>
+        SELECT <include refid="srColumns"><property name="personNm" value="emp01_kor_nm"/><property name="corpNm" value="sys15_corp_nm"/></include>
+          FROM scm01_sr
+               INNER JOIN emp01_person ON emp01_person_id = scm01_person_id
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = scm01_corp_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*) dev_total_cnt
+                                              , SUM(CASE WHEN f_get_dev_status(scm10_dev_id) = '완료' THEN 1 ELSE 0 END) dev_end_cnt
+                                           FROM scm10_dev
+                                          WHERE scm10_sr_id = scm01_sr_id ) t ON TRUE
+               LEFT JOIN systemCode        ON systemCode.cd        = scm01_system_cd
+               LEFT JOIN srType            ON srType.cd            = scm01_sr_type
+               LEFT JOIN aprStatusCode     ON aprStatusCode.cd     = scm01_appr_status_cd
+               LEFT JOIN srStatus          ON srStatus.cd          = scm01_sr_status_cd
+               LEFT JOIN devImportanceCode ON devImportanceCode.cd = scm01_dev_importance_cd
+         WHERE scm01_sr_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+           AND COALESCE(scm01_system_cd, '%') LIKE #{systemCode}
+           AND COALESCE(scm01_sr_status_cd, '10') LIKE #{srStatus}
+        <if test="searchText != null">
+           AND CONCAT( emp01_kor_nm
+                     , sys15_corp_nm
+                     , scm01_requestor
+                     , scm01_sr_content
+                     , scm01_result_content
+                     , ( SELECT ARRAY_TO_STRING(ARRAY_AGG(f_emp_kor_nm(scm02_step_emp_id)), '')
+                           FROM scm02_sr_appr_step
+                          WHERE scm02_sr_id = scm01_sr_id )
+                     , scm01_sr_no ) ILIKE #{searchText}
+        </if>
+        <choose>
+            <when test="checkBox01">
+           AND COALESCE(scm01_sr_status_cd,'10') NOT IN ('30','90')
+            </when>
+            <when test="checkBox02">
+           AND COALESCE(scm01_appr_status_cd,'99') NOT IN ('30','40')
+            </when>
+        </choose>
+        <if test="checkBoxMyReg">
+           AND scm01_person_id = #{personId}
+        </if>
+         ORDER BY scm01_sr_date DESC, scm01_sr_id DESC
+    </select>
+
+    <!-- AS-IS scm01_sr.selectById (IDMS-IC L96) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.scm.dto.SrRes">
+        WITH <include refid="codeCtes"/>
+        SELECT <include refid="srColumns"><property name="personNm" value="f_emp_kor_nm(scm01_person_id)"/><property name="corpNm" value="f_get_corp_nm(scm01_corp_id)"/></include>
+          FROM scm01_sr
+               LEFT JOIN systemCode        ON systemCode.cd        = scm01_system_cd
+               LEFT JOIN srType            ON srType.cd            = scm01_sr_type
+               LEFT JOIN aprStatusCode     ON aprStatusCode.cd     = scm01_appr_status_cd
+               LEFT JOIN srStatus          ON srStatus.cd          = scm01_sr_status_cd
+               LEFT JOIN devImportanceCode ON devImportanceCode.cd = scm01_dev_importance_cd
+               LEFT JOIN LATERAL ( SELECT COUNT(*) dev_total_cnt
+                                        , SUM(CASE WHEN f_get_dev_status(scm10_dev_id) = '완료' THEN 1 ELSE 0 END) dev_end_cnt
+                                     FROM scm10_dev
+                                    WHERE scm01_sr_id = scm10_sr_id ) t ON TRUE
+         WHERE scm01_sr_id = #{srId}
+    </select>
+
+    <!-- AS-IS scm01_sr.createSrNo (IDMS-IC) -->
+    <select id="createSrNo" resultType="string">
+        SELECT to_char(scm01_sr_date, 'yymmdd-')||lpad((max(coalesce(cast(substr(scm01_sr_no,8,3) as numeric),0)) + 1)||'',3,'0') AS sr_no
+          FROM scm01_sr
+         WHERE scm01_sr_date = #{srDate}
+         GROUP BY scm01_sr_date
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertSr">
+        INSERT INTO scm01_sr (scm01_sr_id, scm01_system_cd, scm01_sr_date, scm01_person_id, scm01_corp_id, scm01_requestor, scm01_sr_type,
+                              scm01_sr_content, scm01_appr_status_cd, scm01_sr_no)
+        VALUES (#{req.srId}, #{req.systemCd}, #{req.srDate}, #{personId}, #{req.corpId}, #{req.requestor}, #{req.srType},
+                #{req.srContent}, #{req.apprStatusCd}, #{srNo})
+    </insert>
+
+    <update id="updateSr">
+        UPDATE scm01_sr
+           SET scm01_system_cd      = #{req.systemCd},
+               scm01_sr_date        = #{req.srDate},
+               scm01_corp_id        = #{req.corpId},
+               scm01_requestor      = #{req.requestor},
+               scm01_sr_type        = #{req.srType},
+               scm01_sr_content     = #{req.srContent},
+               scm01_appr_status_cd = #{req.apprStatusCd},
+               scm01_sr_no          = #{srNo}
+         WHERE scm01_sr_id = #{req.srId}
+    </update>
+
+    <!-- AS-IS scm01_sr.updateContent (IDMS-IC) -->
+    <update id="updateContent">
+        UPDATE scm01_sr
+           SET scm01_sr_content = #{srContent}
+         WHERE scm01_sr_id = #{srId}
+    </update>
+
+    <update id="updateApprStatus">
+        UPDATE scm01_sr
+           SET scm01_appr_status_cd = #{apprStatusCd}
+         WHERE scm01_sr_id = #{srId}
+    </update>
+
+    <delete id="deleteSrs">
+        DELETE FROM scm01_sr
+         WHERE scm01_sr_id IN
+        <foreach collection="srIds" item="srId" open="(" separator="," close=")">#{srId}</foreach>
+    </delete>
+</mapper>

@@ -37,6 +37,7 @@ TARGETS = {
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob", "Biz01_Tab_EntertmExpenseReport"]),
     "SR": ("Emp01_Tab_InoutState", ["Act04_Tab_ReportFSS"]),  # X22: SR 규칙 추가(SearchBar + RD 영역)
     "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_DeductAdmin"]),  # Pay20_Tab_Deduct는 DeductAdmin 껍데기라 제외
+    "SGVF": ("Fnd01_Tab_FundSearch", ["Scm01_Tab_Sr"]),  # EE15: SGVF 규칙 추가. 기존 SGVF 화면은 다시 건드릴 때 맞춘다(03 원칙 22 ④)
 }
 
 BORDER = r"border\s*:\s*['\"]1px solid"
@@ -143,6 +144,14 @@ RULES = {
         ("antd Tabs 안 씀", r"<Tabs\b", False),
         ("툴바 없음", r"<SearchBar\b", False),
         ("외곽 테두리 없음", BORDER, False),
+    ],
+    # 아래 폼 박스에는 테두리가 있어(견본 Fnd01_Tab_FundSearch) 테두리 규칙은 정규식으로 가를 수 없다 — 위 박스에 테두리가 없는지는 눈으로 확인
+    "SGVF": [
+        ("세로 Splitter", r"<Splitter\b[^>]*vertical", True),
+        ("위 최소 150", r"min=\{150\}", True),
+        ("폼 최소 360", r"min=\{360\}", True),
+        ("SearchBar", r"<SearchBar\b", True),
+        ("툴바-그리드 간격 8", r"marginTop:\s*8\b", True),
     ],
 }
 

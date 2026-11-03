@@ -15025,5 +15025,70 @@
     "note": "docs/변환/work/EE/EE13-작업기록.md",
     "history": [],
     "id": "EE13"
+  },
+  "Mrb01_Tab_List": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/mrb/Mrb01_Tab_DayofMonth.java": "06a68b0be17b66f9a18be1ef5d8a8f3bed1757e2",
+      "application/src/main/java/myApp/client/vi/mrb/Mrb01_Tab_List.java": "410bec54abc923b49c9b52b61736e1e526a167ff",
+      "application/src/main/java/myApp/client/vi/mrb/model/Mrb01_BookingModel.java": "0a3d588afb22f86efe2788e9a02c93ea6a5e0128",
+      "application/src/main/java/myApp/client/vi/mrb/model/Mrb01_BookingModelProperties.java": "69ff864d5599c72ed8fc1c0af491c1344709ef78",
+      "application/src/main/java/myApp/server/mrb/Mrb01_Booking.java": "f04270fd62c1a4de2828ef9071be4f634937e692",
+      "application/src/main/java/myApp/server/mrb/mapper/mrb01_booking.xml": "982a1047b40280463f4a563d86f7f9457bb410ae"
+    },
+    "shared_links": [
+      "Mrb01_Popup_MeetingRoomReg"
+    ],
+    "recorded_at": "2026-11-03T14:04:27+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE14-작업기록.md",
+    "history": [],
+    "id": "EE14"
+  },
+  "Scm01_Tab_Sr": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Edit_Sr.java": "a9e7dda96e1a9b22a2d07fab8845924d7d7bfb7d",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Edit_SrRO.java": "f4cbd6fa5ae77d000762c452ec4de6226e131ce3",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Grid_ApprFile.java": "493fbe771d934a3ab3908b26c8d6f2b59025d576",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Lookup_SrContent.java": "f1387a173c7d3763f0996b9fecac8f214b1fd03a",
+      "application/src/main/java/myApp/client/vi/scm/Scm01_Tab_Sr.java": "dbc72bf7931c568fe90d562c697bcaa7dafbf8f1",
+      "application/src/main/java/myApp/client/vi/scm/Scm02_Edit_ApprStep.java": "7649cedcbca42ab9968c102dc7e3a2be68118fe5",
+      "application/src/main/java/myApp/client/vi/scm/Scm02_Edit_NoteMessage.java": "7b4d757808b9a390f889e1c9188bc957a8e337b9",
+      "application/src/main/java/myApp/client/vi/scm/Scm02_Grid_ApprStep.java": "3d2b1667ce7692ba2bbe42f8dd0314b9a2381227",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm01_SrModel.java": "ee1d2b008459153518da1773dec268bc8cc700e1",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm01_SrModelProperties.java": "05dc63630049b75eab49dd541079235b8f1b7744",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm02_SrApprStepModel.java": "668480e1b58e0f2144617c2df043b128f082ee85",
+      "application/src/main/java/myApp/client/vi/scm/model/Scm02_SrApprStepModelProperties.java": "0aa2ffb046b2fa2122c73427a05d8647ad5a3236",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/scm/Scm01_Sr.java": "ae63814e72b6feead3558b1489d65a13269de2af",
+      "application/src/main/java/myApp/server/scm/Scm02_SrApprStep.java": "837a1020c31053a059d28ffd9b79d2c0098d0a3c",
+      "application/src/main/java/myApp/server/scm/mapper/scm01_sr.xml": "a38819fb1404264f83a1a4a501b98aa1c2c47815",
+      "application/src/main/java/myApp/server/scm/mapper/scm02_sr_appr_step.xml": "77ba9f3a8743ec79762a16b33c1dadb70dfd48fb",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Org01_Tree_OrgCode",
+      "Sys10_Lookup_FileViewer",
+      "Sys10_Lookup_FileViewer_AView",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-03T14:36:25+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE15-작업기록.md",
+    "history": [],
+    "id": "EE15"
   }
 }

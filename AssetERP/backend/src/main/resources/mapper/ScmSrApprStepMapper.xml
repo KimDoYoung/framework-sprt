@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm02_sr_appr_step.xml (selectBySrId, deleteBySrId) + UpdateDataModel(scm02_sr_appr_step)  (EE15) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmSrApprStepMapper">
+
+    <!-- AS-IS scm02_sr_appr_step.selectBySrId (IDMS-IC) — 결재일 시점의 소속·직책(emp03_trans)과 조직명. 조건(cond)만 srId / srApprStepId 로 갈린다 -->
+    <sql id="stepSelect">
+        WITH scm02 AS (
+            SELECT scm02_sr_appr_step.*
+                 , emp01_person.*
+                 , f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm') AS emp00_title_nm
+                 , emp01_company_id                                                     AS emp00_company_id
+                 , org02_kor_nm                                                         AS org00_kor_nm
+              FROM scm02_sr_appr_step
+                   INNER JOIN emp01_person ON emp01_person_id = scm02_step_emp_id
+                   INNER JOIN emp03_trans  t2 ON ( emp03_person_id  = scm02_step_emp_id
+                                              AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                         FROM emp03_trans
+                                                                        WHERE emp03_person_id = scm02_step_emp_id
+                                                                          AND emp03_trans_date &lt;= COALESCE(scm02_appr_date, f_today()) ))
+                   INNER JOIN org01_code ON org01_code_id = emp03_org_code_id
+                   INNER JOIN org02_info ON ( org02_code_id = org01_code_id
+                                          AND org02_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                   FROM org02_info
+                                                                  WHERE org02_code_id = emp03_org_code_id
+                                                                    AND org02_mod_date &lt;= emp03_trans_date ))
+             WHERE 1=1
+               AND ${cond}
+        )
+        SELECT scm02_sr_appr_step_id                                                              AS sr_appr_step_id
+             , scm02_sr_id                                                                        AS sr_id
+             , scm02_step_type_cd                                                                 AS step_type_cd
+             , scm02_seq                                                                          AS seq
+             , scm02_step_status_cd                                                               AS step_status_cd
+             , scm02_appr_date                                                                    AS appr_date
+             , scm02_note                                                                         AS note
+             , scm02_reject_reason                                                                AS reject_reason
+             , scm02_step_emp_id                                                                  AS step_emp_id
+             , scm02_appr_emp_id                                                                  AS appr_emp_id
+             , f_cdnm('AprStepTypeCode',   scm02_step_type_cd,   emp00_company_id, f_sysdate())   AS step_type_nm
+             , f_cdnm('AprStepStatusCode', scm02_step_status_cd, emp00_company_id, f_sysdate())   AS step_status_nm
+             , emp00_title_nm || ' ' || emp01_kor_nm                                              AS step_appr_name
+             , org00_kor_nm                                                                       AS org_kor_nm
+             , emp00_title_nm                                                                     AS title_nm
+             , emp01_kor_nm                                                                       AS emp_kor_nm
+          FROM scm02
+         ORDER BY f_to_number(scm02_seq), scm02_step_type_cd, scm02_sr_appr_step_id
+    </sql>
+
+    <select id="selectBySrId" resultType="kr.co.kfs.asseterp.biz.scm.dto.SrApprStepRes">
+        <include refid="stepSelect"><property name="cond" value="scm02_sr_id = #{srId}"/></include>
+    </select>
+
+    <select id="selectByStepId" resultType="kr.co.kfs.asseterp.biz.scm.dto.SrApprStepRes">
+        <include refid="stepSelect"><property name="cond" value="scm02_sr_appr_step_id = #{srApprStepId}"/></include>
+    </select>
+
+    <!-- AS-IS scm02_sr_appr_step.deleteBySrId (IDMS-IC) -->
+    <delete id="deleteBySrId">
+        DELETE FROM scm02_sr_appr_step
+         WHERE scm02_sr_id = #{srId}
+    </delete>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertStep">
+        INSERT INTO scm02_sr_appr_step (scm02_sr_appr_step_id, scm02_sr_id, scm02_step_type_cd, scm02_seq, scm02_step_status_cd, scm02_appr_date,
+                                        scm02_note, scm02_reject_reason, scm02_step_emp_id, scm02_appr_emp_id)
+        VALUES (#{srApprStepId}, #{srId}, #{req.stepTypeCd}, #{req.seq}, #{req.stepStatusCd}, #{req.apprDate},
+                #{req.note}, #{req.rejectReason}, #{req.stepEmpId}, #{req.apprEmpId})
+    </insert>
+
+    <update id="updateDecision">
+        UPDATE scm02_sr_appr_step
+           SET scm02_step_status_cd = #{stepStatusCd},
+               scm02_appr_date      = now(),
+               scm02_appr_emp_id    = #{apprEmpId}
+         WHERE scm02_sr_appr_step_id = #{srApprStepId}
+    </update>
+
+    <update id="updateNote">
+        UPDATE scm02_sr_appr_step
+           SET scm02_note          = #{note},
+               scm02_reject_reason = #{rejectReason}
+         WHERE scm02_sr_appr_step_id = #{srApprStepId}
+    </update>
+</mapper>
