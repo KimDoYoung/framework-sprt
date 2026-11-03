@@ -14866,5 +14866,36 @@
     "note": "docs/변환/work/EE/EE07-작업기록.md",
     "history": [],
     "id": "EE07"
+  },
+  "Dcr04_Tab_EmpAuth": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr04_Lookup_DocList.java": "0a9aca418a28fa5db14db31799736fe0f4c122e9",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr04_TabPage_DocList.java": "bbaf4af44ce7f4820d0532af09041df142f74080",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr04_TabPage_EmpAuth.java": "f89ba649a5eb9c74c0ca93cf5cfd6a57af7aff48",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr04_Tab_EmpAuth.java": "c2c2eae5a19b3c9b377212d9519b555e5ccd5dce",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr04_EmpAuthModel.java": "84063ef4e6478102a21487e87274a63f4c89cc8a",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr04_EmpAuthModelProperties.java": "79d561ddd55e55c51f8e692f300ada7ec7485961",
+      "application/src/main/java/myApp/server/dcr/Dcr01_ClassTree.java": "5da5a4d3ddaf00433d72f012858df89306345b21",
+      "application/src/main/java/myApp/server/dcr/Dcr04_EmpAuth.java": "72d2b74da65c95d5a27775b8b273776d37cb8df2",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr04_emp_auth.xml": "b189d7433de2e1b03150b1294f1aac9dfbf0d05c",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Org00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-11-03T13:03:21+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE08-작업기록.md",
+    "history": [],
+    "id": "EE08"
   }
 }
