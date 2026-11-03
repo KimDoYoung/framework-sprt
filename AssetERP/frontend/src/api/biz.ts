@@ -4,7 +4,7 @@ import { readBlobError } from './file';
 import {
   BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizEntertmCompany, BizEntertmHistory, BizEntertmMonth, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
-  FundPriceModi, FundPriceModiMonth,
+  BizWithCorp, FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
 import { MktSelect, MktTarget } from '../types/mkt';
 import { CrmContact } from '../types/crm';
@@ -498,5 +498,14 @@ export const bizFundPriceModiApi = {
   /** AS-IS biz.Biz61_ModiRptRelateAppr.updateApprId — 월 통합 상신(A77) 뒤 결재문서 ID 기록 */
   saveMonth: async (yyyymm: string, apprId: number): Promise<void> => {
     await apiClient.put<ApiResponse<void>>('v1/biz/fund-price-modis/month', { yyyymm, apprId });
+  },
+};
+
+/** EE16 AS-IS Biz13_Lookup_WithCorp (운용사목록 조회창) */
+export const bizWithCorpApi = {
+  /** AS-IS biz.Biz13_WithCorp.selectByText — 로그인 회사의 운용사 */
+  searchWithCorps: async (searchText: string): Promise<BizWithCorp[]> => {
+    const res = await apiClient.get<ApiResponse<BizWithCorp[]>>('v1/biz/with-corps', { params: { searchText } });
+    return res.data.data ?? [];
   },
 };

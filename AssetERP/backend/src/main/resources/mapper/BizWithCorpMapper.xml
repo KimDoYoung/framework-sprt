@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz13_with_corp.xml (selectByText)  (EE16 Biz13_Lookup_WithCorp) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizWithCorpMapper">
+
+    <!-- AS-IS biz13_with_corp.selectByText (IDMS-IC) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizWithCorpRes">
+        SELECT biz13_with_corp_id AS with_corp_id
+             , biz13_corp_id      AS corp_id
+             , biz13_manage_type  AS manage_type
+             , sys15_corp_cd      AS corp_cd
+             , sys15_corp_nm      AS corp_nm
+             , f_cdnm('ManageType', biz13_manage_type, biz13_company_id, f_today()) AS manage_type_nm
+          FROM biz13_with_corp
+               INNER JOIN sys15_corp ON sys15_corp_id = biz13_corp_id
+         WHERE sys15_corp_nm LIKE #{searchText}
+           AND biz13_company_id = #{companyId}
+         ORDER BY COALESCE(biz13_first_start_date, '9999-12-31')
+    </select>
+</mapper>

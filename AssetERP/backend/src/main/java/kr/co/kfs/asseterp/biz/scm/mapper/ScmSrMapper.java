@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.scm.mapper;
 
+import kr.co.kfs.asseterp.biz.scm.dto.SrDevMngSaveReq;
 import kr.co.kfs.asseterp.biz.scm.dto.SrRes;
 import kr.co.kfs.asseterp.biz.scm.dto.SrSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -41,4 +42,15 @@ public interface ScmSrMapper {
 
     /** AS-IS Scm01_Sr.delete (UpdateDataModel.deleteModel) */
     int deleteSrs(@Param("srIds") List<Long> srIds);
+
+    /** AS-IS scm01_sr.selectByDevMng (EE16) — 승인 완료 의뢰, checkBox01 = 미완료건만 */
+    List<SrRes> selectByDevMng(@Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                               @Param("searchText") String searchText, @Param("systemCode") String systemCode,
+                               @Param("srStatus") String srStatus, @Param("checkBox01") boolean checkBox01);
+
+    /** 개발관리 폼 저장 (EE16) */
+    int updateDevMng(@Param("srId") Long srId, @Param("req") SrDevMngSaveReq req);
+
+    /** AS-IS scm01_sr.updateResultContent (EE16) */
+    int updateResultContent(@Param("srId") Long srId, @Param("resultContent") String resultContent);
 }

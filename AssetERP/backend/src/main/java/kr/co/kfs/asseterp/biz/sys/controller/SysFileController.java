@@ -46,6 +46,12 @@ public class SysFileController {
         return ApiResponse.ok(sysFileService.searchByParentId(parentId));
     }
 
+    /** AS-IS sys.Sys10_File.selectByDevId (EE16 Scm01_Lookup_ApprFile) */
+    @GetMapping("/by-dev")
+    public ApiResponse<List<FileRes>> searchByDevId(@RequestParam Long devId) {
+        return ApiResponse.ok(sysFileService.searchByDevId(devId));
+    }
+
     /** AS-IS sys.Sys10_File.selectByFileYn (Z10 Rpt02_Lookup_FileList) */
     @GetMapping("/by-file-yn")
     public ApiResponse<List<FileRes>> searchByFileYn(@RequestParam Long parentId) {

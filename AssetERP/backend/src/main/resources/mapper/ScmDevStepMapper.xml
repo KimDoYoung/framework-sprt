@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm11_dev_step.xml (selectByDevId·inUpdateProgress·updateResult) + UpdateDataModel.deleteModel  (EE16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmDevStepMapper">
+
+    <!-- AS-IS scm11_dev_step.selectByDevId (IDMS-IC) -->
+    <select id="selectByDevId" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevStepRes"><![CDATA[
+        SELECT scm11_dev_step_id     AS dev_step_id
+             , scm11_dev_id          AS dev_id
+             , scm11_dev_step_seq    AS dev_step_seq
+             , scm11_dev_step_cd     AS dev_step_cd
+             , scm11_dev_status_cd   AS dev_status_cd
+             , scm11_person_id       AS person_id
+             , scm11_result_cd       AS result_cd
+             , scm11_result_date     AS result_date
+             , scm11_result          AS result
+             , scm11_note            AS note
+             , f_emp_kor_nm(scm11_person_id)  AS person_nm
+             , f_emp_kor_nm(scm10_person_id)  AS dev_person_nm
+             , f_cdnm('DevStepCode',       scm11_dev_step_cd,   1, f_sysdate()) AS dev_step_nm
+             , f_cdnm('AfterStateCode',    scm11_dev_status_cd, 1, f_sysdate()) AS dev_status_nm
+             , f_cdnm('DevStepResultCode', scm11_result_cd,     1, f_sysdate()) AS result_nm
+             , scm10_reg_date        AS reg_date
+             , scm10_start_date      AS start_date
+             , scm10_due_date        AS due_date
+             , to_char(scm11_result_date, 'YYYY-MM-DD HH24:MI:SS') AS result_date_str
+             , scm01_sr_date         AS sr_date
+             , scm01_sr_no           AS sr_no
+             , scm01_system_cd       AS system_cd
+             , f_cdnm('SystemCode', scm01_system_cd, 1, f_sysdate()) AS system_nm
+             , scm10_note            AS dev_note
+             , regexp_replace(regexp_replace(scm10_note, '<[^>]*>', '', 'g'), E'&#[0-9]+;|&\\w+;', '', 'g')  AS dev_arrange_note
+             , regexp_replace(regexp_replace(scm11_result, '<[^>]*>', '', 'g'), E'&#[0-9]+;|&\\w+;', '', 'g') AS arrange_result
+             , ( SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = scm11_dev_step_id ) AS file_count
+             , f_get_dev_status(scm10_dev_id) AS dev_step_result
+          FROM scm11_dev_step
+               INNER JOIN scm10_dev ON scm11_dev_id = scm10_dev_id
+               INNER JOIN scm01_sr  ON scm10_sr_id  = scm01_sr_id
+         WHERE scm11_dev_id = #{devId}
+         ORDER BY scm11_dev_step_seq
+    ]]></select>
+
+    <!-- AS-IS scm11_dev_step.inUpdateProgress (IDMS-IC) — UPDATE 가 0건이면 새 번호(f_create_seq)로 INSERT (원본 그대로: 새 줄의 번호는 클라이언트 값을 쓰지 않는다) -->
+    <update id="upsertProgress">
+        WITH upsert AS (
+            UPDATE scm11_dev_step
+               SET scm11_dev_id       = #{devId}
+                 , scm11_dev_step_seq = #{devStepSeq}
+                 , scm11_dev_step_cd  = #{devStepCode}
+                 , scm11_person_id    = #{personId}
+             WHERE scm11_dev_step_id  = #{devStepId}
+             RETURNING *
+        )
+        INSERT INTO scm11_dev_step (scm11_dev_step_id, scm11_dev_id, scm11_dev_step_seq, scm11_dev_step_cd, scm11_person_id)
+        SELECT f_create_seq(), #{devId}, #{devStepSeq}, #{devStepCode}, #{personId}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <!-- AS-IS scm11_dev_step.updateResult (IDMS-IC) -->
+    <update id="updateResult">
+        UPDATE scm11_dev_step
+           SET scm11_result = #{result}
+         WHERE scm11_dev_step_id = #{devStepId}
+    </update>
+
+    <delete id="deleteSteps">
+        DELETE FROM scm11_dev_step
+         WHERE scm11_dev_step_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

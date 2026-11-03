@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm03_expect_program.xml (selectBySrId) + UpdateDataModel(scm03_expect_program)  (EE16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmExpectProgramMapper">
+
+    <!-- AS-IS scm03_expect_program.selectBySrId (IDMS-IC) -->
+    <select id="selectBySrId" resultType="kr.co.kfs.asseterp.biz.scm.dto.ExpectProgramRes">
+        SELECT scm03_expect_program_id AS expect_program_id
+             , scm03_sr_id             AS sr_id
+             , scm03_program_id        AS program_id
+             , f_cdnm('ProgramType', scm30_program_type, 1, f_sysdate()) AS program_type_nm
+             , scm30_program_cd        AS program_cd
+             , scm30_program_nm        AS program_nm
+          FROM scm03_expect_program
+               LEFT OUTER JOIN scm30_program ON scm03_program_id = scm30_program_id
+         WHERE scm03_sr_id = #{srId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO scm03_expect_program (scm03_expect_program_id, scm03_sr_id, scm03_program_id)
+        VALUES (#{id}, #{srId}, #{programId})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM scm03_expect_program
+         WHERE scm03_expect_program_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

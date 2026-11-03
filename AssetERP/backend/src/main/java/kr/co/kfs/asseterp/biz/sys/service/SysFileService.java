@@ -66,6 +66,11 @@ public class SysFileService {
         return sysFileMapper.selectByParentId(parentId);
     }
 
+    /** AS-IS Sys10_File.selectByDevId L63 (EE16 Scm01_Lookup_ApprFile) */
+    public List<FileRes> searchByDevId(Long devId) {
+        return sysFileMapper.selectByDevId(devId);
+    }
+
     /** AS-IS Sys10_File.selectByFileYn L246 (Z10 Rpt02_Lookup_FileList) — 파일 구분이 true인 것만 */
     public List<FileRes> searchByFileYn(Long parentId) {
         return sysFileMapper.selectByFileYn(parentId);

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm12_dev_step_rule.xml (getList) + UpdateDataModel(scm12_dev_step_rule)  (EE16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmDevStepRuleMapper">
+
+    <!-- AS-IS scm12_dev_step_rule.getList (IDMS-IC) -->
+    <select id="getList" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevStepRuleRes">
+        SELECT scm12_dev_step_rule_id AS dev_step_rule_id
+             , scm12_dev_step_seq     AS dev_step_seq
+             , scm12_dev_step_cd      AS dev_step_cd
+             , f_cdnm('DevStepCode', scm12_dev_step_cd, 1, f_sysdate()) AS dev_step_nm
+          FROM scm12_dev_step_rule
+         ORDER BY scm12_dev_step_seq
+    </select>
+
+    <!-- UpdateDataModel — 있으면 UPDATE(순서·단계), 없으면 INSERT (새 줄은 번호가 0 이하라 f_create_seq) -->
+    <update id="upsert">
+        WITH upsert AS (
+            UPDATE scm12_dev_step_rule
+               SET scm12_dev_step_seq = #{seq}
+                 , scm12_dev_step_cd  = #{cd}
+             WHERE scm12_dev_step_rule_id = #{id}
+             RETURNING *
+        )
+        INSERT INTO scm12_dev_step_rule (scm12_dev_step_rule_id, scm12_dev_step_seq, scm12_dev_step_cd)
+        SELECT f_create_seq(), #{seq}, #{cd}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <delete id="delete">
+        DELETE FROM scm12_dev_step_rule
+         WHERE scm12_dev_step_rule_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

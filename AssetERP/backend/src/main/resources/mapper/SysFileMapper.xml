@@ -54,6 +54,21 @@
          ORDER BY LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0'), COALESCE(file.sys10_title_yn, 'false') DESC, file.sys10_file_nm COLLATE "ko-KR-x-icu"
     </select>
 
+    <!-- AS-IS sys10_file.selectByDevId (IDMS-IC, EE16 Scm01_Lookup_ApprFile) — 개발의 진행단계에 올린 파일 + 개발에 올린 파일, ORDER BY 1 = 파일ID -->
+    <select id="selectByDevId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id IN ( SELECT scm11_dev_step_id FROM scm11_dev_step WHERE scm11_dev_id = #{devId} )
+                 UNION ALL
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{devId}
+               ) AS file
+         ORDER BY 1
+    </select>
+
     <!-- AS-IS sys10_file.selectByFileYn (IDMS-IC, Z10 Rpt02_Lookup_FileList) — 파일 구분(file_yn)이 'true'인 것만, ORDER BY 1 = 파일ID -->
     <select id="selectByFileYn" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
         SELECT <include refid="fileColumns"/>

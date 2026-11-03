@@ -6,6 +6,8 @@ import kr.co.kfs.asseterp.biz.scm.dto.SrApprNoteReq;
 import kr.co.kfs.asseterp.biz.scm.dto.SrApprStepReq;
 import kr.co.kfs.asseterp.biz.scm.dto.SrApprStepRes;
 import kr.co.kfs.asseterp.biz.scm.dto.SrContentReq;
+import kr.co.kfs.asseterp.biz.scm.dto.SrDevMngSaveReq;
+import kr.co.kfs.asseterp.biz.scm.dto.SrResultContentReq;
 import kr.co.kfs.asseterp.biz.scm.dto.SrRes;
 import kr.co.kfs.asseterp.biz.scm.dto.SrSaveReq;
 import kr.co.kfs.asseterp.biz.scm.service.ScmSrApprStepService;
@@ -40,6 +42,30 @@ public class ScmSrController {
                                            @RequestParam(defaultValue = "false") boolean checkBox02,
                                            @RequestParam(defaultValue = "false") boolean checkBoxMyReg) {
         return ApiResponse.ok(service.search(principal, startDate, closeDate, searchText, systemCode, srStatus, checkBox01, checkBox02, checkBoxMyReg));
+    }
+
+    /** AS-IS scm.Scm01_Sr.selectByDevMng (EE16 Scm01_Tab_DevMng) — 승인 완료 의뢰 */
+    @GetMapping("/dev-mng")
+    public ApiResponse<List<SrRes>> searchDevMng(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                 @RequestParam(required = false) String searchText,
+                                                 @RequestParam(defaultValue = "%") String systemCode,
+                                                 @RequestParam(defaultValue = "%") String srStatus,
+                                                 @RequestParam(defaultValue = "false") boolean checkBox01) {
+        return ApiResponse.ok(service.searchDevMng(startDate, closeDate, searchText, systemCode, srStatus, checkBox01));
+    }
+
+    /** AS-IS scm.Scm01_Sr.update (Scm01_Edit_DevMng.updateRow, EE16) → 저장된 한 행 */
+    @PutMapping("/{srId}/dev-mng")
+    public ApiResponse<SrRes> saveDevMng(@PathVariable Long srId, @RequestBody SrDevMngSaveReq req) {
+        return ApiResponse.ok(service.saveDevMng(srId, req));
+    }
+
+    /** AS-IS scm.Scm01_Sr.updateResultContent (Scm01_Lookup_ResultContent, EE16) */
+    @PutMapping("/{srId}/result-content")
+    public ApiResponse<Void> updateResultContent(@PathVariable Long srId, @RequestBody SrResultContentReq req) {
+        service.updateResultContent(srId, req.resultContent());
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS scm.Scm01_Sr.selectById */

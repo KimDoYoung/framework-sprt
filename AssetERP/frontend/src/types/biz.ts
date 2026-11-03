@@ -459,3 +459,13 @@ export interface FundPriceModiMonth {
   statusCode: string | null;
   statusName: string | null;
 }
+
+/** 운용사(계약사 운영정보) 조회창 한 줄 (AS-IS Biz13_WithCorpModel, biz13_with_corp.selectByText, EE16) */
+export interface BizWithCorp {
+  withCorpId: number;
+  corpId?: number | null;
+  manageType?: string | null;
+  corpCd?: string | null;
+  corpNm?: string | null;
+  manageTypeNm?: string | null;
+}

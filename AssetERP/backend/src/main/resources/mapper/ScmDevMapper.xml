@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm10_dev.xml (selectBySrId) + scm11_dev_step.xml (checkDevStep·deleteByDevId) + UpdateDataModel(scm10_dev·scm11_dev_step)  (EE16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmDevMapper">
+
+    <!-- AS-IS scm10_dev.selectBySrId (IDMS-IC) -->
+    <select id="selectBySrId" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevRes"><![CDATA[
+        SELECT scm10_dev_id                 AS dev_id
+             , scm10_sr_id                  AS sr_id
+             , scm10_person_id              AS person_id
+             , scm10_start_date             AS start_date
+             , scm10_due_date               AS due_date
+             , scm10_note                   AS note
+             , scm10_reg_date               AS reg_date
+             , regexp_replace(regexp_replace(scm10_note, '<[^>]*>', '', 'g'), E'&#[0-9]+;|&\\w+;', '', 'g') AS arrange_note
+             , f_emp_kor_nm(scm10_person_id) AS person_nm
+             , scm01_sr_date                AS sr_date
+             , scm01_sr_no                  AS sr_no
+             , f_cdnm('SystemCode', scm01_system_cd, 1, f_sysdate()) AS system_nm
+             , scm01_requestor||CASE WHEN scm01_corp_id IS NULL THEN ''
+                                     ELSE '('||f_get_corp_nm(scm01_corp_id)||')' END AS requestor
+             , ( SELECT scm11_result_date::date
+                   FROM scm11_dev_step
+                  WHERE scm11_dev_id = scm10_dev_id
+                    AND scm11_result_cd LIKE '1'
+                  ORDER BY scm11_dev_step_seq DESC
+                  LIMIT 1 )                 AS result_date
+             , f_get_dev_status(scm10_dev_id) AS dev_step_result
+             , ( SELECT COUNT(*) FROM scm13_dev_program WHERE scm13_dev_id = scm10_dev_id ) AS dev_program_cnt
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE ( sys10_parent_id IN ( SELECT scm11_dev_step_id FROM scm11_dev_step WHERE scm11_dev_id = scm10_dev_id )
+                          OR sys10_parent_id = scm10_dev_id ) ) AS file_cnt
+          FROM scm10_dev
+               INNER JOIN scm01_sr ON scm10_sr_id = scm01_sr_id
+         WHERE scm10_sr_id = #{srId}
+         ORDER BY scm10_reg_date DESC, scm10_dev_id DESC
+    ]]></select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM scm10_dev WHERE scm10_dev_id = #{devId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertDev">
+        INSERT INTO scm10_dev (scm10_dev_id, scm10_sr_id, scm10_person_id, scm10_note, scm10_reg_date)
+        VALUES (#{devId}, #{req.srId}, #{req.personId}, #{req.note}, #{req.regDate})
+    </insert>
+
+    <update id="updateDev">
+        UPDATE scm10_dev
+           SET scm10_person_id = #{req.personId},
+               scm10_note      = #{req.note},
+               scm10_reg_date  = #{req.regDate}
+         WHERE scm10_dev_id = #{req.devId}
+    </update>
+
+    <!-- AS-IS scm11_dev_step.checkDevStep (IDMS-IC) — 개수만 쓴다 -->
+    <select id="countStepsByDevId" resultType="int">
+        SELECT COUNT(*) FROM scm11_dev_step WHERE scm11_dev_id = #{devId}
+    </select>
+
+    <!-- AS-IS scm12_dev_step_rule.getList (IDMS-IC) -->
+    <select id="selectRules" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevStepRuleRes">
+        SELECT scm12_dev_step_rule_id AS dev_step_rule_id
+             , scm12_dev_step_seq     AS dev_step_seq
+             , scm12_dev_step_cd      AS dev_step_cd
+             , f_cdnm('DevStepCode', scm12_dev_step_cd, 1, f_sysdate()) AS dev_step_nm
+          FROM scm12_dev_step_rule
+         ORDER BY scm12_dev_step_seq
+    </select>
+
+    <insert id="insertDevStep">
+        INSERT INTO scm11_dev_step (scm11_dev_step_id, scm11_dev_id, scm11_dev_step_seq, scm11_dev_step_cd, scm11_person_id)
+        VALUES (#{devStepId}, #{devId}, #{seq}, #{cd}, #{personId})
+    </insert>
+
+    <!-- AS-IS scm11_dev_step.deleteByDevId (IDMS-IC) -->
+    <delete id="deleteStepsByDevId">
+        DELETE FROM scm11_dev_step WHERE scm11_dev_id = #{devId}
+    </delete>
+
+    <delete id="deleteDevs">
+        DELETE FROM scm10_dev
+         WHERE scm10_dev_id IN
+        <foreach collection="devIds" item="devId" open="(" separator="," close=")">#{devId}</foreach>
+    </delete>
+</mapper>

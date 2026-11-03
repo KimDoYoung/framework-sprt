@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.scm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.scm.dto.SrDevMngSaveReq;
 import kr.co.kfs.asseterp.biz.scm.dto.SrRes;
 import kr.co.kfs.asseterp.biz.scm.dto.SrSaveReq;
 import kr.co.kfs.asseterp.biz.scm.mapper.ScmSrMapper;
@@ -76,5 +77,24 @@ public class ScmSrService {
     public int delete(List<Long> srIds) {
         if (srIds == null || srIds.isEmpty()) return 0;
         return mapper.deleteSrs(srIds);
+    }
+
+    /** AS-IS selectByDevMng (EE16) — 승인 완료 의뢰. searchText 가 비었으면 검색어 조건을 뺀다 */
+    public List<SrRes> searchDevMng(LocalDate startDate, LocalDate closeDate, String searchText, String systemCode, String srStatus, boolean checkBox01) {
+        String text = searchText == null || searchText.isBlank() ? null : "%" + searchText + "%";
+        return mapper.selectByDevMng(startDate, closeDate, text, systemCode == null ? "%" : systemCode, srStatus == null ? "%" : srStatus, checkBox01);
+    }
+
+    /** Scm01_Edit_DevMng.updateRow (EE16) — 화면이 바꾸는 열만 UPDATE, 저장된 한 행을 돌려준다 */
+    @Transactional
+    public SrRes saveDevMng(Long srId, SrDevMngSaveReq req) {
+        if (mapper.updateDevMng(srId, req) == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        return mapper.selectById(srId);
+    }
+
+    /** AS-IS updateResultContent (EE16) */
+    @Transactional
+    public void updateResultContent(Long srId, String resultContent) {
+        mapper.updateResultContent(srId, resultContent);
     }
 }

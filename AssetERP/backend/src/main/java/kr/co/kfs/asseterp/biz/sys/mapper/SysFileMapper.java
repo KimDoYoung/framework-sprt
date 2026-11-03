@@ -22,6 +22,9 @@ public interface SysFileMapper {
 
     List<FileRes> selectByParentId(@Param("parentId") Long parentId);
 
+    /** AS-IS sys10_file.selectByDevId (EE16 Scm01_Lookup_ApprFile) — 개발의 진행단계 파일 + 개발 파일 */
+    List<FileRes> selectByDevId(@Param("devId") Long devId);
+
     /** AS-IS sys10_file.selectByFileYn (Z10) */
     List<FileRes> selectByFileYn(@Param("parentId") Long parentId);
 
