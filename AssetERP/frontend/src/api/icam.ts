@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
+import { readBlobError } from './file';
 import {
   CurrentFeeByFund,
   FundOperateStatus,
@@ -16,6 +17,7 @@ import {
   IcamFund,
   IcamSource,
   IcamTestBatchReq,
+  IcamStop,
   IcamUser,
   IcamUserResult,
   IcamUserSaveReq,
@@ -288,5 +290,51 @@ export const icamUserApi = {
   /** AS-IS icam.Icam55_IcamUser.updateResult — 선택내역 일괄반영(처리자는 서버가 로그인 사원) */
   updateResult: async (req: { ids: number[]; procStateCode: string | null; procDate: string | null; procNote: string | null }): Promise<void> => {
     await apiClient.put<ApiResponse<void>>('v1/icam/users/results/batch', req);
+  },
+
+  // ── EE31 미사용ID 권한정지 신청 (Icam55_Tab_UserStopAuthAppr) ──
+
+  /** AS-IS icam.Icam55_IcamUser.selectBySearchText (신청구분 2) — stdDate = 선택 분기의 마지막 날 */
+  searchStops: async (params: { searchText: string; stdDate: string }): Promise<IcamStop[]> => {
+    const res = await apiClient.get<ApiResponse<IcamStop[]>>('v1/icam/users/stops', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.update — 바뀐 행 (icamUserId 0 이하는 새 행) */
+  saveStops: async (rows: IcamStop[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/icam/users/stops', rows.map(r => ({
+      icamUserId: r.icamUserId, regDate: r.regDate ?? null, companyName: r.companyName ?? null, userId: r.userId ?? null,
+      userName: r.userName ?? null, email: r.email ?? null,
+    })));
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.updateApprIds — 화면의 모든 행에 같은 상신ID */
+  updateStopApprIds: async (ids: number[], apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/icam/users/stops/appr-id', { ids, apprId });
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_권한정지 신청서.xlsx) */
+  downloadStopTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/icam/users/stops/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_권한정지 신청서.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=icamUserStopUpload) → 넣은 행 수 */
+  uploadStopsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/icam/users/stops/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
   },
 };

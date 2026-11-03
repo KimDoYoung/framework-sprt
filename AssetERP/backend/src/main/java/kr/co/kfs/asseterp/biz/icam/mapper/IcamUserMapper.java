@@ -6,6 +6,9 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import kr.co.kfs.asseterp.biz.icam.dto.IcamStopExcelRow;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamStopRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamStopSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes;
@@ -49,4 +52,22 @@ public interface IcamUserMapper {
     /** AS-IS icam55_icam_user.updateResult */
     int updateResult(@Param("icamUserId") Long icamUserId, @Param("procStateCode") String procStateCode, @Param("procDate") LocalDate procDate,
                      @Param("procNote") String procNote, @Param("procEmpId") Long procEmpId);
+
+    // ── EE31 미사용ID 권한정지 신청 (Icam55_Tab_UserStopAuthAppr) ──
+
+    /** AS-IS icam55_icam_user.selectBySearchText (regType '2', procResult 없음) */
+    List<IcamStopRes> selectStops(@Param("searchText") String searchText, @Param("startDate") LocalDate startDate,
+                                  @Param("closeDate") LocalDate closeDate, @Param("regType") String regType);
+
+    /** UpdateDataModel INSERT — 신청구분 '2', 정지 true */
+    int insertStop(@Param("icamUserId") Long icamUserId, @Param("regEmpId") Long regEmpId, @Param("req") IcamStopSaveReq req);
+
+    /** UpdateDataModel UPDATE */
+    int updateStop(@Param("req") IcamStopSaveReq req);
+
+    /** AS-IS icam55_icam_user.excelDelete */
+    int excelDelete(@Param("row") IcamStopExcelRow row);
+
+    /** AS-IS icam55_icam_user.excelInsert */
+    int excelInsert(@Param("row") IcamStopExcelRow row);
 }

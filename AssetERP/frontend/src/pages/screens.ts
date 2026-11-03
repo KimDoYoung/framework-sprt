@@ -167,6 +167,7 @@ import { Icr01_Tab_ClassTree } from './icr/Icr01_Tab_ClassTree';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam55_Tab_UserRegAppr } from './icam/Icam55_Tab_UserRegAppr';
 import { Icam55_Tab_UserApprResult } from './icam/Icam55_Tab_UserApprResult';
+import { Icam55_Tab_UserStopAuthAppr } from './icam/Icam55_Tab_UserStopAuthAppr';
 import { Icam06_Tab_FundPrice } from './icam/Icam06_Tab_FundPrice';
 import { Icam06_Tab_FundOperateStatus } from './icam/Icam06_Tab_FundOperateStatus';
 import { Icam10_Tab_CurrentFeeByFund } from './icam/Icam10_Tab_CurrentFeeByFund';
@@ -586,6 +587,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics31_Tab_ComplianceWrite, // K01 (+ Ics31_Edit_Reason. 엑셀은 RD 리포트 대신 서버 xlsx)
   Ics31_Tab_ComplianceConfirm, // K02 (V28: 문서분류·상신상태·[상신][문서보기]·사원명 조회 — 옛 조회창 Ics32_Lookup_RelateAppr는 어디서도 안 열려 제외)
   Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)
+  Icam55_Tab_UserStopAuthAppr, // EE31 (메뉴 #1315. 엑셀 업로드·템플릿, 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A34 연결)
   Icam55_Tab_UserApprResult, // EE30 (메뉴 #1316. 하위 Icam55_Lookup_UserApprResult. 문서보기 Apr01_Edit_ApprDoc)
   Icam55_Tab_UserRegAppr, // EE29 (메뉴 #1314. 하위 Icam55_Edit_UserRegAppr·Icam55_Lookup_RegContent. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A33 연결)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)

@@ -154,4 +154,65 @@
              , icam55_proc_emp_id   = #{procEmpId}
          WHERE icam55_icam_user_id  = #{icamUserId}
     </update>
+
+    <!-- ===== EE31 Icam55_Tab_UserStopAuthAppr 미사용ID 권한정지 신청 ===== -->
+
+    <!-- AS-IS icam55_icam_user.selectBySearchText (regType '2'; 이 화면은 procResult를 보내지 않아 처리결과 조건이 없다) -->
+    <select id="selectStops" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamStopRes">
+        SELECT icam55_icam_user_id                                                   AS icamUserId
+             , icam55_reg_date                                                       AS regDate
+             , icam55_company_nm                                                     AS companyName
+             , icam55_user_id                                                        AS userId
+             , icam55_user_nm                                                        AS userName
+             , icam55_email                                                          AS email
+             , icam55_note                                                           AS note
+             , icam55_appr_id                                                        AS apprId
+             , apr01.apr01_status_cd                                                 AS apprStatusCode
+             , f_cdnm('AprStatusCode', apr01.apr01_status_cd, 1, f_sysdate())        AS apprStatusName
+             , f_emp_kor_nm(icam55_reg_emp_id)                                       AS regEmpName
+             , f_cdnm('ProcStateCode', icam55_proc_state_cd, 1, f_sysdate())         AS procStateName
+             , icam55_proc_date                                                      AS procDate
+             , f_emp_kor_nm(icam55_proc_emp_id)                                      AS procEmpName
+             , icam55_proc_note                                                      AS procNote
+          FROM icam55_icam_user
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = icam55_appr_id
+         WHERE UPPER(CONCAT(icam55_company_nm, icam55_user_nm, icam55_proc_note)) LIKE UPPER(#{searchText})
+           AND icam55_reg_type = #{regType}
+           AND icam55_reg_date BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY icam55_reg_date DESC
+    </select>
+
+    <insert id="insertStop">
+        INSERT INTO icam55_icam_user (icam55_icam_user_id, icam55_reg_date, icam55_reg_type, icam55_company_nm, icam55_user_id, icam55_user_nm,
+                                      icam55_email, icam55_proc_stop_yn, icam55_reg_emp_id)
+        VALUES (#{icamUserId}, #{req.regDate}, '2', #{req.companyName}, #{req.userId}, #{req.userName},
+                #{req.email}, 'true', #{regEmpId})
+    </insert>
+
+    <update id="updateStop">
+        UPDATE icam55_icam_user
+           SET icam55_reg_date  = #{req.regDate},
+               icam55_company_nm = #{req.companyName},
+               icam55_user_id   = #{req.userId},
+               icam55_user_nm   = #{req.userName},
+               icam55_email     = #{req.email}
+         WHERE icam55_icam_user_id = #{req.icamUserId}
+    </update>
+
+    <!-- AS-IS icam55_icam_user.excelDelete (server/icam/mapper/icam55_icam_user.xml) -->
+    <delete id="excelDelete">
+        DELETE FROM icam55_icam_user
+         WHERE icam55_reg_date   = #{row.regDate}
+           AND icam55_company_nm = #{row.companyName}
+           AND icam55_user_nm    = #{row.userName}
+           AND icam55_user_id    = #{row.userId}
+    </delete>
+
+    <!-- AS-IS icam55_icam_user.excelInsert -->
+    <insert id="excelInsert">
+        INSERT INTO icam55_icam_user (icam55_icam_user_id, icam55_reg_date, icam55_reg_type, icam55_company_nm, icam55_user_nm,
+                                      icam55_user_id, icam55_proc_stop_yn, icam55_reg_emp_id, icam55_email)
+        VALUES (f_create_seq(), #{row.regDate}, '2', #{row.companyName}, #{row.userName},
+                #{row.userId}, 'true', #{row.regEmpId}, #{row.email})
+    </insert>
 </mapper>

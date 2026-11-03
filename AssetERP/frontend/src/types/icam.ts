@@ -307,3 +307,24 @@ export interface IcamUserResult {
   procEmpName?: string | null;
   procNote?: string | null;
 }
+
+/** 미사용ID 권한정지 신청 한 줄 (AS-IS Icam55_IcamUserModel, regType 2, EE31) */
+export interface IcamStop {
+  /** 새 행(아직 저장 전)은 0 이하의 임시 번호 */
+  icamUserId: number;
+  regDate?: string | null;
+  companyName?: string | null;
+  userId?: string | null;
+  userName?: string | null;
+  email?: string | null;
+  note?: string | null;
+  apprId?: number | null;
+  /** 10 결재중 · 20 · 30 완료 · 40 반려 · 99 임시저장 */
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  regEmpName?: string | null;
+  procStateName?: string | null;
+  procDate?: string | null;
+  procEmpName?: string | null;
+  procNote?: string | null;
+}
