@@ -2,8 +2,8 @@
  * 문서작성 > 01. 문서작성 > 법규별 문서작성 > 오른쪽 문서 목록 (F03, 1단계)
  * AS-IS: myApp/client/vi/ics/Ics01_Grid_ApprList.java (254줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L62-95: vlc = 툴바(49: 등록기간 · 검색 · [검색] · [신규문서 작성] · 작성도움말) / 문서 그리드(1, 체크박스 단일, 행번호 표시)
- * 1단계(F01·F02와 같은 사유): [신규문서 작성]이 여는 문서분류 조회창 Dcr01_Lookup_Class → 전자결재 편집창 Apr01_Edit_ApprDoc, 상세보기 아이콘이 여는
- *   Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * [신규문서 작성](EE68): 문서분류 조회창 Dcr01_Lookup_Class → 법규 선택창 Apr20_Lookup_SelectIcs → 전자결재 편집창 Apr01_Edit_ApprDoc(insertIcsApproval).
+ *   상세보기 아이콘이 여는 Apr01_Edit_ApprDoc(retrieveApproval)은 아직 연결하지 않았다 — 지금은 안내만 띄운다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +18,8 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<AprIcsDocRow>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -38,6 +40,8 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
   const [rows, setRows] = useState<AprIcsDocRow[]>([]);
   const [loading, setLoading] = useState(false);
   const seq = useRef(0);
+  const [classOpen, setClassOpen] = useState(false);
+  const [newDocTreeId, setNewDocTreeId] = useState<number | null>(null);
 
   // private retrieve() L180-209 / public retrieve(icsClassTreeModel) L211-249: apr.Apr03_RelateFund.selectByIcsClassTreeId (검색어는 서버가 %…%로)
   const retrieve = async (target: IcsWriteTreeNode | null = node) => {
@@ -80,14 +84,13 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
     }
   };
 
-  // [E4] insertButton[신규문서 작성].Select (L122) → insertIcsApproval() L156-178
-  // [E4 일부 생략] Dcr01_Lookup_Class.open() → Apr01_Edit_ApprDoc.insertIcsApproval(classTreeModel, icsClassTreeModel, false, callback: retrieve())는 다음 단계
+  // [E4] insertButton[신규문서 작성].Select (L122) → insertIcsApproval() L156-178: Dcr01_Lookup_Class.open(null, null) → Apr01_Edit_ApprDoc.insertIcsApproval(classTreeModel, icsClassTreeModel, false, callback: retrieve())
   const insertIcsApproval = () => {
     if (node == null) {
       message.warning('문서분류를 선택해주세요');
       return;
     }
-    message.info('전자결재 문서 작성 창은 다음 단계에서 연결됩니다');
+    setClassOpen(true);
   };
 
   // buildGrid() L130-154
@@ -129,6 +132,9 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
           rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
         />
       </div>
+      <Dcr01_Lookup_Class open={classOpen} classTreeId={null} onResult={c => { setClassOpen(false); setNewDocTreeId(c.classTreeId); }} onClose={() => setClassOpen(false)} />
+      <Apr01_Edit_ApprDoc apprId={null} newClassTreeId={newDocTreeId} icsClassTreeId={node?.classTreeId ?? null}
+        onClose={() => { setNewDocTreeId(null); void retrieve(); }} />
     </div>
   );
 };

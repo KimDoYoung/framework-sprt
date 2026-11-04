@@ -1,0 +1,11 @@
+{
+  "id": "EE70",
+  "screen": "Apr22_Lookup_RelateIcrList",
+  "menuNo": null,
+  "accounts": [
+    "kfstest/admin"
+  ],
+  "steps": [
+    "열 방법 없음(도달 불가) — 확인 생략"
+  ]
+}

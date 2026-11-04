@@ -511,7 +511,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd09_Tab_TrustBank, // R12 (#1100 수탁은행정보 관리)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
-  Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. 편집창 Apr01_Edit_ApprDoc·문서분류 조회창 Dcr01_Lookup_Class는 다음 단계)
+  Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. [신규문서 작성]은 EE68에서 연결 — Dcr01_Lookup_Class → Apr20_Lookup_SelectIcs → Apr01_Edit_ApprDoc. 상세보기의 편집창은 다음 단계)
   Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계)
   Dcr00_Tab_ApprList, // F09 1단계 (메뉴 #1326 문서 다운로드 + Apr40_Lookup_DownloadHistory·Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·PDF 만들기 createInPDF7은 다음 단계)
   Dcr00_Tab_FileList, // F08 1단계 (메뉴 #1224 문서별 첨부파일 검색 + Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

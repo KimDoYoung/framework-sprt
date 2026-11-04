@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr20_Lookup_RelateIcsList.java (307줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L65-132: 850×500 모달 "법규 목록", 위 [행 추가][행 삭제] + 오른쪽 새로고침 아이콘, 단일 체크 그리드(법규 510 · 주기 80 · 마감일 100 · 설정 80), 푸터 [저장][닫기]
  * 동작: 변경이 있으면 상신자에게 "상신문서 연관법규 변동알림"이 간다(서버).
+ * EE70: 내규판 Apr22_Lookup_RelateIcrList(AS-IS 304줄, 법규 → 내규, Icr01_Lookup_SelectMulti)는 `kind="icr"`로 같은 부품을 쓴다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
@@ -11,10 +12,12 @@ import { aprRelateEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { AprRelateIcsRow } from '@/types/apr';
 import { IcsLawDeadline } from '@/types/ics';
+import { IcrClassTreeDeadline } from '@/types/icr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { Ics01_Lookup_SelectMulti } from '@/pages/ics/Ics01_Lookup_SelectMulti';
+import { Icr01_Lookup_SelectMulti } from '@/pages/icr/Icr01_Lookup_SelectMulti';
 import { Apr20_Lookup_RelateIcs } from './Apr20_Lookup_RelateIcs';
 
 interface Row extends AprRelateIcsRow {
@@ -30,9 +33,13 @@ interface Props {
   /** [닫기] — AS-IS callback.execute(apprModel): 문서창이 연관법규 탭을 다시 읽는다 */
   onClosed: () => void;
   onClose: () => void;
+  /** 'icr'이면 내규 목록 창(Apr22_Lookup_RelateIcrList) */
+  kind?: 'ics' | 'icr';
 }
 
-export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, onClose }) => {
+export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, onClose, kind = 'ics' }) => {
+  const icr = kind === 'icr';
+  const label = icr ? '내규' : '법규';
   const [rows, setRows] = useState<Row[]>([]);
   const [selected, setSelected] = useState<Row | undefined>(undefined);
   /** deleteList */
@@ -48,7 +55,7 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
     if (target == null) return;
     setLoading(true);
     try {
-      const list = await aprRelateEditApi.getRelateIcs(target.apprId);
+      const list = icr ? await aprRelateEditApi.getRelateIcr(target.apprId) : await aprRelateEditApi.getRelateIcs(target.apprId);
       setRows(list.map(r => ({ ...r, rowKey: r.relateIcsId as number })));
       setSelected(undefined);
       setDeleteIds([]);
@@ -57,7 +64,7 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
     } finally {
       setLoading(false);
     }
-  }, [target]);
+  }, [target, icr]);
   useEffect(() => {
     if (target == null) { setRows([]); setSelected(undefined); setDeleteIds([]); return; }
     void retrieve();
@@ -67,15 +74,15 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
 
   // [E2] insertButton[행 추가].Select (L82) → insertCheck() L258-265 → insertRow() L267-302: Ics01_Lookup_SelectMulti.open("deadline") — 고른 법규·기한마다 새 줄을 맨 아래에 (03 원칙 17)
   const insertCheck = () => {
-    if (finished) return info('결재가 완료된 문서는 연관법규 추가/삭제가 불가능합니다');
+    if (finished) return info('결재가 완료된 문서는 연관' + label + ' 추가/삭제가 불가능합니다');
     setLookupOpen(true);
   };
-  const onPicked = async (list: IcsLawDeadline[]) => {
+  const onPicked = async (list: (IcsLawDeadline | IcrClassTreeDeadline)[]) => {
     setLookupOpen(false);
     try {
       const added: Row[] = [];
       for (const m of list) {
-        const r = await aprRelateEditApi.getRelateIcsInfo(m.classTreeId, m.deadlineId ?? null);
+        const r = icr ? await aprRelateEditApi.getRelateIcrInfo(m.classTreeId, m.deadlineId ?? null) : await aprRelateEditApi.getRelateIcsInfo(m.classTreeId, m.deadlineId ?? null);
         added.push({ ...r, rowKey: --seq.current, relateIcsId: null });
       }
       setRows(prev => [...prev, ...added]);
@@ -86,7 +93,7 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
 
   // [E3] deleteButton[행 삭제].Select (L88) → deleteCheck() L241-248 → deleteRow() L250-256
   const deleteCheck = () => {
-    if (finished) return info('결재가 완료된 문서는 연관법규 추가/삭제가 불가능합니다');
+    if (finished) return info('결재가 완료된 문서는 연관' + label + ' 추가/삭제가 불가능합니다');
     if (!selected) return;
     if (selected.relateIcsId != null) setDeleteIds(prev => [...prev, selected.relateIcsId as number]);
     setRows(prev => prev.filter(r => r.rowKey !== selected.rowKey));
@@ -101,7 +108,7 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
       if (missing) return info('마감일을 입력해주세요');
     }
     try {
-      const changed = await aprRelateEditApi.saveRelateIcs(target.apprId, {
+      const changed = await (icr ? aprRelateEditApi.saveRelateIcr : aprRelateEditApi.saveRelateIcs)(target.apprId, {
         rows: rows.map(r => ({ relateIcsId: r.relateIcsId, classTreeId: r.classTreeId, deadlineId: r.deadlineId, standCode: r.standCode, standDate: r.standDate, closeDate: r.closeDate })),
         deleteIds,
       });
@@ -117,17 +124,17 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
 
   // buildGrid() L134-162
   const columnDefs = useMemo(() => [
-    gb.textArea('classTreeFullName', 510, '법규'),  // L155
+    gb.textArea('classTreeFullName', 510, label),  // L155
     gb.text('cycleName', 80, '주기'),  // L156
     gb.date('closeDate', 100, '마감일'),  // L157
     iconCell<Row>('edit', 'editCell', 80, '설정', setEditRow),  // L158 editCell → Apr20_Lookup_RelateIcs.open
-  ], []);
+  ], [label]);
 
   return (
     <>
       <LookupModal
         open={target != null}
-        title="법규 목록"
+        title={`${label} 목록`}
         width={900}
         style={{ top: 20 }}
         maskClosable={false}
@@ -162,9 +169,12 @@ export const Apr20_Lookup_RelateIcsList: React.FC<Props> = ({ target, onClosed, 
           </div>
         </div>
       </LookupModal>
-      <Ics01_Lookup_SelectMulti open={lookupOpen && target != null} actionCode="deadline" onResultDeadlines={list => void onPicked(list)} onClose={() => setLookupOpen(false)} />
+      {icr
+        ? <Icr01_Lookup_SelectMulti open={lookupOpen && target != null} actionCode="deadline" onResultDeadlines={list => void onPicked(list)} onClose={() => setLookupOpen(false)} />
+        : <Ics01_Lookup_SelectMulti open={lookupOpen && target != null} actionCode="deadline" onResultDeadlines={list => void onPicked(list)} onClose={() => setLookupOpen(false)} />}
       <Apr20_Lookup_RelateIcs
         row={editRow}
+        kind={kind}
         onSet={patch => {
           setRows(prev => prev.map(r => (editRow && r.rowKey === editRow.rowKey ? { ...r, ...patch } : r)));
         }}

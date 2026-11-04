@@ -20,6 +20,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprRelateEditService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -43,6 +44,30 @@ public class AprRelateEditController {
     @PutMapping("/apprs/{apprId}/relate-ics")
     public ApiResponse<Boolean> saveRelateIcs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprRelateIcsSaveReq req) {
         return ApiResponse.ok(service.save(principal, apprId, req));
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.selectByApprId (EE70) */
+    @GetMapping("/apprs/{apprId}/relate-icr-edit")
+    public ApiResponse<List<AprRelateIcsRow>> getRelateIcr(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        return ApiResponse.ok(service.getRelateIcr(principal, apprId));
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.check + deleteList (EE70) — 변경이 있어 저장했으면 true */
+    @PutMapping("/apprs/{apprId}/relate-icr")
+    public ApiResponse<Boolean> saveRelateIcr(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprRelateIcsSaveReq req) {
+        return ApiResponse.ok(service.saveIcr(principal, apprId, req));
+    }
+
+    /** AS-IS apr.Apr20_RelateIcs.insertIcs (EE68) — 내부통제 관리에서 문서 상신: 법규 선택창의 목록 */
+    @GetMapping("/relate-ics/select")
+    public ApiResponse<List<AprRelateSelectRes>> selectRelateIcs(@RequestParam Long dcrClassTreeId, @RequestParam Long icsClassTreeId) {
+        return ApiResponse.ok(service.selectRelateIcsByIcs(dcrClassTreeId, icsClassTreeId));
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.insertIcr (EE69) — 내규 선택창의 목록 */
+    @GetMapping("/relate-icr/select")
+    public ApiResponse<List<AprRelateSelectRes>> selectRelateIcr(@RequestParam Long dcrClassTreeId, @RequestParam Long icrClassTreeId) {
+        return ApiResponse.ok(service.selectRelateIcrByIcr(dcrClassTreeId, icrClassTreeId));
     }
 
     /** [행 추가]로 고른 법규·기한의 보기 값 */

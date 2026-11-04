@@ -15,7 +15,7 @@ import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprLinkRelateAdv, AprLinkRelateAppr, AprLinkRelateFund, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
+import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprRelateSelect, AprLinkRelateAdv, AprLinkRelateAppr, AprLinkRelateFund, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
@@ -32,6 +32,7 @@ import { Apr13_Lookup_PersonAuth } from './Apr13_Lookup_PersonAuth';
 import { Apr50_Lookup_PersonList } from './Apr50_Lookup_PersonList';
 import { Apr90_Lookup_DisposalList } from './Apr90_Lookup_DisposalList';
 import { Apr20_Lookup_RelateIcsList } from './Apr20_Lookup_RelateIcsList';
+import { Apr20_Lookup_SelectIcs } from './Apr20_Lookup_SelectIcs';
 import { Apr01_Lookup_ApprFile } from './Apr01_Lookup_ApprFile';
 import { Apr01_Lookup_RelateAppr } from './Apr01_Lookup_RelateAppr';
 import { Apr01_Lookup_RelateFund } from './Apr01_Lookup_RelateFund';
@@ -68,6 +69,8 @@ interface Props {
   apprId: number | null;
   /** 값이 있으면 새 문서 작성으로 열림 — AS-IS insertApproval(classTreeModel, …) (V07) */
   newClassTreeId?: number | null;
+  /** 내부통제 관리(법규별 문서작성)에서 상신 — 새 문서 작성(newClassTreeId)과 함께 고른 법규 ID. 문서를 열기 전에 Apr20_Lookup_SelectIcs로 연관법규를 고른다 (AS-IS insertIcsApproval L3966-4057, EE68) */
+  icsClassTreeId?: number | null;
   /** 값이 있으면 링크코드로 열린 새 문서 — AS-IS insertLinkApproval(classTreeModel, linkCode, gridDataModel, …) (V17). 제목·본문·시행일자를 링크코드별로 채운다 */
   link?: AprLinkOpen | null;
   /** 링크 문서를 [저장]·[결재요청]한 뒤 (AS-IS callbackResult.execute(apprModel) L807·L5780) — 부른 화면이 문서 ID를 자기 행에 기록한다(updateApprId) */
@@ -87,7 +90,7 @@ const Row: React.FC<{ label: string; children: React.ReactNode; grow?: boolean }
   </div>
 );
 
-export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, link = null, onLinkSaved, statusCode, onClosed, onClose }) => {
+export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, icsClassTreeId = null, link = null, onLinkSaved, statusCode, onClosed, onClose }) => {
   const user = useLoginUser();
   const [doc, setDoc] = useState<AprApprDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
@@ -133,6 +136,18 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const stampDocRef = useRef<{ count: number; provideCo: string; purpose: string; note: string } | undefined>(undefined);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
   const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
+  // EE68: 법규 선택창 — 고르기를 마칠 때까지 문서 열기를 기다린다 (AS-IS는 문서 위에 모달로 겹쳐 뜨고 확인 때 연관법규 줄에 넣는다)
+  const [icsPick, setIcsPick] = useState<{ dcrClassTreeId: number; classTreeId: number } | null>(null);
+  const icsResolve = useRef<((rows: AprRelateSelect[]) => void) | null>(null);
+  const askIcs = (dcrClassTreeId: number, classTreeId: number) => new Promise<AprRelateSelect[]>(resolve => {
+    icsResolve.current = resolve;
+    setIcsPick({ dcrClassTreeId, classTreeId });
+  });
+  const finishIcs = (rows: AprRelateSelect[]) => {
+    setIcsPick(null);
+    icsResolve.current?.(rows);
+    icsResolve.current = null;
+  };
   const treeId = link?.classTreeId ?? newClassTreeId;
   const open = apprId != null || treeId != null;
   const set = (patch: Partial<EditForm>) => setForm(prev => ({ ...prev, ...patch }));
@@ -169,11 +184,14 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
             if (stamp && !stamp.ok) Modal.info({ title: '확인', content: stamp.message ?? '', okText: '확인' });
             else if (stamp?.outType) steps = stamp.steps;
           }
+          // insertIcsApproval L4021-4027: 법규 선택창 [확인]의 줄만 연관법규에 넣고(createIcsLine·createIcrLine 없음), [닫기]면 비어 있다
+          const picked = icsClassTreeId != null ? await askIcs(treeId, icsClassTreeId) : null;
+          if (!alive) return;
           setIsNew(true);
           setSeed({
             steps,
-            ics: n.relateIcs.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
-            icr: n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
+            ics: picked ? picked.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: l.closeDate, deadlineId: l.deadlineId })) : n.relateIcs.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
+            icr: picked ? [] : n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
           });
           const f = toForm(d);
           // insertLinkApproval: 링크코드별 제목·본문·시행일자(서버가 만든다), 본문이 없으면 문서분류 대표 양식(checkContent)
@@ -214,7 +232,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apprId, treeId, link?.linkCode, link?.refId, JSON.stringify(link?.args ?? null), reloadKey]);
+  }, [apprId, treeId, icsClassTreeId, link?.linkCode, link?.refId, JSON.stringify(link?.args ?? null), reloadKey]);
 
   const next = (text: string) => message.info(text);
 
@@ -697,6 +715,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
         onClosed={() => setRelateKey(k => k + 1)}
         onClose={() => setIcsOpen(false)}
       />
+      {/* EE68: 내부통제 관리에서 상신 — 연관법규를 고르는 창(Apr20_Lookup_SelectIcs). 고르기를 마치면 문서가 열린다 */}
+      <Apr20_Lookup_SelectIcs target={icsPick} onResult={finishIcs} onClose={() => finishIcs([])} />
       {/* V12: 인감종류·대표회사 조회창 */}
       <Apr10_Lookup_DocStamp classTreeId={stampOpen && doc != null ? doc.classTreeId : null} onResult={s => void pickStamp(s)} onClose={() => setStampOpen(false)} />
       <Apr15_Lookup_ReprCorp open={corpOpen} companyAddYn={false} onResult={r => void pickReprCorp(r)} onClose={() => setCorpOpen(false)} />

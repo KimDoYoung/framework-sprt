@@ -11,6 +11,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveRow;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprRelateEditMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -39,6 +40,29 @@ public class AprRelateEditService {
     public List<AprRelateIcsRow> getRelateIcs(UserPrincipal user, Long apprId) {
         detailService.getDetail(user, apprId);
         return mapper.selectRelateIcs(apprId);
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.selectByApprId (EE70) */
+    public List<AprRelateIcsRow> getRelateIcr(UserPrincipal user, Long apprId) {
+        detailService.getDetail(user, apprId);
+        return mapper.selectRelateIcr(apprId);
+    }
+
+    /** AS-IS apr.Apr20_RelateIcs.insertIcs (EE68) — 줄마다 새 relateId. 번호표(f_create_seq)를 쓰므로 읽기 전용 트랜잭션이 아니다 */
+    @Transactional
+    public List<AprRelateSelectRes> selectRelateIcsByIcs(Long dcrClassTreeId, Long icsClassTreeId) {
+        return withIds(mapper.selectRelateIcsByIcs(dcrClassTreeId, icsClassTreeId));
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.insertIcr (EE69) — 줄마다 새 relateId. 번호표를 쓰므로 읽기 전용이 아니다 */
+    @Transactional
+    public List<AprRelateSelectRes> selectRelateIcrByIcr(Long dcrClassTreeId, Long icrClassTreeId) {
+        return withIds(mapper.selectRelateIcrByIcr(dcrClassTreeId, icrClassTreeId));
+    }
+
+    private List<AprRelateSelectRes> withIds(List<AprRelateSelectRes> rows) {
+        return rows.stream().map(r -> new AprRelateSelectRes(mapper.selectNextId(), r.classTreeId(), r.classTreeName(), r.classTreeFullName(), r.content(),
+                r.submitTo(), r.relatedLaw(), r.cycleName(), r.deadlineId(), r.deadlineFullName(), r.deadlineNote(), r.scheduleCodeCheck(), r.closeDate())).toList();
     }
 
     /** [행 추가]로 고른 법규·기한의 보기 값 (AS-IS는 조회창 결과 모델에서 가져왔다) */
@@ -72,10 +96,23 @@ public class AprRelateEditService {
      */
     @Transactional
     public boolean save(UserPrincipal user, Long apprId, AprRelateIcsSaveReq req) {
+        return saveLaw(user, apprId, req, false);
+    }
+
+    /**
+     * AS-IS Apr22_Lookup_RelateIcrList.update L173-231 → apr.Apr22_RelateIcr.check L206-287 + deleteList L302-319 (EE70) — [연관법규 추가/수정/삭제]와 같은 흐름의 내규판.
+     * 알림 제목·본문은 "연관내규", 줄은 apr22_relate_icr, 기한은 스케줄 구분 6·7
+     */
+    @Transactional
+    public boolean saveIcr(UserPrincipal user, Long apprId, AprRelateIcsSaveReq req) {
+        return saveLaw(user, apprId, req, true);
+    }
+
+    private boolean saveLaw(UserPrincipal user, Long apprId, AprRelateIcsSaveReq req, boolean icr) {
         AprApprDetailRes doc = detailService.getDetail(user, apprId);
         String status = doc.statusCode();
         if ("30".equals(status) || "40".equals(status)) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재가 완료된 문서는 연관법규 추가/삭제가 불가능합니다");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재가 완료된 문서는 " + (icr ? "연관내규" : "연관법규") + " 추가/삭제가 불가능합니다");
         }
         if (!"10".equals(status) && !"20".equals(status)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
@@ -84,12 +121,12 @@ public class AprRelateEditService {
         List<Long> deleteIds = req.deleteIds() == null ? List.of() : req.deleteIds();
 
         Set<Long> mine = new HashSet<>();
-        mapper.selectRelateIcs(apprId).forEach(r -> mine.add(r.relateIcsId()));
+        (icr ? mapper.selectRelateIcr(apprId) : mapper.selectRelateIcs(apprId)).forEach(r -> mine.add(r.relateIcsId()));
         for (AprRelateIcsSaveRow r : rows) {
             if (r.relateIcsId() != null && !mine.contains(r.relateIcsId())) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT);
             }
-            String cycle = r.deadlineId() == null ? null : mapper.selectCycleName(r.deadlineId());
+            String cycle = r.deadlineId() == null ? null : (icr ? mapper.selectCycleNameIcr(r.deadlineId()) : mapper.selectCycleName(r.deadlineId()));
             boolean missing = "수시".equals(cycle) ? ("20".equals(r.standCode()) && r.closeDate() == null) : r.closeDate() == null;
             if (missing) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "마감일을 입력해주세요");
@@ -101,19 +138,31 @@ public class AprRelateEditService {
 
         // bbs02_notice(알림) + bbs03_target(상신자)
         Long noticeId = mapper.selectNextId();
-        mapper.insertNotice(noticeId, user.getCompanyId(), "상신문서 연관법규 변동알림",
-                "상신문서 **" + doc.title() + "** 의 연관법규 변동사항이 존재합니다. (수정자 : " + user.getName() + ")");
+        mapper.insertNotice(noticeId, user.getCompanyId(), icr ? "상신문서 연관내규 변동알림" : "상신문서 연관법규 변동알림",
+                "상신문서 **" + doc.title() + "** 의 " + (icr ? "연관내규" : "연관법규") + " 변동사항이 존재합니다. (수정자 : " + user.getName() + ")");
         mapper.insertNoticeTarget(mapper.selectNextId(), noticeId, doc.regEmpId());
 
         for (AprRelateIcsSaveRow r : rows) {
             if (r.relateIcsId() == null) {
-                mapper.insertRelateIcs(mapper.selectNextId(), apprId, r.classTreeId(), r.standCode(), r.standDate(), r.closeDate(), r.deadlineId());
+                if (icr) {
+                    mapper.insertRelateIcr(mapper.selectNextId(), apprId, r.classTreeId(), r.standCode(), r.standDate(), r.closeDate(), r.deadlineId());
+                } else {
+                    mapper.insertRelateIcs(mapper.selectNextId(), apprId, r.classTreeId(), r.standCode(), r.standDate(), r.closeDate(), r.deadlineId());
+                }
             } else {
-                mapper.updateRelateIcs(r.relateIcsId(), apprId, r.standCode(), r.standDate(), r.closeDate());
+                if (icr) {
+                    mapper.updateRelateIcr(r.relateIcsId(), apprId, r.standCode(), r.standDate(), r.closeDate());
+                } else {
+                    mapper.updateRelateIcs(r.relateIcsId(), apprId, r.standCode(), r.standDate(), r.closeDate());
+                }
             }
         }
         if (!deleteIds.isEmpty()) {
-            mapper.deleteRelateIcs(apprId, deleteIds);
+            if (icr) {
+                mapper.deleteRelateIcr(apprId, deleteIds);
+            } else {
+                mapper.deleteRelateIcs(apprId, deleteIds);
+            }
         }
         return true;
     }

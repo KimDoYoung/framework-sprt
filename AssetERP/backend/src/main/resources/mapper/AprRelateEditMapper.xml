@@ -34,6 +34,150 @@
            AND apr20_appr_id = #{apprId}
     </select>
 
+    <!-- AS-IS dcr20_relate_ics.insertIcs (IDMS-IC): 본문 그대로(문서분류에 딸린 법규 '99' + 고른 법규 ''), 열 이름만 DTO에 맞추고 note '99'면 참고·마감일 없음 -->
+    <select id="selectRelateIcsByIcs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes">
+        SELECT NULL::numeric                                  AS relate_id
+             , t.class_tree_id
+             , t.class_tree_name
+             , t.class_tree_full_name
+             , t.content
+             , t.submit_to
+             , NULL                                           AS related_law
+             , t.cycle_name
+             , t.deadline_id
+             , t.deadline_full_name
+             , t.deadline_note
+             , CASE WHEN t.note = '99' THEN '참고' ELSE '' END AS schedule_code_check
+             , CASE WHEN t.note = '99' THEN NULL ELSE f_sysdate()::date END AS close_date
+          FROM ( SELECT '99'                                  AS note
+                      , b.ics01_class_tree_id                 AS class_tree_id
+                      , b.ics01_class_tree_nm                 AS class_tree_name
+                      , b.ics01_content                       AS content
+                      , b.ics01_submit_to                     AS submit_to
+                      , c.sch03_deadline_id                   AS deadline_id
+                      , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)               AS class_tree_full_name
+                      , f_get_deadline_nm(c.sch03_deadline_id, '2')                      AS deadline_full_name
+                      , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+                      , c.sch03_note                          AS deadline_note
+                   FROM dcr20_relate_ics a
+                        INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+                        LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr20_ics_class_tree_id AND c.sch03_schedule_cd IN ('2','3') AND c.sch03_company_id = b.ics01_company_id
+                  WHERE 1=1
+                    AND dcr20_dcr_class_tree_id = #{dcrClassTreeId}
+                  UNION
+                 SELECT ''                                    AS note
+                      , b.ics01_class_tree_id
+                      , b.ics01_class_tree_nm
+                      , b.ics01_content
+                      , b.ics01_submit_to
+                      , c.sch03_deadline_id
+                      , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)
+                      , f_get_deadline_nm(c.sch03_deadline_id, '2')
+                      , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())
+                      , c.sch03_note
+                   FROM dcr20_relate_ics a
+                        INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+                        LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr20_ics_class_tree_id AND c.sch03_schedule_cd IN ('2','3') AND c.sch03_company_id = b.ics01_company_id
+                  WHERE 1=1
+                    AND dcr20_ics_class_tree_id = #{icsClassTreeId}
+               ) t
+         ORDER BY t.note
+    </select>
+
+    <!-- AS-IS dcr21_relate_icr.insertIcr (IDMS-IC): 본문 그대로(문서분류에 딸린 내규 '99' + 고른 내규 ''), 열 이름만 DTO에 맞추고 note '99'면 참고·마감일 없음 -->
+    <select id="selectRelateIcrByIcr" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes">
+        SELECT NULL::numeric                                  AS relate_id
+             , t.class_tree_id
+             , t.class_tree_name
+             , t.class_tree_full_name
+             , t.content
+             , t.submit_to
+             , NULL                                           AS related_law
+             , t.cycle_name
+             , t.deadline_id
+             , t.deadline_full_name
+             , t.deadline_note
+             , CASE WHEN t.note = '99' THEN '참고' ELSE '' END AS schedule_code_check
+             , CASE WHEN t.note = '99' THEN NULL ELSE f_sysdate()::date END AS close_date
+          FROM ( SELECT '99'                                  AS note
+                      , b.icr01_class_tree_id                 AS class_tree_id
+                      , b.icr01_class_tree_nm                 AS class_tree_name
+                      , b.icr01_content                       AS content
+                      , b.icr01_submit_to                     AS submit_to
+                      , c.sch03_deadline_id                   AS deadline_id
+                      , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)               AS class_tree_full_name
+                      , f_get_deadline_nm(c.sch03_deadline_id, '2')                      AS deadline_full_name
+                      , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+                      , c.sch03_note                          AS deadline_note
+                   FROM dcr21_relate_icr a
+                        INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+                        LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr21_icr_class_tree_id AND c.sch03_schedule_cd IN ('6','7') AND c.sch03_company_id = b.icr01_company_id
+                  WHERE 1=1
+                    AND dcr21_dcr_class_tree_id = #{dcrClassTreeId}
+                  UNION
+                 SELECT ''                                    AS note
+                      , b.icr01_class_tree_id
+                      , b.icr01_class_tree_nm
+                      , b.icr01_content
+                      , b.icr01_submit_to
+                      , c.sch03_deadline_id
+                      , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)
+                      , f_get_deadline_nm(c.sch03_deadline_id, '2')
+                      , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())
+                      , c.sch03_note
+                   FROM dcr21_relate_icr a
+                        INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+                        LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr21_icr_class_tree_id AND c.sch03_schedule_cd IN ('6','7') AND c.sch03_company_id = b.icr01_company_id
+                  WHERE 1=1
+                    AND dcr21_icr_class_tree_id = #{icrClassTreeId}
+               ) t
+         ORDER BY t.note
+    </select>
+
+    <!-- AS-IS apr22_relate_icr.selectByApprId (IDMS-IC) — 이 창이 쓰는 열만, 조인·조건은 그대로 (EE70) -->
+    <select id="selectRelateIcr" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow">
+        SELECT a.apr22_relate_icr_id                                                        AS relate_ics_id
+             , a.apr22_class_tree_id                                                        AS class_tree_id
+             , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)                           AS class_tree_full_name
+             , b.icr01_content                                                              AS content
+             , b.icr01_submit_to                                                            AS submit_to
+             , b.icr01_related_law                                                          AS related_law
+             , a.apr22_deadline_id                                                          AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                                  AS deadline_full_name
+             , c.sch03_note                                                                 AS deadline_note
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , a.apr22_stand_cd                                                             AS stand_code
+             , a.apr22_stand_date                                                           AS stand_date
+             , a.apr22_close_date                                                           AS close_date
+             , a.apr22_stand_yn                                                             AS stand_yn
+          FROM apr22_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.apr22_class_tree_id = b.icr01_class_tree_id
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr22_deadline_id AND c.sch03_schedule_cd IN ('6','7')
+         WHERE 1=1
+           AND apr22_appr_id = #{apprId}
+    </select>
+
+    <insert id="insertRelateIcr">
+        INSERT INTO apr22_relate_icr (apr22_relate_icr_id, apr22_appr_id, apr22_class_tree_id, apr22_stand_cd, apr22_stand_date, apr22_close_date, apr22_deadline_id)
+        VALUES (#{id}, #{apprId}, #{classTreeId}, #{standCode}, #{standDate}, #{closeDate}, #{deadlineId})
+    </insert>
+
+    <update id="updateRelateIcr">
+        UPDATE apr22_relate_icr
+           SET apr22_stand_cd   = #{standCode}
+             , apr22_stand_date = #{standDate}
+             , apr22_close_date = #{closeDate}
+         WHERE apr22_relate_icr_id = #{id}
+           AND apr22_appr_id = #{apprId}
+    </update>
+
+    <delete id="deleteRelateIcr">
+        DELETE FROM apr22_relate_icr
+         WHERE apr22_appr_id = #{apprId}
+           AND apr22_relate_icr_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
     <!-- 새 줄: 위와 같은 조인을 법규·기한으로 (AS-IS는 Ics01_Lookup_SelectMulti 결과 모델에서 가져왔다. 관련조문은 AS-IS 새 줄처럼 비움) -->
     <select id="selectRelateIcsInfo" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow">
         SELECT NULL::numeric                                                                AS relate_ics_id

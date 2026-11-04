@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -880,6 +880,30 @@ export const aprRelateEditApi = {
   saveRelateIcs: async (apprId: number, req: AprRelateIcsSaveReq): Promise<boolean> => {
     const res = await apiClient.put<ApiResponse<boolean>>(`v1/apr/apprs/${apprId}/relate-ics`, req);
     return !!res.data.data;
+  },
+
+  /** AS-IS apr.Apr22_RelateIcr.selectByApprId (EE70) */
+  getRelateIcr: async (apprId: number): Promise<AprRelateIcsRow[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateIcsRow[]>>(`v1/apr/apprs/${apprId}/relate-icr-edit`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr22_RelateIcr.check + deleteList (EE70) — 변경이 있어 저장했으면 true */
+  saveRelateIcr: async (apprId: number, req: AprRelateIcsSaveReq): Promise<boolean> => {
+    const res = await apiClient.put<ApiResponse<boolean>>(`v1/apr/apprs/${apprId}/relate-icr`, req);
+    return !!res.data.data;
+  },
+
+  /** AS-IS apr.Apr20_RelateIcs.insertIcs (EE68) — 내부통제 관리에서 문서 상신 때 법규 선택창의 목록 */
+  selectRelateIcs: async (dcrClassTreeId: number, icsClassTreeId: number): Promise<AprRelateSelect[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateSelect[]>>('v1/apr/relate-ics/select', { params: { dcrClassTreeId, icsClassTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr22_RelateIcr.insertIcr (EE69) — 내규 선택창의 목록 */
+  selectRelateIcr: async (dcrClassTreeId: number, icrClassTreeId: number): Promise<AprRelateSelect[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateSelect[]>>('v1/apr/relate-icr/select', { params: { dcrClassTreeId, icrClassTreeId } });
+    return res.data.data ?? [];
   },
 
   /** [행 추가]로 고른 법규·기한의 보기 값 */

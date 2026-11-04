@@ -1185,3 +1185,20 @@ export interface AprFileDel {
   delDate: string | null;
   reason: string | null;
 }
+
+/** 상신 때 고르는 법규/내규 한 줄 (GET apr/relate-ics/select·relate-icr/select, AS-IS Apr20_RelateIcsModel·Apr22_RelateIcrModel — EE68·EE69). scheduleCodeCheck "참고"면 마감일 없음 */
+export interface AprRelateSelect {
+  relateId: number;
+  classTreeId: number;
+  classTreeName: string | null;
+  classTreeFullName: string | null;
+  content: string | null;
+  submitTo: string | null;
+  relatedLaw: string | null;
+  cycleName: string | null;
+  deadlineId: number | null;
+  deadlineFullName: string | null;
+  deadlineNote: string | null;
+  scheduleCodeCheck: string | null;
+  closeDate: string | null;
+}

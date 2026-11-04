@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.apr.mapper;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -17,6 +18,26 @@ public interface AprRelateEditMapper {
 
     /** AS-IS apr20_relate_ics.selectByApprId */
     List<AprRelateIcsRow> selectRelateIcs(@Param("apprId") Long apprId);
+
+    /** AS-IS dcr20_relate_ics.insertIcs (EE68): 문서분류에 딸린 법규(참고) + 고른 법규 */
+    List<AprRelateSelectRes> selectRelateIcsByIcs(@Param("dcrClassTreeId") Long dcrClassTreeId, @Param("icsClassTreeId") Long icsClassTreeId);
+
+    /** AS-IS dcr21_relate_icr.insertIcr (EE69): 문서분류에 딸린 내규(참고) + 고른 내규 */
+    List<AprRelateSelectRes> selectRelateIcrByIcr(@Param("dcrClassTreeId") Long dcrClassTreeId, @Param("icrClassTreeId") Long icrClassTreeId);
+
+    /** AS-IS apr22_relate_icr.selectByApprId (EE70) */
+    List<AprRelateIcsRow> selectRelateIcr(@Param("apprId") Long apprId);
+
+    /** AS-IS UpdateDataModel(apr22_relate_icr) INSERT (EE70) */
+    int insertRelateIcr(@Param("id") Long id, @Param("apprId") Long apprId, @Param("classTreeId") Long classTreeId, @Param("standCode") String standCode,
+                        @Param("standDate") LocalDate standDate, @Param("closeDate") LocalDate closeDate, @Param("deadlineId") Long deadlineId);
+
+    /** AS-IS UpdateDataModel(apr22_relate_icr) UPDATE — 이 화면이 바꾸는 기준·마감만 (EE70) */
+    int updateRelateIcr(@Param("id") Long id, @Param("apprId") Long apprId, @Param("standCode") String standCode,
+                        @Param("standDate") LocalDate standDate, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS UpdateDataModel(apr22_relate_icr) DELETE (EE70) */
+    int deleteRelateIcr(@Param("apprId") Long apprId, @Param("ids") List<Long> ids);
 
     /** 새로 고른 법규·기한의 보기 값 (selectByApprId와 같은 조인, 관련조문은 AS-IS처럼 비워 둔다) */
     AprRelateIcsRow selectRelateIcsInfo(@Param("classTreeId") Long classTreeId, @Param("deadlineId") Long deadlineId, @Param("withLaw") boolean withLaw);
