@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys01_company.selectIcamCompanyCode (server/sys/mapper/sys01_company.xml:289)
+  AS-IS icam02_data.insert (server/icam/mapper/icam02_data.xml:164) — 본문은 원본 그대로(원칙 4)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchIcamMapper">
+
+    <select id="selectIcamCompanies" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIcamCompany">
+    SELECT sys01_company_id      AS companyId
+         , sys01_icam_company_cd AS icamCompanyCode
+      FROM sys01_company
+     WHERE CAST(sys01_company_id AS VARCHAR) LIKE #{companyId}
+       AND sys01_icam_company_cd IS NOT NULL
+       AND sys01_use_yn = 'true'
+       AND sys01_erp_product_cd IN ('S3','A1')
+     ORDER BY sys01_company_id
+    </select>
+
+    <insert id="insertIcamData">
+    INSERT
+      INTO icam02_data
+    SELECT f_create_batchseq()
+         , #{p.icamCompanyCode}
+         , #{p.icamDate}
+         , #{p.fundCode}
+         , #{p.fundName}
+         , #{p.itemCode}
+         , #{p.itemName}
+         , #{p.seq}
+         , #{p.infoCode}
+         , #{p.trCode}
+         , #{p.assetCode}
+         , #{p.assetName}
+         , #{p.tgtDate}
+         , #{p.tgtAmt}
+         , #{p.tgtStdDate}
+         , #{p.note}
+         , ( SELECT icam01_ics_class_tree_id
+               FROM icam01_data_info
+              WHERE icam01_info_cd = #{p.infoCode}
+                AND icam01_tr_cd   = #{p.trCode} )
+         , null
+         , f_sysdate()
+         , #{p.creater}
+         , 'false'
+         , null
+    </insert>
+</mapper>

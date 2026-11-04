@@ -1,0 +1,4 @@
+@icamCompanyCode,@stdDate,icam02_icam_company_cd,icam02_icam_date,icam02_fund_cd,icam02_fund_nm,icam02_item_cd,icam02_item_nm,icam03_seq,icam02_info_cd,icam02_tr_cd,icam02_asset_cd,icam02_asset_nm,icam02_tgt_date,icam02_tgt_amt,icam02_tgt_std_date,icam02_note
+2018,2026-11-03,2018,2026-11-03,SIM001,시뮬레이션 펀드 1호,KR7005930003,삼성전자,1,2002,0002,A010001,주식,2026-11-10,1500000,2026-11-03,시험용 가짜 데이터
+2018,2026-11-03,2018,2026-11-03,SIM001,시뮬레이션 펀드 1호,KR7000660001,"SK하이닉스, 보통주",2,2003,0001,A010001,주식,2026-11-12,2300000,2026-11-03,"큰따옴표 ""시험"" 줄"
+1808,2026-11-03,1808,2026-11-03,SIM101,시뮬레이션 펀드 2호,,,1,2004,0001,,,,,,
