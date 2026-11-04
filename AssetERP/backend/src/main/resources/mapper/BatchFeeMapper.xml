@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS icam10_fee.deleteOfficeMngFee·deleteFundMngFee·insert·createFundFeeBook·createFundFeeRcvTr (server/icam/mapper/icam10_fee.xml:517·535·472·456·464)
+  AS-IS icam12_fee_book.delete·insert (icam12_fee_book.xml:116·96), icam11_fee_deposit.selectByFundCode·insert (icam11_fee_deposit.xml:30·95)
+  AS-IS biz13_with_corp.selectManageTypeIs1 (biz13_with_corp.xml:105), sys15_corp.selectCorpCodeCheck·insert (sys15_corp.xml:166·213)
+  AS-IS ast09_book.createDepositBook (ast09_book.xml:647). 본문은 원본 그대로(원칙 4).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchFeeMapper">
+
+    <delete id="deleteOfficeMngFee">
+        DELETE
+          FROM icam10_fee
+         WHERE icam10_company_id = #{companyId}
+           AND icam10_fee_type   IN ('20407','24926')  /* (20407:미지급사무관리보수 / 24926:현금미지급사무보수) */
+           AND icam10_std_date BETWEEN #{startDate} AND #{closeDate}
+    </delete>
+
+    <delete id="deleteFundMngFee">
+        DELETE
+          FROM icam10_fee
+         WHERE icam10_company_id = #{companyId}
+           AND icam10_fee_type   IN ('20402','24923')  /* (20402:미지급운용보수 / 24923:현금미지급운용보수) */
+           AND icam10_std_date BETWEEN #{startDate} AND #{closeDate}
+           AND icam10_fund_cd  LIKE #{fundCode}
+    </delete>
+
+    <delete id="deleteFeeBook">
+        DELETE
+          FROM icam12_fee_book
+         WHERE icam12_company_id = #{companyId}
+           AND icam12_std_date BETWEEN #{startDate} AND #{closeDate}
+    </delete>
+
+    <insert id="insertFee">
+        INSERT
+          INTO icam10_fee
+        SELECT f_create_batchseq()
+             , #{p.companyId}
+             , #{p.stdDate}
+             , #{p.icamCompanyCode}
+             , #{p.icamCompanyName}
+             , #{p.feeType}
+             , #{p.rmkCode}
+             , #{p.rmkName}
+             , #{p.drcrType}
+             , #{p.fundCode}
+             , #{p.fundName}
+             , #{p.fee}
+             , #{p.curCode}
+             , #{p.fxRate}
+             , #{p.afPayDate}
+             , #{p.bfPayDate}
+             , #{p.consignmentCode}
+             , #{p.consignmentName}
+             , f_sysdate()
+             , #{p.worker}
+    </insert>
+
+    <insert id="insertFeeBook">
+        INSERT
+          INTO icam12_fee_book
+        SELECT f_create_batchseq()
+             , #{p.companyId}
+             , #{p.icamCompanyCode}
+             , #{p.icamCompanyName}
+             , #{p.stdDate}
+             , #{p.fundCode}
+             , #{p.fundName}
+             , #{p.curCode}
+             , #{p.forFee}
+             , #{p.fee}
+             , #{p.consignmentCode}
+             , #{p.consignmentName}
+             , null
+             , f_sysdate()
+             , #{p.worker}
+    </insert>
+
+    <select id="countManageTypeIs1" resultType="java.lang.Long">
+        SELECT COUNT(*)
+          FROM biz13_with_corp
+               INNER JOIN sys15_corp ON sys15_corp_id = biz13_corp_id
+         WHERE biz13_company_id  = #{companyId}
+           AND sys15_corp_cd     = #{icamCompanyCode}
+           AND #{stdDate} BETWEEN biz13_first_start_date AND COALESCE(biz13_last_close_date, '9999-12-31')
+           AND biz13_manage_type = '1'
+    </select>
+
+    <select id="countFeeDeposit" resultType="int">
+        SELECT COUNT(*)
+          FROM ( SELECT *
+                   FROM icam11_fee_deposit
+                  WHERE icam11_company_id      = #{companyId}
+                    AND icam11_icam_company_cd = #{icamCompanyCode}
+                    AND icam11_fund_cd         = #{fundCode}
+                    AND icam11_start_date <![CDATA[<=]]> #{stdDate}
+                  ORDER BY icam11_start_date DESC
+                  LIMIT 1 ) t
+    </select>
+
+    <insert id="insertFeeDeposit">
+        INSERT
+          INTO icam11_fee_deposit
+        SELECT f_create_batchseq()
+             , #{companyId}
+             , #{icamCompanyCode}
+             , #{fundCode}
+             , #{startDate}
+             , null
+             , null
+    </insert>
+
+    <select id="countCorpCode" resultType="long">
+        SELECT COUNT(*)
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND sys15_corp_cd = #{corpCode}
+           AND sys15_corp_id != #{corpId}
+           AND sys15_use_yn = 'true'
+    </select>
+
+    <insert id="insertManagerCorp">
+        INSERT
+          INTO sys15_corp
+        SELECT #{corpId}
+             , #{companyId}
+             , #{corpName}
+             , '5'
+             , null
+             , 'true'
+             , #{seq}
+             , null
+             , #{corpCode}
+             , null
+             , null
+             , null
+    </insert>
+
+    <select id="createFundFeeBook" resultType="String">
+        SELECT f_create_fundFeeBook(#{companyId}, #{stdDate}, null)
+    </select>
+
+    <select id="createFundFeeRcvTr" resultType="String">
+        SELECT f_create_fundFeeRcvTr(#{companyId}, #{stdDate})
+    </select>
+
+    <select id="createDepositBook" resultType="String">
+        SELECT f_create_depositBook(#{companyId}, #{stdDate})
+    </select>
+</mapper>

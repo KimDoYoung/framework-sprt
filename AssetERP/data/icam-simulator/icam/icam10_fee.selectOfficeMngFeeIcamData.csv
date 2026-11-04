@@ -1,0 +1,5 @@
+icam10_std_date,icam10_icam_company_cd,icam10_icam_company_nm,icam10_fee_type,icam10_rmk_cd,icam10_rmk_nm,icam10_drcr_type,icam10_fund_cd,icam10_fund_nm,icam10_fee,icam10_cur_cd,icam10_fx_rate,icam10_af_pay_date,icam10_bf_pay_date,icam10_consignment_cd,icam10_consignment_nm
+2026-10-30,9901,시뮬운용사A,20407,101,사무관리보수,C,ZZFND1,시뮬펀드1,1500000,KRW,1,2026-12-31,2026-09-30,01234,시뮬수탁
+2026-10-30,9901,시뮬운용사A,24926,102,현금지급,D,ZZFND1,시뮬펀드1,500000,KRW,1,2026-12-31,2026-09-30,01234,시뮬수탁
+2026-10-30,9902,시뮬운용사B,20407,101,사무관리보수,C,ZZFND2,시뮬펀드2,700000,KRW,1,2026-12-31,2026-09-30,01234,시뮬수탁
+2026-10-30,9903,시뮬운용사C,20407,101,사무관리보수,C,ZZFND3,시뮬펀드3,300000,KRW,1,,,01234,시뮬수탁

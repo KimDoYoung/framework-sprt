@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS icam01_data_info.selectByInfoCodeAndTrCode·insertUpdate (server/icam/mapper/icam01_data_info.xml:27·53)
+  본문은 원본 그대로(원칙 4). 조회는 필요한 열만 별칭으로 담는다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchInfoMapper">
+
+    <select id="selectByInfoCodeAndTrCode" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIcamDataInfo">
+        SELECT icam01_info_cd            AS infoCode
+             , icam01_info_nm            AS infoName
+             , icam01_tr_cd              AS trCode
+             , icam01_tr_nm              AS trName
+             , icam01_ics_class_tree_id  AS icsClassTreeId
+             , icam01_note               AS note
+          FROM icam01_data_info LEFT OUTER JOIN ics01_class_tree ON icam01_ics_class_tree_id = ics01_class_tree_id
+         WHERE icam01_info_cd = #{infoCode}
+           AND icam01_tr_cd   = #{trCode}
+    </select>
+
+    <insert id="insertUpdate">
+        WITH upsert AS (
+                UPDATE icam01_data_info
+                   SET icam01_info_nm           = #{p.infoName}
+                     , icam01_tr_nm             = #{p.trName}
+                     , icam01_ics_class_tree_id = #{p.icsClassTreeId}
+                     , icam01_note              = #{p.note}
+                 WHERE icam01_info_cd = #{p.infoCode}
+                   AND icam01_tr_cd   = #{p.trCode}
+             RETURNING *
+        )
+            INSERT
+              INTO icam01_data_info
+                 ( icam01_data_info_id
+                 , icam01_info_cd
+                 , icam01_info_nm
+                 , icam01_tr_cd
+                 , icam01_tr_nm
+                 , icam01_ics_class_tree_id
+                 , icam01_note
+                 )
+            SELECT f_create_seq()
+                 , #{p.infoCode}
+                 , #{p.infoName}
+                 , #{p.trCode}
+                 , #{p.trName}
+                 , #{p.icsClassTreeId}
+                 , #{p.note}
+             WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+</mapper>

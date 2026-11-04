@@ -1,0 +1,4 @@
+@icamCompanyCode,@feeType,icam12_icam_company_cd,icam12_icam_company_nm,icam12_std_date,icam12_fund_cd,icam12_fund_nm,icam12_cur_cd,icam12_for_fee,icam12_fee,icam12_consignment_cd,icam12_consignment_nm
+9901,20407,9901,시뮬운용사A,2026-10-31,ZZFND1,시뮬펀드1,KRW,1500000,1500000,01234,시뮬수탁
+9902,20407,9902,시뮬운용사B,2026-10-31,ZZFND2,시뮬펀드2,KRW,700000,700000,01234,시뮬수탁
+2018,20402,2018,시뮬자산운용,2026-10-31,ZZFND9,시뮬펀드9,KRW,2000000,2000000,01234,시뮬수탁
