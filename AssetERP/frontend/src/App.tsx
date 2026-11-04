@@ -8,6 +8,40 @@ import { onSessionTerminated, SessionTerminateReason } from './api/client';
 import { User } from './types/auth';
 import { realtime } from './ws/stompClient';
 import { appSettingsStorage } from './utils/storage';
+import { sysSecondaryAuthApi } from './api/sys';
+import { Sys83_Lookup_TempPassword } from './pages/sys/Sys83_Lookup_TempPassword';
+
+/**
+ * 2차 인증 문 (EE64, AS-IS LoginPage.checkExt L594-606): 회사가 2차 인증을 쓰면(회사 설정, 회사관리자 제외) 인증번호를 확인한 뒤에야 화면을 연다.
+ * 닫으면(X) AS-IS처럼 화면이 열리지 않는다 → 로그아웃. 새로고침은 같은 로그인(jti) 안에서는 다시 묻지 않는다.
+ * ※ AS-IS와 같게 화면에서만 막는다(서버가 API를 막지는 않는다).
+ */
+const SecondaryAuthGate: React.FC<{ user: User; onLogout: () => void; children: React.ReactNode }> = ({ user, onLogout, children }) => {
+  const okKey = `secondaryAuthOk:${user.jti}`;
+  const read = () => { try { return sessionStorage.getItem(okKey) === '1'; } catch { return false; } };
+  const [state, setState] = useState<'checking' | 'need' | 'ok'>(read() ? 'ok' : 'checking');
+
+  useEffect(() => {
+    if (state !== 'checking') return;
+    let alive = true;
+    sysSecondaryAuthApi.isRequired()
+      .then(required => { if (alive) setState(required ? 'need' : 'ok'); })
+      .catch(() => { if (alive) setState('ok'); }); // 확인 실패는 막지 않는다(서버는 어차피 API를 막지 않는다)
+    return () => { alive = false; };
+  }, [state]);
+
+  if (state === 'ok') return <>{children}</>;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
+      {state === 'checking' && <Spin size="large" />}
+      <Sys83_Lookup_TempPassword
+        open={state === 'need'}
+        onVerified={() => { try { sessionStorage.setItem(okKey, '1'); } catch { /* 저장 못 해도 이번 접속은 연다 */ } setState('ok'); }}
+        onClose={async () => { try { await authApi.logout(); } finally { onLogout(); } }}
+      />
+    </div>
+  );
+};
 
 const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
   MULTI_LOGIN: {
@@ -115,13 +149,15 @@ export const App: React.FC = () => {
       }
     }}>
       {user ? (
-        <MainFrame
-          user={user}
-          onLogout={() => {
-            setSessionNotice(null);
-            setUser(null);
-          }}
-        />
+        <SecondaryAuthGate user={user} onLogout={() => { setSessionNotice(null); setUser(null); }}>
+          <MainFrame
+            user={user}
+            onLogout={() => {
+              setSessionNotice(null);
+              setUser(null);
+            }}
+          />
+        </SecondaryAuthGate>
       ) : (
         <LoginPage
           notice={sessionNotice}

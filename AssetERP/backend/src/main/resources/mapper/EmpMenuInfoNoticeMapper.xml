@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp91_menu_info_notice.xml (selectByText·selectByMenuId·insert·deletePersonId)  (EE62 Emp91_Lookup_List) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpMenuInfoNoticeMapper">
+
+    <!-- AS-IS emp91_menu_info_notice.selectByText (IDMS-IC): 열만 고른다 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.emp.dto.MenuInfoNoticeRes">
+<![CDATA[
+SELECT	emp91_menu_info_notice_id	AS menu_info_notice_id
+	 ,	sys06_menu_nm				AS menu_name
+	 ,	emp91_date::date			AS date
+	 ,	sys06_menu_no				AS menu_no
+	 ,	sys06_note					AS menu_note
+  FROM	emp91_menu_info_notice
+  		INNER JOIN sys06_menu ON sys06_menu_id = emp91_menu_id
+ WHERE	emp91_person_id = #{personId}
+   AND	sys06_menu_nm LIKE #{searchText}
+ ORDER BY emp91_date, emp91_menu_id
+]]>
+    </select>
+
+    <select id="countByMenuId" resultType="int">
+        SELECT COUNT(*) FROM emp91_menu_info_notice
+         WHERE emp91_menu_id = #{menuId} AND emp91_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS emp91_menu_info_notice.insert (IDMS-IC): 아이디는 f_create_seq, 차단일자는 오늘 -->
+    <insert id="insert">
+        INSERT INTO emp91_menu_info_notice (emp91_menu_info_notice_id, emp91_menu_id, emp91_date, emp91_person_id)
+        VALUES (f_create_seq(), #{menuId}, f_today(), #{personId})
+    </insert>
+
+    <update id="updateDate">
+        UPDATE emp91_menu_info_notice SET emp91_date = f_today()
+         WHERE emp91_menu_id = #{menuId} AND emp91_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS emp91_menu_info_notice.deletePersonId (IDMS-IC) -->
+    <delete id="deleteByMenuId">
+        DELETE FROM emp91_menu_info_notice
+         WHERE emp91_menu_id = #{menuId} AND emp91_person_id = #{personId}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM emp91_menu_info_notice
+         WHERE emp91_person_id = #{personId}
+           AND emp91_menu_info_notice_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys83_secondary_auth_user.xml (insert·selectByTempPassword)  (EE64 Sys83_Lookup_TempPassword) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysSecondaryAuthMapper">
+
+    <select id="selectSecondaryAuthYn" resultType="boolean">
+        SELECT COALESCE(sys01_secondary_auth_yn = 'true', false)
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys83_secondary_auth_user.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO sys83_secondary_auth_user (sys83_secondary_auth_user_id, sys83_company_id, sys83_person_id, sys83_phone, sys83_temp_password, sys83_reg_date, sys83_note)
+        VALUES (f_create_seq(), #{companyId}, #{personId}, #{phone}, #{tempPassword}, f_sysdate(), null)
+    </insert>
+
+    <!-- AS-IS sys83_secondary_auth_user.selectByTempPassword (IDMS-IC): 가장 최근 발급 1건이 그 번호인가 (+ 발급 후 N분 이내) -->
+    <select id="countValid" resultType="int">
+        SELECT COUNT(*)
+          FROM ( SELECT sys83_temp_password, sys83_reg_date
+                   FROM sys83_secondary_auth_user
+                  WHERE sys83_company_id = #{companyId}
+                    AND sys83_person_id = #{personId}
+                  ORDER BY sys83_reg_date DESC
+                  LIMIT 1 ) x
+         WHERE x.sys83_temp_password = #{tempPassword}
+           AND x.sys83_reg_date >= f_sysdate() - (#{validMinutes} * interval '1 minute')
+    </select>
+</mapper>

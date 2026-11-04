@@ -1346,3 +1346,22 @@ export interface AddTitleLogin {
   closeDate?: string | null;
 }
 
+
+/** 화면안내 차단 목록 한 행 (AS-IS Emp91_MenuInfoNoticeModel — EE62) */
+export interface MenuInfoNotice {
+  menuInfoNoticeId: number;
+  menuName: string;
+  date: string | null;
+  menuNo: string | null;
+  menuNote: string | null;
+}
+
+/** 알림설정 한 행 (AS-IS Emp92_SmsNoticeModel — EE63): 항목별 앱·문자·메일 */
+export interface SmsNotice {
+  smsNoticeId: number;
+  smsNoticeName: string;
+  smsNoticeCode: string;
+  talkNoticeYn: boolean;
+  smsNoticeYn: boolean;
+  mailNoticeYn: boolean;
+}

@@ -52,6 +52,8 @@ interface TopBarProps {
   onOpenAddTitle?: () => void;
   /** AS-IS MainFrame warning 아이콘(E4 L294) — 알림 창 (EE53). alarmState: none 알림 없음 / normal 체크리스트 있음 / twinkle 미결재·매매승인 있음(깜빡임) */
   onOpenCheckList?: () => void;
+  /** AS-IS MainFrame settingAnchor L746 — 기본설정(도움말) 창 (EE62·EE63) */
+  onOpenSetting?: () => void;
   alarmState?: 'none' | 'normal' | 'twinkle';
 }
 
@@ -81,6 +83,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenSendMessage,
   onOpenAddTitle,
   onOpenCheckList,
+  onOpenSetting,
   alarmState = 'none',
 }) => {
   const loginUser = useLoginUser();
@@ -476,7 +479,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </Tooltip>
 
           {/* User Profile dropdown */}
-          <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => { if (key === 'logout') onLogout?.(); if (key === 'addTitle') onOpenAddTitle?.(); } }} trigger={['click']} placement="bottomRight">
+          <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => { if (key === 'logout') onLogout?.(); if (key === 'addTitle') onOpenAddTitle?.(); if (key === 'setting') onOpenSetting?.(); } }} trigger={['click']} placement="bottomRight">
             <div
               style={{
                 display: 'flex',

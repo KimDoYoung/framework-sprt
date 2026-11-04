@@ -37,6 +37,7 @@ import { Att02_Lookup_Commute } from './pages/att/Att02_Lookup_Commute';
 import { Emp00_Lookup_SendMessage } from './pages/emp/Emp00_Lookup_SendMessage';
 import { Emp04_Lookup_AddTitleList } from './pages/emp/Emp04_Lookup_AddTitleList';
 import { Frm01_Lookup_CheckList } from './pages/frm/Frm01_Lookup_CheckList';
+import { MySetting } from './pages/frm/MySetting';
 import { frmApi } from './api/frm';
 import { FrmNoticeCnt } from './types/frm';
 
@@ -213,6 +214,8 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
 
   // ── 알림 창 (AS-IS MainFrame warning E4 L294 → Frm01_Lookup_CheckList.open()) + 알림 아이콘 상태(checkActive() L382-471, 주기 조회) ──
   const [checkListOpen, setCheckListOpen] = useState(false);
+  // ── 기본설정(도움말) 창 (AS-IS MainFrame settingAnchor L746 → MySetting.open(), EE62·EE63) ──
+  const [settingOpen, setSettingOpen] = useState(false);
   const [alarmState, setAlarmState] = useState<'none' | 'normal' | 'twinkle'>('none');
   const hasMenu1128 = menus.some(m1 => m1.groups.some(g => g.items.some(i => i.menuNo === '1128')));
   const applyCount = useCallback((c: FrmNoticeCnt) => {
@@ -638,8 +641,10 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           onOpenSendMessage={openSendMessage}
           onOpenAddTitle={() => setAddTitleOpen(true)}
           onOpenCheckList={() => setCheckListOpen(true)}
+          onOpenSetting={() => setSettingOpen(true)}
           alarmState={alarmState}
         />
+        <MySetting open={settingOpen} isManager={user.userId < 0} onClose={() => setSettingOpen(false)} />
         <Frm01_Lookup_CheckList open={checkListOpen} hasMenu1128={hasMenu1128} onCount={applyCount} onClose={() => setCheckListOpen(false)} />
         {/* callback "change": AS-IS는 상단·MyPage·메뉴를 다시 만든다 → TOBE는 새 토큰 쿠키로 화면을 다시 연다 */}
         <Emp04_Lookup_AddTitleList open={addTitleOpen} onClose={() => setAddTitleOpen(false)}

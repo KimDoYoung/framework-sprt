@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget } from '../types/emp';
+import { MenuInfoNotice, SmsNotice, LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -1670,5 +1670,48 @@ export const empSmsNoticeTargetApi = {
   remove: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/sms-notice-targets', { data: ids });
     return res.data.data ?? 0;
+  },
+};
+
+/** EE62 화면안내 (Emp91_Lookup_List) */
+export const empMenuInfoNoticeApi = {
+  /** AS-IS emp.Emp91_MenuInfoNotice.selectByText */
+  search: async (searchText: string): Promise<MenuInfoNotice[]> => {
+    const res = await apiClient.get<ApiResponse<MenuInfoNotice[]>>('v1/emp/menu-info-notices', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** 화면안내 전체 비활성화 상태 (AS-IS LoginUser.getMenuInfoYn 의 반대) */
+  isAllBlocked: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/emp/menu-info-notices/all-blocked');
+    return res.data.data === true;
+  },
+
+  /** AS-IS emp.Emp91_MenuInfoNotice.updatePersonId / deletePersonId (menuId 0) */
+  setAllBlocked: async (blocked: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/menu-info-notices/all', { blocked });
+  },
+
+  /** AS-IS emp.Emp91_MenuInfoNotice.delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/menu-info-notices', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** EE63 알림설정 — 문자 & 메일 (Emp92_Lookup_SmsNotice) */
+export const empSmsNoticeApi = {
+  /** AS-IS emp.Emp92_SmsNotice.selectByPersonId */
+  search: async (): Promise<SmsNotice[]> => {
+    const res = await apiClient.get<ApiResponse<SmsNotice[]>>('v1/emp/sms-notices');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp92_SmsNotice.updateList → 요청과 같은 행을 돌려준다(저장 뒤 화면이 다시 조회) */
+  save: async (rows: SmsNotice[]): Promise<SmsNotice[]> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/sms-notices', rows.map(r => ({
+      smsNoticeCode: r.smsNoticeCode, talkNoticeYn: r.talkNoticeYn, smsNoticeYn: r.smsNoticeYn, mailNoticeYn: r.mailNoticeYn,
+    })));
+    return rows;
   },
 };

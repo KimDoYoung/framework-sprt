@@ -1246,3 +1246,24 @@ export const sysLeaveCompanyApi = {
     return res.data.data;
   },
 };
+
+/** EE64 2차 인증 (Sys83_Lookup_TempPassword) */
+export const sysSecondaryAuthApi = {
+  /** 로그인 직후 2차 인증이 필요한가 (회사 설정 + 회사관리자 아님) */
+  isRequired: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/sys/secondary-auths/required');
+    return res.data.data === true;
+  },
+
+  /** AS-IS sys.Sys83_SecondaryAuthUser.sendTempPassword — 서버가 번호를 만들어 내 휴대폰으로 보낸다 */
+  sendCode: async (): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>('v1/sys/secondary-auths/code');
+    return res.data;
+  },
+
+  /** AS-IS sys.Sys83_SecondaryAuthUser.selectByTempPassword */
+  verify: async (code: string): Promise<boolean> => {
+    const res = await apiClient.post<ApiResponse<boolean>>('v1/sys/secondary-auths/verify', { code });
+    return res.data.data === true;
+  },
+};

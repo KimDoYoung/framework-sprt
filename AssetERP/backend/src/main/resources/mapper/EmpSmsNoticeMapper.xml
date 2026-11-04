@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp92_sms_notice.xml (selectByPersonId·check·insert·updateNoticeYn)  (EE63 Emp92_Lookup_SmsNotice) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpSmsNoticeMapper">
+
+    <!-- AS-IS emp92_sms_notice.selectByPersonId (IDMS-IC): 본문 그대로, 열 이름만 DTO에 맞추고 'true'/'false' 글자는 불리언으로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeRes">
+<![CDATA[
+SELECT	ROW_NUMBER() OVER ()							AS sms_notice_id
+	 ,	sys09_name										AS sms_notice_name
+	 ,	sys09_code										AS sms_notice_code
+	 ,	(CASE WHEN emp92_talk_notice_yn IS NULL
+	 		 THEN 'false'
+        	 ELSE emp92_talk_notice_yn
+    		 END) = 'true'								AS talk_notice_yn
+	 ,	(CASE WHEN emp92_sms_notice_yn IS NULL
+	 		 THEN 'true'
+        	 ELSE emp92_sms_notice_yn
+    		 END) = 'true'								AS sms_notice_yn
+	 ,	(CASE WHEN emp92_mail_notice_yn IS NULL
+	 		 THEN 'true'
+        	 ELSE emp92_mail_notice_yn
+    		 END) = 'true'								AS mail_notice_yn
+  FROM	sys09_code a
+	 	INNER JOIN	sys08_code_kind	b	ON	sys08_code_kind_id = sys09_code_kind_id AND sys08_kind_cd = 'SmsNoticeCode'
+	 	LEFT JOIN	emp92_sms_notice c	ON	emp92_sms_notice_cd = sys09_code AND emp92_person_id = #{personId}
+ WHERE  1=1
+ ORDER BY sys09_code
+]]>
+    </select>
+
+    <select id="countByCode" resultType="int">
+        SELECT COUNT(*) FROM emp92_sms_notice
+         WHERE emp92_person_id = #{personId} AND emp92_sms_notice_cd = #{smsNoticeCode}
+    </select>
+
+    <!-- AS-IS emp92_sms_notice.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO emp92_sms_notice (emp92_sms_notice_id, emp92_person_id, emp92_sms_notice_cd, emp92_talk_notice_yn, emp92_sms_notice_yn, emp92_mail_notice_yn, emp92_note)
+        VALUES (f_create_seq(), #{personId}, #{smsNoticeCode}, #{talkNoticeYn}, #{smsNoticeYn}, #{mailNoticeYn}, null)
+    </insert>
+
+    <!-- AS-IS emp92_sms_notice.updateNoticeYn (IDMS-IC) -->
+    <update id="updateNoticeYn">
+        UPDATE emp92_sms_notice
+           SET emp92_talk_notice_yn = #{talkNoticeYn}
+             , emp92_sms_notice_yn = #{smsNoticeYn}
+             , emp92_mail_notice_yn = #{mailNoticeYn}
+         WHERE emp92_person_id = #{personId}
+           AND emp92_sms_notice_cd = #{smsNoticeCode}
+    </update>
+</mapper>

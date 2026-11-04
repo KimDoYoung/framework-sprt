@@ -1,0 +1,10 @@
+{
+  "id": "EE63",
+  "screen": "Emp92_Lookup_SmsNotice",
+  "menuNo": null,
+  "accounts": ["kfstest/admin"],
+  "steps": [
+    "[개인 환경설정] → [문자 & 메일 알림설정] → '알림설정' 창: 항목별 앱·문자·메일 체크",
+    "체크를 바꾸면 [저장(n)] 켜짐 → 저장 → 다시 조회돼 같은 값, [새로고침]"
+  ]
+}
