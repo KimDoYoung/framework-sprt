@@ -1202,3 +1202,10 @@ export interface AprRelateSelect {
   scheduleCodeCheck: string | null;
   closeDate: string | null;
 }
+
+/** 연관내규 한 건의 내규·원인문서 (GET /api/v1/apr/relate-icr/origin, AS-IS Apr22_RelateIcr.selectById + 상신문서 제목) */
+export interface AprRelateIcrOrigin {
+  classTreeId: number;
+  apprId: number;
+  apprTitle?: string | null;
+}

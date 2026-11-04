@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookExtr, BookFund, BookItem, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, IssuingEntity, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookFund, BookItem, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, IssuingEntity, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, PlanTodo, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -174,6 +174,18 @@ export const fndApi = {
   searchPlans: async (fundId: number): Promise<Plan[]> => {
     const res = await apiClient.get<ApiResponse<Plan[]>>('v1/fnd/plans', { params: { fundId } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd20_Plan.selectById(all=false)/selectByPersonId(all=true): 상품기획 창(Fnd20_Lookup_ToDoList) 목록 */
+  searchPlanTodos: async (planId: number | null, startDate: string, all: boolean): Promise<PlanTodo[]> => {
+    const res = await apiClient.get<ApiResponse<PlanTodo[]>>('v1/fnd/plans/todo', { params: { planId: planId ?? undefined, startDate, all } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd20_Plan.insertAppr: [결재요청] — 상신 문서 ID(없으면 서버가 임시저장 문서를 만든다) */
+  requestPlanAppr: async (planId: number): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/fnd/plans/${planId}/appr`);
+    return res.data.data as number;
   },
 
   /** AS-IS fnd.Fnd20_Plan.update: 바뀐 행만. planId가 0 이하면 새 행 — 저장된 행을 요청 순서대로 돌려준다 */

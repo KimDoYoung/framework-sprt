@@ -5,6 +5,7 @@ import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeF
 import {
   AstCf,
   AstCfBatchCreateReq,
+  AstCfDetail,
   AstCfInfo,
   AstCfInfoSaveReq,
   AstCfSaveReq,
@@ -324,6 +325,12 @@ export const astApi = {
   getCfList: async (cfInfoId: number): Promise<AstCf[]> => {
     const res = await apiClient.get<ApiResponse<AstCf[]>>('v1/ast/cfs', { params: { cfInfoId } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast04_Cf.selectByRelateId: C/F 조회창(Ast04_Lookup_Cf)이 보여 줄 현금흐름 한 건 */
+  getCfByRelateId: async (relateId: number): Promise<AstCfDetail> => {
+    const res = await apiClient.get<ApiResponse<AstCfDetail>>('v1/ast/cfs/by-relate', { params: { relateId } });
+    return res.data.data as AstCfDetail;
   },
 
   /** 현금흐름표 상세 일정 일괄 저장 */

@@ -9,6 +9,20 @@
         SELECT f_create_seq()
     </select>
 
+    <!-- AS-IS ast04_cf.selectByRelateId L29 (IDMS-IC) — C/F 조회창. 거래유형명은 로그인 회사 기준, 거래처명은 f_get_corp_nm -->
+    <select id="selectByRelateId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfDetailRes">
+        SELECT ast04_cf.ast04_cf_id                    AS cf_id
+             , ast05_tr_code.ast05_tr_nm               AS tr_name
+             , f_get_corp_nm(ast03_cf_info.ast03_corp_id) AS corp_name
+             , ast04_cf.ast04_cont_amt                 AS cont_amt
+             , ast04_cf.ast04_tax                      AS tax
+             , ast04_cf.ast04_settle_amt               AS settle_amt
+          FROM ast04_cf
+               INNER JOIN ast03_cf_info ON ast03_cf_info_id = ast04_cf_info_id
+               LEFT OUTER JOIN ast05_tr_code ON ast05_company_id = #{companyId} AND ast05_tr_cd = ast03_tr_cd
+         WHERE ast04_cf_id = #{relateId}
+    </select>
+
     <!-- AS-IS ast03_cf_info.selectByClassTreeId L44 (IDMS-IC) -->
     <select id="selectCfInfoList" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes">
         SELECT a.ast03_cf_info_id         AS cfInfoId,

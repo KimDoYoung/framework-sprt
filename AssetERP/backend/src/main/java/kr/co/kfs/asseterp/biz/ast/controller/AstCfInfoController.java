@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfBatchCreateReq;
+import kr.co.kfs.asseterp.biz.ast.dto.AstCfDetailRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfRes;
@@ -42,6 +43,12 @@ public class AstCfInfoController {
     @GetMapping("/cfs")
     public ApiResponse<List<AstCfRes>> getCfList(@RequestParam Long cfInfoId) {
         return ApiResponse.ok(service.getCfList(cfInfoId));
+    }
+
+    /** AS-IS ast.Ast04_Cf.selectByRelateId — C/F 조회창(Ast04_Lookup_Cf) */
+    @GetMapping("/cfs/by-relate")
+    public ApiResponse<AstCfDetailRes> getCfByRelateId(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long relateId) {
+        return ApiResponse.ok(service.getCfByRelateId(principal, relateId));
     }
 
     /** ast04_cf CUD */

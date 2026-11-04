@@ -55,6 +55,54 @@
            AND t2.fnd01_company_id = #{companyId}
     </select>
 
+    <sql id="todoColumns">
+        t1.fnd20_plan_id                                                                          AS plan_id,
+        (SELECT fnd02_fund_nm
+           FROM fnd02_fund_info
+          WHERE fnd02_fund_code_id = t2.fnd01_fund_code_id
+          LIMIT 1)                                                                                AS fund_name,
+        f_class_tree_nm_allpath(t3.dcr01_class_tree_id)                                           AS class_tree_full_name,
+        f_cdnm('ApprovalTypeCode', t3.dcr01_approval_type_cd, t3.dcr01_company_id, f_sysdate())   AS approval_type_name,
+        t1.fnd20_start_date                                                                       AS start_date,
+        t1.fnd20_due_date                                                                         AS due_date,
+        CASE WHEN COALESCE(t1.fnd20_appr_id, 0) = 0
+             THEN NULL
+             ELSE f_cdnm('AprStatusCode', t4.apr01_status_cd, t2.fnd01_company_id, t1.fnd20_start_date)
+             END                                                                                  AS close_yn,
+        t1.fnd20_appr_id                                                                          AS appr_id,
+        t1.fnd20_note                                                                             AS note
+    </sql>
+
+    <!-- AS-IS fnd20_plan.selectById L27 (상품기획 창, 펀드명 포함). 회사 조건은 더했다 -->
+    <select id="selectTodoById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.PlanTodoRes">
+        SELECT <include refid="todoColumns"/>
+          FROM fnd20_plan t1
+               INNER JOIN fnd01_fund_code t2 ON t1.fnd20_fund_id = t2.fnd01_fund_code_id
+               INNER JOIN dcr01_class_tree t3 ON t1.fnd20_class_tree_id = t3.dcr01_class_tree_id
+               LEFT OUTER JOIN apr01_appr t4 ON t1.fnd20_appr_id = t4.apr01_appr_id
+         WHERE t1.fnd20_plan_id = #{planId}
+           AND t2.fnd01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS fnd20_plan.selectByPersonId L57. 회사 조건은 더했다 -->
+    <select id="selectTodoByPersonId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.PlanTodoRes">
+        SELECT <include refid="todoColumns"/>
+          FROM fnd20_plan t1
+               INNER JOIN fnd01_fund_code t2 ON t1.fnd20_fund_id = t2.fnd01_fund_code_id
+               INNER JOIN dcr01_class_tree t3 ON t1.fnd20_class_tree_id = t3.dcr01_class_tree_id
+               LEFT OUTER JOIN apr01_appr t4 ON t1.fnd20_appr_id = t4.apr01_appr_id
+         WHERE t1.fnd20_person_id = #{personId}
+           AND t2.fnd01_company_id = #{companyId}
+           AND #{startDate} BETWEEN t1.fnd20_start_date AND COALESCE(t1.fnd20_due_date, t1.fnd20_start_date)
+    </select>
+
+    <!-- AS-IS fnd20_plan.updateApprId L150 -->
+    <update id="updateApprId">
+        UPDATE fnd20_plan
+           SET fnd20_appr_id = #{apprId}
+         WHERE fnd20_plan_id = #{planId}
+    </update>
+
     <select id="countFund" resultType="long">
         SELECT COUNT(*)
           FROM fnd01_fund_code

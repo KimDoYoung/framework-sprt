@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.apr.mapper;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcrOriginRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -15,6 +16,9 @@ import java.util.List;
 public interface AprRelateEditMapper {
     /** AS-IS dbConfig.getSeq */
     long selectNextId();
+
+    /** AS-IS apr22_relate_icr.selectById — 연관내규의 내규ID·원인문서(상신문서) ID·제목. 로그인 회사 문서만 */
+    AprRelateIcrOriginRes selectRelateIcrOrigin(@Param("relateIcrId") Long relateIcrId, @Param("companyId") Long companyId);
 
     /** AS-IS apr20_relate_ics.selectByApprId */
     List<AprRelateIcsRow> selectRelateIcs(@Param("apprId") Long apprId);

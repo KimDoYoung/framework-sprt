@@ -1371,3 +1371,13 @@ export interface PreHoldFee {
   forFee: number | null;
   fee: number | null;
 }
+
+/** C/F 조회창이 보여 주는 현금흐름 한 건 (GET /api/v1/ast/cfs/by-relate, AS-IS Ast04_CfModel 일부) */
+export interface AstCfDetail {
+  cfId: number;
+  trName?: string | null;
+  corpName?: string | null;
+  contAmt?: number | null;
+  tax?: number | null;
+  settleAmt?: number | null;
+}

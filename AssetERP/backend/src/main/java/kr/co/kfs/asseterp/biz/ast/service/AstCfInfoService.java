@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfBatchCreateReq;
+import kr.co.kfs.asseterp.biz.ast.dto.AstCfDetailRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfRes;
@@ -35,6 +36,13 @@ public class AstCfInfoService {
 
     public List<AstCfRes> getCfList(Long cfInfoId) {
         return mapper.selectCfList(cfInfoId);
+    }
+
+    /** AS-IS Ast04_Cf.selectByRelateId — 로그인 회사 기준(거래유형명). 없으면 DATA_NOT_FOUND */
+    public AstCfDetailRes getCfByRelateId(UserPrincipal user, Long relateId) {
+        AstCfDetailRes row = mapper.selectByRelateId(user.getCompanyId(), relateId);
+        if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        return row;
     }
 
     @Transactional

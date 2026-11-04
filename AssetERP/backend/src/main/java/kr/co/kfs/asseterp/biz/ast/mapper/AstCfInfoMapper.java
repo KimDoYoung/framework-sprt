@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfBatchCreateReq;
+import kr.co.kfs.asseterp.biz.ast.dto.AstCfDetailRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstCfRes;
@@ -22,6 +23,9 @@ public interface AstCfInfoMapper {
 
     /** AS-IS ast04_cf.selectByCfInfoId */
     List<AstCfRes> selectCfList(@Param("cfInfoId") Long cfInfoId);
+
+    /** AS-IS ast04_cf.selectByRelateId — 오늘의 할일(C/F)에서 연 현금흐름 한 건. 없으면 null */
+    AstCfDetailRes selectByRelateId(@Param("companyId") Long companyId, @Param("relateId") Long relateId);
 
     Long selectNextSeq();
 

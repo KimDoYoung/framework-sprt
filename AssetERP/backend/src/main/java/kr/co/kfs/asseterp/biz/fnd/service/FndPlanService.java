@@ -1,9 +1,16 @@
 package kr.co.kfs.asseterp.biz.fnd.service;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprNewRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprRelateReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprSaveReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprNewStepRes;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
+import kr.co.kfs.asseterp.biz.apr.service.AprApprNewService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.fnd.dto.PlanDeleteReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.PlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.PlanSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.PlanTodoRes;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndPlanMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -11,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +34,42 @@ public class FndPlanService {
     private static final Set<String> UNDELETABLE = Set.of("상신", "결재중", "완료", "반려");
 
     private final FndPlanMapper mapper;
+    private final AprApprNewService aprNewService;
+    private final AprApprWriteMapper aprWriteMapper;
+
+    /** AS-IS Fnd20_Lookup_ToDoList.retrieve: [전체보기]면 selectByPersonId(내 일정 중 기준일이 기간에 드는 것), 아니면 selectById(그 일정 한 건) */
+    public List<PlanTodoRes> searchTodo(UserPrincipal user, Long planId, LocalDate startDate, boolean all) {
+        if (all) return mapper.selectTodoByPersonId(user.getUserId(), user.getCompanyId(), startDate);
+        return mapper.selectTodoById(planId, user.getCompanyId());
+    }
+
+    /**
+     * AS-IS Fnd20_Plan.insertAppr L93 — [결재요청]: 상신 문서가 없으면(결재 상태가 없으면) 임시저장(99) 문서를 만들고(제목 " ", 문서분류 기본 서식, 내부문서),
+     * 연관펀드 한 줄 · 기본 결재선을 넣고 일정에 문서 ID를 기록한다. 이미 있으면 그 문서 ID를 돌려준다. 호출한 화면이 그 문서를 연다
+     */
+    @Transactional
+    public Long requestAppr(UserPrincipal user, Long planId) {
+        Long companyId = user.getCompanyId();
+        PlanRes plan = mapper.selectById(planId, companyId);
+        if (plan == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        Long apprId = plan.closeYn() == null ? null : plan.apprId();
+        if (apprId != null) return apprId;
+
+        AprApprNewRes open = aprNewService.open(user, plan.classTreeId());  // 문서 번호·기본 서식·기본 결재선(createApprovalTypeCd)
+        apprId = open.apprId();
+        LocalDateTime regDate = LocalDate.now().atStartOfDay();
+        AprApprSaveReq req = new AprApprSaveReq("save", plan.classTreeId(), null, " ", open.content(), null, null, regDate, null, null, null,
+                "20", null, null, null, null, null, false, List.of());
+        String dcrIdWord = aprWriteMapper.selectDcrIdWord(companyId, plan.personId(), regDate);
+        aprWriteMapper.insertAppr(apprId, companyId, plan.personId(), "99", dcrIdWord, null, req);
+        aprWriteMapper.insertRelateFund(aprWriteMapper.selectNextId(), apprId, new AprApprRelateReq.Fund(null, plan.fundId(), null, null));
+        for (AprNewStepRes st : open.steps()) {
+            aprWriteMapper.insertStep(st.apprStepId(), apprId, st.stepTypeCode(), st.seq(), st.stepStatusCode(), st.stepEmpId(), st.apprEmpId(),
+                    null, null, String.valueOf(st.lockYn()), null, null);
+        }
+        mapper.updateApprId(planId, apprId);
+        return apprId;
+    }
 
     /** AS-IS fnd.Fnd20_Plan.selectByFundId L50 */
     public List<PlanRes> search(UserPrincipal user, Long fundId) {

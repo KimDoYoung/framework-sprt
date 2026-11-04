@@ -18,6 +18,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprAfterApprSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileStampReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundSaveReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcrOriginRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateSelectRes;
@@ -44,6 +45,12 @@ public class AprRelateEditController {
     @PutMapping("/apprs/{apprId}/relate-ics")
     public ApiResponse<Boolean> saveRelateIcs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprRelateIcsSaveReq req) {
         return ApiResponse.ok(service.save(principal, apprId, req));
+    }
+
+    /** AS-IS apr.Apr22_RelateIcr.selectById — 내규정보 창(Sch04_Lookup_IcrList)의 연관내규 한 건 */
+    @GetMapping("/relate-icr/origin")
+    public ApiResponse<AprRelateIcrOriginRes> getRelateIcrOrigin(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long relateIcrId) {
+        return ApiResponse.ok(service.getRelateIcrOrigin(principal, relateIcrId));
     }
 
     /** AS-IS apr.Apr22_RelateIcr.selectByApprId (EE70) */
