@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.batch.mapper;
 
 import kr.co.kfs.asseterp.biz.batch.dto.BatchExtrFund;
+import kr.co.kfs.asseterp.biz.batch.dto.BatchHoldStdDate;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchExtrOfficeWork;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchOfficeWork;
 import org.apache.ibatis.annotations.Mapper;
@@ -34,4 +35,15 @@ public interface BatchExtrMapper {
     /** AS-IS ifi30_fund.selectByCompanyId */
     List<BatchExtrFund> selectFunds(@Param("companyId") Long companyId, @Param("ifCode") String ifCode,
                                     @Param("startDate") String startDate, @Param("closeDate") String closeDate);
+
+    /** AS-IS ifi34_stk.selectDistinct — 수신한 보유주식의 (회사, 기준일) 조합 */
+    List<BatchHoldStdDate> selectHoldStdDates(@Param("companyId") Long companyId, @Param("ifCode") String ifCode,
+                                              @Param("sendDate") String sendDate);
+
+    /** AS-IS flt09_fund_item.deleteByStdDate */
+    int deleteFundItems(@Param("companyId") Long companyId, @Param("stdDate") java.time.LocalDate stdDate);
+
+    /** AS-IS flt09_fund_item.insertByIfi34 */
+    int insertFundItems(@Param("companyId") Long companyId, @Param("ifCode") String ifCode,
+                        @Param("sendDate") String sendDate, @Param("itemType") String itemType);
 }

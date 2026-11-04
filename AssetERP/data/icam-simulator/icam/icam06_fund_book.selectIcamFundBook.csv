@@ -1,0 +1,4 @@
+@icamCompanyCode,icam06_icam_company_cd,icam06_std_date,icam06_fund_cd,icam06_fund_nm,icam06_multi_class_cd,icam06_cur,icam06_set_qty,icam06_set_amt,icam06_principal,icam06_nav,icam06_total_asset,icam06_std_price,icam06_tax_price,icam06_for_set_amt,icam06_for_principal,icam06_for_nav,icam06_for_total_asset,icam06_for_std_price,icam06_for_tax_price
+2018,2018,2026-10-30,SIM001,시뮬레이션 펀드 1호,,KRW,1000000000,1000000000,1000000000,1100000000,1105000000,1100.25,1099.5,0,0,0,0,0,0
+2018,2018,2026-11-02,SIM001,시뮬레이션 펀드 1호,,KRW,1000000000,1000000000,1000000000,1102000000,1107000000,1102.1,1101.3,0,0,0,0,0,0
+2018,2018,2026-11-02,SIM002,"시뮬레이션 펀드 2호, 외화",MC001,KRW,500000000,500000000,500000000,520000000,521000000,1040,1039,300000,300000,310000,311000,1033.3,1032.9

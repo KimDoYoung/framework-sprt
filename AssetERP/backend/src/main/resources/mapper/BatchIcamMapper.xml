@@ -7,6 +7,7 @@
   AS-IS sys01_company.selectIcamCompanyCode (server/sys/mapper/sys01_company.xml:289)
   AS-IS icam02_data.insert (server/icam/mapper/icam02_data.xml:164) — 본문은 원본 그대로(원칙 4)
   AS-IS sys12_calendar.selectByDate (sys12_calendar.xml:45), icam03_fund.insert·delete (icam03_fund.xml:277·323)
+  AS-IS sys01_company.selectIcamCompanyExcept (sys01_company.xml:308), icam06_fund_book.insert·deleteByStdDate (icam06_fund_book.xml:337·364)
   AS-IS fnd03_consignment.insert2 (:215), fnd09_trust_bank.insert2 (:224), fnd06_office_work.insert2 (:249)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchIcamMapper">
@@ -176,5 +177,50 @@
                           FROM fnd06_office_work
                          WHERE fnd06_company_id     = #{companyId}
                            AND fnd06_office_work_cd = icam03_office_work_cd )
+    </insert>
+
+    <select id="selectIcamCompaniesA1" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIcamCompany">
+    SELECT sys01_company_id      AS companyId
+         , sys01_icam_company_cd AS icamCompanyCode
+      FROM sys01_company
+     WHERE CAST(sys01_company_id AS VARCHAR) LIKE #{companyId}
+       AND sys01_icam_company_cd IS NOT NULL
+       AND sys01_use_yn = 'true'
+       AND sys01_erp_product_cd = 'A1'
+     ORDER BY sys01_company_id
+    </select>
+
+    <delete id="deleteFundBook">
+    DELETE
+      FROM icam06_fund_book
+     WHERE icam06_icam_company_cd = #{icamCompanyCode}
+       AND icam06_std_date BETWEEN #{startDate} AND #{closeDate}
+    </delete>
+
+    <insert id="insertFundBook">
+    INSERT
+      INTO icam06_fund_book
+    SELECT f_create_batchseq()
+         , #{p.icamCompanyCode}
+         , #{p.stdDate}
+         , #{p.fundCode}
+         , #{p.fundName}
+         , #{p.multiClassCode}
+         , #{p.cur}
+         , #{p.setQty}
+         , #{p.setAmt}
+         , #{p.principal}
+         , #{p.nav}
+         , #{p.totalAsset}
+         , #{p.stdPrice}
+         , f_sysdate()
+         , #{p.worker}
+         , #{p.taxPrice}
+         , #{p.forSetAmt}
+         , #{p.forPrincipal}
+         , #{p.forNav}
+         , #{p.forTotalAsset}
+         , #{p.forStdPrice}
+         , #{p.forTaxPrice}
     </insert>
 </mapper>

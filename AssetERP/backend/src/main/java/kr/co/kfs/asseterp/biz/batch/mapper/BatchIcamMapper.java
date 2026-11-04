@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.batch.mapper;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchIcamCompany;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchIcamData;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchIcamFund;
+import kr.co.kfs.asseterp.biz.batch.dto.BatchIcamFundBook;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -36,4 +37,13 @@ public interface BatchIcamMapper {
 
     /** AS-IS fnd06_office_work.insert2 */
     int insertOfficeWorks(@Param("companyId") Long companyId, @Param("icamCompanyCode") String icamCompanyCode);
+
+    /** AS-IS sys01_company.selectIcamCompanyExcept — ICAM 회사코드가 있는 사용 중인 A1(자산운용) 회사만 */
+    List<BatchIcamCompany> selectIcamCompaniesA1(@Param("companyId") String companyId);
+
+    /** AS-IS icam06_fund_book.deleteByStdDate — 회사의 기간(시작일~종료일) 원장 */
+    int deleteFundBook(@Param("icamCompanyCode") String icamCompanyCode, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS icam06_fund_book.insert */
+    int insertFundBook(@Param("p") BatchIcamFundBook book);
 }
