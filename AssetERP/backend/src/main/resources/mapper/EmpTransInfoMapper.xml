@@ -390,4 +390,35 @@
         INSERT INTO emp36_add_deduct (emp36_add_deduct_id, emp36_deduct_id, emp36_add_deduct_type, emp36_add_deduct_cnt)
         VALUES (f_create_seq(), #{deductId}, #{type}, 0)
     </insert>
+
+    <!-- AS-IS sys09_code.selectByCode2 L208 (SEU03): 시스템 코드 종류는 회사 0, 아니면 로그인 회사 / 적용일 이하 최신 적용분 / 폐지(close)는 적용일 이후까지만 -->
+    <select id="selectCodeByCode2" resultType="string">
+        SELECT c.sys09_code
+          FROM sys09_code c, sys08_code_kind k
+         WHERE sys08_code_kind_id = sys09_code_kind_id
+           AND ( ( COALESCE(sys08_sys_yn,'false') = 'true'  AND sys09_company_id = 0 ) OR
+                 ( COALESCE(sys08_sys_yn,'false') != 'true' AND sys09_company_id = #{companyId} ) )
+           AND sys08_kind_cd = #{kindCode}
+           AND ( ( COALESCE(sys09_close_yn,'false') = 'true' AND COALESCE(sys09_close_date,'1900-12-31') <![CDATA[>=]]> f_trunc(#{applyDate, jdbcType=DATE}) ) OR
+                 ( COALESCE(sys09_close_yn,'false') = 'false' ) )
+           AND sys09_apply_date = ( SELECT max(x.sys09_apply_date)
+                                      FROM sys09_code x
+                                     WHERE x.sys09_code_kind_id = c.sys09_code_kind_id
+                                       AND x.sys09_company_id = c.sys09_company_id
+                                       AND x.sys09_code = c.sys09_code
+                                       AND x.sys09_apply_date <![CDATA[ <= ]]> f_trunc(#{applyDate, jdbcType=DATE}) )
+           AND sys09_code = #{code}
+         ORDER BY sys09_seq
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS org00_org_info.selectByOrgCode L126 (SEU03) -->
+    <select id="selectOrgCodeIdByOrgCode" resultType="long">
+        SELECT o.org00_org_code_id
+          FROM org00_org_info o
+         WHERE org00_company_id = #{companyId}
+           AND org00_org_cd = #{orgCode}
+           AND org00_mod_date = ( SELECT min(org00_mod_date) FROM org00_org_info x WHERE x.org00_org_code_id = o.org00_org_code_id )
+         LIMIT 1
+    </select>
 </mapper>

@@ -29,4 +29,7 @@ public interface FbxFileMapper {
 
     /** AS-IS delete L140 */
     int deleteFile(@Param("fileId") Long fileId);
+
+    /** AS-IS uploadFbx03 L297: 첨부(sys10_file) 비고에 "파일보관함: boxId:…, classid:…, orgCodeId:…, empId:…"를 남긴다 */
+    int updateAttachNote(@Param("fileId") Long fileId, @Param("note") String note);
 }

@@ -115,4 +115,9 @@
     <delete id="deleteFile">
         DELETE FROM fbx03_file WHERE fbx03_file_id = #{fileId}
     </delete>
+
+    <!-- AS-IS uploadFbx03 L297 (sys10_file.note) — 첨부는 fbx03_file_id를 부모 ID로 한다 -->
+    <update id="updateAttachNote">
+        UPDATE sys10_file SET sys10_note = #{note} WHERE sys10_file_id = #{fileId}
+    </update>
 </mapper>

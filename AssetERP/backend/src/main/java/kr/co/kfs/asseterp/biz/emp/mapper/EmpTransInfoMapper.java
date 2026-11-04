@@ -58,4 +58,11 @@ public interface EmpTransInfoMapper {
 
     /** AS-IS emp36_add_deduct.insert */
     int insertAddDeduct(@Param("deductId") Long deductId, @Param("type") String type);
+
+    /** AS-IS sys09_code.selectByCode2 (SEU03 엑셀업로드): 적용일 기준 유효한 코드 하나 — 없으면 null. 코드 값만 쓴다 */
+    String selectCodeByCode2(@Param("companyId") Long companyId, @Param("kindCode") String kindCode,
+                             @Param("applyDate") LocalDate applyDate, @Param("code") String code);
+
+    /** AS-IS org00_org_info.selectByOrgCode (SEU03): 조직코드 → 조직ID(첫 이력 기준), 없으면 null */
+    Long selectOrgCodeIdByOrgCode(@Param("companyId") Long companyId, @Param("orgCode") String orgCode);
 }

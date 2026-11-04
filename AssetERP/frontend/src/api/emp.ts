@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
 import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
@@ -42,6 +43,31 @@ export const empApi = {
   searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string, separateAddTitle?: boolean, leaveManager?: boolean): Promise<TransInfo[]> => {
     const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode, separateAddTitle, leaveManager } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ExcelDownload?actionCode=empList (Emp00_Tab_TransInfo [다운로드], .xls → .xlsx) → "사원정보.xlsx" 브라우저 저장 */
+  downloadTransInfosExcel: async (transDate: string | undefined, searchText: string, transCode: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/emp/trans-infos/excel', { params: { transDate, searchText, transCode }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '사원정보.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS ExcelUpload?uploadType=empUpload (Emp00_Tab_TransInfo [엑셀업로드], 회사관리자만) → 등록한 사원 수 */
+  uploadTransInfosExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/trans-infos/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
   },
 
   /** AS-IS emp.Emp00_TransInfo.selectRetireEmpList — 퇴직(900) 발령 사원 (S22 퇴직정산 성명 입력) */

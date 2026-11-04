@@ -62,6 +62,7 @@ public class FbxFileService {
             Long fileId = fileMapper.selectNextId();
             fileMapper.insertFile(fileId, boxId, classTreeId, orgId, user.getUserId());
             FileRes saved = sysFileService.upload(user, fileId, null, "false", file);
+            fileMapper.updateAttachNote(saved.fileId(), String.format("파일보관함: boxId:%s, classid:%s, orgCodeId:%s, empId:%s", boxId, classTreeId, orgId, user.getUserId()));
             historyMapper.insertHistory(boxId, "01", user.getUserId(), saved.fileNm(), orgId);
             count++;
         }

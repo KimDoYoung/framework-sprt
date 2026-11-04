@@ -13,6 +13,8 @@ import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { FileUpdownForm, FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
+import { useLoginUser } from '@/hooks/useLoginUser';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Emp03_Edit_Person } from './Emp03_Edit_Person';
@@ -97,6 +99,8 @@ const TRANS_NAMES: { label: string; code: string }[] = [
 
 export const Emp00_Tab_TransInfo: React.FC = () => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
+  const excelForm = useRef<FileUpdownFormHandle>(null);
+  const isManager = useLoginUser().userId < 0;  // LoginUser.getIsManager() — 회사관리자
   // settings() L204: 조회일자 = 오늘, L220: 재직구분 "재직"
   const sp = useSearchParams(() => ({ transDate: dayjs() as Dayjs | null, searchText: '', transCode: '100' }));
   const { transDate, searchText, transCode } = sp.values;
@@ -136,6 +140,27 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
       setLoading(false);
     }
   }, [transDate, searchText, transCode]);
+
+  // excelDownload() L297-323: 재직구분 콤보 → transCode(전체 000·재직 100·겸직 800·퇴직 900), 조회일자·검색어와 함께 서버로 → 사원정보.xlsx
+  const excelDownload = async () => {
+    try {
+      await empApi.downloadTransInfosExcel(transDate?.format('YYYY-MM-DD'), searchText, transCode);
+    } catch (err) {
+      message.error(errorMessage(err, '다운로드 실패'));
+    }
+  };
+
+  // [E7] excelUploadButton[엑셀업로드].Select (L249) → excelUpload() L325-342: 파일을 고르면 ExcelUpload?uploadType=empUpload
+  // [E12] fileUploadField.Change (L334) → uploadExcelForm.submit(), [E1] uploadExcelForm.SubmitComplete (L200) → retrieve()
+  const onExcelFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      await empApi.uploadTransInfosExcel(file);
+    } catch (err) {
+      message.error(errorMessage(err, '업로드 실패'));
+    }
+    void retrieve();
+  };
 
   // insert() L421-423: 팝업 Emp03_Edit_Person 열기
   const insert = () => setEditOpen(true);
@@ -177,9 +202,12 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
             {/* [E5] insertButton[등록].Select (L234) → insert() */}
             <Button type="register" onClick={insert}>등록</Button>
             {/* [E6 생략] tempDownloadButton[템플릿] — 원본도 툴바에 넣지 않음(L91 주석) */}
-            {/* [E7 생략] excelUploadButton[엑셀업로드](관리자만)·[E1]·[E12] 업로드 — 2단계 */}
-            {/* [E9 생략] excelDownloadButton[다운로드]·[E8] — 2단계 */}
-            <Button type="download" disabled title="2단계">다운로드</Button>
+            {isManager && <>
+              <Button type="upload" onClick={() => excelForm.current?.click()}>엑셀업로드</Button>
+              <FileUpdownForm ref={excelForm} accept=".xlsx,.xls" onChange={onExcelFile} />
+            </>}
+            {/* [E9] excelDownloadButton[다운로드].Select (L262) → excelDownload() L297-323: ExcelDownload?actionCode=empList (조회 조건 그대로) */}
+            <Button type="download" onClick={excelDownload}>다운로드</Button>
           </>}>
             <SearchBar.Field label="조회일자">
               <DatePicker style={{ width: 140 }} value={transDate} onChange={d => sp.set('transDate', d)} format="YYYY-MM-DD" />

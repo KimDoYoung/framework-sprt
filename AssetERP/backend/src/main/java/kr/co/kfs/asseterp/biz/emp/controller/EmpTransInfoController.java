@@ -16,7 +16,15 @@ import kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
+import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoUploadService;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import java.nio.charset.StandardCharsets;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +36,7 @@ import java.util.List;
 public class EmpTransInfoController {
 
     private final EmpTransInfoService empTransInfoService;
+    private final EmpTransInfoUploadService empTransInfoUploadService;
 
     /** AS-IS emp.Emp00_TransInfo.selectByText (separateAddTitle = isSeparateAddTitle, 안 주면 기존 호출처럼 true) */
     @GetMapping("/trans-infos")
@@ -38,6 +47,26 @@ public class EmpTransInfoController {
                                                             @RequestParam(defaultValue = "true") boolean separateAddTitle,
                                                             @RequestParam(defaultValue = "false") boolean leaveManager) {
         return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode, separateAddTitle, leaveManager));
+    }
+
+    /** AS-IS ExcelDownload?actionCode=empList (Emp00_Tab_TransInfo [다운로드], .xls → .xlsx) */
+    @GetMapping("/trans-infos/excel")
+    public ResponseEntity<byte[]> excelTransInfos(@AuthenticationPrincipal UserPrincipal principal,
+                                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+                                                  @RequestParam(required = false) String searchText,
+                                                  @RequestParam(required = false) String transCode) {
+        byte[] body = empTransInfoService.downloadExcel(principal, transDate, searchText, transCode);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("사원정보.xlsx", StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    /** AS-IS ExcelUpload?uploadType=empUpload (Emp00_Tab_TransInfo [엑셀업로드], 회사관리자만) → 등록한 사원 수 */
+    @PostMapping("/trans-infos/excel")
+    public ApiResponse<Integer> uploadTransInfosExcel(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam("excelUpload") MultipartFile file) {
+        return ApiResponse.ok("사원정보를 업로드하였습니다.", empTransInfoUploadService.upload(principal, file));
     }
 
     /** AS-IS emp.Emp00_TransInfo.selectRetireEmpList — 퇴직 발령 사원 (S22 퇴직정산) */

@@ -49,6 +49,11 @@ public class EmpTransInfoService {
                 new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, separateAddTitle, null, null, leaveManager));
     }
 
+    /** AS-IS ExcelDownload empList: selectByText(isSeparateAddTitle=true) 결과를 사원정보.xlsx로. 조건은 화면 [조회]와 같다 */
+    public byte[] downloadExcel(UserPrincipal user, LocalDate transDate, String searchText, String transCode) {
+        return EmpTransInfoExcelWriter.write(searchTransInfos(user, transDate, searchText, transCode, true, false));
+    }
+
     /** AS-IS Emp00_TransInfo.selectRetireEmpList L587 (S22 퇴직정산 성명): 기준일 최신 발령이 퇴직(900)인 사원 */
     public List<TransInfoRes> searchRetireTransInfos(UserPrincipal user, LocalDate transDate, String searchText) {
         String date = (transDate == null ? LocalDate.now() : transDate).toString();
