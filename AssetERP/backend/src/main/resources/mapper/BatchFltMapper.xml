@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS flt11_book.deleteByCompanyId (server/flt/mapper/flt11_book.xml:501), flt11_book.selectInsert (같은 파일:427) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchFltMapper">
+
+    <delete id="deleteFlt11FromToday">
+        DELETE
+          FROM flt11_book
+         WHERE flt11_company_id = #{companyId}
+           AND flt11_book_date  <![CDATA[>=]]> f_today()
+    </delete>
+
+    <insert id="insertFlt11Carry">
+        INSERT
+          INTO flt11_book
+        SELECT f_create_seq()
+             , flt11_company_id
+             , flt11_person_id
+             , flt11_account_id
+             , flt11_item_nm
+             , flt11_item_type
+             , f_today()
+             , flt11_book_amt
+             , flt11_book_qty
+             , flt11_note
+             , flt11_init_buy_date
+             , flt11_pur_price
+             , flt11_pur_amt
+             , flt11_item_cd
+          FROM flt11_book
+         WHERE flt11_company_id = #{companyId}
+           AND flt11_book_qty  <![CDATA[>]]> 0
+           AND flt11_book_date  = f_get_biz_date(#{companyId}, f_today(), '-1')
+    </insert>
+
+</mapper>

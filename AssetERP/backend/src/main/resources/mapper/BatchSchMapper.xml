@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sch04_list.selectInsert (server/sch/mapper/sch04_list.xml:1297) — 본문은 원본 그대로(원칙 4)
+  AS-IS sch03_deadline.createSch09 (server/sch/mapper/sch03_deadline.xml:125)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchSchMapper">
+
+    <insert id="insertSch04List">
+    INSERT
+      INTO sch04_list
+    SELECT f_create_seq()                                                   AS sch04_list_id
+         , company_id                                                       AS sch04_company_id
+         , info_id                                                          AS sch04_info_id    
+         , manager_id                                                       AS sch04_manager_id 
+         , person_id                                                        AS sch04_person_id  
+         , close_date                                                       AS sch04_close_date 
+         , manage_date                                                      AS sch04_manage_date
+         , schedule_cd                                                      AS sch04_schedule_cd
+         , cycle_cd                                                         AS sch04_cycle_cd
+         , status_cd                                                        AS sch04_status_cd  
+         , title                                                            AS sch04_title      
+         , note                                                             AS sch04_note
+         , deadline_id                                                      AS sch04_deadline_id 
+         , 'false'                                                          AS sch04_confirm_yn
+         , null                                                             AS sch04_confirm_date
+         , null                                                             AS sch04_confirm_note
+         , null                                                             AS sch04_appr_id
+         , org_id                                                           AS sch04_mng_org_id
+         , null                                                             AS sch04_confirmer_id
+      FROM ( SELECT close_date                             close_date 
+                  , close_date                             manage_date
+                  , schedule_cd                            schedule_cd
+                  , info_id                                info_id
+                  , cycle_cd                               cycle_cd    
+                  , title                                  title
+                  , CASE WHEN org_id IS NOT NULL THEN org_id
+                         ELSE emp00_org_code_id END        org_id
+                  , manager_id                             manager_id
+                  , manager_id                             person_id 
+                  , status_cd                              status_cd  
+                  , company_id                             company_id
+                  , deadline_id                            deadline_id
+                  , ''                                     note
+                  , appr_status_nm                         appr_status_nm
+               FROM ( /*--------------------------*/
+                      /*     스케줄정보                        */
+                      /*--------------------------*/
+                      SELECT schedule_cd
+                           , info_id
+                           , close_date
+                           , cycle_cd
+                           , title
+                           , null::numeric org_id
+                           , manager_id
+                           , status_cd
+                           , company_id
+                           , deadline_id
+                           , appr_status_nm
+                        FROM (
+		                      SELECT '1'                                                                    schedule_cd
+		                           , sch01_info_id                                                          info_id
+		                           , f_get_std_date(sch03_deadline_id, #{stdDate}, sch01_company_id)        close_date
+		                           , sch03_cycle_cd                                                         cycle_cd
+		                           , sch01_title                                                            title
+		                           , sch01_manager_id                                                       manager_id
+		                           , '0'                                                                    status_cd
+		                           , sch01_company_id                                                       company_id
+		                           , sch03_deadline_id                                                      deadline_id
+		                           , ''                                                                     appr_status_nm
+		                        FROM sch01_info
+		                             INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+		                       WHERE sch01_company_id              = #{companyId}
+                                 AND COALESCE(sch01_use_yn,'true') = 'true'
+		                         AND sch03_cycle_calc_type NOT IN ('02','10')                 /* (02:수시기간설정/10:즉시)제외 */
+                                 AND sch03_cycle_cd        NOT IN ('02','03','04','05','06')  /* (주/월/분기/반기/연)제외 */
+		                       UNION ALL
+		                      SELECT '1'                                                                    schedule_cd
+                                   , sch01_info_id                                                          info_id
+                                   , sch09_day                                                              close_date
+                                   , sch03_cycle_cd                                                         cycle_cd
+                                   , sch01_title                                                            title
+                                   , sch01_manager_id                                                       manager_id
+                                   , '0'                                                                    status_cd
+                                   , sch01_company_id                                                       company_id
+                                   , sch03_deadline_id                                                      deadline_id
+                                   , ''                                                                     appr_status_nm
+                                FROM sch01_info
+                                     INNER JOIN sch03_deadline     ON sch03_info_id     = sch01_info_id
+                                     INNER JOIN sch09_deadline_day ON sch09_deadline_id = sch03_deadline_id
+                               WHERE sch01_company_id              = #{companyId}
+                                 AND COALESCE(sch01_use_yn,'true') = 'true'
+                                 AND sch03_cycle_cd IN ('02','03','04','05','06') /* (주/월/분기/반기/연) */
+                                 AND sch09_day = #{stdDate}::date
+                             ) t1 
+                      /*------------------------------------*/
+                      /* 상신정보(내부통제) - 수시  => 문서작성(법규) */
+                      /*------------------------------------*/
+                      UNION ALL
+                      SELECT '3'                                                                                                   schedule_cd
+                           , apr20_relate_ics_id                                                                                   info_id
+                           , COALESCE(apr20_close_date, f_get_appr_close_date(apr01_appr_id, apr20_deadline_id, apr01_company_id)) close_date
+                           , sch03_cycle_cd                                                                                        cycle_cd
+                           , ics01_class_tree_nm                                                                                   title
+                           , null                                                                                                  org_id
+<!--                            , f_get_ics_manager(apr01_company_id, ics01_class_tree_id)                                              manager_id -->
+                           , apr01_reg_emp_id                                                                                      manager_id
+                           , CASE WHEN COALESCE(ics03_auto_yn,'false') = 'true' THEN '2' ELSE '0' END                              status_cd
+                           , apr01_company_id                                                                                      company_id
+                           , sch03_deadline_id                                                                                     deadline_id
+                           , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, #{stdDate})                                appr_status_nm
+                        FROM apr01_appr
+                             INNER JOIN apr20_relate_ics ON apr20_appr_id       = apr01_appr_id 
+                             INNER JOIN ics01_class_tree ON ics01_class_tree_id = apr20_class_tree_id
+                             INNER JOIN sch03_deadline ON ( sch03_deadline_id = apr20_deadline_id AND
+                                                            sch03_company_id  = ics01_company_id  )
+                             LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id  AND
+                                                                     ics03_company_id        = #{companyId}         )
+                       WHERE apr01_company_id = #{companyId}
+                         AND COALESCE(ics03_except_yn,'false') != 'true'
+                         AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+                         AND apr20_org_appr_id IS NULL  /* 원상신문서ID가 존재하는 경우는 이미 상신문서를 통해 발생된 수시내부통제건이므로 오늘의 할일 생성에서 제외한다.*/
+<!--                          AND sch03_cycle_cd      = '99'        /* (99:수시) */ --> /*(2024.5.28 CYY-반복건도 문서작성시 법규연결하면 오늘의 할일에서 관리할 수 있도록 함. 이용희 전무님 요청)*/
+                         AND apr01_status_cd     NOT IN ('99','40') /* (99:임시저장/40:반려) */
+                      /*-------------------------------*/
+                      /* 상신정보(내부통제) - 반복 => 법규담당  */
+                      /*-------------------------------*/
+                       UNION ALL
+                      SELECT schedule_cd
+                           , info_id
+                           , close_date
+                           , cycle_cd
+                           , title
+                           , org_id
+                           , null manager_id
+                           , status_cd
+                           , company_id
+                           , deadline_id
+                           , appr_status_nm
+                        FROM (
+		                      SELECT '2'                                                                          schedule_cd
+		                           , ics01_class_tree_id                                                          info_id
+		                           , f_get_std_date(sch03_deadline_id, #{stdDate}, #{companyId})                  close_date
+		                           , sch03_cycle_cd                                                               cycle_cd
+		                           , ics01_class_tree_nm                                                          title
+		                           , ics04_org_id                                                                 org_id
+<!-- 		                           , f_get_ics_manager(#{companyId}, ics01_class_tree_id)                         manager_id -->
+		                           , CASE WHEN COALESCE(ics03_auto_yn,'false') = 'true' THEN '2' ELSE '0' END     status_cd
+		                           , #{companyId}                                                                 company_id
+		                           , sch03_deadline_id                                                            deadline_id
+		                           , ''                                                                           appr_status_nm
+		                        FROM ics01_class_tree
+                                     LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id  AND
+                                                                             ics03_company_id = #{companyId}                )
+                                     INNER JOIN sch03_deadline ON ( sch03_info_id    = ics01_class_tree_id    AND
+                                                                    sch03_company_id = ics01_company_id       )
+                                     INNER JOIN ics05_relate_manager ON ( ics05_ics_class_tree_id = ics01_class_tree_id     AND
+                                                                          ics05_company_id        = #{companyId}            )
+                                     INNER JOIN ics04_share   ON ics04_manager_id = ics05_manager_id
+                                     INNER JOIN ics02_manager ON ics02_manager_id = ics05_manager_id
+		                       WHERE ics01_type_cd       = 'IT'
+		                         AND COALESCE(ics03_except_yn,'false') != 'true'
+		                         AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+		                         AND sch03_cycle_cd      != '99'  /* (99:수시 제외) */
+		                       UNION
+                              SELECT '2'                                                                      schedule_cd
+                                   , ics01_class_tree_id                                                      info_id
+                                   , CASE WHEN sch03_cycle_cd = '03' /*월별  */ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-1month')::date, #{companyId})
+                                          WHEN sch03_cycle_cd = '04' /*분기별*/ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-3month')::date, #{companyId})
+                                          WHEN sch03_cycle_cd = '05' /*반기별*/ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-6month')::date, #{companyId})
+                                          WHEN sch03_cycle_cd = '06' /*연별  */ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-12month')::date, #{companyId})
+                                          END close_date
+                                   , sch03_cycle_cd                                                           cycle_cd
+                                   , ics01_class_tree_nm                                                      title
+                                   , ics04_org_id                                                                 org_id
+<!--                                    , f_get_ics_manager(#{companyId}, ics01_class_tree_id)                     manager_id -->
+                                   , CASE WHEN COALESCE(ics03_auto_yn,'false') = 'true' THEN '2' ELSE '0' END status_cd
+                                   , #{companyId}                                                             company_id
+                                   , sch03_deadline_id                                                        deadline_id
+                                   , ''                                                                       appr_status_nm
+                                FROM ics01_class_tree
+                                     LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id AND
+                                                                             ics03_company_id = #{companyId}               )
+                                     INNER JOIN sch03_deadline ON ( sch03_info_id    = ics01_class_tree_id    AND
+                                                                    sch03_company_id = ics01_company_id       )
+                                     INNER JOIN ics05_relate_manager ON ( ics05_ics_class_tree_id = ics01_class_tree_id     AND
+                                                                          ics05_company_id        = #{companyId}            )
+                                     INNER JOIN ics04_share   ON ics04_manager_id = ics05_manager_id
+                                     INNER JOIN ics02_manager ON ics02_manager_id = ics05_manager_id
+                               WHERE ics01_type_cd       = 'IT'
+                                 AND COALESCE(ics03_except_yn,'false') != 'true'
+                                 AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+                                 AND sch03_cycle_cd      IN ('03','04','05','06') /* (월/분기/반기/연) */
+                             ) t2
+                      /*----------------------------------*/
+                      /* 상신정보(내규) - 수시  => 문서작성(내규)  */
+                      /*----------------------------------*/
+                      UNION ALL
+                      SELECT '7'                                                                                                   schedule_cd
+                           , apr22_relate_icr_id                                                                                   info_id
+                           , COALESCE(apr22_close_date, f_get_appr_close_date(apr01_appr_id, apr22_deadline_id, apr01_company_id)) close_date
+                           , sch03_cycle_cd                                                                                        cycle_cd
+                           , icr01_class_tree_nm                                                                                   title
+                           , null                                                                                                  org_id
+                           , apr01_reg_emp_id                                                                                      manager_id
+                           , '0'                                                                                                   status_cd
+                           , apr01_company_id                                                                                      company_id
+                           , sch03_deadline_id                                                                                     deadline_id
+                           , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, #{stdDate})                                appr_status_nm
+                        FROM apr22_relate_icr
+                             INNER JOIN apr01_appr       ON apr01_appr_id       = apr22_appr_id
+                             INNER JOIN icr01_class_tree ON icr01_class_tree_id = apr22_class_tree_id
+                             INNER JOIN sch03_deadline ON ( sch03_deadline_id = apr22_deadline_id AND
+                                                            sch03_company_id  = icr01_company_id  )
+                       WHERE apr01_company_id = #{companyId}
+                         AND apr22_org_appr_id IS NULL  /* 원상신문서ID가 존재하는 경우는 이미 상신문서를 통해 발생된 건이므로 오늘의 할일 생성에서 제외한다.*/
+                         AND apr01_status_cd NOT IN ('99','40') /* (99:임시저장/40:반려) */
+                      /*-------------------------------*/
+                      /* 상신정보(내규) - 반복 => 내규담당       */
+                      /*-------------------------------*/
+                       UNION ALL
+                      SELECT schedule_cd
+                           , info_id
+                           , close_date
+                           , cycle_cd
+                           , title
+                           , org_id
+                           , null   manager_id
+                           , '0'    status_cd
+                           , company_id
+                           , deadline_id
+                           , ''     appr_status_nm
+                        FROM (
+                              SELECT '6'                                                                          schedule_cd
+                                   , icr01_class_tree_id                                                          info_id
+                                   , f_get_std_date(sch03_deadline_id, #{stdDate}, icr01_company_id)              close_date
+                                   , sch03_cycle_cd                                                               cycle_cd
+                                   , icr01_class_tree_nm                                                          title
+                                   , ics04_org_id                                                                 org_id
+                                   , icr01_company_id                                                             company_id
+                                   , sch03_deadline_id                                                            deadline_id
+                                FROM icr01_class_tree
+                                     INNER JOIN sch03_deadline ON ( sch03_info_id    = icr01_class_tree_id    AND
+                                                                    sch03_company_id = icr01_company_id       )
+                                     INNER JOIN icr05_relate_manager ON ( icr05_icr_class_tree_id = icr01_class_tree_id     AND
+                                                                          icr05_company_id        = icr01_company_id        )
+                                     INNER JOIN ics04_share   ON ics04_manager_id = icr05_manager_id
+                                     INNER JOIN ics02_manager ON ics02_manager_id = icr05_manager_id
+                               WHERE icr01_company_id = #{companyId}
+                                 AND icr01_type_cd    = 'IT'
+                                 AND COALESCE(icr01_use_yn,'false') = 'true'
+                                 AND sch03_cycle_cd   != '99'  /* (99:수시 제외) */
+                               UNION
+                              SELECT '6'                                                                      schedule_cd
+                                   , icr01_class_tree_id                                                      info_id
+                                   , CASE WHEN sch03_cycle_cd = '03' /*월별  */ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-1month')::date, icr01_company_id)
+                                          WHEN sch03_cycle_cd = '04' /*분기별*/ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-3month')::date, icr01_company_id)
+                                          WHEN sch03_cycle_cd = '05' /*반기별*/ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-6month')::date, icr01_company_id)
+                                          WHEN sch03_cycle_cd = '06' /*연별  */ THEN f_get_std_date(sch03_deadline_id, (#{stdDate}::date + INTERVAL '-12month')::date, icr01_company_id)
+                                          END close_date
+                                   , sch03_cycle_cd                                                           cycle_cd
+                                   , icr01_class_tree_nm                                                      title
+                                   , ics04_org_id                                                             org_id
+                                   , icr01_company_id                                                         company_id
+                                   , sch03_deadline_id                                                        deadline_id
+                                FROM icr01_class_tree
+                                     INNER JOIN sch03_deadline ON ( sch03_info_id    = icr01_class_tree_id    AND
+                                                                    sch03_company_id = icr01_company_id       )
+                                     INNER JOIN icr05_relate_manager ON ( icr05_icr_class_tree_id = icr01_class_tree_id     AND
+                                                                          icr05_company_id        = icr01_company_id        )
+                                     INNER JOIN ics04_share   ON ics04_manager_id = icr05_manager_id
+                                     INNER JOIN ics02_manager ON ics02_manager_id = icr05_manager_id
+                               WHERE icr01_company_id = #{companyId}
+                                 AND icr01_type_cd    = 'IT'
+                                 AND COALESCE(icr01_use_yn,'false') = 'true'
+                                 AND sch03_cycle_cd   IN ('03','04','05','06') /* (월/분기/반기/연) */
+                             ) t3
+                    ) a
+                    LEFT JOIN getPerson(#{companyId}, #{stdDate}::date) ON emp00_person_id = manager_id
+              WHERE close_date = #{stdDate}::date
+                AND ( ( schedule_cd  = '1'                                                      AND
+                        close_date <![CDATA[<=]]> COALESCE(emp00_retire_date, '9999-12-31'))    OR
+                      ( schedule_cd != '1'                                                      ) )
+                AND NOT EXISTS ( SELECT 1
+                                   FROM sch04_list
+                                  WHERE sch04_company_id = company_id
+                                    AND sch04_info_id    = info_id
+                                    AND sch04_close_date = close_date
+                                    AND sch04_mng_org_id = CASE WHEN org_id IS NOT NULL THEN org_id ELSE emp00_org_code_id END
+                               )
+           ) sch
+           INNER JOIN sys12_calendar ON ( sys12_company_id = 0 AND sys12_day = sch.close_date )
+     WHERE sch.company_id = #{companyId}
+<!--        AND sch.company_id = sys12_company_id -->
+<!--        AND sch.close_date = sys12_day -->
+       AND ( ( sch.cycle_cd =  '01' AND sys12_working_yn = 'true') OR
+             ( sch.cycle_cd != '01'                              ) )
+<!--        AND sch.manager_id IS NOT NULL -->
+    </insert>
+
+    <select id="createSch09" resultType="String">
+        SELECT f_create_schDeadlineDay(sch03_deadline_id, #{stdDate}::date)
+          FROM sch01_info
+               INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+         WHERE sch01_company_id = #{companyId}
+           AND sch01_use_yn     = 'true'
+           AND sch03_schedule_cd = '1'
+           AND sch03_cycle_cd NOT IN ('01','99')
+    </select>
+
+</mapper>

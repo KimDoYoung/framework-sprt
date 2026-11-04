@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys01_company.selectByUseYn (server/sys/mapper/sys01_company.xml:318), sys12_calendar.bizDate (server/sys/mapper/sys12_calendar.xml:102) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchCommonMapper">
+
+    <select id="selectUseCompanies" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchCompany">
+        SELECT sys01_company_id AS company_id
+             , sys01_company_nm AS company_name
+          FROM sys01_company
+         WHERE COALESCE(sys01_use_yn,'false') = 'true'
+           AND sys01_company_id != 0
+         ORDER BY sys01_company_id
+    </select>
+
+    <select id="selectBizDate" resultType="java.time.LocalDate">
+        SELECT f_get_biz_date(#{companyId}, #{stdDate}, #{type})
+    </select>
+
+</mapper>
