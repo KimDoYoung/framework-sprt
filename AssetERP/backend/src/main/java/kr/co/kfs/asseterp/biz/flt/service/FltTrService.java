@@ -280,4 +280,21 @@ public class FltTrService {
     private static String like(String text) {
         return "%" + (text == null ? "" : text) + "%";
     }
+
+    /**
+     * AS-IS Flt10_Lookup_AddConfirmReasonWrite.edit → flt.Flt10_Tr.update L696-735: 최초원장 기준일(flt13_book_init) 이전 거래면
+     * "최초원장 기준일 이전의 거래내역은 등록할 수 없습니다" — 화면이 바꾸는 추가확인사유 열만 저장한다
+     */
+    @Transactional
+    public void updateAddConfirmReason(UserPrincipal user, Long trId, String reason) {
+        kr.co.kfs.asseterp.biz.flt.dto.TrReasonKeyRes key = mapper.selectTrReasonKey(user.getCompanyId(), trId);
+        if (key == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        String initDate = mapper.selectInitDate(user.getCompanyId(), key.personId());
+        if (initDate != null && key.trDate() != null && initDate.compareTo(key.trDate()) >= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "최초원장 기준일 이전의 거래내역은 등록할 수 없습니다");
+        }
+        mapper.updateAddConfirmReason(user.getCompanyId(), trId, reason == null || reason.isEmpty() ? null : reason);
+    }
 }

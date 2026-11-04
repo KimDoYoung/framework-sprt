@@ -230,4 +230,12 @@ public class FltTrController {
     public ApiResponse<Integer> updateUnfill(@AuthenticationPrincipal UserPrincipal principal, @RequestBody TrUnfillReq req) {
         return ApiResponse.ok(service.updateUnfill(principal, req));
     }
+
+    /** AS-IS flt.Flt10_Tr.update (Flt10_Lookup_AddConfirmReasonWrite.edit) — 추가확인사유만 저장 */
+    @PutMapping("/{trId}/add-confirm-reason")
+    public ApiResponse<Void> updateAddConfirmReason(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long trId,
+                                                    @RequestBody kr.co.kfs.asseterp.biz.flt.dto.TrAddConfirmReasonReq req) {
+        service.updateAddConfirmReason(principal, trId, req.reason());
+        return ApiResponse.ok(null);
+    }
 }

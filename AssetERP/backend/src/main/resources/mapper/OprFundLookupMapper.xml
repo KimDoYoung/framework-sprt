@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/opr/mapper/opr01_create.xml:164 · opr02_fund.xml (EE100 Opr02_Lookup_Fund) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.opr.mapper.OprFundLookupMapper">
+
+    <!-- AS-IS opr01_create.selectByLookupTitle — 화면이 쓰는 열만. 담당자는 AS-IS가 b.emp00_kor_nm인데 로컬 emp00_trans_info 뷰에 이 열이 없어 같은 이름을 주는 f_emp_kor_nm(b.emp00_person_id)로 했다(03 원칙 4) -->
+    <select id="selectByLookupTitle" resultType="kr.co.kfs.asseterp.biz.opr.dto.OprCreateRes">
+        SELECT a.opr01_create_id                                                            AS create_id
+             , a.opr01_title                                                                AS title
+             , a.opr01_year                                                                 AS year
+             , f_cdnm('TermCodeOpr', a.opr01_term_cd, a.opr01_company_id, f_sysdate())      AS term_name
+             , f_emp_kor_nm(b.emp00_person_id)                                              AS kor_name
+             , b.emp00_pos_nm                                                               AS pos_name
+             , a.opr01_start_date                                                           AS start_date
+          FROM opr01_create a
+               INNER JOIN emp00_trans_info b
+                  ON a.opr01_company_id = b.emp00_company_id AND a.opr01_create_emp_id = b.emp00_person_id
+         WHERE b.emp00_all_title = 0
+           AND a.opr01_company_id = #{companyId}
+           AND f_trunc(f_sysdate()) BETWEEN b.emp00_trans_date AND COALESCE(b.emp00_close_date, '9999.12.31')
+           AND a.opr01_title || f_emp_kor_nm(b.emp00_person_id) LIKE #{title}
+           AND a.opr01_year LIKE #{year}
+         ORDER BY a.opr01_create_id DESC
+    </select>
+
+    <!-- AS-IS opr02_fund.selectByCreateId -->
+    <select id="selectFundsByCreateId" resultType="kr.co.kfs.asseterp.biz.opr.dto.OprFundRes">
+        SELECT a.opr02_fund_id                                                                        AS fund_id
+             , a.opr02_reg_fund_id                                                                    AS reg_fund_id
+             , b.fnd00_fund_cd                                                                        AS fund_code
+             , b.fnd00_fund_nm                                                                        AS fund_name
+             , f_cdnm('FundTypeCode', b.fnd00_fund_type_cd, b.fnd00_company_id, b.fnd00_work_date)    AS fund_type_name
+             , f_emp_kor_nm(c.emp00_person_id)                                                        AS emp_name1
+             , b.fnd00_start_date                                                                     AS start_date
+             , CASE b.fnd00_public_yn WHEN 'true' THEN '공모' ELSE '사모' END                         AS public_name
+             , f_org_nm(b.fnd00_org_code_id, b.fnd00_work_date)                                       AS org_code_name
+          FROM opr02_fund a
+               INNER JOIN fnd00_fund b ON a.opr02_reg_fund_id = b.fnd00_fund_id
+               LEFT OUTER JOIN emp00_trans_info c
+                  ON b.fnd00_emp1_id = c.emp00_person_id
+                 AND c.emp00_all_title = 0
+                 AND b.fnd00_work_date BETWEEN c.emp00_trans_date AND c.emp00_close_date
+               INNER JOIN fnd08_org_auth d ON a.opr02_reg_fund_id = d.fnd08_fund_code_id
+         WHERE b.fnd00_work_date   = f_max_workdate(a.opr02_reg_fund_id, f_trunc(f_sysdate()))
+           AND d.fnd08_auth_yn     = 'true'
+           AND d.fnd08_org_code_id = #{orgId}
+           AND b.fnd00_company_id  = #{companyId}
+           AND a.opr02_create_id   = #{createId}
+         ORDER BY b.fnd00_fund_cd
+    </select>
+</mapper>

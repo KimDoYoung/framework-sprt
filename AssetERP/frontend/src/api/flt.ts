@@ -771,3 +771,11 @@ export const fltBookInitApi = {
     return res.data.data;
   },
 };
+
+/** 승인/반려/추가확인 사유 창 (EE98 Flt10_Lookup_AddConfirmReasonWrite) */
+export const fltAddConfirmReasonApi = {
+  /** AS-IS flt.Flt10_Tr.update(edit 모드) — 추가확인사유만 저장. 최초원장 기준일 이전 거래면 서버 메시지 */
+  update: async (trId: number, reason: string | null): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/flt/trs/${trId}/add-confirm-reason`, { reason });
+  },
+};

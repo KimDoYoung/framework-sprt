@@ -3,6 +3,7 @@ import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
   CurrentFeeByFund,
+  IcamPriceStock,
   FundOperateStatus,
   FundOperateStatusDetail,
   FundPrice,
@@ -355,5 +356,20 @@ export const icamUserApi = {
   /** AS-IS icam.Icam55_IcamUser.updateMultiAuth — 선택내역 일괄반영 */
   updateStopAuths: async (req: { ids: number[]; delDate: string | null; unstopDate: string | null; note: string | null }): Promise<void> => {
     await apiClient.put<ApiResponse<void>>('v1/icam/users/stop-auths/batch', req);
+  },
+};
+
+/** 종목(주식/ETF) 찾기 (EE99 Flt10_Lookup_ItemStk) */
+export const icamPriceApi = {
+  /** AS-IS icam.Icam20_Price.selectByStdDatePaging(+Total) — 기준일의 주식(2010) 종목 */
+  searchStocks: async (stdDate: string, searchText: string, limit: number, offset: number): Promise<PageRes<IcamPriceStock>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcamPriceStock>>>('v1/icam/prices/stocks', { params: { stdDate, searchText, limit, offset } });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+
+  /** 열 때의 기준일 — 오늘 이후면 전영업일 (AS-IS open(date) L56-79) */
+  getStockStdDate: async (date: string): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/icam/prices/stock-std-date', { params: { date } });
+    return res.data.data ?? date;
   },
 };

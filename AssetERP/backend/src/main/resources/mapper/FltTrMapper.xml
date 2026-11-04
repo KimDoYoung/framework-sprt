@@ -1989,4 +1989,21 @@
         <foreach collection="trIds" item="id" open="(" separator="," close=")">#{id}</foreach>
                ) a
     </select>
+
+    <!-- EE98 Flt10_Lookup_AddConfirmReasonWrite.edit — 최초원장 기준일 검사에 쓰는 사원·거래일 -->
+    <select id="selectTrReasonKey" resultType="kr.co.kfs.asseterp.biz.flt.dto.TrReasonKeyRes">
+        SELECT flt10_person_id AS person_id
+             , TO_CHAR(flt10_tr_date, 'YYYY-MM-DD') AS tr_date
+          FROM flt10_tr
+         WHERE flt10_company_id = #{companyId}
+           AND flt10_tr_id      = #{trId}
+    </select>
+
+    <!-- EE98 AS-IS flt.Flt10_Tr.update(UpdateDataModel) 중 추가확인사유 열 — 화면이 바꾸는 열만 -->
+    <update id="updateAddConfirmReason">
+        UPDATE flt10_tr
+           SET flt10_add_confirm_reason = #{reason}
+         WHERE flt10_company_id = #{companyId}
+           AND flt10_tr_id      = #{trId}
+    </update>
 </mapper>

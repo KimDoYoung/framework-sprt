@@ -193,4 +193,10 @@ public interface FltTrMapper {
     /** V30 A09: 고른 실거래 행(본인 것만) — closeDate는 realTrInner의 기준일 */
     List<RealTrRes> selectRealTrsByIds(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                        @Param("closeDate") String closeDate, @Param("trIds") List<Long> trIds);
+
+    /** EE98: 로그인 회사의 거래 한 건의 사원·거래일 */
+    kr.co.kfs.asseterp.biz.flt.dto.TrReasonKeyRes selectTrReasonKey(@Param("companyId") Long companyId, @Param("trId") Long trId);
+
+    /** EE98 AS-IS flt10_tr UpdateDataModel의 추가확인사유 열 */
+    int updateAddConfirmReason(@Param("companyId") Long companyId, @Param("trId") Long trId, @Param("reason") String reason);
 }

@@ -346,3 +346,9 @@ export interface IcamStopAuth {
   note?: string | null;
 }
 
+
+/** AS-IS icam.Icam20_Price.selectByStdDatePaging (Flt10_Lookup_ItemStk, EE99) — 종목(주식) 한 줄. isin = 종목코드 */
+export interface IcamPriceStock {
+  isin: string | null;
+  itemName: string | null;
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/icam/mapper/icam20_price.xml (EE99 Flt10_Lookup_ItemStk) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamPriceMapper">
+
+    <!-- AS-IS icam20_price.selectByStdDatePaging — 화면이 쓰는 열(종목코드 isin·종목명)만 -->
+    <select id="selectByStdDatePaging" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamPriceStockRes">
+        SELECT icam20_isin    AS isin
+             , icam20_item_nm AS item_name
+          FROM icam20_price
+         WHERE icam20_std_date  = CAST(#{stdDate} AS date)
+           AND icam20_item_type = #{itemType}
+           AND UPPER(CONCAT(icam20_item_cd, icam20_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY icam20_item_cd
+         LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS icam20_price.selectByStdDatePagingTotal -->
+    <select id="selectByStdDatePagingTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM icam20_price
+         WHERE icam20_std_date  = CAST(#{stdDate} AS date)
+           AND icam20_item_type = #{itemType}
+           AND UPPER(CONCAT(icam20_item_cd, icam20_item_nm)) LIKE UPPER(#{searchText})
+    </select>
+
+    <!-- sys.Sys12_Calendar.selectBizDate2(companyId 0, type -1, chkYn true) — 기준일이 오늘 이후면 오늘의 전영업일 -->
+    <select id="selectStdDate" resultType="string">
+        SELECT TO_CHAR(CASE WHEN CAST(#{date} AS date) >= f_today()
+                            THEN f_get_biz_date2(0, f_today(), '-1', 'true')
+                            ELSE CAST(#{date} AS date) END, 'YYYY-MM-DD')
+    </select>
+</mapper>
