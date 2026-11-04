@@ -30,6 +30,11 @@ public class FndIssuingEntityService {
 
     private final FndIssuingEntityMapper mapper;
 
+    /** AS-IS Fnd07_IssuingEntity.selectBysearchText L41-45 (Fnd07_Lookup_IssuingEntity): "%검색어%", 코드+이름에서 찾는다. 회사 조건이 없다 */
+    public List<IssuingEntityRes> searchBySearchText(String searchText) {
+        return mapper.selectBySearchText("%" + (searchText == null ? "" : searchText) + "%");
+    }
+
     /** AS-IS selectByCodeName L23-39: "%발행기관명%". 회사 조건이 없다 */
     public List<IssuingEntityRes> search(String issuingEntityName) {
         return mapper.selectByCodeName("%" + (issuingEntityName == null ? "" : issuingEntityName) + "%");

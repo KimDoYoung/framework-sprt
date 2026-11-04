@@ -1,0 +1,9 @@
+{
+  "id": "EE91",
+  "screen": "Fnd07_Lookup_IssuingEntity",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(호출처 EE90 창이 TOBE에서 열리지 않음) — 일괄 시험 대상 아님"
+  ]
+}

@@ -26,6 +26,23 @@
          WHERE fnd07_issuing_entity_nm LIKE #{issuingEntityName}
     </select>
 
+    <!-- AS-IS fnd07_issuing_entity.selectBysearchText L37 (EE91 기관찾기) — 코드+이름에 검색어. 열은 selectByCodeName과 같다 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.IssuingEntityRes">
+        SELECT fnd07_issuing_entity_id                                                             AS issuing_entity_id,
+               fnd07_issuing_entity_cd                                                             AS issuing_entity_code,
+               fnd07_issuing_entity_nm                                                             AS issuing_entity_name,
+               fnd07_issuing_entity_attach_cd                                                      AS issuing_entity_attach_code,
+               fnd07_issuing_entity_face_value                                                     AS issuing_entity_face_value,
+               fnd07_issuing_entity_settle_month                                                   AS issuing_entity_settle_month,
+               fnd07_issuing_entity_nation_cd                                                      AS issuing_entity_nation_code,
+               f_cdnm('EmpNationCode', fnd07_issuing_entity_nation_cd, '0', f_sysdate())           AS kuka_name,
+               LOWER(fnd07_issuing_entity_use_yn)                                                  AS issuing_entity_use_yn,
+               fnd07_issuing_entity_note                                                           AS issuing_entity_note,
+               fnd07_company_id                                                                    AS company_id
+          FROM fnd07_issuing_entity
+         WHERE fnd07_issuing_entity_cd||fnd07_issuing_entity_nm LIKE #{searchText}
+    </select>
+
     <!-- AS-IS dbConfig.getSeq (IsNewData.getSeq) -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()

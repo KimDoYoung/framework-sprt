@@ -25,6 +25,12 @@ public class FndIssuingEntityController {
         return ApiResponse.ok(service.search(issuingEntityName));
     }
 
+    /** AS-IS fnd.Fnd07_IssuingEntity.selectBysearchText (EE91 Fnd07_Lookup_IssuingEntity 기관찾기) */
+    @GetMapping("/search")
+    public ApiResponse<List<IssuingEntityRes>> searchBySearchText(@RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchBySearchText(searchText));
+    }
+
     /** AS-IS fnd.Fnd07_IssuingEntity.update — 원본 서버에 없는 서비스라 서버가 거절 */
     @PutMapping
     public ApiResponse<List<IssuingEntityRes>> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<IssuingEntityRes> rows) {

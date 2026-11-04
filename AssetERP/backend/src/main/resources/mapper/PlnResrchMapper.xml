@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pln/mapper/pln03_resrch.xml (selectDetailInit·selectById·insert·closeUpdate·apprUpdate) — EE90 Pln03_Lookup_ResrchDetail -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pln.mapper.PlnResrchMapper">
+
+    <!-- AS-IS pln03_resrch.selectDetailInit L217 — 로컬 DB에는 f_apr_get_approval 함수·결재규칙 40이 없어 이 문장만 시험하지 못했다(작업기록).
+         새 번호는 AS-IS common.sequenceNextVal → f_create_seq() -->
+    <select id="selectDetailInit" resultType="kr.co.kfs.asseterp.biz.pln.dto.PlnResrchRes" flushCache="true">
+        SELECT f_create_seq()                                                       AS resrch_id
+             , #{empId}                                                             AS reg_person_id
+             , f_emp_kor_nm(c.emp00_person_id)||' ('||c.emp00_org_kor_nm||')'      AS reg_emp_name
+             , f_trunc(f_sysdate())::date                                           AS reg_date
+             , f_trunc(f_sysdate())::date                                           AS resrch_start_date
+             , f_add_day(f_trunc(f_sysdate()), 7)::date                             AS resrch_close_date
+             , f_apr_get_approval(#{empId}, f_trunc(f_sysdate()), apr06_appr_line01) AS cfrm_person_id
+             , f_emp_kor_nm(a.emp00_person_id)||' ('||a.emp00_org_kor_nm||')'      AS cfrm_emp_name
+             , '10'                                                                 AS target_type_code
+             , '종목'                                                                AS target_type_name
+          FROM apr06_appr_step_rule
+             , emp00_trans_info a   /* 승인자정보 */
+             , emp00_trans_info c   /* 등록자정보 */
+         WHERE apr06_appr_step_rule_cd = 40
+           AND a.emp00_person_id = f_apr_get_approval(#{empId}, f_trunc(f_sysdate()), apr06_appr_line01)
+           AND a.emp00_org_code_id = #{orgId}
+           AND f_trunc(f_sysdate()) BETWEEN a.emp00_trans_date AND COALESCE(a.emp00_close_date, to_date('29991231','yyyyMMdd'))
+           AND c.emp00_person_id = #{empId}
+           AND f_trunc(f_sysdate()) BETWEEN c.emp00_trans_date AND COALESCE(c.emp00_close_date, to_date('29991231','yyyyMMdd'))
+    </select>
+
+    <!-- AS-IS pln03_resrch.selectById L32 (상위 분류명 열은 이 창이 안 쓴다) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pln.dto.PlnResrchRes">
+        SELECT a.pln03_resrch_id                  AS resrch_id
+             , a.pln03_class_tree_id              AS class_tree_id
+             , b.dcr01_class_tree_nm              AS class_tree_name
+             , a.pln03_issuing_entity_id          AS issuing_entity_id
+             , CASE WHEN pln03_target_type_code = '10' THEN ( SELECT fnd07_issuing_entity_nm
+                                                                FROM fnd07_issuing_entity
+                                                               WHERE fnd07_issuing_entity_id = pln03_issuing_entity_id )
+                    WHEN pln03_target_type_code = '20' THEN ( SELECT sys09_name
+                                                                FROM sys09_code
+                                                               WHERE sys09_code_id = pln03_issuing_entity_id )
+                    ELSE NULL END                 AS issuing_entity_name
+             , a.pln03_visit_reason               AS visit_reason
+             , a.pln03_reg_emp_id                 AS reg_person_id
+             , f_emp_kor_nm(f.emp00_person_id)||' ('||f.emp00_org_kor_nm||')' AS reg_emp_name
+             , a.pln03_reg_date::date             AS reg_date
+             , a.pln03_close_date::date           AS close_date
+             , a.pln03_close_yn                   AS close_yn
+             , a.pln03_resrch_start_date::date    AS resrch_start_date
+             , a.pln03_resrch_close_date::date    AS resrch_close_date
+             , a.pln03_cfrm_emp_id                AS cfrm_person_id
+             , f_emp_kor_nm(e.emp00_person_id)||' ('||e.emp00_org_kor_nm||')' AS cfrm_emp_name
+             , a.pln03_cfrm_date::date            AS cfrm_date
+             , a.pln03_note                       AS note
+             , a.pln03_target_type_code           AS target_type_code
+             , f_cdnm('ResrchTargetTypeCode', a.pln03_target_type_code, f.emp00_company_id, pln03_reg_date) AS target_type_name
+          FROM pln03_resrch a
+             , dcr01_class_tree b
+             , emp00_trans_info e
+             , emp00_trans_info f
+         WHERE a.pln03_class_tree_id = b.dcr01_class_tree_id
+           AND a.pln03_cfrm_emp_id   = e.emp00_person_id
+           AND e.emp00_all_title = 0
+           AND a.pln03_reg_emp_id    = f.emp00_person_id
+           AND f.emp00_all_title = 0
+           AND a.pln03_reg_date BETWEEN e.emp00_trans_date AND COALESCE(e.emp00_close_date, to_date('29991231','yyyyMMdd'))
+           AND a.pln03_reg_date BETWEEN f.emp00_trans_date AND COALESCE(f.emp00_close_date, to_date('29991231','yyyyMMdd'))
+           AND a.pln03_resrch_id     = #{resrchId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT count(*) FROM pln03_resrch WHERE pln03_resrch_id = #{resrchId}
+    </select>
+
+    <!-- AS-IS pln03_resrch.insert L312-368 (PostgreSQL 분기)의 UPDATE. AS-IS 문장은 `WHERE a.pln03_resrch_id`처럼 없는 별칭 a를 써서 그대로는 실행되지 않으므로 별칭 없이 고쳤다(작업방법).
+         창이 고치는 열만, 등록자 본인·확인 전 건만 -->
+    <update id="update">
+        UPDATE pln03_resrch
+           SET pln03_class_tree_id     = #{req.classTreeId}
+             , pln03_issuing_entity_id = #{req.issuingEntityId}
+             , pln03_visit_reason      = #{req.visitReason}
+             , pln03_resrch_start_date = #{req.resrchStartDate}
+             , pln03_resrch_close_date = #{req.resrchCloseDate}
+             , pln03_cfrm_emp_id       = #{req.cfrmPersonId}
+             , pln03_note              = #{req.note}
+             , pln03_target_type_code  = #{req.targetTypeCode}
+         WHERE pln03_resrch_id = #{req.resrchId}
+           AND pln03_reg_emp_id = #{regPersonId}
+           AND pln03_cfrm_date IS NULL
+    </update>
+
+    <insert id="insert">
+        INSERT INTO pln03_resrch
+              ( pln03_resrch_id, pln03_class_tree_id, pln03_issuing_entity_id, pln03_visit_reason, pln03_reg_emp_id, pln03_reg_date
+              , pln03_resrch_start_date, pln03_resrch_close_date, pln03_cfrm_emp_id, pln03_note, pln03_target_type_code )
+        VALUES( #{req.resrchId}, #{req.classTreeId}, #{req.issuingEntityId}, #{req.visitReason}, #{regPersonId}, f_trunc(f_sysdate())
+              , #{req.resrchStartDate}, #{req.resrchCloseDate}, #{req.cfrmPersonId}, #{req.note}, #{req.targetTypeCode} )
+    </insert>
+
+    <!-- AS-IS pln03_resrch.closeUpdate L240 — 등록자 본인·확인 전 건만 -->
+    <update id="closeUpdate">
+        UPDATE pln03_resrch
+           SET pln03_close_yn   = CASE WHEN #{close} THEN 'true' ELSE 'false' END
+             , pln03_close_date = CASE WHEN #{close} THEN f_trunc(f_sysdate()) ELSE NULL END
+         WHERE pln03_resrch_id = #{resrchId}
+           AND pln03_reg_emp_id = #{regPersonId}
+           AND pln03_cfrm_date IS NULL
+    </update>
+
+    <!-- AS-IS pln03_resrch.apprUpdate L247 — 확인자 본인·승인요청(완료일 있음)·확인 전 건만 -->
+    <update id="apprUpdate">
+        UPDATE pln03_resrch
+           SET pln03_cfrm_emp_id = #{cfrmPersonId}
+             , pln03_cfrm_date   = f_trunc(f_sysdate())
+         WHERE pln03_resrch_id = #{resrchId}
+           AND pln03_cfrm_emp_id = #{cfrmPersonId}
+           AND pln03_close_date IS NOT NULL
+           AND pln03_cfrm_date IS NULL
+    </update>
+</mapper>

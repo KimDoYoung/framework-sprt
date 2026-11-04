@@ -299,6 +299,12 @@ export const fndApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS fnd.Fnd07_IssuingEntity.selectBysearchText (EE91 Fnd07_Lookup_IssuingEntity) — 기관코드+기관명에 "%검색어%" */
+  searchIssuingEntitiesBySearchText: async (searchText: string): Promise<IssuingEntity[]> => {
+    const res = await apiClient.get<ApiResponse<IssuingEntity[]>>('v1/fnd/issuing-entities/search', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS fnd.Fnd07_IssuingEntity.update — 원본 서버에 없는 서비스라 서버가 거절 */
   saveIssuingEntities: async (rows: IssuingEntity[]): Promise<IssuingEntity[]> => {
     const res = await apiClient.put<ApiResponse<IssuingEntity[]>>('v1/fnd/issuing-entities', rows);

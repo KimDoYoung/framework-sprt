@@ -1,0 +1,9 @@
+{
+  "id": "EE89",
+  "screen": "Pln00_Lookup_ClassTree",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(호출처 `Pln02_TabPage_Plan`이 TOBE에 없음) — 일괄 시험 대상 아님"
+  ]
+}
