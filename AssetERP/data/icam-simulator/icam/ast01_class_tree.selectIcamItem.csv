@@ -1,0 +1,6 @@
+@icamCompanyCode,ast01_icam_l_nm,ast01_icam_m_nm,ast01_icam_l_cd,ast01_icam_m_cd,ast01_icam_s_cd,ast01_isin,ast01_class_tree_nm
+2018,시뮬 주식,,3,,,KRSIM0000001,시뮬 삼성전자
+2018,시뮬 주식,,3,,,KRSIM0000002,"시뮬 SK하이닉스, 보통주"
+2018,시뮬 채권,시뮬 국채,1,,,KRSIM0000003,시뮬 국고채 3년
+2018,시뮬 유동성,시뮬 예금,2,1,,10101,예금
+2018,시뮬 부동산,시뮬 프로젝트,F,P01,H,KRSIM0000004,시뮬 오피스 빌딩
