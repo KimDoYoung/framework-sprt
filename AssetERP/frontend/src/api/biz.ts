@@ -7,7 +7,7 @@ import {
   BizWithCorp, FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
 import { MktSelect, MktTarget } from '../types/mkt';
-import { CrmContact } from '../types/crm';
+import { CrmContact, CrmContactDetail, CrmContactSaveReq, CrmRelateFund, CrmWorkDetail, CrmWorkDetailSaveReq } from '../types/crm';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
 export const bizLimitApi = {
@@ -211,12 +211,66 @@ export const bizPromoApi = {
   },
 };
 
+/** EE85 AS-IS Crm12_Lookup_WorkDetail (server/crm/Crm12_WorkDetail · Crm13_RelateFund · Crm15_Share) — 업무활동내역 창 */
+export const crmWorkDetailApi = {
+  /** AS-IS DBUtil.setSeq — 새 건 번호 */
+  nextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/crm/work-details/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS crm12_work_detail.selectById */
+  get: async (workDetailId: number): Promise<CrmWorkDetail> => {
+    const res = await apiClient.get<ApiResponse<CrmWorkDetail>>(`v1/crm/work-details/${workDetailId}`);
+    return res.data.data as CrmWorkDetail;
+  },
+
+  /** AS-IS crm13_relate_fund.selectByWorkDetailId */
+  searchFunds: async (workDetailId: number): Promise<CrmRelateFund[]> => {
+    const res = await apiClient.get<ApiResponse<CrmRelateFund[]>>(`v1/crm/work-details/${workDetailId}/funds`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS crm.Crm15_Share.insertDefaultShare — 공유 요약(복사된 것이 없으면 null) */
+  insertDefaultShare: async (workDetailId: number, contactId: number): Promise<string | null> => {
+    const res = await apiClient.post<ApiResponse<string | null>>(`v1/crm/work-details/${workDetailId}/default-share`, null, { params: { contactId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS crm.Crm15_Share.deleteDefaultShare (등록 취소) */
+  deleteDefaultShare: async (workDetailId: number): Promise<void> => {
+    await apiClient.delete(`v1/crm/work-details/${workDetailId}/default-share`);
+  },
+
+  /** AS-IS crm.Crm12_WorkDetail.modelUpdate + crm.Crm13_RelateFund.updateList */
+  save: async (req: CrmWorkDetailSaveReq): Promise<void> => {
+    await apiClient.put('v1/crm/work-details', req);
+  },
+
+  /** AS-IS crm.Crm13_RelateFund.delete */
+  deleteFund: async (relateFundId: number): Promise<void> => {
+    await apiClient.delete(`v1/crm/work-details/funds/${relateFundId}`);
+  },
+};
+
 /** L12 AS-IS Crm09_Lookup_SelectSingle (server/crm/Crm09_Contact) — 영업 거래처 조회창 */
 export const crmContactApi = {
   /** AS-IS crm.Crm09_Contact.selectKeyInCompanyName — open("keyInCompany"). searchText는 글자 그대로(서버가 `%…%`로 감싼다) */
   searchKeyInCompanies: async (searchText: string): Promise<CrmContact[]> => {
     const res = await apiClient.get<ApiResponse<CrmContact[]>>('v1/crm/contacts/key-in-companies', { params: { searchText } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS crm09_contact.selectById (EE84 Crm09_Lookup_ContactPoint.openEdit) */
+  get: async (contactId: number): Promise<CrmContactDetail> => {
+    const res = await apiClient.get<ApiResponse<CrmContactDetail>>(`v1/crm/contacts/${contactId}`);
+    return res.data.data as CrmContactDetail;
+  },
+
+  /** AS-IS crm.Crm09_Contact.modelUpdate — contactId가 없으면 새 영업거래처. 저장한 한 건을 돌려준다 */
+  save: async (req: CrmContactSaveReq): Promise<CrmContactDetail> => {
+    const res = await apiClient.put<ApiResponse<CrmContactDetail>>('v1/crm/contacts', req);
+    return res.data.data as CrmContactDetail;
   },
 };
 

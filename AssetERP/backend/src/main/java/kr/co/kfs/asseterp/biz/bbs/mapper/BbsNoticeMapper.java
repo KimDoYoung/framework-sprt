@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.bbs.mapper;
 
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeCompanyRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeInsertRow;
@@ -67,4 +68,10 @@ public interface BbsNoticeMapper {
 
     /** AS-IS bbs02_notice.selectByTargetPerson — 나에게 온 읽지 않은 알림 공지 (EE55) */
     List<BbsNoticeTargetRes> selectByTargetPerson(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    /** AS-IS bbs05_history 날짜 갱신 (updatePersonId의 이미 있을 때) */
+    void updateHistoryDate(@Param("noticeId") Long noticeId, @Param("personId") Long personId);
+
+    /** AS-IS bbs02_notice.selectByTargetCompany — 로그인 때 뜨는 공지 목록 (EE83) */
+    List<BbsNoticeCompanyRes> selectByTargetCompany(@Param("companyId") Long companyId, @Param("personId") Long personId);
 }

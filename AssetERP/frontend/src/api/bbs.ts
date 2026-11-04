@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsBoard, BbsBoardSaveReq, BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeTarget, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
+import { BbsBoard, BbsBoardSaveReq, BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeCompany, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeTarget, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -228,6 +228,12 @@ export const bbsNoticeApi = {
   /** AS-IS bbs.Bbs02_Notice.selectByTargetPerson (EE55 Frm01_Lookup_NoticeList) — 나에게 온 읽지 않은 알림 공지 */
   searchByTargetPerson: async (): Promise<BbsNoticeTarget[]> => {
     const res = await apiClient.get<ApiResponse<BbsNoticeTarget[]>>('v1/bbs/notices/target-person');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs02_Notice.selectByTargetCompany (EE83 Bbs02_Lookup_NoticeAdmin) — 로그인 때 뜨는 공지 목록 */
+  searchByTargetCompany: async (): Promise<BbsNoticeCompany[]> => {
+    const res = await apiClient.get<ApiResponse<BbsNoticeCompany[]>>('v1/bbs/notices/target-company');
     return res.data.data ?? [];
   },
 

@@ -434,6 +434,12 @@ export interface BbsNoticeTarget {
 }
 
 
+/** 로그인 때 뜨는 공지 한 줄 (AS-IS Bbs02_NoticeModel 일부 — Bbs02_Lookup_NoticeAdmin, EE83). topYn = 상단고정, noticeTypeName = 구분 HTML */
+export interface BbsNoticeCompany extends BbsNoticeTarget {
+  topYn?: string | null;
+  noticeTypeName?: string | null;
+}
+
 /** 게시판 한 건 (GET /api/v1/bbs/boards/{id}, AS-IS Bbs01_BoardModel 중 등록·수정 창이 다루는 값). writeUserName은 "이름 직위" */
 export interface BbsBoard {
   boardId: number;

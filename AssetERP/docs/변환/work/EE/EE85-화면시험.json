@@ -1,0 +1,9 @@
+{
+  "id": "EE85",
+  "screen": "Crm12_Lookup_WorkDetail",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(영업활동 메뉴가 TOBE에 없음) — 일괄 시험 대상 아님"
+  ]
+}

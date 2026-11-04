@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.bbs.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeCompanyRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeInsertRow;
@@ -51,11 +52,14 @@ public class BbsNoticeService {
         return new PageRes<>(mapper.selectByPersonIdTotal(cond), mapper.selectByPersonIdPaging(cond));
     }
 
-    /** AS-IS Bbs05_History.updatePersonId L32 — 이 사원의 기록이 아직 없을 때만 1건 넣는다("해당 공지사항 그만보기") */
+    /** AS-IS Bbs05_History.updatePersonId L32 — 이 사원의 기록이 아직 없을 때만 1건 넣는다("해당 공지사항 그만보기"; 있으면 날짜 갱신) */
     @Transactional
     public void updatePersonId(UserPrincipal user, Long noticeId) {
         if (mapper.countHistory(noticeId, user.getUserId()) == 0) {
             mapper.insertHistory(mapper.selectNextId(), noticeId, user.getUserId());
+        } else {
+            // L44-52 이미 있으면 날짜만 오늘로 고친다 (noticeId 0 "오늘 하루 열지 않음"을 다음 날 다시 누를 때)
+            mapper.updateHistoryDate(noticeId, user.getUserId());
         }
     }
 
@@ -135,5 +139,10 @@ public class BbsNoticeService {
     /** AS-IS Bbs02_Notice.selectByTargetPerson L111-123 (Frm01_Lookup_NoticeList, EE55) */
     public List<BbsNoticeTargetRes> searchByTargetPerson(UserPrincipal user) {
         return mapper.selectByTargetPerson(user.getCompanyId(), user.getUserId());
+    }
+
+    /** AS-IS Bbs02_Notice.selectByTargetCompany (Bbs02_Lookup_NoticeAdmin, EE83) */
+    public List<BbsNoticeCompanyRes> searchByTargetCompany(UserPrincipal user) {
+        return mapper.selectByTargetCompany(user.getCompanyId(), user.getUserId());
     }
 }

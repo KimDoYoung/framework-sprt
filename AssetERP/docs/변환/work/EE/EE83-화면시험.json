@@ -1,0 +1,9 @@
+{
+  "id": "EE83",
+  "screen": "Bbs02_Lookup_NoticeAdmin",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(로그인 직후 Calendar 공지 팝업이 TOBE에 없음) — 일괄 시험 대상 아님"
+  ]
+}

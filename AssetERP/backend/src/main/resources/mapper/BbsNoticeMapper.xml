@@ -416,6 +416,13 @@
         VALUES (#{historyId}, #{noticeId}, f_sysdate(), #{personId})
     </insert>
 
+    <update id="updateHistoryDate">
+        UPDATE bbs05_history
+           SET bbs05_date = f_sysdate()
+         WHERE bbs05_notice_id = #{noticeId}
+           AND bbs05_person_id = #{personId}
+    </update>
+
     <!-- AS-IS bbs02_notice.selectByTargetPerson (IDMS-IC) — 나에게 온 읽지 않은 알림 공지 (EE55 Frm01_Lookup_NoticeList).
          본문 그대로, 바깥에서 열만 고른다(분기는 이 호출이 넘기지 않는 파라미터라 기본 가지만 남김) -->
     <select id="selectByTargetPerson" resultType="kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes">
@@ -541,6 +548,141 @@ WITH noticeType AS ( SELECT sys09_code noticeType_cd
      ORDER BY bbs02_from_date desc, bbs02_seq ASC, bbs02_notice_id desc
 ) y
  ORDER BY y.bbs02_from_date desc, y.bbs02_seq ASC, y.bbs02_notice_id desc
+]]>
+    </select>
+
+
+    <!-- AS-IS bbs02_notice.selectByTargetCompany (IDMS-IC) — 로그인 때 뜨는 공지 목록 (EE83 Bbs02_Lookup_NoticeAdmin). selectByTargetPerson에 "오늘 하루 열지 않음"(bbs05_notice_id=0 이력) 조건과 상단고정 정렬이 더해진 것.
+         본문 그대로, 바깥에서 열만 고른다(분기는 이 호출이 넘기지 않는 파라미터라 기본 가지만 남김) -->
+    <select id="selectByTargetCompany" resultType="kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeCompanyRes">
+<![CDATA[
+SELECT	y.bbs02_notice_id			AS notice_id
+	 ,	y.bbs02_notice_no			AS notice_no
+	 ,	y.bbs02_title				AS title
+	 ,	y.bbs02_title2				AS title2
+	 ,	y.bbs02_notice				AS notice
+	 ,	y.bbs02_comment_yn			AS comment_yn
+	 ,	y.bbs02_from_date::date		AS from_date
+	 ,	y.bbs02_top_yn				AS top_yn
+	 ,	y.bbs02_notice_type_nm		AS notice_type_name
+  FROM	(
+WITH noticeType AS ( SELECT sys09_code noticeType_cd
+                              , sys09_name noticeType_nm
+                           FROM sys08_code_kind
+                                INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                          WHERE sys08_kind_cd    = 'NoticeType'
+                            AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{companyId} END
+    ), noticeDetail AS ( SELECT sys09_code noticeDetail_cd
+                              , sys09_name noticeDetail_nm
+                           FROM sys08_code_kind
+                                INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                          WHERE sys08_kind_cd    = 'NoticeDetailCode'
+                            AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{companyId} END
+    ), bbs AS ( SELECT *
+                  FROM (
+                        SELECT  *
+                             ,  CONCAT(bbs02_notice_type_nm, bbs02_notice_detail_nm) AS bbs02_notice_detail_full_nm
+                             ,  (
+                                    CASE WHEN COALESCE(bbs02_top_notice_yn, 'false') = 'true' 
+                                         THEN CASE WHEN f_today() <= bbs02_top_notice_close_date 
+                                                   THEN 'true'
+                                                   ELSE 'false'
+                                                   END
+                                         ELSE 'false'
+                                         END
+                                )                                                    AS bbs02_top_yn
+                          FROM (
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||CASE WHEN bbs02_notice_type = '90'    /*(90:시스템공지)*/
+                                                               THEN 'style=color:#E33E31;'
+                                                               ELSE 'style=color:#4B81B9;' END ||'&gt;'||
+                                            '['||noticeType_nm||'] '
+                                            '&lt;'||'/b'||'&gt;'                                                    AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                         AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||CASE WHEN bbs02_notice_type = '90'    /*(90:시스템공지)*/
+                                                               THEN 'style=color:#E33E31;'
+                                                               ELSE 'style=color:#4B81B9;' END ||'&gt;'||
+                                            '['||noticeType_nm||'] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                                       AS bbs02_title2
+                                         ,  3                                                                       AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN bbs04_target_company ON ( bbs04_notice_id  = bbs02_notice_id  AND
+                                                                                      bbs04_company_id = #{companyId}     )
+                                            LEFT OUTER JOIN noticeType   ON noticeType_cd   = bbs02_notice_type
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  ( bbs02_public_company_yn = 'true' OR bbs04_target_company_id IS NOT NULL )
+                                       AND  COALESCE(bbs02_public_yn, 'true') = 'true'
+                                       AND  bbs02_notice_type IN ( SELECT sys09_code
+                                                                     FROM sys13_code_group
+                                                                          INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                                    WHERE sys13_kind_group_cd = 'NoticeType002' )
+                                       AND ( ( /*** (9010:관리자공지)인 경우 관리자권한에 등록되어 있는 사용자만 조회되도록 함 ***/
+                                               COALESCE(bbs02_notice_detail_cd,'') = '9010'                                  AND
+                                               EXISTS ( SELECT 1
+                                                          FROM sys04_role
+                                                               INNER JOIN sys05_user_role ON sys05_role_id = sys04_role_id
+                                                         WHERE sys04_company_id = #{companyId}
+                                                           AND sys04_admin_yn   = 'true'
+                                                           AND sys05_user_id    = #{personId} )                             ) OR
+                                             ( COALESCE(bbs02_notice_detail_cd,'') != '9010'                                ) )
+                                     UNION ALL 
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||'[(회사)전체공지] '
+                                            '&lt;'||'/b'||'&gt;'                                            AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                 AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||
+                                            '[(회사)전체공지] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                               AS bbs02_title2
+                                         ,  1                                                               AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  bbs02_company_id = #{companyId}
+                                       AND  bbs02_notice_type = '01'    /*(01:(회사)전체공지)*/
+                                     UNION ALL  
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||'[(회사)개별공지] '
+                                            '&lt;'||'/b'||'&gt;'                                            AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                 AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||
+                                            '[(회사)개별공지] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                               AS bbs02_title2
+                                         ,  1                                                               AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  bbs02_company_id = #{companyId}
+                                       AND  bbs02_notice_type = '02'    /*(02:(회사)개별공지)*/
+                                       AND  bbs02_notice_id IN  ( 
+                                                                   SELECT bbs03_notice_id 
+                                                                     FROM bbs03_target
+                                                                    WHERE bbs03_person_id = #{personId}
+                                                                )
+                                 ) bbs
+                           WHERE bbs02_open_yn = '알림'
+                             
+                             
+                             
+                       ) bbs_in
+                 WHERE 1=1
+                 AND bbs02_from_date <= f_today()
+    )
+
+    SELECT *
+      FROM bbs
+     WHERE f_today() BETWEEN bbs02_from_date AND COALESCE(bbs02_to_date,to_date('99991231','yyyymmdd'))
+       AND bbs02_from_date >= ( SELECT COALESCE(sys01_notice_date, TO_DATE('19990101','yyyyMMdd'))
+                                              FROM sys01_company
+                                             WHERE sys01_company_id = #{companyId} )
+       AND NOT EXISTS ( SELECT 1
+                          FROM bbs05_history
+                         WHERE bbs05_notice_id = bbs02_notice_id
+                           AND bbs05_person_id = #{personId} )
+       AND f_today() NOT IN ( SELECT bbs05_date::date
+                                FROM bbs05_history
+                               WHERE bbs05_person_id = #{personId}
+                                 AND bbs05_notice_id = 0 )
+     ORDER BY (COALESCE(bbs02_top_yn, 'false') = 'true') DESC, bbs02_from_date desc, bbs02_seq ASC, bbs02_notice_id desc
+) y
+ ORDER BY (COALESCE(y.bbs02_top_yn, 'false') = 'true') DESC, y.bbs02_from_date desc, y.bbs02_seq ASC, y.bbs02_notice_id desc
 ]]>
     </select>
 

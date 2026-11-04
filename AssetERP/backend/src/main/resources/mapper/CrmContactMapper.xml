@@ -15,4 +15,70 @@
            AND upper(biz01_provide_company) like upper(#{searchText})
          GROUP BY biz01_provide_company
     </select>
+
+    <!-- AS-IS crm09_contact.selectById (+ selectShareInfo include). 회사 조건은 TOBE에서 더했다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmContactDetailRes">
+        SELECT crm09_contact_id             AS contact_id
+             , crm09_contact_nm             AS contact_name
+             , crm09_item_type_cd           AS item_type_code
+             , f_cdnm('CrmItemTypeCode', crm09_item_type_cd, crm09_company_id, f_sysdate()) AS item_type_name
+             , crm09_contact_emp_nm         AS contact_emp_name
+             , crm09_contact_org_nm         AS contact_org_name
+             , crm09_contact_title          AS contact_title
+             , crm09_contact_pos            AS contact_pos
+             , crm09_contact_tel_no         AS contact_tel_no
+             , crm09_contact_mobile_no      AS contact_mobile_no
+             , crm09_contact_email_addr     AS contact_email_addr
+             , crm09_contact_dt::date       AS contact_date
+             , crm09_person_id              AS person_id
+             , crm09_company_id             AS company_id
+             , crm09_major_issues           AS major_issues
+             , crm09_note                   AS note
+             , (SELECT (SELECT CASE WHEN crm14_share_cd = '1'
+                                    THEN f_emp_kor_nm(crm14_person_id)
+                                    ELSE f_org_nm(crm14_org_id, f_today()) END
+                          FROM crm14_share_default
+                         WHERE crm14_contact_id = crm09_contact_id
+                         ORDER BY crm14_share_cd DESC
+                         LIMIT 1)
+                       ||(CASE WHEN COUNT(*) = 1 THEN ''
+                               ELSE ' 외 '|| COUNT(*)-1
+                          END)
+                  FROM crm14_share_default
+                 WHERE crm14_contact_id = crm09_contact_id)  AS share_info
+          FROM crm09_contact
+         WHERE crm09_contact_id = #{contactId}
+           AND crm09_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO crm09_contact
+              ( crm09_contact_id, crm09_contact_nm, crm09_item_type_cd, crm09_contact_emp_nm, crm09_contact_org_nm
+              , crm09_contact_title, crm09_contact_pos, crm09_contact_tel_no, crm09_contact_mobile_no, crm09_contact_email_addr
+              , crm09_contact_dt, crm09_person_id, crm09_company_id, crm09_major_issues, crm09_note )
+        VALUES( #{contactId}, #{req.contactName}, #{req.itemTypeCode}, #{req.contactEmpName}, #{req.contactOrgName}
+              , #{req.contactTitle}, #{req.contactPos}, #{req.contactTelNo}, #{req.contactMobileNo}, #{req.contactEmailAddr}
+              , f_today(), #{personId}, #{companyId}, #{req.majorIssues}, #{req.note} )
+    </insert>
+
+    <update id="update">
+        UPDATE crm09_contact
+           SET crm09_contact_nm         = #{req.contactName}
+             , crm09_item_type_cd       = #{req.itemTypeCode}
+             , crm09_contact_emp_nm     = #{req.contactEmpName}
+             , crm09_contact_org_nm     = #{req.contactOrgName}
+             , crm09_contact_title      = #{req.contactTitle}
+             , crm09_contact_pos        = #{req.contactPos}
+             , crm09_contact_tel_no     = #{req.contactTelNo}
+             , crm09_contact_mobile_no  = #{req.contactMobileNo}
+             , crm09_contact_email_addr = #{req.contactEmailAddr}
+             , crm09_major_issues       = #{req.majorIssues}
+             , crm09_note               = #{req.note}
+         WHERE crm09_contact_id = #{req.contactId}
+           AND crm09_company_id = #{companyId}
+    </update>
 </mapper>

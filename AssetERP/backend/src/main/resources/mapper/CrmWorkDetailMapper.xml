@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/crm/mapper/crm12_work_detail.xml · crm13_relate_fund.xml · crm15_share.xml (EE85 Crm12_Lookup_WorkDetail) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.crm.mapper.CrmWorkDetailMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS crm12_work_detail.selectById (창이 쓰는 열만). 회사 조건은 TOBE에서 더했다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmWorkDetailRes">
+        SELECT crm12_work_detail_id              AS work_detail_id
+             , crm12_contact_id                  AS contact_id
+             , crm09_contact_nm                  AS contact_name
+             , crm12_work_date                   AS work_date
+             , crm12_reg_date                    AS reg_date
+             , crm12_work_nm                     AS work_name
+             , crm12_work_content                AS work_content
+             , (COALESCE(crm12_private_yn, 'false') = 'true') AS private_yn
+             , crm12_person_id                   AS person_id
+             , crm12_company_id                  AS company_id
+             , (SELECT (SELECT CASE WHEN crm15_share_cd = '1'
+                                    THEN f_emp_kor_nm(crm15_person_id)
+                                    ELSE f_org_nm(crm15_org_id, f_today()) END
+                          FROM crm15_share
+                         WHERE crm15_work_detail_id = crm12_work_detail_id
+                         ORDER BY crm15_share_cd DESC
+                         LIMIT 1)
+                       ||(CASE WHEN COUNT(*) = 1 THEN ''
+                               ELSE ' 외 '|| COUNT(*)-1
+                          END)
+                  FROM crm15_share
+                 WHERE crm15_work_detail_id = crm12_work_detail_id) AS share_info
+          FROM crm12_work_detail
+               INNER JOIN crm09_contact ON crm09_contact_id = crm12_contact_id
+         WHERE crm12_work_detail_id = #{workDetailId}
+           AND crm12_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS crm13_relate_fund.selectByWorkDetailId -->
+    <select id="selectFundsByWorkDetailId" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmRelateFundRes">
+        SELECT crm13_relate_fund_id                                                    AS relate_fund_id
+             , crm13_work_detail_id                                                    AS work_detail_id
+             , crm13_fund_id                                                           AS fund_id
+             , fnd01_fund_cd                                                           AS fund_code
+             , f_get_fund_nm(fnd01_company_id, fnd01_fund_cd, f_sysdate()::date)       AS fund_name
+          FROM crm13_relate_fund
+               INNER JOIN fnd01_fund_code ON fnd01_fund_code_id = crm13_fund_id
+         WHERE crm13_work_detail_id = #{workDetailId}
+         ORDER BY fnd01_fund_cd DESC
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT count(*)
+          FROM crm12_work_detail
+         WHERE crm12_work_detail_id = #{workDetailId}
+           AND crm12_company_id     = #{companyId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO crm12_work_detail
+              ( crm12_work_detail_id, crm12_company_id, crm12_person_id, crm12_reg_date, crm12_contact_id
+              , crm12_work_date, crm12_work_nm, crm12_work_content, crm12_private_yn )
+        VALUES( #{req.workDetailId}, #{companyId}, #{personId}, f_today(), #{req.contactId}
+              , #{req.workDate}, #{req.workName}, #{req.workContent}, #{req.privateYn}::text )
+    </insert>
+
+    <update id="update">
+        UPDATE crm12_work_detail
+           SET crm12_work_date    = #{req.workDate}
+             , crm12_work_nm      = #{req.workName}
+             , crm12_work_content = #{req.workContent}
+             , crm12_private_yn   = #{req.privateYn}::text
+         WHERE crm12_work_detail_id = #{req.workDetailId}
+           AND crm12_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS crm15_share.deleteByWorkDetailId -->
+    <delete id="deleteSharesByWorkDetailId">
+        DELETE FROM crm15_share
+         WHERE crm15_work_detail_id = #{workDetailId}
+    </delete>
+
+    <!-- AS-IS crm15_share.insertDefaultShare -->
+    <insert id="insertDefaultShare">
+        INSERT INTO crm15_share
+        SELECT f_create_seq()
+             , #{workDetailId}
+             , crm14_share_cd
+             , crm14_person_id
+             , crm14_org_id
+             , crm14_company_id
+          FROM crm14_share_default
+         WHERE crm14_contact_id = #{contactId}
+    </insert>
+
+    <!-- AS-IS crm15_share.selectShareInfo -->
+    <select id="selectShareInfo" resultType="string">
+        SELECT (SELECT CASE WHEN crm15_share_cd = '1'
+                            THEN f_emp_kor_nm(crm15_person_id)
+                            ELSE f_org_nm(crm15_org_id, f_today()) END
+                  FROM crm15_share
+                 WHERE crm15_work_detail_id = #{workDetailId}
+                 ORDER BY crm15_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM crm15_share
+         WHERE crm15_work_detail_id = #{workDetailId}
+    </select>
+
+    <!-- AS-IS crm13_relate_fund.deleteByWorkDetailId -->
+    <delete id="deleteFundsByWorkDetailId">
+        DELETE FROM crm13_relate_fund
+         WHERE crm13_work_detail_id = #{workDetailId}
+    </delete>
+
+    <insert id="insertFund">
+        INSERT INTO crm13_relate_fund ( crm13_relate_fund_id, crm13_work_detail_id, crm13_fund_id )
+        VALUES ( #{relateFundId}, #{workDetailId}, #{fundId} )
+    </insert>
+
+    <!-- AS-IS Crm13_RelateFund.delete (deleteModel) — 내 회사 업무활동의 연결펀드만 -->
+    <delete id="deleteFund">
+        DELETE FROM crm13_relate_fund
+         WHERE crm13_relate_fund_id = #{relateFundId}
+           AND crm13_work_detail_id IN ( SELECT crm12_work_detail_id FROM crm12_work_detail WHERE crm12_company_id = #{companyId} )
+    </delete>
+</mapper>

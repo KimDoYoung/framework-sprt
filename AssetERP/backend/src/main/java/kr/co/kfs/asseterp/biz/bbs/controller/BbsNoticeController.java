@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.bbs.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeCompanyRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonRes;
@@ -120,5 +121,11 @@ public class BbsNoticeController {
     @GetMapping("/target-person")
     public ApiResponse<List<BbsNoticeTargetRes>> searchByTargetPerson(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.searchByTargetPerson(principal));
+    }
+
+    /** AS-IS bbs.Bbs02_Notice.selectByTargetCompany (Bbs02_Lookup_NoticeAdmin) — 로그인 때 뜨는 공지 목록 */
+    @GetMapping("/target-company")
+    public ApiResponse<List<BbsNoticeCompanyRes>> searchByTargetCompany(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.searchByTargetCompany(principal));
     }
 }
