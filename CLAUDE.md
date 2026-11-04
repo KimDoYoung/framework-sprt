@@ -20,8 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/변환/` (규칙: `03-절대원칙`·`05-작업방법`) | `yunhee analysis`·`port-sql`·`run` |
 | 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | (예정. 지금은 `변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
 | 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | (예정) | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
-| 대체 | AS-IS의 UI·로직을 TOBE로 실제 대신 쓰게 함(전환 단위·공존·롤백은 아래 Strangler Fig) | (예정) | |
-| 비교 | AS-IS와 TOBE를 대조해 차이를 명확히 함 | (예정) | `yunhee compare`·`page-style --compare`·`analysis ui --tobe` |
+| 대체 | AS-IS의 UI·로직(업무흐름)을 TOBE로 실제 대신 쓰게 함(전환 단위·공존·롤백은 아래 Strangler Fig) | (예정) | |
 | 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | (예정) | `yunhee run "gradle test"` |
 
 * 기술스택이 바뀌면서 달라지는 것
