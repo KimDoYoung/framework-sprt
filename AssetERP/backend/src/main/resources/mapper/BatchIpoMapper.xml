@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  공모주 일정 배치 (BatchMain ipoScrap·ipo38Scrap·ipoMismatch). 본문은 원본 그대로(원칙 4), 달라진 곳만 아래에 적는다.
+  - sch13_ipo_crawling.insert (server/sch/mapper/sch13_ipo_crawling.xml:66)
+  - sch13_ipo_crawling.selectByTrackId (같은 파일:52) — `SELECT sch13_ipo_crawling.*`를 쓰는 열만 별칭으로 적음(조건·정렬 그대로)
+  - sch13_ipo_crawling.selectValidItemCode (같은 파일:62)
+  - sch10_ipo.selectByIssCorpCode (server/sch/mapper/sch10_ipo.xml:401) — `SELECT *`를 열 별칭으로 적음(조건·정렬 그대로)
+  - sch10_ipo.insert (같은 파일:484)·update (같은 파일:506)·updateCancelYn (같은 파일:527)
+  - sch12_ipo_corp.insertCorpName (server/sch/mapper/sch12_ipo_corp.xml:38)
+  - sch14_ipo_mismatch.createIpoMismatch (server/sch/mapper/sch14_ipo_mismatch.xml:44)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchIpoMapper">
+
+    <insert id="insertCrawling">
+        INSERT
+          INTO sch13_ipo_crawling
+        SELECT f_create_batchseq()
+         , #{p.trackId}
+         , #{p.stkName}
+         , #{p.status}
+         , #{p.marketType}
+         , #{p.stkCode}
+         , #{p.industry}
+         , #{p.ceo}
+         , #{p.bizType}
+         , #{p.addr}
+         , #{p.website}
+         , #{p.phone}
+         , #{p.majorShareholder}
+         , #{p.revenue}
+         , #{p.bizProfit}
+         , #{p.netProfit}
+         , #{p.capital}
+         , #{p.totalIpoQty}
+         , #{p.par}
+         , #{p.listIpoQty}
+         , #{p.priceBracket}
+         , #{p.subscriptionRate}
+         , #{p.finalPrice}
+         , #{p.ipoOfferAmt}
+         , #{p.leadManager}
+         , #{p.demandDate}
+         , #{p.subscriptionDate}
+         , #{p.divDate}
+         , #{p.payDate}
+         , #{p.refundDate}
+         , #{p.listDate}
+         , #{p.irDate}
+         , #{p.irLocationTime}
+         , #{p.corpRate}
+         , #{p.lockUpRate}
+         , #{p.demandCorpCnt}
+         , #{p.targetType}
+    </insert>
+
+    <select id="selectLatestCrawling" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIpoCrawlRow">
+        SELECT sch13_track_id          AS track_id
+             , sch13_stk_code          AS stk_code
+             , sch13_stk_name          AS stk_name
+             , sch13_market_type       AS market_type
+             , sch13_price_bracket     AS price_bracket
+             , sch13_lead_manager      AS lead_manager
+             , sch13_demand_date       AS demand_date
+             , sch13_subscription_date AS subscription_date
+             , sch13_div_date          AS div_date
+             , sch13_pay_date          AS pay_date
+             , sch13_refund_date       AS refund_date
+             , sch13_list_date         AS list_date
+             , sch13_final_price       AS final_price
+          FROM sch13_ipo_crawling
+         WHERE sch13_track_id = ( SELECT MAX(sch13_track_id)
+                                    FROM sch13_ipo_crawling
+                                   WHERE sch13_target_type = #{targetType} )   /*(1:공모주38 / 2:IPO-Stock)*/
+           AND TO_DATE((CASE WHEN COALESCE(sch13_list_date,'') = '' THEN '9999-12-31' ELSE sch13_list_date END),'YYYY-MM-DD') <![CDATA[>=]]> f_today()
+         ORDER BY sch13_ipo_crawling_id DESC
+    </select>
+
+    <select id="selectValidItemCode" resultType="String">
+        SELECT f_get_ipo_valid_item_cd(#{itemCode})
+    </select>
+
+    <select id="selectIpoByIssCorpCode" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIpo">
+        SELECT sch10_ipo_id                    AS ipo_id
+             , sch10_iss_corp_cd               AS iss_corp_code
+             , sch10_market_cd                 AS market_code
+             , sch10_company_id                AS company_id
+             , sch10_item_nm                   AS item_name
+             , sch10_demand_start_date         AS demand_start_date
+             , sch10_demand_close_date         AS demand_close_date
+             , sch10_subscription_start_date   AS subscription_start_date
+             , sch10_subscription_close_date   AS subscription_close_date
+             , sch10_div_date                  AS div_date
+             , sch10_pay_date                  AS pay_date
+             , sch10_refund_date               AS refund_date
+             , sch10_list_date                 AS list_date
+             , sch10_note                      AS note
+             , sch10_cancel_yn                 AS cancel_yn
+             , sch10_price_bracket             AS price_bracket
+             , sch10_price                     AS price
+             , COALESCE(sch14_check_yn,'false') AS mismatch_check_yn
+          FROM sch10_ipo
+               LEFT OUTER JOIN sch14_ipo_mismatch ON ( sch14_ipo_id = sch10_ipo_id AND
+                                                       sch14_ipo_mismatch_id = ( SELECT sch14_ipo_mismatch_id
+                                                                                   FROM sch14_ipo_mismatch
+                                                                                  WHERE sch14_ipo_id = sch10_ipo_id
+                                                                                  ORDER BY sch14_insert_date_time DESC
+                                                                                  LIMIT 1 ) )
+         WHERE sch10_iss_corp_cd = #{issCorpCode}
+           AND sch10_market_cd   = #{marketType}
+         ORDER BY sch10_demand_start_date DESC
+         LIMIT 1
+    </select>
+
+    <insert id="insertIpo">
+        INSERT
+          INTO sch10_ipo
+        SELECT f_create_seq()
+             , #{p.itemName}
+             , #{p.demandStartDate}
+             , #{p.demandCloseDate}
+             , #{p.subscriptionStartDate}
+             , #{p.subscriptionCloseDate}
+             , #{p.divDate}
+             , #{p.payDate}
+             , #{p.refundDate}
+             , #{p.listDate}
+             , #{p.note}
+             , #{p.companyId}
+             , #{p.marketCode}
+             , #{p.cancelYn}
+             , #{p.priceBracket}
+             , #{p.price}
+             , #{p.issCorpCode}
+    </insert>
+
+    <update id="updateIpo">
+        UPDATE sch10_ipo
+           SET sch10_item_nm                    = #{p.itemName}
+             , sch10_demand_start_date          = #{p.demandStartDate}
+             , sch10_demand_close_date          = #{p.demandCloseDate}
+             , sch10_subscription_start_date    = #{p.subscriptionStartDate}
+             , sch10_subscription_close_date    = #{p.subscriptionCloseDate}
+             , sch10_div_date                   = #{p.divDate}
+             , sch10_pay_date                   = #{p.payDate}
+             , sch10_refund_date                = #{p.refundDate}
+             , sch10_list_date                  = #{p.listDate}
+             , sch10_note                       = #{p.note}
+             , sch10_company_id                 = #{p.companyId}
+             , sch10_market_cd                  = #{p.marketCode}
+             , sch10_cancel_yn                  = #{p.cancelYn}
+             , sch10_price_bracket              = #{p.priceBracket}
+             , sch10_price                      = #{p.price}
+             , sch10_iss_corp_cd                = #{p.issCorpCode}
+         WHERE sch10_ipo_id = #{p.ipoId}
+    </update>
+
+    <insert id="insertCorpName">
+        INSERT
+          INTO sch12_ipo_corp
+        SELECT f_create_seq()
+             , corpName
+          FROM ( SELECT trim(unnest(string_to_array(unnest(string_to_array(#{leadManager},',')),'.'))) corpName
+                 EXCEPT
+                 SELECT sch12_corp_nm
+                   FROM sch12_ipo_corp ) t
+    </insert>
+
+    <update id="updateCancelYn">
+        UPDATE sch10_ipo
+           SET sch10_cancel_yn = 'true'
+         WHERE 1=1
+           AND sch10_demand_start_date <![CDATA[>=]]> f_today() + interval '-3month'
+           AND NOT EXISTS ( SELECT 1
+                              FROM sch13_ipo_crawling
+                                   LEFT OUTER JOIN sch15_ipo_item_matching ON sch15_item_cd = sch13_stk_code
+                             WHERE sch13_track_id    = #{trackId}
+                               AND sch13_target_type = '1'
+                               AND SUBSTR(COALESCE(sch15_valid_item_cd, sch13_stk_code),1,5) = sch10_iss_corp_cd
+                               AND sch13_market_type = CASE WHEN sch10_market_cd = '1' THEN '거래소'
+                                                            WHEN sch10_market_cd = '2' THEN '코스닥'
+                                                            WHEN sch10_market_cd = '3' THEN '코넥스'
+                                                            WHEN sch10_market_cd = '4' THEN '유가증권' END )
+           AND NOT EXISTS ( SELECT 1
+                              FROM sch14_ipo_mismatch
+                             WHERE sch14_ipo_id = sch10_ipo_id
+                               AND sch14_ipo_mismatch_id = ( SELECT sch14_ipo_mismatch_id
+                                                               FROM sch14_ipo_mismatch
+                                                              WHERE sch14_ipo_id = sch10_ipo_id
+                                                              ORDER BY sch14_insert_date_time DESC
+                                                              LIMIT 1 )
+                               AND COALESCE(sch14_check_yn,'false') = 'true' )
+    </update>
+
+    <select id="createIpoMismatch" resultType="String">
+        SELECT f_create_ipoMismatch()
+    </select>
+
+</mapper>
