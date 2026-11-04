@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.common.config;
 
+import kr.co.kfs.asseterp.common.batch.BatchApiKeyFilter;
 import kr.co.kfs.asseterp.common.config.properties.AuthProperties;
 import kr.co.kfs.asseterp.common.config.properties.CorsProperties;
 import kr.co.kfs.asseterp.common.config.properties.LogProperties;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -37,6 +39,7 @@ public class SecurityConfig {
     private final TenantFilter tenantFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final BatchApiKeyFilter batchApiKeyFilter;
     private final AuthProperties authProperties;
     private final CorsProperties corsProperties;
     private final LogProperties logProperties;
@@ -50,7 +53,24 @@ public class SecurityConfig {
         return NoOpPasswordEncoder.getInstance();
     }
 
+    /**
+     * 배치 API(/api/v1/batch/**): 외부 cron 등 서버 간 호출. 테넌트·JWT 대신 API key + 호출 IP로 인증한다
+     * (asseterp.batch.*, BatchApiKeyFilter). 기본 보안 체인보다 먼저 이 경로를 가져간다.
+     */
     @Bean
+    @Order(1)
+    public SecurityFilterChain batchSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/v1/batch/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("BATCH"))
+                .addFilterBefore(batchApiKeyFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -84,6 +104,14 @@ public class SecurityConfig {
      * JwtAuthenticationFilter, TenantFilter는 @Component라 서블릿 필터로도 자동 등록된다.
      * Security 필터 체인에서만 동작하도록 서블릿 컨테이너 등록은 비활성화한다.
      */
+    /** BatchApiKeyFilter도 배치 보안 체인에서만 동작한다 */
+    @Bean
+    public FilterRegistrationBean<BatchApiKeyFilter> batchApiKeyFilterRegistration(BatchApiKeyFilter filter) {
+        FilterRegistrationBean<BatchApiKeyFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(JwtAuthenticationFilter filter) {
         FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);

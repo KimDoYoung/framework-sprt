@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys97_notice_log.insert (server/sys/mapper/sys97_notice_log.xml:24) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchNoticeLogMapper">
+
+    <insert id="insert">
+        INSERT
+          INTO sys97_notice_log
+             ( sys97_proc_nm
+             , sys97_notice_msg
+             , sys97_err_msg
+             , sys97_note
+             )
+        VALUES ( #{p.procName}
+               , #{p.noticeMsg}
+               , #{p.errMsg}
+               , #{p.note}
+               )
+    </insert>
+
+</mapper>
