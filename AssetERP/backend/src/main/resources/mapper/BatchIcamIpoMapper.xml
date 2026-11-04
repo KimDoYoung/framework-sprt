@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS icam25_ipo.delete·insert (server/icam/mapper/icam25_ipo.xml:71·56). 본문은 원본 그대로(원칙 4).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchIcamIpoMapper">
+
+    <delete id="deleteFrom">
+        DELETE
+          FROM icam25_ipo
+         WHERE icam25_start_date <![CDATA[>=]]> #{stdDate}
+    </delete>
+
+    <insert id="insert">
+        INSERT
+          INTO icam25_ipo
+        SELECT f_create_batchseq()
+             , #{p.itemName}
+             , #{p.issCorpCode}
+             , #{p.startDate}
+             , #{p.closeDate}
+             , #{p.companyCount}
+             , f_sysdate()
+             , #{p.worker}
+             , #{p.totalCompanyCount}
+             , #{p.regRate}
+    </insert>
+</mapper>

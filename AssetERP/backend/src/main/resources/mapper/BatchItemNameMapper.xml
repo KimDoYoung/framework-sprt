@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS icam20_price.selectChangedItemName·updateItemName (server/icam/mapper/icam20_price.xml:114·144)
+  AS-IS flt10_tr.updateItemName·updateTrItemName (flt10_tr.xml:2222·2228), flt11_book.updateItemName (flt11_book.xml:495),
+        flt12_book_month.updateItemName (flt12_book_month.xml:205), flt13_book_init.updateItemName (flt13_book_init.xml:135)
+  본문은 원본 그대로(원칙 4). selectChangedItemName의 SELECT *만 열 이름 별칭으로 풀었다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchItemNameMapper">
+
+    <select id="selectChangedItemName" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIcamPrice">
+        SELECT icam20_std_date        AS stdDate
+             , icam20_item_type       AS itemType
+             , icam20_item_cd         AS itemCode
+             , icam20_item_nm         AS itemName
+             , icam20_koscom_cd       AS koscomCode
+             , icam20_isin            AS isin
+             , icam20_ksd_item_cd     AS ksdItemCode
+             , icam20_close_price     AS closePrice
+             , icam20_pre_close_price AS preClosePrice
+             , icam20_market_type     AS marketType
+             , icam20_worker          AS worker
+          FROM icam20_price a1
+         WHERE icam20_item_type = '2010'
+           AND icam20_std_date  = #{stdDate}
+           AND EXISTS ( SELECT 1
+                          FROM icam20_price a2
+                         WHERE a2.icam20_item_type = a1.icam20_item_type
+                           AND a2.icam20_isin      = a1.icam20_isin
+                           AND a2.icam20_item_nm  != a1.icam20_item_nm )
+    </select>
+
+    <update id="updatePriceItemName">
+        UPDATE icam20_price
+           SET icam20_item_nm = #{itemName}
+         WHERE icam20_item_type = #{itemType}
+           AND icam20_isin      = #{isin}
+           AND icam20_std_date != #{stdDate}
+    </update>
+
+    <update id="updateFlt10ItemName">
+        UPDATE  flt10_tr
+           SET  flt10_item_nm = #{itemName}
+         WHERE  flt10_item_cd = #{isin}
+    </update>
+
+    <update id="updateFlt10TrItemName">
+        UPDATE  flt10_tr
+           SET  flt10_tr_item_nm = #{itemName}
+         WHERE  flt10_tr_item_cd = #{isin}
+    </update>
+
+    <update id="updateFlt11ItemName">
+        UPDATE  flt11_book
+           SET  flt11_item_nm = #{itemName}
+         WHERE  flt11_item_cd = #{isin}
+    </update>
+
+    <update id="updateFlt12ItemName">
+        UPDATE  flt12_book_month
+           SET  flt12_item_nm = #{itemName}
+         WHERE  flt12_item_cd = #{isin}
+    </update>
+
+    <update id="updateFlt13ItemName">
+        UPDATE  flt13_book_init
+           SET  flt13_item_nm = #{itemName}
+         WHERE  flt13_item_cd = #{isin}
+    </update>
+</mapper>

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.batch;
 import kr.co.kfs.asseterp.biz.batch.action.IcamPriceAction;
 import kr.co.kfs.asseterp.biz.batch.dto.BatchReq;
 import kr.co.kfs.asseterp.biz.batch.service.BatchNoticeLogService;
+import kr.co.kfs.asseterp.biz.batch.service.ComStkItemSync;
 import kr.co.kfs.asseterp.biz.icam.reader.CsvIcamReader;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /** SB20 icamPrice를 시뮬레이터 CSV로 asseterpdb에서 실제로 돌리고 롤백한다 */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({IcamPriceAction.class, CsvIcamReader.class})
+@Import({IcamPriceAction.class, ComStkItemSync.class, CsvIcamReader.class})
 @TestPropertySource(properties = {"asseterp.icam.mode=simulator", "asseterp.icam.simulator-dir=../data/icam-simulator"})
 class IcamPriceActionDbTest {
 

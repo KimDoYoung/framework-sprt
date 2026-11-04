@@ -19,4 +19,8 @@
         SELECT f_get_biz_date(#{companyId}, #{stdDate}, #{type})
     </select>
 
+    <select id="selectBizDate2" resultType="java.time.LocalDate">
+        SELECT f_get_biz_date2(#{companyId}, #{stdDate}, #{type}, #{chkYn})
+    </select>
+
 </mapper>

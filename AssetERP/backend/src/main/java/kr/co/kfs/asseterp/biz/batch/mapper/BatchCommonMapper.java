@@ -17,4 +17,8 @@ public interface BatchCommonMapper {
 
     /** f_get_biz_date(회사, 기준일, 이동 일수) — 영업일 */
     LocalDate selectBizDate(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("type") String type);
+
+    /** f_get_biz_date2(회사, 기준일, 이동 일수, 확인 여부) — AS-IS sys12_calendar.bizDate2 */
+    LocalDate selectBizDate2(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate,
+                             @Param("type") String type, @Param("chkYn") String chkYn);
 }
