@@ -442,4 +442,19 @@
          ORDER BY org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
     </select>
 
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (Sys99_Print.insertRdPersonnelRecordCard ① 내 출력 자료 정리) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdPersonnelRecordCard L4806 ② 선택 사원마다 sys99_print 한 줄(long01 = 사원ID) -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id, sys99_long01 )
+        VALUES ( f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}, #{empPersonId} )
+    </insert>
+
 </mapper>

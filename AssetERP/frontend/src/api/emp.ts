@@ -58,6 +58,12 @@ export const empApi = {
   },
 
   /** AS-IS ExcelDownload?actionCode=empList (Emp00_Tab_TransInfo [다운로드], .xls → .xlsx) → "사원정보.xlsx" 브라우저 저장 */
+  /** AS-IS sys.Sys99_Print.insertRdPersonnelRecordCard (Emp00_Lookup_PersonnelRecordCard) → rdGroupId */
+  rdPrintPersonnelRecordCard: async (personIds: number[]): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/trans-infos/rd-print', personIds);
+    return res.data.data;
+  },
+
   downloadTransInfosExcel: async (transDate: string | undefined, searchText: string, transCode: string): Promise<void> => {
     try {
       const res = await apiClient.get<Blob>('v1/emp/trans-infos/excel', { params: { transDate, searchText, transCode }, responseType: 'blob' });

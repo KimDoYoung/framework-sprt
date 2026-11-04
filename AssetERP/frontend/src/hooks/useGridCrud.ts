@@ -85,20 +85,23 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
    * GridUpdate(getModifiedRecords)가 보낸다. markDirty: AS-IS가 넣은 뒤 addChange로 값을 채우면 true(Sys05 사원찾기 등),
    * 모델 setter로만 채우면 false(빈 행·기본값 — 아무것도 고치지 않고 저장하면 저장되지 않는다).
    */
-  const addRows = useCallback((inits: Partial<T>[] = [{}], markDirty = true) => {
+  const addRows = useCallback((inits: Partial<T>[] = [{}], markDirty = true, afterId?: number) => {
     const api = gridRef.current?.api;
     api?.stopEditing();
     const added = inits.map(init => ({ ...newRow(), ...init, [idField]: --tempSeq.current } as T));
     if (added.length === 0) return;
     // afterSelected만 기준 행이 필요하다: 선택한 행 → 없으면 포커스된 행
     let anchor: T | undefined;
-    if (insertAt === 'afterSelected') {
+    if (afterId != null) {
+      // afterId: 그 ID의 행 바로 아래에 넣는다(insertAt보다 우선 — AS-IS grid.getStore().add(index + 1, model))
+      anchor = { [idField]: afterId } as T;
+    } else if (insertAt === 'afterSelected') {
       const focused = api?.getFocusedCell();
       anchor = api?.getSelectedRows()[0] ?? (focused ? api?.getDisplayedRowAtIndex(focused.rowIndex)?.data : undefined);
     }
     if (markDirty) { added.forEach(r => dirty.current.add(getId(r))); bump(); }
     setRows(prev => {
-      if (insertAt === 'first') return [...added, ...prev];
+      if (insertAt === 'first' && afterId == null) return [...added, ...prev];
       const at = anchor ? prev.findIndex(r => getId(r) === getId(anchor!)) : -1;
       return at < 0 ? [...prev, ...added] : [...prev.slice(0, at + 1), ...added, ...prev.slice(at + 1)];
     });

@@ -124,4 +124,11 @@ public class EmpTransInfoController {
                                                             @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(empTransInfoService.searchOnlineList(principal, transDate, searchText));
     }
+
+    /** AS-IS sys.Sys99_Print.insertRdPersonnelRecordCard (Emp00_Lookup_PersonnelRecordCard) → rdGroupId */
+    @PostMapping("/trans-infos/rd-print")
+    public ApiResponse<String> rdPrintPersonnelRecordCard(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestBody List<Long> personIds) {
+        return ApiResponse.ok(empTransInfoService.insertRdPersonnelRecordCard(principal, personIds));
+    }
 }

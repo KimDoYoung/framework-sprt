@@ -70,4 +70,13 @@ public interface EmpTransInfoMapper {
     List<TransInfoRes> selectOnlineList(@Param("companyId") Long companyId, @Param("transDate") String transDate,
                                         @Param("searchText") String searchText, @Param("personIds") List<Long> personIds,
                                         @Param("personId") Long personId, @Param("transId") Long transId);
+
+    /** AS-IS sys99_print.deleteByPersonId (내 출력 자료 정리) */
+    int deletePrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId,
+                    @Param("windowClassName") String windowClassName);
+
+    /** AS-IS sys99_print.insert — 인사기록카드는 long01(사원ID)만 채운다 */
+    int insertPrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId,
+                    @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
+                    @Param("empPersonId") Long empPersonId);
 }

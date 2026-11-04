@@ -34,6 +34,7 @@ import { Emp13_TabPage_Project } from './Emp13_TabPage_Project';
 import { Emp04_TabPage_AddTitle } from './Emp04_TabPage_AddTitle';
 import { Emp18_TabPage_RelateFile } from './Emp18_TabPage_RelateFile';
 import { Emp19_TabPage_education } from './Emp19_TabPage_education';
+import { Emp00_Lookup_PersonnelRecordCard } from './Emp00_Lookup_PersonnelRecordCard';
 
 const gb = gbFor<TransInfo>();
 
@@ -109,6 +110,7 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(TABS[0].key);
   const [editOpen, setEditOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const columnDefs = useMemo(buildGrid, []);
 
   /** rowData가 그리드에 반영된 뒤(onRowDataUpdated) 선택할 행 */
@@ -208,6 +210,8 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
             </>}
             {/* [E9] excelDownloadButton[다운로드].Select (L262) → excelDownload() L297-323: ExcelDownload?actionCode=empList (조회 조건 그대로) */}
             <Button type="download" onClick={excelDownload}>다운로드</Button>
+            {/* [E10] downLoadButton[인사기록카드].Select (L269) → Emp00_Lookup_PersonnelRecordCard.open() */}
+            <Button type="download" onClick={() => setCardOpen(true)}>인사기록카드</Button>
           </>}>
             <SearchBar.Field label="조회일자">
               <DatePicker style={{ width: 140 }} value={transDate} onChange={d => sp.set('transDate', d)} format="YYYY-MM-DD" />
@@ -251,6 +255,7 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
       </Splitter.Panel>
     </Splitter>
     <Emp03_Edit_Person open={editOpen} onClose={() => setEditOpen(false)} onSaved={onSaved} />
+    <Emp00_Lookup_PersonnelRecordCard open={cardOpen} onClose={() => setCardOpen(false)} />
     </>
   );
 };

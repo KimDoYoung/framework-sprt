@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/att/mapper/att03_overtime_req.xml selectByPersonId(L156) · selectByYearMonth(L291) · notInOvertimeReqIdList(L433) · getInfo(L450)
+  + att01_work_policy.getModel + pay34_work_time_config.getModel + att05_pm_work.getWorkDateInfo + UpdateDataModel(update/insert/delete)
+  selectByPersonId는 그리드가 안 쓰는 열(주간·월간 현황 CTE·소속·직급)을 뺐다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttMyOvertimeReqMapper">
+
+    <sql id="selectCols">
+        SELECT a.att03_overtime_req_id                                                                      AS overtime_req_id
+             , a.att03_work_date::date                                                                      AS work_date
+             , a.att03_work_type_cd                                                                         AS work_type_code
+             , f_cdnm('WorkTypeCode', a.att03_work_type_cd, a.att03_company_id, f_sysdate())                AS work_type_name
+             , a.att03_overtime_min                                                                         AS overtime_min
+             , CASE WHEN a.att03_work_type_cd = '10'
+                    THEN TO_CHAR(CASE WHEN EXISTS (
+                                                    SELECT 1
+                                                      FROM att05_pm_work pm
+                                                           LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+                                                     WHERE COALESCE(apr01_status_cd, '99') = '30'
+                                                       AND pm.att05_person_id = a.att03_person_id
+                                                       AND pm.att05_work_date = a.att03_work_date
+                                              )
+                                      THEN aop.att01_pm_work_end_time::time
+                                      ELSE aop.att01_work_end_time::time
+                                      END, 'HH24:MI')
+                         || ' ~ ' ||
+                         TO_CHAR((CASE WHEN EXISTS (
+                                                    SELECT 1
+                                                      FROM att05_pm_work pm
+                                                           LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+                                                     WHERE COALESCE(apr01_status_cd, '99') = '30'
+                                                       AND pm.att05_person_id = a.att03_person_id
+                                                       AND pm.att05_work_date = a.att03_work_date
+                                              )
+                                      THEN aop.att01_pm_work_end_time::time
+                                      ELSE aop.att01_work_end_time::time
+                                      END + (a.att03_overtime_min || ' minutes')::interval), 'HH24:MI')
+                    WHEN a.att03_work_type_cd = '20'
+                    THEN TO_CHAR(aptc.pay34_nt_start_time::time, 'HH24:MI')
+                         || ' ~ ' ||
+                         TO_CHAR((aptc.pay34_nt_start_time::time + (a.att03_overtime_min || ' minutes')::interval), 'HH24:MI')
+                    END                                                                                     AS over_time_str
+             , a.att03_reason                                                                               AS reason
+             , a.att03_work_reward_type_cd                                                                  AS work_reward_type_code
+             , f_cdnm('WorkRewardTypeCode', a.att03_work_reward_type_cd, a.att03_company_id, f_sysdate())   AS work_reward_type_name
+             , a.att03_appr_id                                                                              AS appr_id
+             , apr01_status_cd                                                                              AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)                   AS status_name
+          FROM att03_overtime_req a
+               INNER JOIN emp01_person ON emp01_person_id = a.att03_person_id
+               LEFT OUTER JOIN att01_work_policy aop ON aop.att01_company_id = a.att03_company_id
+                                                    AND aop.att01_start_date = (
+                                                            SELECT MAX(att01_start_date)
+                                                              FROM att01_work_policy
+                                                             WHERE att01_company_id = a.att03_company_id
+                                                               AND att01_start_date <![CDATA[<=]]> a.att03_work_date
+                                                        )
+               LEFT OUTER JOIN pay34_work_time_config aptc ON aptc.pay34_start_date = (
+                                                            SELECT pay34_start_date
+                                                              FROM pay34_work_time_config t
+                                                             WHERE t.pay34_company_id IN (a.att03_company_id, 0)
+                                                               AND t.pay34_start_date <![CDATA[<=]]> a.att03_work_date
+                                                             ORDER BY CASE WHEN t.pay34_company_id = a.att03_company_id THEN 0 ELSE 1 END
+                                                                    , t.pay34_start_date DESC
+                                                             LIMIT 1
+                                                        )
+               LEFT OUTER JOIN apr01_appr apr ON apr.apr01_appr_id = a.att03_appr_id
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimeReqRes">
+        <include refid="selectCols"/>
+         WHERE a.att03_person_id = #{personId}
+        <if test="baseDate != null">
+           AND a.att03_work_date = #{baseDate}::date
+        </if>
+         ORDER BY a.att03_work_date
+                , CASE a.att03_work_type_cd
+                       WHEN '30' THEN 1
+                       WHEN '10' THEN 2
+                       WHEN '20' THEN 3
+                       ELSE 4 END
+                , a.att03_overtime_req_id
+    </select>
+
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimeReqRes">
+        <include refid="selectCols"/>
+         WHERE a.att03_company_id = #{companyId}
+           AND a.att03_person_id  = #{personId}
+           AND a.att03_overtime_req_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="notInOvertimeReqIdList" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimeReqRes">
+        <include refid="selectCols"/>
+         WHERE a.att03_company_id = #{companyId}
+           AND a.att03_person_id  = #{personId}
+        <if test="ids != null and ids.size() != 0">
+           AND a.att03_overtime_req_id NOT IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+         ORDER BY a.att03_work_date
+    </select>
+
+    <select id="selectWorkDatesByYearMonth" resultType="string">
+        SELECT TO_CHAR(a.att03_work_date, 'YYYY-MM-DD')
+          FROM att03_overtime_req a
+               INNER JOIN emp01_person ON emp01_person_id = a.att03_person_id
+         WHERE a.att03_company_id = #{companyId}
+           AND a.att03_person_id  = #{personId}
+           AND #{yyyyMM} = TO_CHAR(a.att03_work_date, 'YYYYMM')
+    </select>
+
+    <!-- getInfo: pay01_annual 서브쿼리의 t.pay01_person_id = emp.emp01_company_id 는 AS-IS 그대로(사원ID와 회사ID를 비교하는 것으로 보임) -->
+    <select id="getInfo" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimeInfoRes">
+        WITH weekly_sum AS (
+            SELECT att03_person_id
+                 , date_trunc('week', att03_work_date)   AS week_start
+                 , FLOOR(SUM(att03_overtime_min) / 60.0) AS week_total_hour
+              FROM att03_overtime_req
+                   LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+             WHERE COALESCE(apr01_status_cd, '99') = '30'
+             GROUP BY att03_person_id, date_trunc('week', att03_work_date)
+        ),
+        monthly_sum AS (
+            SELECT att03_person_id
+                 , date_trunc('month', att03_work_date)  AS month_start
+                 , FLOOR(SUM(att03_overtime_min) / 60.0) AS month_total_hour
+              FROM att03_overtime_req
+                   LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+             WHERE COALESCE(apr01_status_cd, '99') = '30'
+             GROUP BY att03_person_id, date_trunc('month', att03_work_date)
+        )
+        SELECT CASE WHEN ws.att03_person_id IS NULL
+                    THEN '-'
+                    WHEN ws.week_total_hour <![CDATA[=]]> aptc.pay34_week_max_add_hours
+                    THEN '&lt;'||'b style=color:#E33E31;'||'&gt;'||
+                         (ws.week_total_hour || ' / ' || aptc.pay34_week_max_add_hours)
+                         ||'&lt;'||'/b'||'&gt;'
+                    ELSE '&lt;'||'b style=color:#4B81B9;'||'&gt;'||
+                         (ws.week_total_hour || ' / ' || aptc.pay34_week_max_add_hours)
+                         ||'&lt;'||'/b'||'&gt;'
+                    END                                                                                      AS week_report
+             , CASE WHEN pay01_month_ot_hours IS NULL OR ms.month_total_hour IS NULL
+                    THEN '-'
+                    WHEN ms.month_total_hour <![CDATA[=]]> annal.pay01_month_ot_hours
+                    THEN '&lt;'||'b style=color:#E33E31;'||'&gt;'||
+                         (ms.month_total_hour || ' / ' || annal.pay01_month_ot_hours)
+                         ||'&lt;'||'/b'||'&gt;'
+                    ELSE '&lt;'||'b style=color:#4B81B9;'||'&gt;'||
+                         (ms.month_total_hour || ' / ' || annal.pay01_month_ot_hours)
+                         ||'&lt;'||'/b'||'&gt;'
+                    END                                                                                      AS month_report
+          FROM emp01_person emp
+               LEFT OUTER JOIN att03_overtime_req a ON emp.emp01_person_id = a.att03_person_id AND a.att03_work_date = #{baseDate}::date
+               LEFT OUTER JOIN pay34_work_time_config aptc ON aptc.pay34_start_date = (
+                                                            SELECT pay34_start_date
+                                                              FROM pay34_work_time_config t
+                                                             WHERE t.pay34_company_id IN (emp.emp01_company_id, 0)
+                                                               AND t.pay34_start_date <![CDATA[<=]]> #{baseDate}::date
+                                                             ORDER BY CASE WHEN t.pay34_company_id = emp.emp01_company_id THEN 0 ELSE 1 END
+                                                                    , t.pay34_start_date DESC
+                                                             LIMIT 1
+                                                        )
+               LEFT OUTER JOIN pay01_annual annal ON annal.pay01_start_date = (
+                                                            SELECT pay01_start_date
+                                                              FROM pay01_annual t
+                                                             WHERE t.pay01_person_id = emp.emp01_company_id
+                                                               AND t.pay01_start_date <![CDATA[<=]]> #{baseDate}::date
+                                                             ORDER BY t.pay01_start_date DESC
+                                                             LIMIT 1
+                                                        )
+                                                 AND annal.pay01_person_id = emp.emp01_person_id
+               LEFT OUTER JOIN weekly_sum ws ON ws.att03_person_id = emp.emp01_person_id
+                                            AND ws.att03_person_id = #{personId}
+                                            AND ws.week_start = date_trunc('week', #{baseDate}::date)
+               LEFT OUTER JOIN monthly_sum ms ON ms.att03_person_id = emp.emp01_person_id
+                                             AND ms.att03_person_id = #{personId}
+                                             AND ms.month_start = date_trunc('month', #{baseDate}::date)
+         WHERE emp01_person_id = #{personId}
+         LIMIT 1
+    </select>
+
+    <select id="selectPolicies" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimePolicyRow">
+        SELECT att01_work_end_time AS work_end_time
+             , att01_pm_work_end_time AS pm_work_end_time
+          FROM att01_work_policy
+         WHERE att01_company_id = #{companyId}
+           AND att01_use_yn = 'true'
+        <if test="baseDate != null">
+           AND att01_start_date <![CDATA[<=]]> #{baseDate}::date
+        </if>
+         ORDER BY att01_start_date
+    </select>
+
+    <select id="selectTimeConfig" resultType="kr.co.kfs.asseterp.biz.att.dto.AttMyOvertimeTimeConfigRow">
+        SELECT pay34_nt_start_time       AS nt_start_time
+             , pay34_nt_end_time         AS nt_end_time
+             , pay34_week_max_add_hours  AS week_max_add_hours
+          FROM pay34_work_time_config
+         WHERE pay34_company_id IN (#{companyId}, 0)
+         ORDER BY CASE WHEN pay34_company_id = #{companyId} THEN 0 ELSE 1 END
+                , pay34_start_date DESC
+         LIMIT 1
+    </select>
+
+    <select id="countPmWorkOnDate" resultType="int">
+        SELECT count(*)
+          FROM att05_pm_work
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att05_appr_id
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+           AND att05_work_date  = #{workDate}
+           AND COALESCE(apr01_status_cd, '99') IN ('10', '20', '30')
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <update id="update">
+        UPDATE att03_overtime_req
+           SET att03_work_date             = #{workDate}
+             , att03_overtime_min          = #{overtimeMin}
+             , att03_reason                = #{reason}
+             , att03_work_type_cd          = #{workTypeCode}
+             , att03_work_reward_type_cd   = #{workRewardTypeCode}
+         WHERE att03_company_id = #{companyId}
+           AND att03_person_id  = #{personId}
+           AND att03_overtime_req_id = #{overtimeReqId}
+    </update>
+
+    <insert id="insert">
+        INSERT INTO att03_overtime_req ( att03_overtime_req_id, att03_company_id, att03_person_id, att03_work_date, att03_overtime_min
+                                       , att03_reason, att03_work_type_cd, att03_work_reward_type_cd )
+        VALUES ( #{overtimeReqId}, #{companyId}, #{personId}, #{workDate}, #{overtimeMin}
+               , #{reason}, #{workTypeCode}, #{workRewardTypeCode} )
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM att03_overtime_req
+         WHERE att03_company_id = #{companyId}
+           AND att03_person_id  = #{personId}
+           AND att03_overtime_req_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateApprId">
+        UPDATE att03_overtime_req
+           SET att03_appr_id = #{apprId}
+         WHERE att03_company_id = #{companyId}
+           AND att03_person_id  = #{personId}
+           AND att03_overtime_req_id = #{overtimeReqId}
+    </update>
+
+</mapper>

@@ -30,6 +30,8 @@ public class EmpTransInfoService {
     /** 채용발령 (AS-IS update L440: "채용발령(100), 공통코드 확인") */
     private static final String TRANS_HIRE = "100";
 
+    private static final String PERSONNEL_RECORD_CARD = "Emp00_Lookup_PersonnelRecordCard";
+
     private final EmpTransInfoMapper empTransInfoMapper;
     private final PresenceService presenceService;
 
@@ -166,5 +168,22 @@ public class EmpTransInfoService {
                 .toList();
         if (onlineIds.isEmpty()) return List.of();
         return empTransInfoMapper.selectOnlineList(user.getCompanyId(), date, like, onlineIds, null, null);
+    }
+
+    /**
+     * AS-IS Sys99_Print.insertRdPersonnelRecordCard L4806: ① 내 출력 자료 정리 ② 선택 사원마다 sys99_print 삽입 ③ 새 groupId 반환.
+     * windowClassName은 AS-IS가 보내는 "Emp00_Lookup_PersonnelRecordCard".
+     */
+    @Transactional
+    public String insertRdPersonnelRecordCard(UserPrincipal user, List<Long> personIds) {
+        if (personIds == null || personIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        long groupId = empTransInfoMapper.selectNextId();
+        empTransInfoMapper.deletePrint(user.getCompanyId(), user.getUserId(), PERSONNEL_RECORD_CARD);
+        for (Long personId : personIds) {
+            empTransInfoMapper.insertPrint(user.getCompanyId(), user.getUserId(), PERSONNEL_RECORD_CARD, groupId, personId);
+        }
+        return String.valueOf(groupId);
     }
 }

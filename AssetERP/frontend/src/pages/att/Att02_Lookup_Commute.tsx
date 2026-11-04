@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/att/Att02_Lookup_Commute.java (450줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L84-123: 300×430 모달(크기 고정), 머리말 = 오늘 상태명(미출근·정상·지각 …), 큰 시계 HH:mm:ss(1초 갱신, getClock L262-273),
  *   출근/퇴근 안내 줄(🕒 00:00 출근 전 → HH:mm 출근완료 → HH:mm 퇴근완료), [출근][퇴근], [외근 후 퇴근], [연장근무신청], [오후근무신청]
- * 연장근무신청(Att03_Lookup_OvertimeReq)·오후근무신청(Att05_Lookup_PmWork) 창은 아직 TOBE에 없어 다음 단계 안내 (팝업-미변환목록 G-22·23)
+ * 오후근무신청(Att05_Lookup_PmWork)은 EE72, 연장근무신청(Att03_Lookup_OvertimeReq)은 EE73에서 연결했다
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, message } from 'antd';
@@ -15,6 +15,8 @@ import { AttMyCommute, AttWorkPolicy } from '@/types/att';
 import { Button } from '@/components/button';
 import { Att02_Edit_Reason, ReasonTarget } from './Att02_Edit_Reason';
 import { Att02_Edit_CheckOutTime } from './Att02_Edit_CheckOutTime';
+import { Att05_Lookup_PmWork } from './Att05_Lookup_PmWork';
+import { Att03_Lookup_OvertimeReq } from './Att03_Lookup_OvertimeReq';
 
 interface Props {
   open: boolean;
@@ -38,6 +40,8 @@ export const Att02_Lookup_Commute: React.FC<Props> = ({ open, onClose }) => {
   const [processing, setProcessing] = useState(false);
   const [reasonTarget, setReasonTarget] = useState<ReasonTarget | null>(null);
   const [checkOutTarget, setCheckOutTarget] = useState<AttMyCommute | null>(null);
+  const [pmWorkOpen, setPmWorkOpen] = useState(false);
+  const [overtimeOpen, setOvertimeOpen] = useState(false);
 
   const processingRef = useRef(false);
   const lastInfoRef = useRef<AttMyCommute | null>(null);
@@ -191,9 +195,9 @@ export const Att02_Lookup_Commute: React.FC<Props> = ({ open, onClose }) => {
     });
   };
   // [E6] overButton[연장근무신청].Select (L246) → Att03_Lookup_OvertimeReq.open() — 다음 단계(팝업-미변환목록 G-22)
-  const onOver = () => { message.info('연장근무신청 창은 다음 단계에서 제공됩니다.'); };
-  // [E7] afternoonButton[오후근무신청].Select (L253) → Att05_Lookup_PmWork.open() — 다음 단계(팝업-미변환목록 G-23)
-  const onAfternoon = () => { message.info('오후근무신청 창은 다음 단계에서 제공됩니다.'); };
+  const onOver = () => setOvertimeOpen(true);
+  // [E7] afternoonButton[오후근무신청].Select (L253) → Att05_Lookup_PmWork.open() (EE72)
+  const onAfternoon = () => setPmWorkOpen(true);
 
   const big: React.CSSProperties = { width: '100%', height: 55 };
 
@@ -221,6 +225,8 @@ export const Att02_Lookup_Commute: React.FC<Props> = ({ open, onClose }) => {
         </div>
       </Modal>
       <Att02_Edit_Reason target={reasonTarget} onClose={() => setReasonTarget(null)} />
+      <Att05_Lookup_PmWork open={pmWorkOpen} onClose={() => setPmWorkOpen(false)} />
+      <Att03_Lookup_OvertimeReq open={overtimeOpen} onClose={() => setOvertimeOpen(false)} />
       <Att02_Edit_CheckOutTime
         target={checkOutTarget}
         onClose={() => setCheckOutTarget(null)}

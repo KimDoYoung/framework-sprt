@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/att/mapper/att05_pm_work.xml selectByWorkDate(L90) · notInPmWorkIdList(L165) + UpdateDataModel(update/delete) + att03_overtime_req.selectByPersonId(baseDate 건수) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttPmWorkMapper">
+
+    <sql id="selectCols">
+        SELECT att05_pm_work_id                                                         AS pm_work_id
+             , att05_work_date                                                          AS work_date
+             , att05_reason                                                             AS reason
+             , att05_appr_id                                                            AS appr_id
+             , apr01_status_cd                                                          AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS status_name
+             , policy.att01_pm_work_start_time || ' ~ ' || policy.att01_pm_work_end_time AS time_str
+             , att01_break_minutes                                                      AS break_minutes
+             , EXTRACT(HOUR FROM (policy.att01_pm_work_end_time::time
+                                  - policy.att01_pm_work_start_time::time
+                                  - (policy.att01_break_minutes * INTERVAL '1 minute')))::int
+               || '시간 ' ||
+               LPAD(EXTRACT(MINUTE FROM (policy.att01_pm_work_end_time::time
+                                         - policy.att01_pm_work_start_time::time
+                                         - (policy.att01_break_minutes * INTERVAL '1 minute')))::int::text, 2, '0')
+               || '분'                                                                  AS work_time_str
+          FROM att05_pm_work
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att05_appr_id
+               LEFT OUTER JOIN LATERAL (
+                    SELECT att01_pm_work_start_time
+                         , att01_pm_work_end_time
+                         , att01_break_minutes
+                      FROM att01_work_policy
+                     WHERE att01_company_id = att05_company_id
+                       AND att01_use_yn = 'true'
+                       AND att01_start_date <![CDATA[<=]]> att05_work_date
+                     ORDER BY att01_start_date DESC
+                     LIMIT 1
+               ) policy ON TRUE
+    </sql>
+
+    <select id="selectByWorkDate" resultType="kr.co.kfs.asseterp.biz.att.dto.AttPmWorkRes">
+        <include refid="selectCols"/>
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+           AND att05_work_date  = #{workDate}
+    </select>
+
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.att.dto.AttPmWorkRes">
+        <include refid="selectCols"/>
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+           AND att05_pm_work_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="notInPmWorkIdList" resultType="kr.co.kfs.asseterp.biz.att.dto.AttPmWorkRes">
+        <include refid="selectCols"/>
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+        <if test="ids != null and ids.size() != 0">
+           AND att05_pm_work_id NOT IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+    </select>
+
+    <select id="countOvertimeByDate" resultType="int">
+        SELECT count(*)
+          FROM att03_overtime_req
+         WHERE att03_person_id = #{personId}
+           AND att03_work_date = #{baseDate}::date
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <update id="update">
+        UPDATE att05_pm_work
+           SET att05_work_date = #{workDate}
+             , att05_reason    = #{reason}
+         WHERE att05_pm_work_id = #{pmWorkId}
+    </update>
+
+    <insert id="insert">
+        INSERT INTO att05_pm_work ( att05_pm_work_id, att05_company_id, att05_person_id, att05_work_date, att05_reason )
+        VALUES ( #{pmWorkId}, #{companyId}, #{personId}, #{workDate}, #{reason} )
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM att05_pm_work
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+           AND att05_pm_work_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateApprId">
+        UPDATE att05_pm_work
+           SET att05_appr_id = #{apprId}
+         WHERE att05_company_id = #{companyId}
+           AND att05_person_id  = #{personId}
+           AND att05_pm_work_id = #{pmWorkId}
+    </update>
+
+</mapper>

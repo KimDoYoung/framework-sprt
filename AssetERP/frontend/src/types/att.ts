@@ -122,3 +122,64 @@ export interface AttMyCommuteLast {
   last: AttMyCommute | null;
 }
 
+/** 오후근무신청 창 그리드 한 행 (GET /api/v1/att/pm-works, AS-IS Att05_PmWorkModel). 새 행의 pmWorkId는 임시 음수 */
+export interface AttPmWork {
+  pmWorkId: number;
+  workDate: string;
+  reason?: string | null;
+  apprId?: number | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+  timeStr?: string | null;
+  breakMinutes?: number | null;
+  workTimeStr?: string | null;
+}
+
+/** 오후근무 저장 요청: rows = 그리드의 모든 행(중복 검사용), changed = 바뀐 행 */
+export interface AttPmWorkSaveReq {
+  baseDate: string;
+  rows: { pmWorkId: number; workDate: string; reason?: string | null; changed: boolean }[];
+}
+
+/** 연장근무신청 창 그리드 한 행 (GET /api/v1/att/overtime-reqs/me, AS-IS Att03_OvertimeReqModel). 새 행의 overtimeReqId는 임시 음수.
+ *  startTimeStr·endTimeStr은 화면에서 계산하는 값(서버에 없음) */
+export interface AttMyOvertime {
+  overtimeReqId: number;
+  workDate: string;
+  workTypeCode?: string | null;
+  workTypeName?: string | null;
+  overtimeMin?: number | null;
+  overTimeStr?: string | null;
+  reason?: string | null;
+  workRewardTypeCode?: string | null;
+  workRewardTypeName?: string | null;
+  apprId?: number | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+  startTimeStr?: string | null;
+  endTimeStr?: string | null;
+}
+
+/** 연장근무신청 창 기준값 (AS-IS defaultInfo + 등록 때 getWorkDateInfo) */
+export interface AttMyOvertimeSettings {
+  policyFound: boolean;
+  workEndTime?: string | null;
+  pmWorkEndTime?: string | null;
+  ntStartTime: string;
+  ntEndTime: string;
+  weekMaxAddHours: number;
+  pmWorkOnDate: boolean;
+}
+
+/** 안내 줄의 주간·월간 현황 (HTML 조각) */
+export interface AttMyOvertimeInfo {
+  weekReport?: string | null;
+  monthReport?: string | null;
+}
+
+/** 연장근무 저장 요청: rows = 그리드의 모든 행(중복·합계 검사용), changed = 바뀐 행, deleteIds = 화면에서 뺀 하위 행 */
+export interface AttMyOvertimeSaveReq {
+  baseDate: string;
+  rows: { overtimeReqId: number; workDate: string; workTypeCode?: string | null; overtimeMin?: number | null; reason?: string | null; workRewardTypeCode?: string | null; changed: boolean }[];
+  deleteIds: number[];
+}

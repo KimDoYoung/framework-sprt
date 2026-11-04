@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AttCommute, AttCommuteStatus, AttMyCommute, AttMyCommuteLast, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
+import { AttCommute, AttCommuteStatus, AttMyCommute, AttMyCommuteLast, AttMyOvertime, AttMyOvertimeInfo, AttMyOvertimeSaveReq, AttMyOvertimeSettings, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttPmWork, AttPmWorkSaveReq, AttWorkPolicy } from '../types/att';
 
 /** att(근태) 화면 API (T06~) */
 export const attApi = {
@@ -133,5 +133,71 @@ export const attApi = {
   updateMyCheckOutTime: async (commuteId: number, checkOutTime: string, checkOutTimeStr: string): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>(`v1/att/commutes/me/${commuteId}/check-out-time`, { checkOutTime, checkOutTimeStr });
     return res.data.data ?? 0;
+  },
+
+  // ── 오후근무신청 창 (Att05_Lookup_PmWork) ──
+
+  /** AS-IS att.Att05_PmWork.selectByWorkDate — 내 신청, 신청일자 하루 */
+  searchPmWorks: async (workDate: string): Promise<AttPmWork[]> => {
+    const res = await apiClient.get<ApiResponse<AttPmWork[]>>('v1/att/pm-works', { params: { workDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS 창의 updateChk01~03 + att.Att05_PmWork.update (검사 메시지는 서버가 BusinessException으로) */
+  savePmWorks: async (req: AttPmWorkSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/att/pm-works', req);
+  },
+
+  /** AS-IS att.Att05_PmWork.delete → 삭제 건수 */
+  deletePmWorks: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/att/pm-works', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS updateApprId — 상신한 문서 ID를 행에 기록 */
+  updatePmWorkAppr: async (pmWorkId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/att/pm-works/${pmWorkId}/appr`, null, { params: { apprId } });
+  },
+
+  // ── 연장근무신청 창 (Att03_Lookup_OvertimeReq) ──
+
+  /** AS-IS att.Att03_OvertimeReq.selectByPersonId — 내 신청, 근무일자 하루 */
+  searchMyOvertimes: async (baseDate: string): Promise<AttMyOvertime[]> => {
+    const res = await apiClient.get<ApiResponse<AttMyOvertime[]>>('v1/att/overtime-reqs/me', { params: { baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS att.Att03_OvertimeReq.selectByYearMonth — 신청이 있는 근무일자 (yyyyMM) */
+  searchMyOvertimeDates: async (yyyyMM: string): Promise<string[]> => {
+    const res = await apiClient.get<ApiResponse<string[]>>('v1/att/overtime-reqs/me/work-dates', { params: { yyyyMM } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS att.Att03_OvertimeReq.getInfo — 주간·월간 현황 */
+  getMyOvertimeInfo: async (baseDate: string): Promise<AttMyOvertimeInfo | null> => {
+    const res = await apiClient.get<ApiResponse<AttMyOvertimeInfo | null>>('v1/att/overtime-reqs/me/info', { params: { baseDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS Att01_WorkPolicy.getModel + Pay34_WorkTimeConfig.getModel + Att05_PmWork.getWorkDateInfo */
+  getMyOvertimeSettings: async (baseDate: string): Promise<AttMyOvertimeSettings> => {
+    const res = await apiClient.get<ApiResponse<AttMyOvertimeSettings>>('v1/att/overtime-reqs/me/settings', { params: { baseDate } });
+    return res.data.data as AttMyOvertimeSettings;
+  },
+
+  /** AS-IS 창의 updateChk01~02 + checkWeekMaxTime + Att03_OvertimeReq.delete·update (검사 메시지는 서버가 BusinessException으로) */
+  saveMyOvertimes: async (req: AttMyOvertimeSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/att/overtime-reqs/me', req);
+  },
+
+  /** AS-IS att.Att03_OvertimeReq.delete → 삭제 건수 */
+  deleteMyOvertimes: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/att/overtime-reqs/me', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS updateApprId — 상신한 문서 ID를 행에 기록 */
+  updateMyOvertimeAppr: async (overtimeReqId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/att/overtime-reqs/me/${overtimeReqId}/appr`, null, { params: { apprId } });
   },
 };
