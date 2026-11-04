@@ -42,6 +42,15 @@ public class BatchIpoService {
         saveCrawling(data, BatchIpoCrawling::ofIpo38);
     }
 
+    /** IPOStock 직접 스크래핑 결과를 한 트랜잭션으로 sch13에 넣는다(AS-IS scrapingIpo: 끝에서 한 번 commit, 미일치 생성은 부르지 않는다) */
+    @Transactional
+    public void saveScraped(List<BatchIpoCrawling> rows) {
+        for (BatchIpoCrawling row : rows) {
+            mapper.insertCrawling(row);
+        }
+        log.info("공모주 스크래핑 {}건 저장", rows.size());
+    }
+
     private void saveCrawling(String data, BiFunction<String, String[], BatchIpoCrawling> factory) {
         if (data == null) {
             // AS-IS는 NullPointerException(메시지 없음)으로 롤백된다 — 입력 검사로 분명한 문구를 준다
