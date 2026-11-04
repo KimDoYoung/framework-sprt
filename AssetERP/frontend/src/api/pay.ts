@@ -1227,3 +1227,22 @@ export const payApi = {
     return res.data.data ?? 0;
   },
 };
+
+/** 퇴직정산서 생성 창 (EE96 Pay07_Lookup_RetireCreate) */
+export interface PayRetireStatementCreateReq {
+  personId: number;
+  calcMonth: number | null;
+  fixHi: number | null;
+  fixLt: number | null;
+  fixEi: number | null;
+  nonHiYn: boolean;
+  nonLtYn: boolean;
+  nonEiYn: boolean;
+}
+
+export const payRetireStatementApi = {
+  /** AS-IS pay.Pay07_Retire.createRetire — 결재 진행중·완료면 "결재진행중 또는 이미 완료된 문서입니다." */
+  create: async (req: PayRetireStatementCreateReq): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/pay/retire-statements', req);
+  },
+};

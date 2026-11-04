@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay07_retire.xml · Pay07_Retire.createRetire (EE96 Pay07_Lookup_RetireCreate) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayRetireStatementMapper">
+
+    <!-- AS-IS pay07_retire.checkAppr L91 -->
+    <select id="checkAppr" resultType="string">
+        SELECT CASE WHEN COALESCE(apr01_status_cd,'99') IN ('10','20','30') THEN 'false' ELSE 'true' END
+          FROM pay07_retire
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = pay07_appr_id
+         WHERE pay07_person_id = #{personId}
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_company_id = #{companyId} AND emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS Pay07_Retire.createRetire L61-93 — 저장 프로시저(9 인자) -->
+    <update id="createRetire">
+        CALL pay07_retire_create( #{personId}, #{userId}, #{calcMonth}, #{fixHi}, #{fixLt}, #{fixEi}, #{nonHiYn}, #{nonLtYn}, #{nonEiYn} )
+    </update>
+</mapper>

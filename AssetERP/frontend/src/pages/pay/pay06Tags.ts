@@ -25,3 +25,18 @@ export const setActMappingKeys = (keys: string[]) => { current = keys; };
 
 /** TempData.getActMappingList — 비어 있으면 기본 목록 */
 export const getActMappingTags = (): string[] => (current.length === 0 ? DEFAULT_TAGS : current.filter(k => k !== ''));
+
+/**
+ * 퇴직정산서 양식 & 태그 목록 (EE95) — AS-IS TempData.getRetireMappingList() L295-343.
+ * AS-IS는 certMappingList가 비었을 때 기본 목록(L300-327)을, 아니면 retireMappingList(setRetireMappingList — 어디서도 부르지 않음)를 쓴다.
+ * 증명서 매핑 목록은 TOBE에 없으므로 기본 목록을 쓴다.
+ */
+const RETIRE_TAGS = [
+  '퇴직자', '퇴직일', '소 속', '직 위',
+  '기본급', '차량유지비', '식대', '기타지급',
+  '국민연금', '건강보험료', '건강보험료.당월', '건강보험료.퇴직정산', '장기요양보험료', '장기요양보험료.당월', '장기요양보험료.퇴직정산',
+  '고용보험료', '고용보험료.당월', '고용보험료.퇴직정산', '근로소득세.정산', '근로소득주민세.정산',
+  '지급금 계', '공제금 계', '차감지급액',
+];
+
+export const getRetireMappingTags = (): string[] => RETIRE_TAGS;
