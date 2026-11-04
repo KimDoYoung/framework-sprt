@@ -13,15 +13,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 작업의 구성
 
-작업은 아래 여섯 가지로 나눈다. 각 작업의 규칙·기록은 `docs/` 아래 작업별 폴더에 둔다(지금은 `AssetERP/docs/변환/`만 있고, 나머지는 필요할 때 만든다).
+작업은 아래 여섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
 
 | 작업 | 뜻 | docs 폴더 | 핵심 명령 |
 |:---|:---|:---|:---|
 | 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/변환/` (규칙: `03-절대원칙`·`05-작업방법`) | `yunhee analysis`·`port-sql`·`run` |
-| 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | (예정. 지금은 `변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
-| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | (예정) | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
-| 대체 | AS-IS의 UI·로직(업무흐름)을 TOBE로 실제 대신 쓰게 함(전환 단위·공존·롤백은 아래 Strangler Fig) | (예정) | |
-| 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | (예정) | `yunhee run "gradle test"` |
+| 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | `AssetERP/docs/업무분석/` (참고: `변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
+| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/변경반영/` | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
+| 대체 | AS-IS의 UI·로직(업무흐름)을 TOBE로 실제 대신 쓰게 함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/대체/` | |
+| 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/테스트/` | `yunhee run "gradle test"` |
 
 * 기술스택이 바뀌면서 달라지는 것
    - 보안: 세션 → JWT (`docs/security-설계.md`)

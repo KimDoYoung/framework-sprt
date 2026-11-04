@@ -8,7 +8,9 @@
 - 보고는 UI의 흐름과 DB의 변경을 함께 보고되어야 한다.
 
 
-## 하위 폴더의 구성
+## 파일 및 폴더
 
-- READMD.md : this file, '업무분석' task에 대한  전반적인 설명
-- 폴더 domain별 주요업무 : AssetERP의 ASIS의 각 도메인별로 파악된 주요업무를 기술하고 있다. (ex: act-도메인-주요업무들.md)
+- 파일들
+    - README.md : this file, '업무분석' task에 대한  전반적인 설명
+- 폴더들 
+    - domain별 주요업무 : AssetERP의 ASIS의 각 도메인별로 파악된 주요업무를 기술하고 있다. (ex: act-도메인-주요업무들.md)
