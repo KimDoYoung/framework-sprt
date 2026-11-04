@@ -1,0 +1,3 @@
+@icamAdvisCompanyCode,@stdDate,adv10_std_date,adv10_manage_cd,adv10_manage_nm,adv10_item_cd,adv10_item_nm,adv10_qty,fnd10_eval_amt,adv10_item_group_cd,adv10_item_group_nm,adv10_market_cd,adv10_market_nm
+ZZ98,2026-11-03,2026-11-03,ADVBK01,시뮬 자문계좌,A005930,시뮬 삼성전자,100,7000000,3,Stock(주식),1,유가증권시장
+ZZ98,2026-11-03,2026-11-03,ADVBK01,시뮬 자문계좌,A000660,시뮬 SK하이닉스,50,9000000,3,Stock(주식),2,코스닥

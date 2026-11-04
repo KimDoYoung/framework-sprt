@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS fnd10_book.delete·insert (server/fnd/mapper/fnd10_book.xml:285·296)
+  AS-IS fnd01_fund_code.selectByFundCode (fnd01_fund_code.xml:122), ast01_class_tree.selectByDetailCode (ast01_class_tree.xml:504)
+  AS-IS adv10_book.insert·delete (server/adv/mapper/adv10_book.xml:61·81)
+  본문은 원본 그대로(원칙 4). 별칭만 DTO 필드.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchBookMapper">
+
+    <delete id="deleteFndBook">
+    DELETE
+      FROM fnd10_book
+     WHERE fnd10_std_date   = #{stdDate}
+       AND fnd10_company_id = #{companyId}
+       AND fnd10_fund_code_id IN ( SELECT fnd01_fund_code_id
+                                     FROM fnd01_fund_code
+                                    WHERE fnd01_company_id = #{companyId}
+                                      AND fnd01_icam_yn    = 'true' )
+    </delete>
+
+    <select id="selectFundCodeId" resultType="java.lang.Long">
+    SELECT fnd01_fund_code_id
+      from fnd01_fund_code
+     where fnd01_fund_cd = #{fundCode}
+       and fnd01_company_id = #{companyId}
+    </select>
+
+    <select id="selectItemClassTreeId" resultType="java.lang.Long">
+    SELECT ast01_class_tree_id
+      FROM ast01_class_tree
+     WHERE ast01_company_id = #{companyId}
+       AND ast01_isin       = #{itemCode}
+       AND ast01_type_cd    = 'IT'
+       AND ast01_asset_type = '2'   /*(2:운용자산)*/
+       AND ast01_icam_yn    = 'true'
+     LIMIT 1
+    </select>
+
+    <insert id="insertFndBook">
+    INSERT INTO fnd10_book
+              ( fnd10_book_id
+              , fnd10_std_date
+              , fnd10_fund_code_id
+              , fnd10_ast_class_tree_id
+              , fnd10_company_id
+              , fnd10_pur_amt
+              , fnd10_eval_amt
+              , fnd10_eval_pl_amt
+              , fnd10_recv_amt
+              , fnd10_note
+              , fnd10_create_date
+              , fnd10_creater
+              , fnd10_detail_type
+              , fnd10_item_cd
+              , fnd10_item_group_cd
+              , fnd10_item_group_nm
+              , fnd10_market_cd
+              , fnd10_market_nm
+    ) VALUES (  #{p.bookId}
+             ,  #{p.stdDate}
+             ,  #{p.fundCodeId}
+             ,  #{p.astClassTreeId}
+             ,  #{p.companyId}
+             ,  #{p.purAmt}
+             ,  #{p.evalAmt}
+             ,  #{p.evalPlAmt}
+             ,  #{p.recvAmt}
+             ,  #{p.note}
+             ,  f_sysdate()
+             ,  #{p.creater}
+             ,  #{p.detailType}
+             ,  #{p.itemCode}
+             ,  #{p.itemGroupCode}
+             ,  #{p.itemGroupName}
+             ,  #{p.marketCode}
+             ,  #{p.marketName}
+             )
+    </insert>
+
+    <delete id="deleteAdvBook">
+    DELETE
+      FROM adv10_book
+     WHERE adv10_company_id = #{companyId}
+       AND adv10_std_date   = #{stdDate}
+    </delete>
+
+    <insert id="insertAdvBook">
+    INSERT
+      INTO adv10_book
+    SELECT #{p.bookId}
+         , #{p.stdDate}
+         , #{p.companyId}
+         , #{p.manageCode}
+         , #{p.manageName}
+         , #{p.itemCode}
+         , #{p.itemName}
+         , #{p.qty}
+         , #{p.evalAmt}
+         , #{p.itemGroupCode}
+         , #{p.itemGroupName}
+         , #{p.marketCode}
+         , #{p.marketName}
+         , f_sysdate()
+         , #{p.creater}
+    </insert>
+</mapper>
