@@ -90,4 +90,17 @@ class SysFileUploadPolicyDbTest {
         assertThat(stored.length()).isEqualTo(5000L);
         assertThat(Files.readAllBytes(stored.toPath())).isEqualTo(body);
     }
+
+    @Test
+    void 프로필_사진은_없으면_noimage_일반_이미지는_nonamed가_기본이다() throws Exception {
+        Files.write(new File(DIR, "noimage.jpg").toPath(), new byte[]{1});
+        Files.write(new File(DIR, "nonamed.jpg").toPath(), new byte[]{2, 2});
+        assertThat(service.getMonitoringImage(-1L).file().getName()).isEqualTo("noimage.jpg");   // 사진 없는 부모
+        assertThat(service.getImage(null, -1L).file().getName()).isEqualTo("nonamed.jpg");
+        // 사진이 올라가 있으면 그 사진
+        FileRes saved = up("photo.jpg", new byte[]{9, 9, 9}, null);
+        // parentId 990099에 올라간 사진을 monitoring이 돌려준다
+        assertThat(service.getMonitoringImage(990099L).file().length()).isEqualTo(3L);
+        assertThat(saved.fileNm()).isEqualTo("photo.jpg");
+    }
 }

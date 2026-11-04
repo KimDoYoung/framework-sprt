@@ -43,6 +43,7 @@ import java.util.Set;
 public class SysFileService {
 
     private static final String NONAMED_IMAGE = "nonamed.jpg";
+    private static final String NOIMAGE_IMAGE = "noimage.jpg";
 
     private final SysFileMapper sysFileMapper;
     private final UploadProperties uploadProperties;
@@ -249,6 +250,15 @@ public class SysFileService {
 
     /** AS-IS FileDownload.downloadGenericImage L195-215 (fileType=image): fileId 또는 parentId의 최근 1건, 없으면 {업로드 폴더}/nonamed.jpg */
     public StoredFile getImage(Long fileId, Long parentId) {
+        return getImage(fileId, parentId, NONAMED_IMAGE);
+    }
+
+    /** AS-IS FileDownload fileType=monitoring (monitoringImage L191, MainFrame 상단 프로필 사진): image와 같고 기본 이미지만 {업로드 폴더}/noimage.jpg */
+    public StoredFile getMonitoringImage(Long parentId) {
+        return getImage(null, parentId, NOIMAGE_IMAGE);
+    }
+
+    private StoredFile getImage(Long fileId, Long parentId, String defaultName) {
         FileRes fileModel = null;
         if (fileId != null) {
             fileModel = sysFileMapper.selectById(fileId);
@@ -257,11 +267,11 @@ public class SysFileService {
         }
         File file = fileModel != null ? new File(fileModel.serverPath(), fileModel.fileId().toString()) : null;
         if (file == null || !file.exists()) {
-            file = new File(uploadProperties.dir(), NONAMED_IMAGE);
+            file = new File(uploadProperties.dir(), defaultName);
             if (!file.exists()) {
                 throw new BusinessException(ErrorCode.FILE_NOT_FOUND); // 원본은 기본 이미지가 늘 있다 — 여기서는 없으면 404
             }
-            return new StoredFile(file, NONAMED_IMAGE, "image/jpg");
+            return new StoredFile(file, defaultName, "image/jpg");
         }
         return new StoredFile(file, fileModel.fileNm(), "image/" + fileModel.fileExt());
     }

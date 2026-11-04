@@ -121,6 +121,9 @@ export const fileApi = {
     return `${API_BASE_URL}/v1/sys/files/image?${q}`;
   },
 
+  /** AS-IS FileDownload?fileType=monitoring&parentId= — MainFrame 상단 프로필 사진 주소 (사진이 없으면 noimage.jpg) */
+  monitoringUrl: (parentId: number): string => `${API_BASE_URL}/v1/sys/files/monitoring?parentId=${parentId}`,
+
   /** AS-IS sys.Sys11_RelateFile.checkFileDelete → FILE_DELETE_STATUS */
   checkFileDelete: async (fileId: number, parentId: number): Promise<number> => (await fileApi.checkFileDeleteResult(fileId, parentId)).status,
 

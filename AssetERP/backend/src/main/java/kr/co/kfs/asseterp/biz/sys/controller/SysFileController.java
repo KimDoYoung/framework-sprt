@@ -110,6 +110,12 @@ public class SysFileController {
         return toResponse(sysFileService.getImage(fileId, parentId), "inline");
     }
 
+    /** AS-IS FileDownload?fileType=monitoring&parentId= — 상단 프로필 사진(MainFrame). image와 같고 기본 이미지만 noimage.jpg */
+    @GetMapping("/monitoring")
+    public ResponseEntity<Resource> getMonitoringImage(@RequestParam Long parentId) {
+        return toResponse(sysFileService.getMonitoringImage(parentId), "inline");
+    }
+
     /** AS-IS FileDownload?fileType=selectList&selectList=id,id,… — 고른 파일들의 zip ("Asset-ERP.zip") */
     @GetMapping("/zip")
     public ResponseEntity<StreamingResponseBody> downloadZip(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> fileIds) {

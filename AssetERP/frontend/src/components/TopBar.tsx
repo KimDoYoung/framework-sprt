@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { fileApi } from '../api/file';
+import { useLoginUser } from '../hooks/useLoginUser';
 import { Input, Avatar, Dropdown, MenuProps, Tooltip, AutoComplete, Modal, Popconfirm, message, Tag } from 'antd';
 import {
   SearchOutlined,
@@ -64,6 +66,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   userName,
   onLogout,
 }) => {
+  const loginUser = useLoginUser();
+  const photoUrl = useMemo(() => fileApi.monitoringUrl(loginUser.userId), [loginUser.userId]);
+  const [photoOk, setPhotoOk] = useState(true);
   const [searchValue, setSearchValue] = useState('');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
@@ -466,11 +471,21 @@ export const TopBar: React.FC<TopBarProps> = ({
                 userSelect: 'none',
               }}
             >
-              <Avatar
-                size={26}
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.35)', color: '#fff' }}
-                icon={<UserOutlined />}
-              />
+              {/* AS-IS MainFrame.getNorthLayout() L538: FileDownload?fileType=monitoring&parentId=로그인 사원 — 35×35 원형, object-fit cover */}
+              {photoOk ? (
+                <img
+                  src={photoUrl}
+                  alt=""
+                  onError={() => setPhotoOk(false)}
+                  style={{ borderRadius: '70%', objectFit: 'cover', height: 35, width: 35 }}
+                />
+              ) : (
+                <Avatar
+                  size={26}
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.35)', color: '#fff' }}
+                  icon={<UserOutlined />}
+                />
+              )}
               <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{userName}</span>
               <DownOutlined style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)' }} />
             </div>
