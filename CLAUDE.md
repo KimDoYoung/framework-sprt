@@ -80,6 +80,17 @@ yunhee run "./deploy.sh"              # frontend 빌드 → backend static 복�
 ```
 개발 서버는 `./fm.sh run`(Vite, 5173), `./bm.sh run`. `gradlew` wrapper가 없어 시스템 `gradle`을 쓴다.
 
+
+### 변경분 반영 커맨드
+
+ASIS 변경 분 반영 - ASIS 소스의 변경된 내용을 git pull하고 그에 따라서 index 작업을 다시 한다.
+
+```bash
+cd AssetERP
+./check-git.sh
+
+```
+
 ## Backend 아키텍처 (`docs/TOBE-Framework.md` 규칙)
 
 - **Base package는 반드시 `kr.co.kfs.asseterp`** (build.gradle `group`도 동일).
