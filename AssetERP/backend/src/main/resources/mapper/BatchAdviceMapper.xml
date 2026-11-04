@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys01_company.selectIcamAdvisCompanyCode (server/sys/mapper/sys01_company.xml:299)
+  AS-IS adv02_account.selectByManageCode (server/adv/mapper/adv02_account.xml:61) · insert (:124) · update (:140)
+  AS-IS sys15_corp.selectByCorpName2 (server/sys/mapper/sys15_corp.xml:141) · insert (:213) · updateCorpCode (:265)
+  본문은 원본 그대로(원칙 4). 별칭만 DTO 필드.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchAdviceMapper">
+
+    <select id="selectAdvisCompanies" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchIcamCompany">
+    SELECT sys01_company_id             AS companyId
+         , sys01_icam_advis_company_cd  AS icamCompanyCode
+      FROM sys01_company
+     WHERE CAST(sys01_company_id AS VARCHAR) LIKE #{companyId}
+       AND sys01_icam_advis_company_cd IS NOT NULL
+       AND sys01_use_yn = 'true'
+       AND sys01_erp_product_cd IN ('S3','A1')
+    </select>
+
+    <select id="selectAccountsByManageCode" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchAdvAccount">
+    SELECT adv02_account_id                 AS accountId
+         , adv02_company_id                 AS companyId
+         , adv02_manage_cd                  AS manageCode
+         , adv02_manage_nm                  AS manageName
+         , adv02_tr_corp_cd                 AS trCorpCode
+         , adv02_tr_corp_nm                 AS trCorpName
+         , TO_DECRYPTS(adv02_account_no)    AS accountNoDec
+         , adv02_start_date                 AS startDate
+         , adv02_close_date                 AS closeDate
+         , adv02_worker                     AS worker
+      FROM adv02_account
+     WHERE adv02_company_id = #{companyId}
+       AND adv02_manage_cd  = #{manageCode}
+    </select>
+
+    <insert id="insertAccount">
+    INSERT
+      INTO adv02_account
+    SELECT f_create_seq()
+         , #{p.companyId}
+         , #{p.manageCode}
+         , #{p.manageName}
+         , #{p.trCorpCode}
+         , #{p.trCorpName}
+         , TO_ENCRYPTS(#{p.accountNoDec})
+         , #{p.startDate}
+         , #{p.closeDate}
+         , f_sysdate()
+         , #{p.worker}
+    </insert>
+
+    <update id="updateAccount">
+    UPDATE adv02_account
+       SET adv02_manage_nm  = #{p.manageName}
+         , adv02_tr_corp_cd = #{p.trCorpCode}
+         , adv02_tr_corp_nm = #{p.trCorpName}
+         , adv02_account_no = TO_ENCRYPTS(#{p.accountNoDec})
+         , adv02_start_date = #{p.startDate}
+         , adv02_close_date = #{p.closeDate}
+         , adv02_work_date  = f_sysdate()
+         , adv02_worker     = #{p.worker}
+     WHERE adv02_account_id = #{p.accountId}
+    </update>
+
+    <select id="selectCorpsByName" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchSysCorp">
+    SELECT sys15_corp_id      AS corpId
+         , sys15_company_id   AS companyId
+         , sys15_corp_nm      AS corpName
+         , sys15_corp_type    AS corpType
+         , sys15_corp_cd      AS corpCode
+      FROM sys15_corp
+     WHERE sys15_company_id = #{companyId}
+       AND sys15_corp_type  = #{corpType}
+       AND sys15_corp_nm    = #{corpName}
+    </select>
+
+    <insert id="insertCorp">
+    INSERT
+      INTO sys15_corp
+    SELECT #{p.corpId}
+         , #{p.companyId}
+         , #{p.corpName}
+         , #{p.corpType}
+         , null
+         , 'true'
+         , null
+         , null
+         , #{p.corpCode}
+         , null
+         , null
+         , null
+    </insert>
+
+    <update id="updateCorpCode">
+    UPDATE sys15_corp
+       SET sys15_corp_cd = #{p.corpCode}
+     WHERE sys15_corp_id = #{p.corpId}
+    </update>
+</mapper>
