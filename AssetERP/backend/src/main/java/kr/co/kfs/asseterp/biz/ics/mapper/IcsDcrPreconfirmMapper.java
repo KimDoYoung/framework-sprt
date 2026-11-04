@@ -24,6 +24,11 @@ public interface IcsDcrPreconfirmMapper {
                                                     @Param("closeDate") LocalDate closeDate, @Param("dcrTypeCode") String dcrTypeCode,
                                                     @Param("searchText") String searchText);
 
+    /** AS-IS ics40_dcr_preconfirm.selectByDate — 과거심사필번호 조회창 */
+    List<IcsDcrPreconfirmRes> selectByDate(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
+                                           @Param("closeDate") LocalDate closeDate, @Param("searchText") String searchText,
+                                           @Param("statusCode") String statusCode);
+
     /** AS-IS ics40_dcr_preconfirm.selectByCompanyId — 회사의 사전확인대장 전체 */
     List<IcsDcrPreconfirmRes> selectByCompanyId(@Param("companyId") Long companyId);
 

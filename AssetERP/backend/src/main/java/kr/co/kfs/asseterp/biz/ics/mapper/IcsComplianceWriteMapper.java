@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ics.mapper;
 
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmerRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -47,7 +48,14 @@ public interface IcsComplianceWriteMapper {
 
     /** AS-IS ics31_compliance_write.updateFixYn — 내 작성 행만 */
     int updateFixYn(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("complianceWriteId") Long complianceWriteId,
-                    @Param("fixYn") String fixYn);
+                    @Param("fixYn") String fixYn, @Param("confirmerId") Long confirmerId);
+
+    /** AS-IS ics30_compliance.selectConfirmer — 기본 확인자 (이전 확인자 → 소속 부서장 → 준법감시인) */
+    IcsComplianceConfirmerRes selectConfirmer(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") LocalDate stdDate);
+
+    /** AS-IS ics32_relate_appr.selectApprStatus(apprType 2 부서장 준수확인서) — 그 확인자가 이 분기(월)에 상신해 결재 중·완료인 건수 */
+    int countApprStatus(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("yyyymm") String yyyymm,
+                        @Param("cycleType") String cycleType);
 
     /** AS-IS UpdateDataModel.deleteModel(ics31_compliance_write) — 내 작성 행만 */
     int deleteById(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("complianceWriteId") Long complianceWriteId);

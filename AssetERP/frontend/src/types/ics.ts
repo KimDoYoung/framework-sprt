@@ -652,3 +652,9 @@ export interface IcsDcrTypeOption {
   code: string;
   name: string;
 }
+
+/** 기본 확인자 (GET /api/v1/ics/compliance-writes/confirmer, AS-IS selectConfirmer). 정할 수 없으면 둘 다 null */
+export interface IcsComplianceConfirmer {
+  confirmerId: number | null;
+  confirmerName: string | null;
+}

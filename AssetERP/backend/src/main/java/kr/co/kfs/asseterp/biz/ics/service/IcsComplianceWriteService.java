@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ics.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmerRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteAnswerReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteCreateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteFixReq;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,6 +31,7 @@ import java.util.List;
 public class IcsComplianceWriteService {
 
     private static final String SEARCH_ALL = "%";
+    private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy.MM");
 
     private final IcsComplianceWriteMapper mapper;
 
@@ -81,13 +84,29 @@ public class IcsComplianceWriteService {
         return mapper.selectById(user.getCompanyId(), user.getUserId(), complianceWriteId);
     }
 
-    /** AS-IS Ics31_ComplianceWrite.updateFixYn — 그리드 행들의 작성 행을 제출('true')·제출취소('false') */
+    /** AS-IS Ics30_Compliance.selectConfirmer — 기본 확인자 (확인자 선택창을 열 때) */
+    public IcsComplianceConfirmerRes confirmer(UserPrincipal user, LocalDate stdDate) {
+        return mapper.selectConfirmer(user.getCompanyId(), user.getUserId(), stdDate);
+    }
+
+    /**
+     * AS-IS Ics31_Tab_ComplianceWrite.updateFixYn(L548) + Ics31_ComplianceWrite.updateFixYn — 그리드 행들의 작성 행을 제출('true')·제출취소('false').
+     * 제출이면 먼저 그 확인자가 이 분기(월)의 부서장 준수확인서를 이미 상신했는지(Ics32_RelateAppr.selectApprStatus) 본다
+     */
     @Transactional
     public int updateFixYn(UserPrincipal user, IcsComplianceWriteFixReq req) {
-        String fixYn = Boolean.TRUE.equals(req.fixYn()) ? "true" : "false";
+        boolean fix = Boolean.TRUE.equals(req.fixYn());
+        String fixYn = fix ? "true" : "false";
+        if (fix) {
+            if (req.confirmerId() == null) throw new BusinessException(ErrorCode.INVALID_INPUT, "확인자를 선택하세요");
+            if (req.stdDate() != null && req.cycleType() != null
+                    && mapper.countApprStatus(user.getCompanyId(), req.confirmerId(), req.stdDate().format(YYYY_MM), req.cycleType()) > 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "해당 확인자는 이미 준수확인서의 제출을 마친 상태입니다. 확인바랍니다.");
+            }
+        }
         int count = 0;
         for (Long id : req.writeIds() == null ? List.<Long>of() : req.writeIds()) {
-            count += mapper.updateFixYn(user.getCompanyId(), user.getUserId(), id, fixYn);
+            count += mapper.updateFixYn(user.getCompanyId(), user.getUserId(), id, fixYn, fix ? req.confirmerId() : null);
         }
         return count;
     }

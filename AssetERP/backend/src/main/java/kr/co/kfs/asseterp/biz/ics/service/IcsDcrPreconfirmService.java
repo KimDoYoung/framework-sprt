@@ -46,6 +46,11 @@ public class IcsDcrPreconfirmService {
         return mapper.selectByConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), like(searchText));
     }
 
+    /** AS-IS selectByDate(statusCode "20") — 과거심사필번호 조회창(Ics40_Lookup_SelectSingle): 승인된 사전확인만 */
+    public List<IcsDcrPreconfirmRes> searchApproved(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
+        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, like(searchText), "20");
+    }
+
     /** AS-IS selectByReviewConfirm — 로그인 회사 */
     public List<IcsDcrPreconfirmRes> searchReview(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String dcrTypeCode, String searchText) {
         return mapper.selectByReviewConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), like(searchText));

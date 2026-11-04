@@ -64,6 +64,15 @@
         <include refid="preconfirmWhere"/>
     </select>
 
+    <!-- AS-IS ics40_dcr_preconfirm.selectByDate L141 (IDMS-IC) — 과거심사필번호 조회창: 승인(20)된 것만, 검색어는 내용·제공처. 검색어는 서비스가 %…%로 감싼다 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND CONCAT(ics40_content, ics40_provide_co) ILIKE #{searchText}
+           AND COALESCE(ics40_status_cd, '') LIKE #{statusCode}
+    </select>
+
     <!-- AS-IS ics40_dcr_preconfirm.selectByCompanyId (IDMS-IC) -->
     <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
         <include refid="preconfirmSelect"/>

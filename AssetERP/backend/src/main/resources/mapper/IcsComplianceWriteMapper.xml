@@ -136,15 +136,61 @@
            AND ics31_person_id  = #{personId}
     </update>
 
-    <!-- AS-IS ics31_compliance_write.updateFixYn (IDMS-IC) — 제출이면 제출일시 = 지금, 취소면 null -->
+    <!-- AS-IS ics31_compliance_write.updateFixYn (IDMS-IC) — 제출이면 제출일시 = 지금 + 확인자, 취소면 제출일시 null(확인자는 그대로) -->
     <update id="updateFixYn">
         UPDATE ics31_compliance_write
            SET ics31_fix_yn = #{fixYn},
-               ics31_fix_datetime = CASE WHEN #{fixYn} = 'true' THEN f_sysdate() ELSE NULL END
+               ics31_fix_datetime = CASE WHEN #{fixYn} = 'true' THEN f_sysdate() ELSE NULL END,
+               ics31_confirmer_id = CASE WHEN #{fixYn} = 'true' THEN #{confirmerId} ELSE ics31_confirmer_id END
          WHERE ics31_compliance_write_id = #{complianceWriteId}
            AND ics31_company_id = #{companyId}
            AND ics31_person_id  = #{personId}
     </update>
+
+    <!-- AS-IS ics30_compliance.selectConfirmer (IDMS-IC) — 이전에 확인받은 확인자(퇴직 아님) → 부서장(f_get_confirmer_limit '0020') → 준법감시인(등급 120) -->
+    <select id="selectConfirmer" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmerRes">
+        SELECT confirmer_id               AS confirmer_id
+             , f_emp_kor_nm(confirmer_id) AS confirmer_name
+          FROM ( SELECT CASE WHEN pre_confirmer_id IS NOT NULL THEN pre_confirmer_id
+                             WHEN head_emp_id      IS NOT NULL THEN head_emp_id
+                             ELSE compl_emp_id END AS confirmer_id
+                   FROM ( SELECT (
+                                   SELECT ics31_confirmer_id
+                                     FROM ics31_compliance_write
+                                          INNER JOIN getPerson(emp.emp00_company_id, #{stdDate}::date) a ON a.emp00_person_id = ics31_confirmer_id
+                                    WHERE ics31_person_id  = emp.emp00_person_id
+                                      AND ics31_yyyymm     <![CDATA[<=]]> TO_CHAR(#{stdDate}::date, 'YYYY.MM')
+                                      AND ics31_confirm_yn = 'true'
+                                      AND COALESCE(a.emp00_retire_date, '2999-12-31'::date) <![CDATA[>]]> #{stdDate}::date
+                                    ORDER BY ics31_yyyymm DESC
+                                    LIMIT 1
+                                 ) AS pre_confirmer_id
+                               , f_get_confirmer_limit(emp.emp00_person_id, #{stdDate}::date, '0020') AS head_emp_id
+                               , (
+                                   SELECT b.emp00_person_id
+                                     FROM getPerson(emp.emp00_company_id, #{stdDate}::date) b
+                                    WHERE b.emp00_trans_cd != '900'   /* 900: 퇴직 */
+                                      AND b.emp00_grade_cd  = '120'   /* 120: 준법감시인 */
+                                    LIMIT 1
+                                 ) AS compl_emp_id
+                            FROM getPerson(#{companyId}, #{stdDate}::date) emp
+                           WHERE emp.emp00_person_id = #{personId}
+                        ) t
+               ) tt
+    </select>
+
+    <!-- AS-IS ics32_relate_appr.selectApprStatus (IDMS-IC) — apprType 2(부서장 준수확인서)는 V28로 추가된 열 ics32_appr_type -->
+    <select id="countApprStatus" resultType="int">
+        SELECT count(*)
+          FROM ics32_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON ics32_appr_id = apr01_appr_id
+         WHERE ics32_company_id = #{companyId}
+           AND b.apr01_status_cd IN ('10', '20', '30')
+           AND ics32_yyyymm     = #{yyyymm}
+           AND ics32_cycle_type = #{cycleType}
+           AND ics32_appr_type  = '2'
+           AND ics32_person_id  = #{personId}
+    </select>
 
     <!-- UpdateDataModel.deleteModel(ics31_compliance_write) -->
     <delete id="deleteById">

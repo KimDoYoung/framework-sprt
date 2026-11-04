@@ -19,6 +19,7 @@ import { ExpandCollapseButtons } from '@/components/button/ExpandCollapseButtons
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SearchBar } from '@/components/search';
 import { Ics31_Edit_Reason } from './Ics31_Edit_Reason';
+import { Ics31_Lookup_Confirmer } from './Ics31_Lookup_Confirmer';
 import { defaultPeriod, getDate } from './icsComplyPeriod';
 
 /** 그리드 행 — 예·아니오·해당없음 체크박스 값은 답변 코드(Y·N·X)에서 정한다 (AS-IS Ics30_ComplianceModel.getYes/getNo/getNot) */
@@ -50,6 +51,7 @@ const MSG_FIXED = '제출한 체크리스트는 수정이 불가능합니다';
 const ANSWER_CODE = { yes: 'Y', no: 'N', not: 'X' } as const;
 
 export const Ics31_Tab_ComplianceWrite: React.FC = () => {
+  const [confirmTarget, setConfirmTarget] = useState<{ ids: number[]; std: string } | null>(null);  // 제출 중인 행들(확인자 선택창이 열린 동안)
   const [cycleType, setCycleType] = useState<string | null>(null);  // enable(cycleType) — null이면 화면 비활성
   const [year, setYear] = useState(dayjs().format('YYYY'));
   const [period, setPeriod] = useState('');
@@ -175,8 +177,16 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
         if (model.confirmYn) { message.info('담당자가 확인처리한 체크리스트로 제출취소가 불가능합니다'); return; }
       }
     }
+    const ids = list.map(m => m.complianceWriteId).filter((id): id is number => id != null);
+    // 제출이면 확인자 선택창(Ics31_Lookup_Confirmer, EE75)을 열고, 고른 확인자로 updateFixYn() L548-590. 제출취소는 바로
+    if (check) setConfirmTarget({ ids, std: stdDateText() ?? '' });
+    else await updateFixYn(false, ids);
+  };
+
+  // updateFixYn() L548-590: (제출이면 확인자가 이미 부서장 준수확인서를 상신했는지 서버가 보고 거절) → ics.Ics31_ComplianceWrite.updateFixYn → 안내 → retrieve()
+  const updateFixYn = async (check: boolean, ids: number[], confirm?: { confirmerId: number; stdDate: string; cycleType: string }) => {
     try {
-      await icsApi.updateComplianceWriteFix(check, list.map(m => m.complianceWriteId).filter((id): id is number => id != null));
+      await icsApi.updateComplianceWriteFix(check, ids, confirm);
       message.info(check ? '준수확인서 제출이 완료되었습니다' : '준수확인서 제출이 취소되었습니다');
       await retrieve();
     } catch (err) {
@@ -289,6 +299,13 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
         model={reasonTarget}
         onSaved={item => setRows(prev => prev.map(r => (r.complianceId === item.complianceId ? merge(r, item) : r)))}
         onClose={() => setReasonTarget(null)}
+      />
+      {/* 확인자 선택창(EE75): [확인]하면 고른 확인자로 제출, 닫으면 제출하지 않는다(AS-IS는 callback이 null이면 "확인자가 선택되지 않았습니다" — 닫기만으로는 callback이 안 불린다) */}
+      <Ics31_Lookup_Confirmer
+        open={confirmTarget != null}
+        stdDate={confirmTarget?.std ?? ''}
+        onResult={id => { if (confirmTarget) void updateFixYn(true, confirmTarget.ids, { confirmerId: id, stdDate: confirmTarget.std, cycleType: view.current.cycleType ?? 'M' }); }}
+        onClose={() => setConfirmTarget(null)}
       />
     </div>
   );

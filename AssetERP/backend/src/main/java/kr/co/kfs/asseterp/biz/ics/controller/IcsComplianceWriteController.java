@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ics.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmerRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteAnswerReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteCreateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteFixReq;
@@ -69,6 +70,13 @@ public class IcsComplianceWriteController {
     public ApiResponse<IcsComplianceWriteItem> updateReason(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long complianceWriteId,
                                                             @RequestBody IcsComplianceWriteReasonReq req) {
         return ApiResponse.ok(service.updateReason(principal, complianceWriteId, req.reason()));
+    }
+
+    /** AS-IS ics.Ics30_Compliance.selectConfirmer — 확인자 선택창의 기본 확인자 */
+    @GetMapping("/confirmer")
+    public ApiResponse<IcsComplianceConfirmerRes> confirmer(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
+        return ApiResponse.ok(service.confirmer(principal, stdDate));
     }
 
     /** AS-IS ics.Ics31_ComplianceWrite.updateFixYn — 제출·제출취소 */

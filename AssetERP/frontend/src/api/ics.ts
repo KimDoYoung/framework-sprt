@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceWriter, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceWriter, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsComplianceConfirmer, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -689,9 +689,15 @@ export const icsApi = {
     return res.data.data as IcsComplianceWriteItem;
   },
 
-  /** AS-IS ics.Ics31_ComplianceWrite.updateFixYn: 제출(true)·제출취소(false) */
-  updateComplianceWriteFix: async (fixYn: boolean, writeIds: number[]): Promise<void> => {
-    await apiClient.put<ApiResponse<number>>('v1/ics/compliance-writes/fix', { fixYn, writeIds });
+  /** AS-IS ics.Ics30_Compliance.selectConfirmer: 확인자 선택창의 기본 확인자 (stdDate 'yyyy-MM-dd') */
+  getComplianceConfirmer: async (stdDate: string): Promise<IcsComplianceConfirmer> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceConfirmer>>('v1/ics/compliance-writes/confirmer', { params: { stdDate } });
+    return res.data.data as IcsComplianceConfirmer;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.updateFixYn: 제출(true)·제출취소(false). 제출이면 confirmerId(확인자)·stdDate·cycleType도 보낸다 — 확인자가 이미 제출했으면 서버가 거절 */
+  updateComplianceWriteFix: async (fixYn: boolean, writeIds: number[], confirm?: { confirmerId: number; stdDate: string; cycleType: string }): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/ics/compliance-writes/fix', { fixYn, writeIds, ...confirm });
   },
 
   /** AS-IS ics.Ics31_ComplianceWrite.deleteByPersonId (새로작성): 제출한 내역이 있으면 서버가 거절한다 */
@@ -878,6 +884,12 @@ export const icsApi = {
   getDcrPreconfirmSkipYn: async (): Promise<boolean> => {
     const res = await apiClient.get<ApiResponse<boolean>>('v1/ics/dcr-preconfirms/skip-yn');
     return res.data.data === true;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.selectByDate(statusCode 20): 과거심사필번호 조회창 — 승인된 사전확인만 */
+  searchApprovedDcrPreconfirms: async (startDate: string, closeDate: string, searchText: string): Promise<IcsDcrPreconfirm[]> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrPreconfirm[]>>('v1/ics/dcr-preconfirms/approved', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS ics.Ics40_DcrPreconfirm.updateByStatus — statusCode 20 승인 / 10 취소, 처리 건수 */

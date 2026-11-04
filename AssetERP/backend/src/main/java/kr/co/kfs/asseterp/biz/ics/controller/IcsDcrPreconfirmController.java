@@ -36,6 +36,15 @@ public class IcsDcrPreconfirmController {
         return ApiResponse.ok(service.search(principal, startDate, closeDate, dcrTypeCode, searchText));
     }
 
+    /** AS-IS ics.Ics40_DcrPreconfirm.selectByDate(statusCode 20) — 과거심사필번호 조회창 */
+    @GetMapping("/approved")
+    public ApiResponse<List<IcsDcrPreconfirmRes>> searchApproved(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                                 @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchApproved(principal, startDate, closeDate, searchText));
+    }
+
     /** AS-IS ics.Ics40_DcrPreconfirm.selectByReviewConfirm (M06) */
     @GetMapping("/review")
     public ApiResponse<List<IcsDcrPreconfirmRes>> searchReview(@AuthenticationPrincipal UserPrincipal principal,
