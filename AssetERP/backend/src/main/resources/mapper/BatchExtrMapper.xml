@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS fnd03_consignment.insert3 (server/fnd/mapper/fnd03_consignment.xml:236)
+  AS-IS fnd06_office_work.selectByExtrCode (:126) · countByCode (:136) · insert3 (:270)
+  AS-IS ifi30_fund.selectByCompanyId (server/ifi/mapper/ifi30_fund.xml:60) · selectOfficeWork (:82)
+  본문은 원본 그대로(원칙 4). 별칭만 DTO 필드.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchExtrMapper">
+
+    <insert id="insertConsignments">
+    INSERT
+      INTO fnd03_consignment
+    SELECT f_create_seq()
+         , ifi30_cust_cd
+         , ifi30_cust_nm
+         , 'true'
+         , null
+         , ifi29_company_id
+         , CASE WHEN ifi30_if_cd = 'SFTP_SHFP_01' THEN ifi30_cust_cd ELSE NULL END  /*SFTP_SHFP_01:신한펀드파트너스*/
+         , null                                                                     /*02:우리펀드*/
+         , null                                                                     /*03:하나펀드*/
+         , null                                                                     /*04:미래에셋(한국펀드파트너스)*/
+         , null                                                                     /*05:예탁원*/
+         , CASE WHEN ifi30_if_cd = 'SFTP_KBFP_01' THEN ifi30_cust_cd ELSE NULL END  /*06:KB펀드파트너스*/
+      FROM ifi30_fund
+           INNER JOIN ifi29_am_corp_mapping ON (    ifi29_if_cd      = ifi30_if_cd
+                                                AND ifi29_am_corp_cd = ifi30_am_corp_cd
+                                                AND ifi30_send_date  BETWEEN TO_CHAR(ifi29_start_date,'YYYYMMDD')
+                                                                     AND     COALESCE(TO_CHAR(ifi29_end_date,'YYYYMMDD'),'99991231') )
+     WHERE 1=1
+     <if test="companyId != null">
+       AND ifi29_company_id = #{companyId}
+     </if>
+     <if test="ifCode != null">
+       AND ifi30_if_cd = #{ifCode}
+     </if>
+       AND ifi30_send_date BETWEEN #{startDate} AND #{closeDate}
+       AND NOT EXISTS ( SELECT 1
+                          FROM fnd03_consignment
+                         WHERE fnd03_company_id = ifi29_company_id
+                           AND ifi30_cust_cd = CASE WHEN ifi30_if_cd = 'SFTP_SHFP_01' THEN fnd03_etc_consignment_cd01   /*SFTP_SHFP_01:신한펀드파트너스*/
+                                                    WHEN ifi30_if_cd = 'SFTP_KBFP_01' THEN fnd03_etc_consignment_cd06   /*SFTP_KBFP_01:KB펀드파트너스*/
+                                                    ELSE null END )
+     GROUP BY ifi30_if_cd, ifi29_company_id, ifi30_cust_cd, ifi30_cust_nm
+    </insert>
+
+    <select id="selectOfficeWorks" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchExtrOfficeWork">
+    SELECT ifi30_if_cd           AS ifCode
+         , ifi30_office_work_cd  AS officeWorkCode
+         , ifi30_office_work_nm  AS officeWorkName
+         , ifi29_company_id      AS companyId
+      FROM ifi30_fund
+           INNER JOIN ifi29_am_corp_mapping ON ( ifi29_if_cd      = ifi30_if_cd         AND
+                                                 ifi29_am_corp_cd = ifi30_am_corp_cd    )
+     WHERE 1=1
+     <if test="companyId != null">
+       AND ifi29_company_id = #{companyId}
+     </if>
+     <if test="ifCode != null">
+       AND ifi30_if_cd = #{ifCode}
+     </if>
+       AND ifi30_send_date BETWEEN #{startDate} AND #{closeDate}
+       AND NOT EXISTS ( SELECT 1
+                          FROM fnd06_office_work
+                         WHERE fnd06_company_id = ifi29_company_id
+                           AND ifi30_office_work_cd = CASE WHEN ifi30_if_cd = 'SFTP_SHFP_01' THEN fnd06_etc_office_work_cd01    /*SFTP_SHFP_01:신한펀드파트너스*/
+                                                           WHEN ifi30_if_cd = 'SFTP_KBFP_01' THEN fnd06_etc_office_work_cd06    /*SFTP_KBFP_01:KB펀드파트너스*/
+                                                           ELSE null END )
+     GROUP BY ifi30_if_cd
+            , ifi30_office_work_cd
+            , ifi30_office_work_nm
+            , ifi29_company_id
+    </select>
+
+    <select id="selectOfficeWorkByExtrCode" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchOfficeWork">
+    SELECT fnd06_office_work_cd AS officeWorkCode
+         , fnd06_office_work_nm AS officeWorkName
+         , fnd06_kofia_cd       AS kofiaCode
+      FROM fnd06_office_work
+     WHERE fnd06_company_id         = #{companyId}
+       AND fnd06_office_work_use_yn = 'true'
+       AND #{officeWorkCode} = CASE WHEN #{ifCode} = 'SFTP_SHFP_01' THEN fnd06_etc_office_work_cd01
+                                    WHEN #{ifCode} = 'SFTP_KBFP_01' THEN fnd06_etc_office_work_cd06
+                                    ELSE null END
+    </select>
+
+    <select id="countOfficeWorkByCode" resultType="int">
+    SELECT COUNT(*)
+      FROM fnd06_office_work
+     WHERE fnd06_company_id     = #{companyId}
+       AND fnd06_office_work_cd = #{officeWorkCode}
+    </select>
+
+    <insert id="insertOfficeWork">
+    INSERT
+      INTO fnd06_office_work
+         ( fnd06_office_work_id
+         , fnd06_office_work_cd
+         , fnd06_office_work_nm
+         , fnd06_office_work_use_yn
+         , fnd06_office_work_note
+         , fnd06_company_id
+         , fnd06_etc_office_work_cd01
+         , fnd06_etc_office_work_cd06
+         , fnd06_kofia_cd
+         )
+    VALUES ( f_create_seq()
+           , #{officeWork.officeWorkCode}
+           , #{officeWork.officeWorkName}
+           , 'true'
+           , null
+           , #{companyId}
+           , CASE WHEN #{ifCode} = 'SFTP_SHFP_01' THEN #{ifi30OfficeWorkCode} ELSE null END     /*SFTP_SHFP_01:신한펀드파트너스*/
+           , CASE WHEN #{ifCode} = 'SFTP_KBFP_01' THEN #{ifi30OfficeWorkCode} ELSE null END     /*SFTP_KBFP_01:KB펀드파트너스*/
+           , #{officeWork.kofiaCode}
+    )
+    </insert>
+
+    <select id="selectFunds" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchExtrFund">
+    SELECT ifi30_if_cd                AS ifCode
+         , ifi30_send_date            AS sendDate
+         , ifi30_fund_cd              AS fundCode
+         , ifi30_fund_nm              AS fundName
+         , ifi30_first_set_date       AS firstSetDate
+         , ifi30_end_date             AS endDate
+         , ifi30_end_yn               AS endYn
+         , ifi30_kofia_fund_cd        AS kofiaFundCode
+         , ifi30_ksd_fund_cd          AS ksdFundCode
+         , ifi30_ksd_item_cd          AS ksdItemCode
+         , ifi30_kofia_trust_cd       AS kofiaTrustCode
+         , ifi30_kofia_fund_type_cd   AS kofiaFundTypeCode
+         , ifi30_kofia_public_cd      AS kofiaPublicCode
+         , ifi30_kofia_parent_cd      AS kofiaParentCode
+         , ifi30_kofia_class_type_cd  AS kofiaClassTypeCode
+         , ifi30_kofia_fund_unit_cd   AS kofiaFundUnitCode
+         , ifi30_kofia_char_class_cd  AS kofiaCharClassCode
+         , ifi30_set_amt              AS setAmt
+         , ifi30_nav                  AS nav
+         , ifi30_opr_dept             AS oprDept
+         , ifi30_operator1            AS operator1
+         , ifi30_operator2            AS operator2
+         , ifi30_cust_cd              AS custCode
+         , ifi30_cust_nm              AS custName
+         , ifi30_office_work_cd       AS officeWorkCode
+         , ifi30_office_work_nm       AS officeWorkName
+         , ifi30_am_rate              AS amRate
+         , ifi30_sales_rate           AS salesRate
+         , ifi30_cust_rate            AS custRate
+         , ifi30_office_work_rate     AS officeWorkRate
+         , ifi30_cur_cd               AS curCode
+         , ifi30_mat_due_date         AS matDueDate
+         , ifi30_next_close_date      AS nextCloseDate
+         , ifi30_next_fee_date        AS nextFeeDate
+         , ifi29_company_id           AS companyId
+      FROM ifi30_fund
+           INNER JOIN ifi29_am_corp_mapping ON (    ifi29_if_cd      = ifi30_if_cd
+                                                AND ifi29_am_corp_cd = ifi30_am_corp_cd
+                                                AND ifi30_send_date  BETWEEN TO_CHAR(ifi29_start_date,'YYYYMMDD')
+                                                                     AND     COALESCE(TO_CHAR(ifi29_end_date,'YYYYMMDD'),'99991231') )
+     WHERE 1=1
+     <if test="companyId != null">
+       AND ifi29_company_id = #{companyId}
+     </if>
+     <if test="ifCode != null">
+       AND ifi30_if_cd = #{ifCode}
+     </if>
+       AND ifi30_send_date BETWEEN #{startDate} AND #{closeDate}
+    </select>
+</mapper>
