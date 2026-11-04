@@ -1216,3 +1216,27 @@ export interface AprRelateIcsOrigin {
   apprId: number;
   apprTitle?: string | null;
 }
+
+/** AS-IS apr.Apr17_CorpDoc.selectByCompanyId (Apr17_Lookup_CorpDoc, EE92) — 법인서류 신청내역 한 줄 */
+export interface AprCorpDoc {
+  corpDocId: number;
+  callDate: string | null;
+  callEmpName: string | null;
+  provideCo: string | null;
+  purpose: string | null;
+  stampCertCallCnt: number | null;
+  corpRegCallCnt: number | null;
+  regDate: string | null;
+}
+
+/** AS-IS apr.Apr18_RelateCorpDoc.selectByCorpDocId (Apr18_Lookup_RelateAppr·Apr19_Lookup_RelateAppr, EE93·EE94) — 법인서류 연결문서 한 줄. title·statusName = 굵은 글씨 HTML 포함 */
+export interface AprCorpDocRelate {
+  relateCorpDocId: number;
+  corpDocId: number;
+  apprId: number | null;
+  title: string | null;
+  regDate: string | null;
+  effectDate: string | null;
+  regEmpName: string | null;
+  statusName: string | null;
+}

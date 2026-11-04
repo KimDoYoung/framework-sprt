@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr17_corp_doc.xml · apr18_relate_corp_doc.xml (EE92 Apr17_Lookup_CorpDoc · EE93 Apr18_Lookup_RelateAppr · EE94 Apr19_Lookup_RelateAppr) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprCorpDocMapper">
+
+    <!-- AS-IS apr17_corp_doc.selectByCompanyId L71 (주석 처리된 옛 문장은 옮기지 않음) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocRes">
+        SELECT apr17_corp_doc_id            AS corp_doc_id
+             , apr17_call_date              AS call_date
+             , apr17_call_emp_nm            AS call_emp_name
+             , apr17_provide_co             AS provide_co
+             , apr17_purpose                AS purpose
+             , apr17_stamp_cert_call_cnt    AS stamp_cert_call_cnt
+             , apr17_corp_reg_call_cnt      AS corp_reg_call_cnt
+             , apr17_reg_date               AS reg_date
+          FROM (SELECT *
+                     , f_emp_kor_nm(apr17_call_emp_id)          AS apr17_call_emp_nm
+                     , ( SELECT count(*)
+                           FROM apr18_relate_corp_doc
+                                INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+                          WHERE apr18_corp_doc_id = apr17_corp_doc_id )               AS apr17_appr_cnt
+                     , ( SELECT count(*)
+                           FROM apr18_relate_corp_doc
+                                INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+                          WHERE apr18_corp_doc_id = apr17_corp_doc_id
+                            AND apr01_status_cd = '40')                              AS apr17_appr_reject_cnt
+                  FROM apr17_corp_doc
+                 WHERE apr17_company_id = #{companyId}
+                   AND apr17_reg_date IS NULL
+                   AND ( COALESCE(apr17_stamp_cert_call_cnt,0) != 0 OR
+                         COALESCE(apr17_corp_reg_call_cnt  ,0) != 0 )) t
+         WHERE CASE WHEN apr17_appr_cnt != 0 THEN apr17_appr_cnt != apr17_appr_reject_cnt ELSE TRUE END
+         ORDER BY apr17_call_date DESC
+    </select>
+
+    <!-- AS-IS apr17_corp_doc.regDateUpdate L186 — 날짜는 로그인 날짜(LoginUser.getToday) 대신 서버 오늘. 로그인 회사의 등록 전 건만(보안 보강) -->
+    <update id="regDateUpdate">
+        UPDATE apr17_corp_doc
+           SET apr17_reg_date = f_today()
+         WHERE apr17_company_id = #{companyId}
+           AND apr17_reg_date IS NULL
+           AND apr17_corp_doc_id IN
+           <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- AS-IS apr18_relate_corp_doc.selectByCorpDocId L24 — 로그인 회사의 신청내역만(TOBE에서 더함) -->
+    <select id="selectRelatesByCorpDocId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocRelateRes">
+        SELECT a.apr18_relate_corp_doc_id                                                    AS relate_corp_doc_id
+             , a.apr18_corp_doc_id                                                           AS corp_doc_id
+             , a.apr18_appr_id                                                               AS appr_id
+             , b.apr01_title                                                                 AS title
+             , b.apr01_reg_date                                                              AS reg_date
+             , b.apr01_effect_date                                                           AS effect_date
+             , f_emp_kor_nm(b.apr01_reg_emp_id)                                              AS reg_emp_name
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, f_sysdate())   AS status_name
+          FROM apr18_relate_corp_doc a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.apr18_appr_id
+               INNER JOIN apr17_corp_doc c ON c.apr17_corp_doc_id = a.apr18_corp_doc_id
+         WHERE a.apr18_corp_doc_id = #{corpDocId}
+           AND c.apr17_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS apr17_corp_doc.checkByApprId L168 -->
+    <select id="selectCorpDocIdsByApprId" resultType="long">
+        SELECT apr17_corp_doc_id
+          FROM apr17_corp_doc
+               INNER JOIN apr18_relate_corp_doc ON apr18_corp_doc_id = apr17_corp_doc_id
+         WHERE apr18_appr_id = #{apprId}
+         GROUP BY apr17_corp_doc_id
+    </select>
+
+    <select id="countCorpDoc" resultType="int">
+        SELECT count(*) FROM apr17_corp_doc
+         WHERE apr17_corp_doc_id = #{corpDocId} AND apr17_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Apr18_RelateCorpDoc.modelUpdate → UpdateDataModel INSERT -->
+    <insert id="insertRelate">
+        INSERT INTO apr18_relate_corp_doc ( apr18_relate_corp_doc_id, apr18_corp_doc_id, apr18_appr_id )
+        VALUES ( #{relateCorpDocId}, #{corpDocId}, #{apprId} )
+    </insert>
+
+    <!-- AS-IS Apr18_RelateCorpDoc.delete → UpdateDataModel DELETE — 로그인 회사의 신청내역에 붙은 연결만(보안 보강) -->
+    <delete id="deleteRelates">
+        DELETE FROM apr18_relate_corp_doc
+         WHERE apr18_corp_doc_id IN ( SELECT apr17_corp_doc_id FROM apr17_corp_doc WHERE apr17_company_id = #{companyId} )
+           AND apr18_relate_corp_doc_id IN
+           <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList, AprCorpDoc, AprCorpDocRelate } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -1018,5 +1018,35 @@ export const aprStampApplApi = {
   /** AS-IS apr.Apr16_StampDoc.delete */
   remove: async (apprId: number, stampDocId: number): Promise<void> => {
     await apiClient.delete(`v1/apr/apprs/${apprId}/stamp-docs/${stampDocId}`);
+  },
+};
+
+/** 법인서류 신청내역·연결문서 창 (EE92 Apr17_Lookup_CorpDoc · EE93 Apr18_Lookup_RelateAppr · EE94 Apr19_Lookup_RelateAppr) */
+export const aprCorpDocApi = {
+  /** AS-IS apr.Apr17_CorpDoc.selectByCompanyId — 등록 전 신청내역 */
+  search: async (): Promise<AprCorpDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDoc[]>>('v1/apr/corp-docs');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.regDateUpdate — 고른 신청내역의 등록일을 오늘로 */
+  regDateUpdate: async (ids: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/apr/corp-docs/reg-date', ids);
+  },
+
+  /** AS-IS apr.Apr18_RelateCorpDoc.selectByCorpDocId */
+  searchRelates: async (corpDocId: number): Promise<AprCorpDocRelate[]> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDocRelate[]>>(`v1/apr/corp-docs/${corpDocId}/relates`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr18_RelateCorpDoc.modelUpdate — 이미 연결된 문서면 "이미 연결된 문서입니다." */
+  insertRelate: async (corpDocId: number, apprId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`v1/apr/corp-docs/${corpDocId}/relates/${apprId}`);
+  },
+
+  /** AS-IS apr.Apr18_RelateCorpDoc.delete */
+  deleteRelates: async (ids: number[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>('v1/apr/corp-docs/relates', { data: ids });
   },
 };
