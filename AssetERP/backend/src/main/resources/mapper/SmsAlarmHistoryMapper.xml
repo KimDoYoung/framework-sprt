@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sms/mapper/sms10_alarm_history.xml selectByText L26  (EE57 Sms10_Lookup_AlarmList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sms.mapper.SmsAlarmHistoryMapper">
+
+    <!-- AS-IS sms10_alarm_history.selectByText (IDMS-IC): 받은 알림(in)은 수신자=나, 보낸 알림(out)은 발신자=나. 본문 그대로, 그리드가 쓰는 열만 고른다 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sms.dto.SmsAlarmHistoryRes">
+<![CDATA[
+SELECT	sms10_alarm_history_id									AS alarm_history_id
+	 ,	to_char(sms10_send_date,'yyyy-mm-dd hh24:mi:ss')		AS send_time_str
+]]>
+        <if test="inOutYn == 'out'">
+	 ,	f_emp_kor_nm(sms10_target_person_id)					AS target_person_name
+        </if>
+        <if test="inOutYn != 'out'">
+	 ,	f_emp_kor_nm(sms10_person_id)							AS target_person_name
+        </if>
+<![CDATA[
+	 ,	sms10_content											AS content
+	 ,	(sms10_send_yn = 'true')								AS send_yn
+  FROM	sms10_alarm_history
+ WHERE	f_trunc(sms10_send_date) BETWEEN #{startDate} AND #{closeDate}
+   AND	UPPER(CONCAT(f_emp_kor_nm(sms10_target_person_id),sms10_content)) LIKE UPPER(#{searchText})
+]]>
+        <if test="inOutYn == 'out'">
+   AND	sms10_person_id = #{personId}
+        </if>
+        <if test="inOutYn != 'out'">
+   AND	sms10_target_person_id = #{personId}
+   AND	sms10_send_yn = 'true'
+        </if>
+ ORDER BY sms10_send_date DESC
+    </select>
+</mapper>

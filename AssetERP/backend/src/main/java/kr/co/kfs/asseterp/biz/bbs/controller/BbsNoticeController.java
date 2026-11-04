@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.bbs.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeSaveReq;
@@ -113,5 +114,11 @@ public class BbsNoticeController {
     public ApiResponse<Void> deleteAllTargets(@PathVariable Long noticeId) {
         service.deleteAllTargets(noticeId);
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS bbs.Bbs02_Notice.selectByTargetPerson (Frm01_Lookup_NoticeList) — 나에게 온 읽지 않은 알림 공지 */
+    @GetMapping("/target-person")
+    public ApiResponse<List<BbsNoticeTargetRes>> searchByTargetPerson(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.searchByTargetPerson(principal));
     }
 }

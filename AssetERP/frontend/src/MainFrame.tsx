@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { message, Dropdown, MenuProps, ConfigProvider, Tooltip } from 'antd';
 import koKR from 'antd/locale/ko_KR';
 import dayjs from 'dayjs';
@@ -36,6 +36,9 @@ import { attApi } from './api/att';
 import { Att02_Lookup_Commute } from './pages/att/Att02_Lookup_Commute';
 import { Emp00_Lookup_SendMessage } from './pages/emp/Emp00_Lookup_SendMessage';
 import { Emp04_Lookup_AddTitleList } from './pages/emp/Emp04_Lookup_AddTitleList';
+import { Frm01_Lookup_CheckList } from './pages/frm/Frm01_Lookup_CheckList';
+import { frmApi } from './api/frm';
+import { FrmNoticeCnt } from './types/frm';
 
 /** 탭 헤더 hover 툴팁 내용. 지금(개발 중)은 클래스명. 끝나면 undefined(없음) 또는 `${menuNo} ${title}` 등으로 바꾼다 */
 const tabTooltip = (config: { classNm?: string; title?: string; menuNo?: string }): string | undefined => config.classNm;
@@ -207,6 +210,24 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
         message.error('메뉴를 불러오지 못했습니다.');
       });
   }, [user.userId, user.companyId]);
+
+  // ── 알림 창 (AS-IS MainFrame warning E4 L294 → Frm01_Lookup_CheckList.open()) + 알림 아이콘 상태(checkActive() L382-471, 주기 조회) ──
+  const [checkListOpen, setCheckListOpen] = useState(false);
+  const [alarmState, setAlarmState] = useState<'none' | 'normal' | 'twinkle'>('none');
+  const hasMenu1128 = menus.some(m1 => m1.groups.some(g => g.items.some(i => i.menuNo === '1128')));
+  const applyCount = useCallback((c: FrmNoticeCnt) => {
+    if (c.cnt1 + c.cnt2 > 0) setAlarmState(c.cnt1 > 0 ? 'twinkle' : 'normal');
+    else if (hasMenu1128 && c.cnt5 > 0) setAlarmState('twinkle');
+    else setAlarmState('none');
+  }, [hasMenu1128]);
+  useEffect(() => {
+    if (user.userId < 0) return; // 회사관리자는 알림 건수가 없다
+    let alive = true;
+    const tick = () => frmApi.getNoticeCnt().then(c => { if (alive) applyCount(c); }).catch(() => undefined);
+    tick();
+    const timer = window.setInterval(tick, 60000);
+    return () => { alive = false; window.clearInterval(timer); };
+  }, [user.userId, user.companyId, applyCount]);
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
@@ -616,7 +637,10 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           onOpenCommute={() => setCommuteOpen(true)}
           onOpenSendMessage={openSendMessage}
           onOpenAddTitle={() => setAddTitleOpen(true)}
+          onOpenCheckList={() => setCheckListOpen(true)}
+          alarmState={alarmState}
         />
+        <Frm01_Lookup_CheckList open={checkListOpen} hasMenu1128={hasMenu1128} onCount={applyCount} onClose={() => setCheckListOpen(false)} />
         {/* callback "change": AS-IS는 상단·MyPage·메뉴를 다시 만든다 → TOBE는 새 토큰 쿠키로 화면을 다시 연다 */}
         <Emp04_Lookup_AddTitleList open={addTitleOpen} onClose={() => setAddTitleOpen(false)}
           onChanged={() => { setAddTitleOpen(false); window.setTimeout(() => window.location.reload(), 700); }} />

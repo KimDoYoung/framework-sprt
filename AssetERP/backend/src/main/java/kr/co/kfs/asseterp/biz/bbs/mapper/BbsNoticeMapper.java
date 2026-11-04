@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.bbs.mapper;
 
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeInsertRow;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngCond;
@@ -63,4 +64,7 @@ public interface BbsNoticeMapper {
 
     /** bbs05_history.insert */
     int insertHistory(@Param("historyId") Long historyId, @Param("noticeId") Long noticeId, @Param("personId") Long personId);
+
+    /** AS-IS bbs02_notice.selectByTargetPerson — 나에게 온 읽지 않은 알림 공지 (EE55) */
+    List<BbsNoticeTargetRes> selectByTargetPerson(@Param("companyId") Long companyId, @Param("personId") Long personId);
 }

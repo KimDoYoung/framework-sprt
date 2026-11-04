@@ -1,0 +1,10 @@
+{
+  "id": "EE56",
+  "screen": "Frm01_Lookup_Outstanding",
+  "menuNo": null,
+  "accounts": ["kfstest/admin"],
+  "steps": [
+    "TopBar 종 → [미결재건] → '미결재건' 창(720): 등록일·제목·상신자·상세보기 아이콘, 행번호 없음",
+    "상세보기 아이콘 → 전자결재 문서 창. 승인 등 처리 뒤 닫으면 목록·알림 건수 갱신"
+  ]
+}

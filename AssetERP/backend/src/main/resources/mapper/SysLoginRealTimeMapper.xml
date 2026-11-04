@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys28_login_real_time.xml selectByDate L31  (EE58 Sys28_Lookup_LoginRealTime) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysLoginRealTimeMapper">
+
+    <!-- AS-IS sys28_login_real_time.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.sys.dto.LoginRealTimeRes">
+<![CDATA[
+SELECT	sys28_login_real_time_id							AS login_real_time_id
+	 ,	TO_CHAR(sys28_login_time, 'YYYY-MM-DD HH24:MI:SS')	AS login_time_str
+	 ,	sys28_ip_address									AS ip_address
+  FROM	sys28_login_real_time
+ WHERE	sys28_person_id = #{personId}
+   AND	sys28_login_time BETWEEN (f_sysdate() - interval '10 minute') AND (f_sysdate() + interval '10 minute')
+]]>
+    </select>
+</mapper>

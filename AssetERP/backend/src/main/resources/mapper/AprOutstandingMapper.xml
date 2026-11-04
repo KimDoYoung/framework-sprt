@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml selectOutstandingPopup L1361  (EE56 Frm01_Lookup_Outstanding) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprOutstandingMapper">
+
+    <!-- AS-IS apr01_appr.selectOutstandingPopup (IDMS-IC): 본문 그대로, 그리드가 쓰는 열만 고른다 -->
+    <select id="selectOutstandingPopup" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprOutstandingRes">
+<![CDATA[
+WITH step_group AS (
+	SELECT	s.*
+		 ,	SUM(CASE WHEN s.apr04_step_type_cd != '20' THEN 1 ELSE 0 END)
+		 	OVER(PARTITION BY s.apr04_appr_id ORDER BY s.apr04_seq
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)	AS grp_no
+	  FROM	apr04_appr_step s
+	 WHERE	s.apr04_step_type_cd NOT IN ('30')
+),
+active_step AS (
+    SELECT	*
+      FROM	step_group s
+     WHERE	s.apr04_step_status_cd NOT IN ('20','30')
+),
+my_step AS (
+    SELECT	*
+      FROM	active_step s
+     WHERE	s.apr04_step_emp_id IN ( #{personId}, (
+									                SELECT	apr07_target_emp_id
+									                  FROM	apr07_alt_appr
+									                 WHERE	apr07_alt_emp_id = #{personId}
+									                   AND	f_trunc(f_sysdate()) BETWEEN apr07_start_date AND apr07_close_date
+									                 LIMIT 1
+								   				  )
+								   )
+)
+SELECT  a.apr01_appr_id						AS appr_id
+     ,  a.apr01_reg_date					AS reg_date
+     ,  a.apr01_title						AS title
+     ,  f_emp_kor_nm(a.apr01_reg_emp_id)	AS reg_emp_name
+  FROM  apr01_appr a
+  		INNER JOIN my_step b ON a.apr01_appr_id = b.apr04_appr_id
+ WHERE	a.apr01_status_cd NOT IN ('30','40','99')
+   AND	NOT EXISTS (
+   						SELECT	1
+					      FROM	active_step prev
+					     WHERE	prev.apr04_appr_id = b.apr04_appr_id
+					       AND	prev.apr04_seq < b.apr04_seq
+					       AND	prev.grp_no < b.grp_no
+					       AND	prev.apr04_step_type_cd != '20'
+				   )
+ ORDER BY a.apr01_reg_date DESC, a.apr01_appr_id DESC, a.apr01_title
+]]>
+    </select>
+</mapper>

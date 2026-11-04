@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.bbs.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.bbs.dto.BbsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeInsertRow;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngCond;
@@ -129,5 +130,10 @@ public class BbsNoticeService {
     @Transactional
     public void deleteAllTargets(Long noticeId) {
         mapper.deleteAllTargets(noticeId);
+    }
+
+    /** AS-IS Bbs02_Notice.selectByTargetPerson L111-123 (Frm01_Lookup_NoticeList, EE55) */
+    public List<BbsNoticeTargetRes> searchByTargetPerson(UserPrincipal user) {
+        return mapper.selectByTargetPerson(user.getCompanyId(), user.getUserId());
     }
 }

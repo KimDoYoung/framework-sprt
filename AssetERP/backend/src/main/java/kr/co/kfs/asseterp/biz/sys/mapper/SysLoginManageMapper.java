@@ -19,6 +19,13 @@ public interface SysLoginManageMapper {
     int updateConfirmYn(@Param("loginManageId") Long loginManageId, @Param("confirmYn") String confirmYn);
 
     /** AS-IS emp01_person.selectByPersonId 중 승인 문자에 쓰는 열: 휴대폰·성명 */
+    /** AS-IS sys27_login_manage.selectByMacAddress — 그 사원이 그 기기(Mac)로 이미 신청한 행 수 */
+    int countByMacAddress(@Param("personId") Long personId, @Param("macAddress") String macAddress);
+
+    /** AS-IS sys27_login_manage.insert — 기기 등록 요청 (승인일·승인여부 비움) */
+    int insertRequest(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("macAddress") String macAddress,
+                      @Param("placeCode") String placeCode, @Param("reason") String reason);
+
     PersonPhone selectPersonPhone(@Param("personId") Long personId);
 
     record PersonPhone(String mobileTelNo, String korNm) {

@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/frm/mapper/frm01_list.xml (getNoticeCnt)  (EE53 Frm01_Lookup_CheckList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.frm.mapper.FrmListMapper">
+
+    <!-- AS-IS frm01_list.getNoticeCnt (IDMS-IC): 미결재건·체크리스트·공지사항·알림함·매매승인 건수. 본문 그대로, 바깥에서 열만 고른다.
+         (공지 CTE의 searchText·noticeType 등 분기는 이 호출이 넘기지 않는 파라미터라 기본 가지만 남겼다) -->
+    <select id="selectNoticeCnt" resultType="kr.co.kfs.asseterp.biz.frm.dto.FrmNoticeCntRes">
+<![CDATA[
+SELECT	x.frm01_cnt1	AS cnt1
+	 ,	x.frm01_cnt2	AS cnt2
+	 ,	x.frm01_cnt3	AS cnt3
+	 ,	x.frm01_cnt4	AS cnt4
+	 ,	x.frm01_cnt5	AS cnt5
+  FROM	(
+WITH step_group AS (
+	SELECT	s.*
+		 ,	SUM(CASE WHEN s.apr04_step_type_cd != '20' THEN 1 ELSE 0 END)
+		 	OVER(PARTITION BY s.apr04_appr_id ORDER BY s.apr04_seq
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)	AS grp_no
+	  FROM	apr04_appr_step s
+	 WHERE	s.apr04_step_type_cd NOT IN ('30')
+),
+active_step AS (
+    SELECT	*
+      FROM	step_group s
+     WHERE	s.apr04_step_status_cd NOT IN ('20','30')
+),
+my_step AS (
+    SELECT	*
+      FROM	active_step s
+     WHERE	s.apr04_step_emp_id IN ( #{personId}, (
+									                SELECT	apr07_target_emp_id
+									                  FROM	apr07_alt_appr
+									                 WHERE	apr07_alt_emp_id = #{personId}
+									                   AND	f_trunc(f_sysdate()) BETWEEN apr07_start_date AND apr07_close_date
+									                 LIMIT 1
+								   				  )
+								   )
+)    
+SELECT  ROW_NUMBER() OVER() AS frm01_list_id
+     ,  (
+     		SELECT	COUNT(a.apr01_appr_id)
+			  FROM	apr01_appr a
+					INNER JOIN my_step b ON a.apr01_appr_id = b.apr04_appr_id
+			 WHERE	a.apr01_status_cd NOT IN ('30','40','99')
+			   AND	NOT EXISTS (
+			   						SELECT	1
+								      FROM	active_step prev
+								     WHERE	prev.apr04_appr_id = b.apr04_appr_id
+								       AND	prev.apr04_seq < b.apr04_seq
+								       AND	prev.grp_no < b.grp_no
+								       AND	prev.apr04_step_type_cd != '20'
+							   )
+        )   AS frm01_cnt1
+     ,  (
+            SELECT COUNT(*)
+              FROM ( SELECT sch04_list_id           list_id    
+                          , sch04_close_date        close_date 
+                          , sch04_manage_date       manage_date
+                          , sch04_schedule_cd       schedule_cd
+                          , sch04_info_id           info_id
+                          , sch04_cycle_cd          cycle_cd    
+                          , sch04_title             title      
+                          , sch04_manager_id        manager_id 
+                          , sch04_person_id         person_id  
+                          , sch04_status_cd         status_cd  
+                          , sch04_company_id        company_id
+                          , sch04_deadline_id       deadline_id
+                          , sch04_note              note
+                          , sch04_appr_id           appr_id
+                          , appr1.apr01_status_cd   appr_status_cd
+                          , CASE WHEN COALESCE(appr1.apr01_status_cd,'X') != 'X' 
+                                 THEN f_cdnm('AprStatusCode', appr1.apr01_status_cd, sch04_company_id, f_sysdate())
+                                 ELSE null END      appr_status_nm
+                          , ''                      org_appr_status_nm
+                       FROM sch04_list
+                            LEFT OUTER JOIN sch01_info ON sch01_info_id = sch04_info_id
+                            LEFT OUTER JOIN apr01_appr appr1 ON appr1.apr01_appr_id = sch04_appr_id
+                      WHERE sch04_company_id = #{companyId}
+                        AND sch04_close_date = f_today()
+                        AND COALESCE(sch01_private_yn,'false') = 'false'
+                        AND COALESCE(sch01_daily_yn  ,'false') = 'true'
+                        AND sch04_schedule_cd NOT IN ('2','3')  /* 법규공시 제외 (2024.6.7 이용희 전무님) */
+                      UNION ALL
+                     SELECT row_number() OVER (ORDER BY info_id)   list_id    
+                          , close_date                             close_date 
+                          , close_date                             manage_date
+                          , schedule_cd                            schedule_cd
+                          , info_id                                info_id
+                          , cycle_cd                               cycle_cd    
+                          , title                                  title      
+                          , manager_id                             manager_id 
+                          , manager_id                             person_id  
+                          , status_cd                              status_cd  
+                          , company_id                             company_id
+                          , deadline_id                            deadline_id
+                          , ''                                     note
+                          , null                                   appr_id
+                          , ''                                     appr_status_cd
+                          , ''                                     appr_status_nm
+                          , org_appr_status_nm                     org_appr_status_nm
+                       FROM ( /* 스케줄정보 */
+                              SELECT '1'                                                                schedule_cd
+                                   , sch01_info_id                                                      info_id
+                                   , f_get_std_date(sch03_deadline_id, f_today(), sch01_company_id)     close_date
+                                   , sch03_cycle_cd                                                     cycle_cd
+                                   , sch01_title                                                        title
+                                   , sch01_manager_id                                                   manager_id
+                                   , sch01_company_id                                                   company_id
+                                   , sch03_deadline_id                                                  deadline_id
+                                   , ''                                                                 org_appr_status_nm
+                                   , '0'                                                                status_cd
+                                FROM sch01_info
+                                     INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id 
+                               WHERE sch01_company_id = #{companyId}
+                                 AND COALESCE(sch01_use_yn,'true') = 'true'
+                                 AND COALESCE(sch01_private_yn,'false') = 'false'
+                                 AND COALESCE(sch01_daily_yn  ,'false') = 'true'
+                                 AND sch03_cycle_cd NOT IN ('02','03','04','05','06')    /*(주/월/분기/반기/연)제외*/
+                               UNION ALL
+                              SELECT '1'                                                                schedule_cd
+                                   , sch01_info_id                                                      info_id
+                                   , sch09_day                                                          close_date
+                                   , sch03_cycle_cd                                                     cycle_cd
+                                   , sch01_title                                                        title
+                                   , sch01_manager_id                                                   manager_id
+                                   , sch01_company_id                                                   company_id
+                                   , sch03_deadline_id                                                  deadline_id
+                                   , ''                                                                 org_appr_status_nm
+                                   , '0'                                                                status_cd
+                                FROM sch01_info
+                                     INNER JOIN sch03_deadline     ON sch03_info_id     = sch01_info_id
+                                     INNER JOIN sch09_deadline_day ON sch09_deadline_id = sch03_deadline_id
+                               WHERE sch01_company_id = #{companyId}
+                                 AND COALESCE(sch01_use_yn,'true') = 'true'
+                                 AND COALESCE(sch01_private_yn,'false') = 'false'
+                                 AND COALESCE(sch01_daily_yn  ,'false') = 'true'
+                                 AND sch03_cycle_cd IN ('02','03','04','05','06')    /*(주/월/분기/반기/연)*/
+                                 AND sch09_day = f_today()
+                               UNION ALL
+                              /* 공모주 */
+                              SELECT *         
+                                FROM (
+                                      SELECT '5'                            schedule_cd
+                                           , sch10_ipo_id                   info_id
+                                           , sch10_demand_start_date        close_date
+                                           , '99'                           cycle_cd
+                                           , '[수요예측] '||sch10_item_nm     title
+                                           , #{personId}                    manager_id
+                                           , #{companyId}                   company_id
+                                           , null::numeric                  deadline_id
+                                           , ''                             org_appr_status_nm
+                                           , '0'                            status_cd
+                                        FROM sch10_ipo
+                                             INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id              AND
+                                                                               sch11_company_id = #{companyId}              AND
+                                                                               COALESCE(sch11_interest_yn,'false') = 'true' )
+                                       WHERE sch10_demand_start_date = f_today()
+                                         AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                       UNION ALL
+                                      SELECT '5'                            schedule_cd
+                                           , sch10_ipo_id                   info_id
+                                           , sch10_subscription_start_date  close_date
+                                           , '99'                           cycle_cd
+                                           , '[공모주청약] '||sch10_item_nm    title
+                                           , #{personId}                    manager_id
+                                           , #{companyId}                   company_id
+                                           , null                           deadline_id
+                                           , ''                             org_appr_status_nm
+                                           , '0'                            status_cd
+                                        FROM sch10_ipo
+                                             INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id              AND
+                                                                               sch11_company_id = #{companyId}              AND
+                                                                               COALESCE(sch11_interest_yn,'false') = 'true' )
+                                       WHERE sch10_subscription_start_date = f_today()
+                                         AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                       UNION ALL
+                                      SELECT '5'                            schedule_cd
+                                           , sch10_ipo_id                   info_id
+                                           , sch10_pay_date                 close_date
+                                           , '99'                           cycle_cd
+                                           , '[공모주납입] '||sch10_item_nm    title
+                                           , #{personId}                    manager_id
+                                           , #{companyId}                   company_id
+                                           , null                           deadline_id
+                                           , ''                             org_appr_status_nm
+                                           , '0'                            status_cd
+                                        FROM sch10_ipo
+                                             INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id              AND
+                                                                               sch11_company_id = #{companyId}              AND
+                                                                               COALESCE(sch11_interest_yn,'false') = 'true' )
+                                       WHERE sch10_pay_date = f_today()
+                                         AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                       UNION ALL
+                                      SELECT '5'                            schedule_cd
+                                           , sch10_ipo_id                   info_id
+                                           , sch10_list_date                close_date
+                                           , '99'                           cycle_cd
+                                           , '[공모주상장] '||sch10_item_nm    title
+                                           , #{personId}                    manager_id
+                                           , #{companyId}                   company_id
+                                           , null                           deadline_id
+                                           , ''                             org_appr_status_nm
+                                           , '0'                            status_cd
+                                        FROM sch10_ipo
+                                             INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id              AND
+                                                                               sch11_company_id = #{companyId}              AND
+                                                                               COALESCE(sch11_interest_yn,'false') = 'true' )
+                                       WHERE sch10_list_date = f_today()
+                                         AND COALESCE(sch10_cancel_yn,'false') != 'true'                                
+                                     ) ipo
+                               WHERE ( ( #{personId}  IN ( SELECT sch02_person_id
+                                                             FROM sch02_share
+                                                            WHERE sch02_info_id  = info_id
+                                                              AND sch02_share_cd = '1' ) ) OR
+                                       ( #{orgId}     IN ( SELECT sch02_org_id
+                                                             FROM sch02_share
+                                                            WHERE sch02_info_id  = info_id
+                                                              AND sch02_share_cd = '2' ) ) )
+                            ) a
+                      WHERE close_date = f_today()
+                        AND (info_id, close_date, company_id, manager_id) NOT IN ( SELECT sch04_info_id, sch04_close_date, sch04_company_id, sch04_manager_id
+                                                                                     FROM sch04_list
+                                                                                    WHERE sch04_company_id = #{companyId}
+                                                                                      AND sch04_close_date = f_today()
+                                                                                 )
+                   ) sch
+             WHERE sch.company_id = #{companyId}
+               AND sch.person_id  = #{personId}
+               AND status_cd NOT IN ('1','2','5','9')     /* (1:완료/2:ICAM/5:해당없음/9:취소) */
+        )   AS frm01_cnt2
+     ,  (
+            
+    WITH noticeType AS ( SELECT sys09_code noticeType_cd
+                              , sys09_name noticeType_nm
+                           FROM sys08_code_kind
+                                INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                          WHERE sys08_kind_cd    = 'NoticeType'
+                            AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{companyId} END
+    ), noticeDetail AS ( SELECT sys09_code noticeDetail_cd
+                              , sys09_name noticeDetail_nm
+                           FROM sys08_code_kind
+                                INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                          WHERE sys08_kind_cd    = 'NoticeDetailCode'
+                            AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{companyId} END
+    ), bbs AS ( SELECT *
+                  FROM (
+                        SELECT  *
+                             ,  CONCAT(bbs02_notice_type_nm, bbs02_notice_detail_nm) AS bbs02_notice_detail_full_nm
+                             ,  (
+                                    CASE WHEN COALESCE(bbs02_top_notice_yn, 'false') = 'true' 
+                                         THEN CASE WHEN f_today() <= bbs02_top_notice_close_date 
+                                                   THEN 'true'
+                                                   ELSE 'false'
+                                                   END
+                                         ELSE 'false'
+                                         END
+                                )                                                    AS bbs02_top_yn
+                          FROM (
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||CASE WHEN bbs02_notice_type = '90'    /*(90:시스템공지)*/
+                                                               THEN 'style=color:#E33E31;'
+                                                               ELSE 'style=color:#4B81B9;' END ||'&gt;'||
+                                            '['||noticeType_nm||'] '
+                                            '&lt;'||'/b'||'&gt;'                                                    AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                         AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||CASE WHEN bbs02_notice_type = '90'    /*(90:시스템공지)*/
+                                                               THEN 'style=color:#E33E31;'
+                                                               ELSE 'style=color:#4B81B9;' END ||'&gt;'||
+                                            '['||noticeType_nm||'] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                                       AS bbs02_title2
+                                         ,  3                                                                       AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN bbs04_target_company ON ( bbs04_notice_id  = bbs02_notice_id  AND
+                                                                                      bbs04_company_id = #{companyId}     )
+                                            LEFT OUTER JOIN noticeType   ON noticeType_cd   = bbs02_notice_type
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  ( bbs02_public_company_yn = 'true' OR bbs04_target_company_id IS NOT NULL )
+                                       AND  COALESCE(bbs02_public_yn, 'true') = 'true'
+                                       AND  bbs02_notice_type IN ( SELECT sys09_code
+                                                                     FROM sys13_code_group
+                                                                          INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                                    WHERE sys13_kind_group_cd = 'NoticeType002' )
+                                       AND ( ( /*** (9010:관리자공지)인 경우 관리자권한에 등록되어 있는 사용자만 조회되도록 함 ***/
+                                               COALESCE(bbs02_notice_detail_cd,'') = '9010'                                  AND
+                                               EXISTS ( SELECT 1
+                                                          FROM sys04_role
+                                                               INNER JOIN sys05_user_role ON sys05_role_id = sys04_role_id
+                                                         WHERE sys04_company_id = #{companyId}
+                                                           AND sys04_admin_yn   = 'true'
+                                                           AND sys05_user_id    = #{personId} )                             ) OR
+                                             ( COALESCE(bbs02_notice_detail_cd,'') != '9010'                                ) )
+                                     UNION ALL 
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||'[(회사)전체공지] '
+                                            '&lt;'||'/b'||'&gt;'                                            AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                 AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||
+                                            '[(회사)전체공지] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                               AS bbs02_title2
+                                         ,  1                                                               AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  bbs02_company_id = #{companyId}
+                                       AND  bbs02_notice_type = '01'    /*(01:(회사)전체공지)*/
+                                     UNION ALL  
+                                    SELECT  bbs02_notice.*
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||'[(회사)개별공지] '
+                                            '&lt;'||'/b'||'&gt;'                                            AS bbs02_notice_type_nm
+                                         ,  noticeDetail_nm                                                 AS bbs02_notice_detail_nm
+                                         ,  '&lt;'||'b '||'style=color:#E33E31;'||'&gt;'||
+                                            '[(회사)개별공지] '
+                                            '&lt;'||'/b'||'&gt;'||bbs02_title                               AS bbs02_title2
+                                         ,  1                                                               AS bbs02_seq
+                                      FROM  bbs02_notice
+                                            LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+                                     WHERE  bbs02_company_id = #{companyId}
+                                       AND  bbs02_notice_type = '02'    /*(02:(회사)개별공지)*/
+                                       AND  bbs02_notice_id IN  ( 
+                                                                   SELECT bbs03_notice_id 
+                                                                     FROM bbs03_target
+                                                                    WHERE bbs03_person_id = #{personId}
+                                                                )
+                                 ) bbs
+                           WHERE bbs02_open_yn = '알림'
+                             
+                             
+                             
+                       ) bbs_in
+                 WHERE 1=1
+                 AND bbs02_from_date <= f_today()
+    )
+
+            SELECT COUNT(*)
+              FROM bbs
+             WHERE f_today() BETWEEN bbs02_from_date AND COALESCE(bbs02_to_date,to_date('99991231','yyyymmdd'))
+               AND bbs02_from_date >= ( SELECT COALESCE(sys01_notice_date, TO_DATE('19990101','yyyyMMdd'))
+                                                      FROM sys01_company
+                                                     WHERE sys01_company_id = #{companyId} )
+               AND NOT EXISTS ( SELECT 1
+                                  FROM bbs05_history
+                                 WHERE bbs05_notice_id = bbs02_notice_id
+                                   AND bbs05_person_id = #{personId} )
+        )   AS frm01_cnt3
+     ,  (
+            SELECT  COUNT(sms10_alarm_history_id)
+              FROM  sms10_alarm_history
+             WHERE  f_trunc(sms10_send_date) BETWEEN (f_sysdate() - INTERVAL '7 DAY') AND f_sysdate()
+               AND  sms10_target_person_id = #{personId}
+               AND  sms10_send_yn = 'true'
+        )   AS frm01_cnt4
+     ,  (
+     		SELECT	COUNT(flt10_tr_id)
+			  FROM	flt10_tr
+			 WHERE	flt10_company_id = #{companyId}
+			   AND	COALESCE(flt10_status_cd, '00') = '10'
+		)   AS frm01_cnt5
+) x
+]]>
+    </select>
+</mapper>

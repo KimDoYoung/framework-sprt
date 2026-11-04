@@ -724,6 +724,12 @@ export const sysApi = {
     return res.data.data;
   },
 
+  /** AS-IS sys.Sys27_LoginManage.insert (Sys27_Lookup_Request, EE61) — 기기 등록 요청. 이미 신청한 기기면 false */
+  requestLoginManage: async (placeCode: string, reason: string, macAddress?: string): Promise<boolean> => {
+    const res = await apiClient.post<ApiResponse<boolean>>('v1/sys/login-manages/requests', { placeCode, reason, macAddress });
+    return res.data.data === true;
+  },
+
   // ── A20 로그인내역 조회 (Sys26_Tab_LoginHistory) ──
 
   /** AS-IS sys.Sys26_Login.selectByLoginDate: companyId·loginMode '%' = 전체 */

@@ -51,6 +51,21 @@
          WHERE sys27_login_manage_id = #{loginManageId}
     </update>
 
+    <!-- AS-IS(IDMS-IC) sys27_login_manage.selectByMacAddress: 중복 신청 확인 (건수만) -->
+    <select id="countByMacAddress" resultType="int">
+        SELECT COUNT(*)
+          FROM sys27_login_manage
+         WHERE sys27_person_id = #{personId}
+           AND sys27_mac_address LIKE #{macAddress}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys27_login_manage.insert (INSERT 열 목록을 명시) -->
+    <insert id="insertRequest">
+        INSERT INTO sys27_login_manage (sys27_login_manage_id, sys27_company_id, sys27_person_id, sys27_open_date,
+                                        sys27_mac_address, sys27_place_cd, sys27_reason, sys27_confirm_date, sys27_confirm_yn)
+        SELECT f_create_seq(), #{companyId}, #{personId}, f_sysdate(), #{macAddress,jdbcType=VARCHAR}, #{placeCode}, #{reason}, null, null
+    </insert>
+
     <!-- AS-IS(IDMS-IC) emp01_person.selectByPersonId L292 (승인 문자에 쓰는 열만) -->
     <select id="selectPersonPhone" resultType="kr.co.kfs.asseterp.biz.sys.mapper.SysLoginManageMapper$PersonPhone">
         SELECT emp01_mobile_telno AS mobile_tel_no, emp01_kor_nm AS kor_nm

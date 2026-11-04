@@ -11,6 +11,7 @@ import {
   MessageOutlined,
   SendOutlined,
   ClockCircleOutlined,
+  BellOutlined,
   SwapOutlined,
   SoundOutlined,
   SettingOutlined,
@@ -49,6 +50,9 @@ interface TopBarProps {
   onOpenSendMessage?: () => void;
   /** AS-IS MainFrame addTitleAnchor L670 — 겸직전환 창 (EE52) */
   onOpenAddTitle?: () => void;
+  /** AS-IS MainFrame warning 아이콘(E4 L294) — 알림 창 (EE53). alarmState: none 알림 없음 / normal 체크리스트 있음 / twinkle 미결재·매매승인 있음(깜빡임) */
+  onOpenCheckList?: () => void;
+  alarmState?: 'none' | 'normal' | 'twinkle';
 }
 
 interface ScreenSearchItem {
@@ -76,6 +80,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenCommute,
   onOpenSendMessage,
   onOpenAddTitle,
+  onOpenCheckList,
+  alarmState = 'none',
 }) => {
   const loginUser = useLoginUser();
   const photoUrl = useMemo(() => fileApi.monitoringUrl(loginUser.userId), [loginUser.userId]);
@@ -521,6 +527,16 @@ export const TopBar: React.FC<TopBarProps> = ({
             <Tooltip title="사내 메신저" placement="bottom">
               <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
                 <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="알림 (미결재·체크리스트·공지사항)" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }} onClick={() => onOpenCheckList?.()}>
+                <style>{'@keyframes erp-alarm-blink{0%,100%{opacity:1}50%{opacity:.25}}'}</style>
+                <BellOutlined style={{
+                  fontSize: 18,
+                  color: alarmState === 'twinkle' ? '#ff7875' : alarmState === 'normal' ? '#ffd666' : '#fff',
+                  animation: alarmState === 'twinkle' ? 'erp-alarm-blink 1s infinite' : undefined,
+                }} />
               </span>
             </Tooltip>
             <Tooltip title="출퇴근" placement="bottom">

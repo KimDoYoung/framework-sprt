@@ -36,6 +36,30 @@ export const authApi = {
     return res.data;
   },
 
+  /** 인증번호 발송 (EE60, AS-IS sys.Sys25_Password.getCode). 인증번호는 서버가 들고 있다 */
+  sendPasswordCode: async (companyCode: string, empNo: string, phone: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>('/auth/password/code', { companyCode, empNo, phone });
+    return res.data;
+  },
+
+  /** 인증번호 확인 (EE60, AS-IS Sys25_Lookup_Reset.resetPassword 의 비교 — 서버에서) */
+  verifyPasswordCode: async (companyCode: string, empNo: string, code: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>('/auth/password/verify', { companyCode, empNo, code });
+    return res.data;
+  },
+
+  /** 비밀번호 변경 (EE59, AS-IS sys.Sys25_Password.checkPassword·checkPasswordRule·insert) */
+  changePassword: async (companyCode: string, loginId: string, currentPassword: string | undefined, newPassword: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>('/auth/password/change', { companyCode, loginId, currentPassword, newPassword });
+    return res.data;
+  },
+
+  /** 비밀번호 만료 3개월 연장 (EE59, AS-IS sys.Sys25_Password.extension) */
+  extendPassword: async (companyCode: string, loginId: string, currentPassword: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>('/auth/password/extension', { companyCode, loginId, currentPassword });
+    return res.data;
+  },
+
   refresh: async (): Promise<ApiResponse<User>> => {
     const res = await apiClient.post<ApiResponse<User>>('/auth/refresh');
     return res.data;

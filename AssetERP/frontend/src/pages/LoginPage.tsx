@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Typography, Alert, Select, Spin, message } from 'antd';
+import { Card, Form, Input, Button, Typography, Alert, Select, Spin, Modal, message } from 'antd';
 import { UserOutlined, LockOutlined, SafetyCertificateOutlined, BankOutlined } from '@ant-design/icons';
 import { authApi } from '../api/auth';
 import { errorMessage } from '../api/client';
 import { CompanyItem, TenantInfo, User } from '../types/auth';
+import { Sys25_Lookup_Password } from './sys/Sys25_Lookup_Password';
+import { Sys25_Lookup_Reset } from './sys/Sys25_Lookup_Reset';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -34,6 +36,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
   const [tenantError, setTenantError] = useState<string | null>(null);
   // admin 서브도메인에서만: 로그인할 회사 선택 목록 (AS-IS Sys01_Lookup_SelectSingle)
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  // 비밀번호 변경 창 (EE59, AS-IS LoginPage.changePassword L790-795) · 비밀번호 재설정 창 (EE60, AS-IS resetPassword L797-800)
+  const [pwdTarget, setPwdTarget] = useState<{ companyCode: string; loginId: string; statusType: 'init' | 'modi'; noExtension: boolean } | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   useEffect(() => {
     const loadTenant = async () => {
@@ -51,6 +56,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
     loadTenant();
   }, []);
 
+  /** AS-IS LoginPage.companyCode: 일반 회사는 접속한 서브도메인, admin에서는 고른 회사(안 고르면 admin) */
+  const companyCodeOf = (values: { companyCode?: string }) => (tenant?.admin && values.companyCode ? values.companyCode : tenant?.companyCode ?? '');
+
   const handleSubmit = async (values: LoginFormValues) => {
     setLoading(true);
     setLoginError(null);
@@ -64,7 +72,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
         setLoginError(res.message || '로그인에 실패했습니다.');
       }
     } catch (err: any) {
-      setLoginError(errorMessage(err, '로그인 요청 중 오류가 발생했습니다.'));
+      const msg = errorMessage(err, '로그인 요청 중 오류가 발생했습니다.');
+      setLoginError(msg);
+      // AS-IS getServiceResult() L538-561: status 99 최초로그인/초기화 후 → init, 98 비밀번호 만료 → modi. 안내 확인 뒤 비밀번호 변경 창
+      if (err?.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
+        const statusType = msg.includes('설정되지 않') ? 'init' : 'modi';
+        Modal.confirm({
+          title: '확인', content: msg, okText: '예', cancelButtonProps: { style: { display: 'none' } }, width: 450,
+          onOk: () => {
+            form.setFieldValue('password', undefined);   // changePassword() L791 passWordStr.setText(null)
+            setPwdTarget({ companyCode: companyCodeOf(values), loginId: values.username, statusType, noExtension: false });
+          },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -194,6 +214,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           </Form.Item>
         </Form>
 
+        {/* AS-IS 로그인 화면의 [비밀번호 재설정] (L307 resetPassword()) */}
+        <div style={{ textAlign: 'center' }}>
+          <Button type="link" disabled={!tenantValid} onClick={() => setResetOpen(true)}>비밀번호 재설정</Button>
+        </div>
+
         <div style={{ marginTop: 8, textAlign: 'center' }}>
           <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
             * 회사는 접속한 서브도메인(<Text code>{tenant?.companyCode ?? '-'}</Text>)으로 정해집니다.
@@ -201,6 +226,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           </Paragraph>
         </div>
       </Card>
+      {/* [EE60] 비밀번호 재설정 → 인증번호 확인 뒤 비밀번호 변경(init, 3개월 연장 없음 = openNoExtension L58-65) */}
+      <Sys25_Lookup_Reset
+        open={resetOpen}
+        companyCode={companyCodeOf(form.getFieldsValue())}
+        onVerified={empNo => setPwdTarget({ companyCode: companyCodeOf(form.getFieldsValue()), loginId: empNo, statusType: 'init', noExtension: true })}
+        onClose={() => setResetOpen(false)}
+      />
+      <Sys25_Lookup_Password
+        open={pwdTarget != null}
+        companyCode={pwdTarget?.companyCode ?? ''}
+        loginId={pwdTarget?.loginId ?? ''}
+        statusType={pwdTarget?.statusType ?? 'modi'}
+        noExtension={pwdTarget?.noExtension}
+        onClose={() => setPwdTarget(null)}
+      />
     </div>
   );
 };

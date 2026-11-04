@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
+import { BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeTarget, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -225,6 +225,12 @@ export const bbsNoticeApi = {
   },
 
   /** AS-IS bbs.Bbs02_Notice.selectByPersonIdPaging (Z03). 구분 전체는 '%', 기간(YYYY-MM-DD)은 구분이 전체일 때만 보낸다 */
+  /** AS-IS bbs.Bbs02_Notice.selectByTargetPerson (EE55 Frm01_Lookup_NoticeList) — 나에게 온 읽지 않은 알림 공지 */
+  searchByTargetPerson: async (): Promise<BbsNoticeTarget[]> => {
+    const res = await apiClient.get<ApiResponse<BbsNoticeTarget[]>>('v1/bbs/notices/target-person');
+    return res.data.data ?? [];
+  },
+
   searchMyNotices: async (params: { noticeType: string; noticeDetailCode: string; searchText: string; startDate?: string; closeDate?: string; offset: number; limit: number }): Promise<PageRes<BbsNoticePerson>> => {
     const res = await apiClient.get<ApiResponse<PageRes<BbsNoticePerson>>>('v1/bbs/notices/mine', { params });
     return res.data.data as PageRes<BbsNoticePerson>;

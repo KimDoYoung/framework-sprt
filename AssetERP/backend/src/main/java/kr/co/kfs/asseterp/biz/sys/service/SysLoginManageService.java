@@ -56,6 +56,24 @@ public class SysLoginManageService {
         return res;
     }
 
+    /**
+     * AS-IS Sys27_Lookup_Request.update() L94-126 → sys.Sys27_LoginManage.insert (Sys27_LoginManage.java L81-97):
+     * 같은 기기(Mac)로 이미 신청했으면 false("이미 신청완료된 기기입니다"), 아니면 신청 행을 만들고 true.
+     * 사원·회사는 요청 값이 아니라 로그인한 사용자다. 브라우저는 Mac 주소를 알 수 없어 macAddress는 비어 있을 수 있다
+     */
+    @Transactional
+    public boolean request(UserPrincipal user, String placeCode, String reason, String macAddress) {
+        if (placeCode == null || placeCode.isBlank() || reason == null || reason.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        String mac = macAddress == null ? "" : macAddress;
+        if (sysLoginManageMapper.countByMacAddress(user.getUserId(), mac) > 0) {
+            return false;
+        }
+        sysLoginManageMapper.insertRequest(user.getCompanyId(), user.getUserId(), mac.isEmpty() ? null : mac, placeCode, reason);
+        return true;
+    }
+
     private static void requireSysAdmin(UserPrincipal user) {
         if (!user.isSysAdmin()) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
