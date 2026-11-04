@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS icam20_price.insert·delete (server/icam/mapper/icam20_price.xml:126·152)
+  AS-IS com50_item.selectByItemCode·insert·updateItemName (server/com/mapper/com50_item.xml:20·62·72)
+  본문은 원본 그대로(원칙 4). 별칭만 DTO 필드.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchPriceMapper">
+
+    <delete id="deletePrices">
+    DELETE
+      FROM icam20_price
+     WHERE icam20_std_date = #{stdDate}
+    </delete>
+
+    <insert id="insertPrice">
+    INSERT
+      INTO icam20_price
+    SELECT f_create_batchseq()
+         , #{p.stdDate}
+         , #{p.itemType}
+         , #{p.itemCode}
+         , #{p.itemName}
+         , #{p.koscomCode}
+         , #{p.isin}
+         , #{p.ksdItemCode}
+         , #{p.closePrice}
+         , #{p.preClosePrice}
+         , #{p.marketType}
+         , f_sysdate()
+         , #{p.worker}
+    </insert>
+
+    <select id="selectItems" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchComItem">
+    SELECT com50_item_cd       AS itemCode
+         , com50_item_nm       AS itemName
+         , com50_item_type     AS itemType
+         , com50_item_short_cd AS itemShortCode
+      FROM com50_item
+     WHERE com50_item_cd   = #{itemCode}
+       AND com50_item_type = #{itemType}
+    </select>
+
+    <insert id="insertItem">
+    INSERT
+      INTO com50_item
+    SELECT f_create_seq()
+         , #{p.itemCode}
+         , #{p.itemName}
+         , #{p.itemType}
+         , #{p.itemShortCode}
+    </insert>
+
+    <update id="updateItemName">
+    UPDATE com50_item
+       SET com50_item_nm = #{itemName}
+     WHERE com50_item_cd = #{itemCode}
+       AND com50_item_type = #{itemType}
+    </update>
+</mapper>

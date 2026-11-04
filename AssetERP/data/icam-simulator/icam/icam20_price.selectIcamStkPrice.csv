@@ -1,0 +1,3 @@
+@stdDateStr,icam20_std_date,icam20_item_cd,icam20_item_nm,icam20_koscom_cd,icam20_isin,icam20_ksd_item_cd,icam20_close_price,icam20_pre_close_price,icam20_market_type
+2026-11-03,2026-11-03,ZZ0001,시뮬 삼성전자,ZZ0001,KRZZ00000011,,70000,69500,A
+2026-11-03,2026-11-03,ZZ0002,"시뮬 SK하이닉스, 보통주",ZZ0002,KRZZ00000029,,120000,121000,C
