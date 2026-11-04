@@ -151,13 +151,14 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
         open={open}
         title={<span style={{ color: '#0069B4', fontWeight: 'bold' }}>증빙자료</span>}
         width={width}
+        centered={extra != null}
         closable={false}
         maskClosable={false}
         onCancel={close}
         destroyOnClose
         footer={<div style={{ textAlign: 'center' }}><Button type="close" onClick={close}>닫기</Button></div>}
       >
-        <div style={{ height: `min(${extra ? 648 : 440}px, calc(100vh - 230px))`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: `min(${extra ? 648 : 440}px, calc(100vh - ${extra ? 190 : 230}px))`, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Space>
             {/* [E1] retrieveButton[조회].Select (L131) → retrieve() */}
             <Button type="search" onClick={retrieve}>조회</Button>

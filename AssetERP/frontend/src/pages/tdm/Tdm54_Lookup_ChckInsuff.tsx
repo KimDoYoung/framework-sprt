@@ -92,7 +92,7 @@ export const Tdm54_Lookup_ChckInsuff: React.FC<Props> = ({ target, onChanged, on
     gb.date('regDate', 100, '등록일', editMode ? { editor: 'date' } : undefined),  // L466
     gb.textCenter('regEmpName', 100, '등록자'),  // L467
     gb.textArea('content', 470, '조치내용', editMode ? { editor: 'largeText' } : undefined),  // L468
-    gb.textArea('note', 420, '비고', editMode ? { editor: 'largeText' } : undefined),  // L469
+    gb.textArea('note', 330, '비고', editMode ? { editor: 'largeText' } : undefined),  // L469
     gb.textCenter('fileCountStr', 80, '증빙자료'),  // L470
     // L458-463 fileCell → lookupFile() L597-616: 저장 안 한 변경이 있으면 "저장 후 증빙자료를 연결하세요", 아니면 Tdm00_Lookup_RelateAppr.open/view("tdm63", 조치기록 ID)
     iconCell<TdmCheckApprInsuffRecord>('edit', 'fileCell', 30, ' ', row => {

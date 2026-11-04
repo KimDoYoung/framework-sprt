@@ -87,7 +87,7 @@ export const Tdm00_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
       gb.text('docName', 300, '문서명', editor ? { editor } : undefined),  // L133
       gb.date('docDate', 100, '작성일', readOnly ? undefined : { editor: 'date' }),  // L134
       gb.text('systemName', 150, '시스템명', editor ? { editor } : undefined),  // L135
-      gb.text('note', 180, '비고', editor ? { editor } : undefined),  // L136
+      gb.text('note', 130, '비고', editor ? { editor } : undefined),  // L136
     ];
   }, [readOnly, viamc, companyCode]);
 
