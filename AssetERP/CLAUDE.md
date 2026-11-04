@@ -33,7 +33,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 
 ## yunhee 적극 사용 (토큰 절약)
 
-사용자 지시(2026-10-07): yunhee 사용법을 충분히 익히고 작업에 적극 활용해 토큰을 아낀다. 자세한 명령표는 `docs/변환/05-작업방법.md` §7.
+사용자 지시(2026-10-07): yunhee 사용법을 충분히 익히고 작업에 적극 활용해 토큰을 아낀다. 전체 사용법은 루트 `CLAUDE.md`가 가리키는 yunhee `docs/help/`와 `yunhee <command> --help`, 이 프로젝트에서의 적용 표는 `docs/변환/05-작업방법.md` §7.
 
 - 세션 시작에 `yunhee --version` → 05 §7 기준 버전보다 높으면 `yunhee changelog --since <기준>`으로 바뀐 것만 본다.
 - AS-IS 분석은 **`yunhee analysis`**(screen·method·grid·model·sql·ui, `yunhee analysis --list`)로 필요한 것만 뽑는다. 원본 Java·매퍼 XML·긴 색인을 통째로 읽거나 `sed`·`grep`으로 자르지 않는다. 원문은 `analysis method … -o code`로 그 메서드만.

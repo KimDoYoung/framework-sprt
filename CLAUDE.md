@@ -101,6 +101,7 @@ yunhee run "./deploy.sh"              # frontend 빌드 → backend static 복�
 
 
 - 이 머신에는 AI 어시스턴트의 토큰 낭비를 원천 차단하기 위한 로컬 CLI `yunhee`가 설치되어 있습니다.
+- yunhee의 기능과 사용법은 `/home/kdy987/work/yunhee-cli/docs/help/` 폴더에 fully 기술되어 있다. 간단한 도움말은 `yunhee --help`, `yunhee <command> --help`로 본다(명령 옵션이 기억나지 않으면 추측하지 말고 먼저 `--help`).
 -  작업 시 불필요한 전체 파일 읽기, grep/find, 셸 직접 빌드(mvn/gradle/npm)나 curl 호출을 금지합니다.
 
 1. **작업 전 도구 탐색**:

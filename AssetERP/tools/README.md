@@ -22,16 +22,13 @@
 
 각 시뮬레이터의 자세한 설정은 폴더의 `README.md`.
 
-## yunhee 검증·벤치마크
+## yunhee 벤치마크
 
 | 파일 | 용도 |
 |:---|:---|
-| `yunhee-0.2.5-check.sh` | yunhee 수정사항 021 검증 (항목마다 ✅/❌ 한 줄) |
-| `yunhee-018-check.sh` | yunhee 수정사항 018 및 이후 항목 회귀 검증 |
 | `yunhee-benchmark.sh` + `yunhee-benchmark/` | 토큰 절감·정확성 벤치마크. 시나리오 `cases/`(17개), `lib.sh`, `report.py`, 결과 누적 (`--list`·`--history`·`--fast`) |
 
 ## 주의
 
 - 브라우저 화면 시험 도구(`screens/`, `smoke-frame.js`, `menus.sh`)는 2026-11-04에 삭제했다(git 이력에 있음). 시험 방법은 `테스트` 작업에서 정립한 뒤 새로 만든다. 그 전까지 ID 변환 중에는 브라우저 스크립트를 쓰지 않는다(`../docs/변환/06-결과확인.md` "화면시험 지연").
-- `yunhee-018-check.sh`의 일부 절은 옛 원본 색인(`.yunhee/018-old-index`, git-ignored)을 쓴다. A-8은 삭제된 `screens/A03.js`가 필요해 건너뛴다.
 - 시뮬레이터는 자기 폴더에 `.pid`·`.log`를 만든다(git-ignored).
