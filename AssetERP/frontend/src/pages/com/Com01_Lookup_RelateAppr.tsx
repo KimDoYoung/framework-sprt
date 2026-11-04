@@ -34,9 +34,13 @@ interface Props {
   /** 연결·제거·파일 변경 뒤와 [닫기] (AS-IS callback.execute()) — 부르는 쪽이 증빙자료 건수를 다시 센다 */
   onChanged?: () => void;
   onClose: () => void;
+  /** 하위 클래스가 모달 폭을 바꾼다 (Tdm00_Lookup_RelateAppr 1000). 기본 880 */
+  width?: number;
+  /** 하위 클래스가 파일 목록 아래에 더하는 칸 (Tdm00_Lookup_RelateAppr의 외부보관 증빙자료, 높이 200 — AS-IS `vlc.add(extrEvidVlc, 200)`) */
+  extra?: React.ReactNode;
 }
 
-export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', keyTable, keyTableId, onChanged, onClose }) => {
+export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', keyTable, keyTableId, onChanged, onClose, width = 880, extra }) => {
   const gridRef = useRef<AgGridReact<ComRelateAppr>>(null);
   const [rows, setRows] = useState<ComRelateAppr[]>([]);
   const [loading, setLoading] = useState(false);
@@ -146,14 +150,14 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
       <LookupModal
         open={open}
         title={<span style={{ color: '#0069B4', fontWeight: 'bold' }}>증빙자료</span>}
-        width={880}
+        width={width}
         closable={false}
         maskClosable={false}
         onCancel={close}
         destroyOnClose
         footer={<div style={{ textAlign: 'center' }}><Button type="close" onClick={close}>닫기</Button></div>}
       >
-        <div style={{ height: 'min(440px, calc(100vh - 230px))', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: `min(${extra ? 648 : 440}px, calc(100vh - 230px))`, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Space>
             {/* [E1] retrieveButton[조회].Select (L131) → retrieve() */}
             <Button type="search" onClick={retrieve}>조회</Button>
@@ -167,6 +171,7 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
           <div style={{ height: 200 }}>
             <Com01_Grid_RelateFile keyTableId={keyTableId} readOnly={readOnly} onChanged={onChanged} />
           </div>
+          {extra && <div style={{ height: 200 }}>{extra}</div>}
         </div>
       </LookupModal>
       <Apr05_Lookup_LoadDoc2 open={loadOpen} multi aprStatusYn onSelectedList={onLoadDocs} onClose={() => setLoadOpen(false)} />

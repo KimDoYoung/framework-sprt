@@ -338,6 +338,21 @@ export interface BookRelateFnd {
   fundName?: string | null;
 }
 
+/** 종목별 보유펀드 조회창의 종목 한 행 (EE47, AS-IS Fnd10_BookModel 중 종목코드·종목명) */
+export interface BookItem {
+  bookId: number;
+  itemCode: string;
+  itemName?: string | null;
+}
+
+/** 종목별 보유펀드 조회창의 펀드 한 행 (EE47, AS-IS Fnd10_BookModel 중 펀드코드·펀드명·구분) */
+export interface BookFund {
+  bookId: number;
+  fundCode?: string | null;
+  fundName?: string | null;
+  manageType?: string | null;
+}
+
 /** 펀드보유주식(타사무) 한 행 (P11, AS-IS Fnd11_BookExtrModel). bookExtrId가 0 이하면 새 행 */
 export interface BookExtr {
   bookExtrId: number;

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm64_chck_evid_extr.xml selectByTargetId (EE49 외부보관 증빙자료, Tdm00_Lookup_RelateAppr) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckEvidExtrMapper">
+
+    <!-- 수정(추가): tdm64에 회사 열이 없어 대상 테이블로 회사를 확인한다 -->
+    <select id="countTarget" resultType="int">
+        SELECT (SELECT COUNT(*) FROM tdm52_chck_manl WHERE tdm52_chck_manl_id = #{targetId} AND tdm52_company_id = #{companyId})
+             + (SELECT COUNT(*)
+                  FROM tdm63_chck_insuff_record
+                       INNER JOIN tdm54_chck_insuff ON tdm54_chck_insuff_id = tdm63_chck_insuff_id
+                 WHERE tdm63_chck_insuff_record_id = #{targetId} AND tdm54_company_id = #{companyId})
+    </select>
+
+    <!-- AS-IS selectByTargetId L25 — 그리드가 쓰는 열만 -->
+    <select id="selectByTargetId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckEvidExtrRes">
+        SELECT tdm64_chck_evid_extr_id                       AS chck_evid_extr_id
+             , tdm64_target_id                               AS target_id
+             , tdm64_system_nm                               AS system_name
+             , tdm64_doc_no                                  AS doc_no
+             , tdm64_doc_nm                                  AS doc_name
+             , to_char(tdm64_doc_date, 'YYYY-MM-DD')         AS doc_date
+             , tdm64_note                                    AS note
+          FROM tdm64_chck_evid_extr
+         WHERE tdm64_target_id = #{targetId}
+         ORDER BY COALESCE(tdm64_doc_no,'')
+                , tdm64_doc_nm COLLATE "ko_KR.utf8"
+                , tdm64_doc_date
+    </select>
+
+    <select id="selectIdsByTargetId" resultType="java.lang.Long">
+        SELECT tdm64_chck_evid_extr_id
+          FROM tdm64_chck_evid_extr
+         WHERE tdm64_target_id = #{targetId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(tdm64_chck_evid_extr) INSERT. 자동 채움: upd_nm = 로그인 사용자 이름, upd_date = 현재 시각 -->
+    <insert id="insertEvid">
+        INSERT INTO tdm64_chck_evid_extr
+               ( tdm64_chck_evid_extr_id, tdm64_target_id, tdm64_system_nm, tdm64_doc_no, tdm64_doc_nm, tdm64_doc_date, tdm64_note, tdm64_upd_nm, tdm64_upd_date )
+        VALUES ( #{id}, #{targetId}, #{row.systemName}, #{row.docNo}, #{row.docName}, CAST(#{row.docDate} AS date), #{row.note}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateEvid">
+        UPDATE tdm64_chck_evid_extr
+           SET tdm64_system_nm = #{row.systemName}
+             , tdm64_doc_no    = #{row.docNo}
+             , tdm64_doc_nm    = #{row.docName}
+             , tdm64_doc_date  = CAST(#{row.docDate} AS date)
+             , tdm64_note      = #{row.note}
+             , tdm64_upd_nm    = #{updName}
+             , tdm64_upd_date  = f_sysdate()
+         WHERE tdm64_chck_evid_extr_id = #{row.chckEvidExtrId}
+           AND tdm64_target_id         = #{targetId}
+    </update>
+
+    <delete id="deleteEvids">
+        DELETE FROM tdm64_chck_evid_extr
+         WHERE tdm64_target_id = #{targetId}
+           AND tdm64_chck_evid_extr_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

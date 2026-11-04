@@ -5,7 +5,7 @@
  *   1.조치계획(등록일·등록자·조치완료 예정일·조치 예정자·조치명·조치계획내용 + [발생 점검항목 보기]) 3.조치결과(조치상태·조치부서·조치완료일·조치자·조치결과)
  *   2.조치기록 그리드(등록일 100·등록자 100·조치내용 470·비고 420·증빙자료 80·보기 아이콘 30) 4.조치결과 승인(승인상태·승인(반려)의견)
  * view(chckInsuffId) L131-149: 조치내역을 ID로 읽어 읽기 전용(승인·반려·취소·임시저장 숨김) / edit(model, stdDate, cb) L151-161. setButton() L478-494: 승인상태 10(대기)이면 승인·반려·임시저장을 켜고 취소는 끈다
- * 다음 단계: 조치기록의 증빙 보기 아이콘(Tdm00_Lookup_RelateAppr "tdm63")은 안내만 (N22와 같다)
+ * 다음 단계: 조치기록의 증빙 보기 아이콘은 EE49의 Tdm00_Lookup_RelateAppr.view("tdm63")를 연다
  * UX보강(10): 해당 없음
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -17,6 +17,7 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { Tdm52_Edit_ChckManl, CheckManlEditTarget } from './Tdm52_Edit_ChckManl';
+import { Tdm00_Lookup_RelateAppr } from './Tdm00_Lookup_RelateAppr';
 
 const gb = gbFor<TdmCheckApprInsuffRecord>();
 
@@ -61,6 +62,7 @@ export const Tdm54_Lookup_ChckInsuffCmnt: React.FC<Props> = ({ target, onChanged
   const [apprCmnt, setApprCmnt] = useState('');
   const [manlView, setManlView] = useState<CheckManlEditTarget | null>(null);
   const [busy, setBusy] = useState(false);
+  const [evid, setEvid] = useState<number | null>(null);   // 증빙자료 창 대상 조치기록 ID
 
   // [E0] 화면 열림 (생성자 L92-119, open() L163-171): view면 조치내역을 ID로 읽는다 → 폼에 채우고 setButton(), retrieveRecord() L416-427 (tdm.Tdm63_ChckInsuffRecord.selectBychckInsuffId)
   useEffect(() => {
@@ -87,8 +89,8 @@ export const Tdm54_Lookup_ChckInsuffCmnt: React.FC<Props> = ({ target, onChanged
     gb.textArea('content', 470, '조치내용'),  // L408
     gb.textArea('note', 420, '비고'),  // L409
     gb.textCenter('fileCountStr', 80, '증빙자료'),  // L410
-    // L411 fileCell → Tdm00_Lookup_RelateAppr.view("tdm63", chckInsuffRecordId, null) — 다음 단계
-    iconCell<TdmCheckApprInsuffRecord>('view', 'fileCell', 30, ' ', () => { message.info('증빙자료 창(Tdm00_Lookup_RelateAppr)은 다음 단계에서 연결됩니다'); }),
+    // L411 fileCell → Tdm00_Lookup_RelateAppr.view("tdm63", chckInsuffRecordId, null)
+    iconCell<TdmCheckApprInsuffRecord>('view', 'fileCell', 30, ' ', row => setEvid(row.chckInsuffRecordId)),
   ], []);
 
   const waiting = model?.apprStatusCode === '10';                            // setButton() L478-494
@@ -231,6 +233,7 @@ export const Tdm54_Lookup_ChckInsuffCmnt: React.FC<Props> = ({ target, onChanged
         </div>
       )}
       <Tdm52_Edit_ChckManl target={manlView} onChanged={() => undefined} onClose={() => setManlView(null)} />
+      <Tdm00_Lookup_RelateAppr open={evid != null} mode="view" keyTable="tdm63" keyTableId={evid} onClose={() => setEvid(null)} />
     </Modal>
   );
 };

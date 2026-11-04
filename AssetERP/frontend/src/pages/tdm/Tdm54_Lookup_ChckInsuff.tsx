@@ -7,7 +7,7 @@
  * setReadOnly() L618-666: 상태 이름에 "승인"이 있고(승인반려 26 제외) 또는 조치부서가 내 책무 대상 부서가 아니면 읽기 전용(단추 숨김).
  *   편집이면 조치완료(19)는 [완료취소]만 켜고, 발생·조치중·승인반려(10·11·26)는 [완료취소]만 끈다
  * 서버: tdm.Tdm54_ChckInsuff.updateComplete(U 저장·P 조치완료·C 완료취소), Tdm63_ChckInsuffRecord.select/delete/update
- * 다음 단계: 조치기록의 증빙자료 아이콘(Tdm00_Lookup_RelateAppr "tdm63")은 안내만 (N22와 같다)
+ * 다음 단계: 조치기록의 증빙자료 아이콘은 EE49의 Tdm00_Lookup_RelateAppr("tdm63")를 연다
  * UX보강(10): 해당 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -24,6 +24,7 @@ import { Emp00_Lookup_SelectSingleTdm } from '@/components/lookup/Emp00_Lookup_S
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Tdm52_Edit_ChckManl, CheckManlEditTarget } from './Tdm52_Edit_ChckManl';
 import { useDeferredCrud } from './useDeferredCrud';
+import { Tdm00_Lookup_RelateAppr } from './Tdm00_Lookup_RelateAppr';
 
 const gb = gbFor<TdmCheckApprInsuffRecord>();
 const DATE_FORMAT = 'YYYY.MM.DD';
@@ -64,6 +65,7 @@ export const Tdm54_Lookup_ChckInsuff: React.FC<Props> = ({ target, onChanged, on
   const [empLookup, setEmpLookup] = useState(false);
   const [manlView, setManlView] = useState<CheckManlEditTarget | null>(null);
   const [busy, setBusy] = useState(false);
+  const [evid, setEvid] = useState<number | null>(null);   // 증빙자료 창 대상 조치기록 ID (lookupFile L597-616)
 
   const insuffId = target?.chckInsuffId ?? null;
   // setReadOnly() L618-631
@@ -92,10 +94,10 @@ export const Tdm54_Lookup_ChckInsuff: React.FC<Props> = ({ target, onChanged, on
     gb.textArea('content', 470, '조치내용', editMode ? { editor: 'largeText' } : undefined),  // L468
     gb.textArea('note', 420, '비고', editMode ? { editor: 'largeText' } : undefined),  // L469
     gb.textCenter('fileCountStr', 80, '증빙자료'),  // L470
-    // L458-463 fileCell → lookupFile() L597-616: 저장 안 한 변경이 있으면 "저장 후 증빙자료를 연결하세요", 아니면 Tdm00_Lookup_RelateAppr (다음 단계 — 안내만)
-    iconCell<TdmCheckApprInsuffRecord>('edit', 'fileCell', 30, ' ', () => {
+    // L458-463 fileCell → lookupFile() L597-616: 저장 안 한 변경이 있으면 "저장 후 증빙자료를 연결하세요", 아니면 Tdm00_Lookup_RelateAppr.open/view("tdm63", 조치기록 ID)
+    iconCell<TdmCheckApprInsuffRecord>('edit', 'fileCell', 30, ' ', row => {
       if (crudRef.current.hasChanges()) { message.warning('저장 후 증빙자료를 연결하세요'); return; }
-      message.info('증빙자료 창(Tdm00_Lookup_RelateAppr)은 다음 단계에서 연결됩니다');
+      setEvid(row.chckInsuffRecordId);
     }),
   ], [editMode]);
 
@@ -293,6 +295,9 @@ export const Tdm54_Lookup_ChckInsuff: React.FC<Props> = ({ target, onChanged, on
         onClose={() => setEmpLookup(false)}
       />
       <Tdm52_Edit_ChckManl target={manlView} onChanged={() => undefined} onClose={() => setManlView(null)} />
+      {/* lookupFile() L605-615: EDIT면 open(…, 닫힌 뒤 retrieveRecord()), 아니면 view(…, null) */}
+      <Tdm00_Lookup_RelateAppr open={evid != null} mode={editMode ? 'open' : 'view'} keyTable="tdm63" keyTableId={evid}
+        onChanged={editMode ? () => void retrieve() : undefined} onClose={() => setEvid(null)} />
     </Modal>
   );
 };

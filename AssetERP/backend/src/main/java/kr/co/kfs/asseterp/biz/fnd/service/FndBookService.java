@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.fnd.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
+import kr.co.kfs.asseterp.biz.fnd.dto.BookFundRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.BookItemRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.BookRelateAstRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.BookRelateFndRes;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndBookMapper;
@@ -30,5 +32,15 @@ public class FndBookService {
     public List<BookRelateFndRes> searchRelateFnd(UserPrincipal user, Long astClassTreeId, LocalDate stdDate) {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByRelateFnd(user.getCompanyId(), orgId, astClassTreeId, stdDate);
+    }
+
+    /** AS-IS selectItemList L34 (EE47). searchText는 AS-IS 화면처럼 "%" + 입력 + "%" */
+    public List<BookItemRes> searchItems(UserPrincipal user, LocalDate stdDate, String searchText) {
+        return mapper.selectItemList(user.getCompanyId(), stdDate, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS selectFundListByItemCode L40 (EE47) */
+    public List<BookFundRes> searchFundsByItem(UserPrincipal user, LocalDate stdDate, String itemCode) {
+        return mapper.selectFundListByItemCode(user.getCompanyId(), stdDate, itemCode);
     }
 }

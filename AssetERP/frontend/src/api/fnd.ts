@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, IssuingEntity, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookFund, BookItem, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, IssuingEntity, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -99,6 +99,20 @@ export const fndApi = {
   /** AS-IS fnd.Fnd10_Book.selectByRelateFnd: 고른 종목을 가진 내 권한 펀드 */
   searchBookRelateFnd: async (params: { astClassTreeId: number; stdDate: string }): Promise<BookRelateFnd[]> => {
     const res = await apiClient.get<ApiResponse<BookRelateFnd[]>>('v1/fnd/books/relate-fnd', { params });
+    return res.data.data ?? [];
+  },
+
+  // ── EE47 종목별 보유펀드 조회창 (Fnd10_Lookup_RelateFund) ──
+
+  /** AS-IS fnd.Fnd10_Book.selectItemList: 기준일에 보유한 종목 (searchText는 서버가 %…%로 감싼다) */
+  searchBookItems: async (params: { stdDate: string; searchText: string }): Promise<BookItem[]> => {
+    const res = await apiClient.get<ApiResponse<BookItem[]>>('v1/fnd/books/items', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd10_Book.selectFundListByItemCode: 고른 종목을 보유한 펀드(운용·일임/자문·고유) */
+  searchBookFundsByItem: async (params: { stdDate: string; itemCode: string }): Promise<BookFund[]> => {
+    const res = await apiClient.get<ApiResponse<BookFund[]>>('v1/fnd/books/items/funds', { params });
     return res.data.data ?? [];
   },
 

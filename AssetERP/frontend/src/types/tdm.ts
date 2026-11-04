@@ -1376,3 +1376,14 @@ export interface TdmCompanySetup {
   evidFileCheckYn: string | null;
   note: string | null;
 }
+
+/** 외부보관 증빙자료 한 행 (EE49, AS-IS Tdm64_ChckEvidExtrModel). 새 행은 임시 음수 ID, docDate는 yyyy-MM-dd */
+export interface TdmChckEvidExtr {
+  chckEvidExtrId: number;
+  targetId: number | null;
+  systemName: string | null;
+  docNo: string | null;
+  docName: string | null;
+  docDate: string | null;
+  note: string | null;
+}

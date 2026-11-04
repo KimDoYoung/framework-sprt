@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys15_Lookup_Corp.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(regYn, callback) L72: regYn이면 [거래처추가]가 보이고 [전체]가 [선택안함]이 된다. 창 610×500, 열 때 검색칸에 커서
  * open(corpTypeName, regYn, callback) L66: 구분 콤보를 그 이름("증권회사" 등)으로 맞추고 조회한다 (Q01 Adv02_Edit_Account)
- * empYn(임직원 포함, open(regYn, empYn, …), U11): 구분 콤보 끝에 Z99 "임직원"을 더하고 서버가 임직원을 UNION한다. openSearch(검색어 미리 채움)와 [거래처추가] 창(Sys15_Lookup_AddCorp)은 다음 단계 — 쓰는 화면이 생길 때 만든다
+ * empYn(임직원 포함, open(regYn, empYn, …), U11): 구분 콤보 끝에 Z99 "임직원"을 더하고 서버가 임직원을 UNION한다. openSearch(검색어 미리 채움)와 [거래처추가] 창(Sys15_Lookup_AddCorp)은 EE48
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05·06
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import { MultiGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupModal } from '@/components/lookup/LookupModal';
+import { Sys15_Lookup_AddCorp } from '@/components/lookup/Sys15_Lookup_AddCorp';
 
 const gb = gbFor<Corp>();
 
@@ -46,6 +47,7 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
   const [corpType, setCorpType] = useState('%');
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<Corp[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
   const columnDefs = useMemo(buildGrid, []);
 
   // retrieve() L218-239: 서비스 sys.Sys15_Corp.selectByUseYn(companyId, corpType, searchText "%…%", empYn). 검색어가 없으면 "%"
@@ -81,7 +83,7 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
     return () => { alive = false; };
   }, [open, corpTypeName, retrieve]);
 
-  // [E6] confirmButton[확인].Select (L179) · [E3] grid.RowDoubleClick (L159) → confirm() L241-250
+  // [E7] confirmButton[확인].Select (L179) · [E4] grid.RowDoubleClick (L159) → confirm() L241-250
   const confirm = (picked?: Corp) => {
     const selectedRows = gridRef.current?.api.getSelectedRows() ?? [];
     const corp = picked ?? (selectedRows.includes(lastSelected.current!) ? lastSelected.current : selectedRows[0]);
@@ -93,6 +95,7 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
   };
 
   return (
+    <>
     <LookupModal
       open={open}
       title="거래처목록"
@@ -103,25 +106,25 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
         <div style={{ textAlign: 'center' }}>
           <Space>
             <Button type="save" onClick={() => confirm()}>확인</Button>
-            {/* [E7] selectAllButton[전체].Select [callback != null] (L189) → callback(null) + hide(). regYn이면 문구가 "선택안함" (L187) */}
+            {/* [E8] selectAllButton[전체].Select [callback != null] (L189) → callback(null) + hide(). regYn이면 문구가 "선택안함" (L187) */}
             <Button onClick={() => onResult(null)}>{regYn ? '선택안함' : '전체'}</Button>
-            {/* [E8] cancelButton[닫기].Select (L198) → hide() */}
+            {/* [E9] cancelButton[닫기].Select (L198) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
         </div>
       }
     >
       <div style={{ height: 400, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {/* [E4] retrieveButton[조회].Select (L166) → retrieve(). [E2] searchText.KeyPress [Enter] (L150) → retrieve() */}
+        {/* [E5] retrieveButton[조회].Select (L166) → retrieve(). [E3] searchText.KeyPress [Enter] (L150) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve(corpType, searchText)}
           extra={regYn ? (
-            // [E5] addButton[거래처추가].Select (L172) → lookupAddCorp() L252-260: [E5 다음 단계] Sys15_Lookup_AddCorp
-            <Button type="register" onClick={() => message.info('거래처추가 창은 다음 단계에서 연결합니다.')}>거래처추가</Button>
+            // [E6] addButton[거래처추가].Select (L172) → lookupAddCorp() L252-260: Sys15_Lookup_AddCorp.open(callback = retrieve())
+            <Button type="register" onClick={() => setAddOpen(true)}>거래처추가</Button>
           ) : undefined}
         >
           <SearchBar.Field label="구분">
-            {/* [E1] corpTypeComboBox[CorpType].Collapse (L141) → retrieve() */}
+            {/* [E1] corpTypeComboBox.callbackOnCreate (L123) · [E2] corpTypeComboBox[CorpType].Collapse (L141) → retrieve() */}
             <SystemCodeComboBox
               kindCd="CorpType"
               altCode={['%', '전체']}
@@ -148,5 +151,7 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
         </div>
       </div>
     </LookupModal>
+      <Sys15_Lookup_AddCorp open={addOpen} onSaved={() => void retrieve(corpType, searchText)} onClose={() => setAddOpen(false)} />
+    </>
   );
 };

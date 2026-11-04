@@ -61,4 +61,170 @@
          ORDER BY fnd10_fund_cd
     </select>
 
+    <!-- AS-IS(IDMS-IC) fnd10_book.selectItemList L123 (EE47 종목별 보유펀드 조회창 — 왼쪽 종목 목록). 그리드가 쓰는 열(종목코드·종목명)만 -->
+    <select id="selectItemList" resultType="kr.co.kfs.asseterp.biz.fnd.dto.BookItemRes">
+        SELECT row_number() over(order by fnd10_item_cd)   AS book_id
+             , fnd10_item_cd                               AS item_code
+             , com50_item_nm                               AS item_name
+          FROM (
+                /*----------- 운용펀드 보유종목 -----------*/
+                SELECT fnd10_item_cd    AS fnd10_item_cd
+                  FROM fnd10_book
+                 WHERE fnd10_company_id     = #{companyId}
+                   AND fnd10_std_date       = #{stdDate}::date
+                   AND fnd10_item_group_cd  = '3'   --(3:주식)
+                   AND fnd10_market_cd     != 'B'   --(B:비상장)
+                 UNION ALL
+                SELECT fnd11_item_cd    AS fnd10_item_cd
+                  FROM fnd11_book_extr
+                 WHERE fnd11_company_id = #{companyId}
+                   AND fnd11_std_date   = ( SELECT MAX(fnd11_std_date)
+                                              FROM fnd11_book_extr
+                                             WHERE fnd11_company_id = #{companyId}
+                                               AND fnd11_std_date &lt;= #{stdDate}::date )
+                   AND fnd11_item_type  = '2010'    --(2010:주식)
+                 UNION ALL
+                SELECT flt09_item_cd    AS fnd10_item_cd
+                  FROM flt09_fund_item
+                 WHERE flt09_company_id = #{companyId}
+                   AND flt09_std_date   = #{stdDate}::date
+                   AND flt09_item_type  = '2010'    --(2010:주식)
+                /*----------- 일임/자문 보유종목 -----------*/
+                 UNION ALL
+                SELECT adv10_item_cd    AS fnd10_item_cd
+                  FROM adv10_book
+                 WHERE adv10_company_id     = #{companyId}
+                   AND adv10_std_date       = #{stdDate}::date
+                   AND adv10_item_group_cd  = '3'   --(3:주식)
+                   AND adv10_market_cd     != 'B'   --(B:비상장)
+                 UNION ALL
+                SELECT adv11_item_cd    AS fnd10_item_cd
+                  FROM adv11_book_extr
+                 WHERE adv11_company_id = #{companyId}
+                   AND adv11_std_date   = ( SELECT MAX(adv11_std_date)
+                                              FROM adv11_book_extr
+                                             WHERE adv11_company_id = #{companyId}
+                                               AND adv11_std_date &lt;= #{stdDate}::date )
+                   AND adv11_item_type  = '2010'    --(2010:주식)
+                /*----------- 고유자산 보유종목 -----------*/
+                 UNION ALL
+                SELECT com50_item_cd    AS fnd10_item_cd
+                  FROM ast09_book
+                       INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+                       INNER JOIN com50_item       ON com50_item_short_cd = ast01_isin AND com50_item_type = '2010'
+                 WHERE ast09_company_id = #{companyId}
+                   AND ast09_hold_qty  != 0
+                   AND ast01_asset_type = '1'                       /*(1:고유자산)*/
+                   AND ast01_item_s_class_cd IN ('201010','201011') /*(201010:상장주식/201011:IPO)*/
+                   AND (ast09_ast_class_tree_id
+                       ,ast09_keep_account_id
+                       ,ast09_hold_date        ) IN ( SELECT ast09_ast_class_tree_id
+                                                           , ast09_keep_account_id
+                                                           , MAX(ast09_hold_date)
+                                                        FROM ast09_book
+                                                       WHERE ast09_company_id = #{companyId}
+                                                         AND ast09_hold_date &lt;= #{stdDate}::date
+                                                       GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+               ) t
+               LEFT OUTER JOIN com50_item ON ( com50_item_cd   = fnd10_item_cd  AND
+                                               com50_item_type = '2010'         )
+         WHERE CONCAT(fnd10_item_cd, com50_item_nm) ILIKE #{searchText}
+         GROUP BY fnd10_item_cd, com50_item_nm
+    </select>
+
+    <!-- AS-IS(IDMS-IC) fnd10_book.selectFundListByItemCode L193 (EE47 — 오른쪽 보유펀드 목록). 그리드가 쓰는 열(펀드코드·펀드명·구분)만 -->
+    <select id="selectFundListByItemCode" resultType="kr.co.kfs.asseterp.biz.fnd.dto.BookFundRes">
+        SELECT row_number() over(order by seq, fnd10_fund_cd)   AS book_id
+             , fnd10_fund_cd                                    AS fund_code
+             , fnd10_fund_nm                                    AS fund_name
+             , fnd10_manage_type                                AS manage_type
+          FROM (
+                /*----------- 운용펀드 보유종목 -----------*/
+                SELECT fnd01_fund_cd        AS fnd10_fund_cd
+                     , fnd02_fund_nm        AS fnd10_fund_nm
+                     , '운용'                AS fnd10_manage_type
+                     , 1                    AS seq
+                  FROM fnd10_book
+                       INNER JOIN fnd01_fund_code ON fnd01_fund_code_id = fnd10_fund_code_id
+                       INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = fnd10_fund_code_id
+                                                      AND fnd02_work_date    = ( SELECT MAX(fnd02_work_date)
+                                                                                   FROM fnd02_fund_info
+                                                                                  WHERE fnd02_fund_code_id = fnd10_fund_code_id
+                                                                                    AND fnd02_work_date &lt;= fnd10_std_date ) )
+                 WHERE fnd10_company_id = #{companyId}
+                   AND fnd10_std_date   = #{stdDate}
+                   AND fnd10_item_cd    = #{itemCode}
+                 UNION ALL
+                SELECT fnd11_fund_cd        AS fnd10_fund_cd
+                     , fnd11_fund_nm        AS fnd10_fund_nm
+                     , '운용'                AS fnd10_manage_type
+                     , 1                    AS seq
+                  FROM fnd11_book_extr
+                 WHERE fnd11_company_id = #{companyId}
+                   AND fnd11_std_date   = ( SELECT MAX(fnd11_std_date)
+                                              FROM fnd11_book_extr
+                                             WHERE fnd11_company_id = #{companyId}
+                                               AND fnd11_std_date &lt;= #{stdDate}::date )
+                   AND fnd11_item_cd    = #{itemCode}
+                   AND fnd11_item_type  = '2010'    --(2010:주식)
+                 UNION ALL
+                SELECT null                   AS fnd10_fund_cd
+                     , '**펀드자산 보유**'        AS fnd10_fund_nm
+                     , '운용'                  AS fnd10_manage_type
+                     , 1                      AS seq
+                  FROM flt09_fund_item
+                 WHERE flt09_company_id = #{companyId}
+                   AND flt09_std_date   = #{stdDate}
+                   AND flt09_item_cd    = #{itemCode}
+                   AND flt09_item_type  = '2010'    --(2010:주식)
+                /*----------- 일임/자문 보유종목 -----------*/
+                 UNION ALL
+                SELECT adv10_manage_cd        AS fnd10_fund_cd
+                     , adv10_manage_nm        AS fnd10_fund_nm
+                     , '일임/자문'              AS fnd10_manage_type
+                     , 2                      AS seq
+                  FROM adv10_book
+                 WHERE adv10_company_id = #{companyId}
+                   AND adv10_std_date   = #{stdDate}
+                   AND adv10_item_cd    = #{itemCode}
+                 UNION ALL
+                SELECT adv11_manage_cd        AS fnd10_fund_cd
+                     , adv11_manage_nm        AS fnd10_fund_nm
+                     , '일임/자문'              AS fnd10_manage_type
+                     , 2                      AS seq
+                  FROM adv11_book_extr
+                 WHERE adv11_company_id = #{companyId}
+                   AND adv11_std_date   = ( SELECT MAX(adv11_std_date)
+                                              FROM adv11_book_extr
+                                             WHERE adv11_company_id = #{companyId}
+                                               AND adv11_std_date &lt;= #{stdDate}::date )
+                   AND adv11_item_cd    = #{itemCode}
+                   AND adv11_item_type  = '2010'    --(2010:주식)
+                /*----------- 고유자산 보유종목 -----------*/
+                 UNION ALL
+                SELECT DISTINCT
+                       null                   AS fnd10_fund_cd
+                     , '**고유자산 보유**'        AS fnd10_fund_nm
+                     , '고유'                  AS fnd10_manage_type
+                     , 3                      AS seq
+                  FROM ast09_book
+                       INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+                       INNER JOIN com50_item       ON com50_item_short_cd = ast01_isin AND com50_item_type = '2010'
+                 WHERE ast09_company_id = #{companyId}
+                   AND ast09_hold_qty  != 0
+                   AND com50_item_cd    = #{itemCode}
+                   AND ast01_asset_type = '1'                       /*(1:고유자산)*/
+                   AND ast01_item_s_class_cd IN ('201010','201011') /*(201010:상장주식/201011:IPO)*/
+                   AND (ast09_ast_class_tree_id
+                       ,ast09_keep_account_id
+                       ,ast09_hold_date        ) IN ( SELECT ast09_ast_class_tree_id
+                                                           , ast09_keep_account_id
+                                                           , MAX(ast09_hold_date)
+                                                        FROM ast09_book
+                                                       WHERE ast09_company_id = #{companyId}
+                                                         AND ast09_hold_date &lt;= #{stdDate}::date
+                                                       GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+               ) t
+    </select>
+
 </mapper>

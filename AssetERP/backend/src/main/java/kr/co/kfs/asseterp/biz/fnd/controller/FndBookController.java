@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.fnd.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.BookFundRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.BookItemRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.BookRelateAstRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.BookRelateFndRes;
 import kr.co.kfs.asseterp.biz.fnd.service.FndBookService;
@@ -38,5 +40,21 @@ public class FndBookController {
                                                                @RequestParam Long astClassTreeId,
                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
         return ApiResponse.ok(service.searchRelateFnd(principal, astClassTreeId, stdDate));
+    }
+
+    /** AS-IS fnd.Fnd10_Book.selectItemList (EE47 종목별 보유펀드 조회창 — 종목 목록) */
+    @GetMapping("/items")
+    public ApiResponse<List<BookItemRes>> searchItems(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                      @RequestParam(required = false, defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchItems(principal, stdDate, searchText));
+    }
+
+    /** AS-IS fnd.Fnd10_Book.selectFundListByItemCode (EE47 — 고른 종목의 보유펀드) */
+    @GetMapping("/items/funds")
+    public ApiResponse<List<BookFundRes>> searchFundsByItem(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                            @RequestParam String itemCode) {
+        return ApiResponse.ok(service.searchFundsByItem(principal, stdDate, itemCode));
     }
 }

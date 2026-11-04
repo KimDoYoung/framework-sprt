@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmTaskRelateRule, TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmManlList, TdmManlEtcReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
 import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
-import type { TdmFormFile, TdmCompanySetup } from '../types/tdm';
+import type { TdmFormFile, TdmCompanySetup, TdmChckEvidExtr } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
 /** EE43 AS-IS Tdm11_Lookup_TaskRelateRule (직무 연관규정 매핑) */
@@ -1421,6 +1421,28 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm91_CompanySetup.delete */
   deleteCompanySetups: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/company-setups', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** 외부보관 증빙자료 (EE49, AS-IS server/tdm/Tdm64_ChckEvidExtr) — targetId = 이행점검(tdm52) 또는 미흡 조치기록(tdm63) ID */
+export const tdmChckEvidExtrApi = {
+  /** AS-IS tdm.Tdm64_ChckEvidExtr.selectByTargetId */
+  search: async (targetId: number): Promise<TdmChckEvidExtr[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckEvidExtr[]>>('v1/tdm/chck-evid-extrs', { params: { targetId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm64_ChckEvidExtr.update (ID ≤ 0은 INSERT) → 다시 읽은 목록 */
+  save: async (targetId: number, rows: TdmChckEvidExtr[]): Promise<TdmChckEvidExtr[]> => {
+    const body = rows.map(({ chckEvidExtrId, systemName, docNo, docName, docDate, note }) => ({ chckEvidExtrId, systemName, docNo, docName, docDate, note }));
+    const res = await apiClient.put<ApiResponse<TdmChckEvidExtr[]>>('v1/tdm/chck-evid-extrs', body, { params: { targetId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm64_ChckEvidExtr.delete */
+  remove: async (targetId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/chck-evid-extrs', { params: { targetId }, data: ids });
     return res.data.data ?? 0;
   },
 };
