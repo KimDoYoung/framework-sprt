@@ -147,6 +147,8 @@ public class ActJournalDtlService {
         boolean all = accountCode == null || accountCode.isBlank() || "none".equals(accountCode);
         JournalSubCond base = subCond(companyId, startDate, closeDate, all ? null : accountCode, null, null, null, null);
         List<JournalAccountRes> accounts = all ? mapper.selectAccountCodes(base) : mapper.selectOneAccountCodes(base);
+        // 사용자 승인(2026-11-04): FSS 계정코드가 없는 계정(f_get_fss_account_cd가 null)은 시트를 만들 수 없어 건너뛴다. AS-IS는 이 행에서 NPE로 파일이 안 만들어진다
+        accounts = accounts.stream().filter(acc -> acc != null && acc.trCode() != null).toList();
         try {
             return ActJournalSubExcelWriter.write(startDate, closeDate, accounts, acc ->
                     mapper.selectByAccountCode(subCond(companyId, startDate, closeDate, acc.trCode(), null, null, null, null)));

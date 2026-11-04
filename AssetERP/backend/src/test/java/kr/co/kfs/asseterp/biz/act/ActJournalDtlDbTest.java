@@ -65,6 +65,17 @@ class ActJournalDtlDbTest {
     }
 
     @Test
+    void 계정별원장_엑셀_전체_계정은_FSS코드_없는_계정을_건너뛰고_계정마다_시트다() throws Exception {
+        byte[] bytes = service.downloadAccountExcel(user, START, CLOSE, null);
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            assertThat(wb.getNumberOfSheets()).isGreaterThanOrEqualTo(1);
+            for (int i = 0; i < wb.getNumberOfSheets(); i++) {
+                assertThat(wb.getSheetName(i)).startsWith(i + "_").hasSizeLessThanOrEqualTo(31);
+            }
+        }
+    }
+
+    @Test
     void 계정별원장_출력_준비는_조회_결과만큼_임시행을_만든다() {
         List<JournalSubRes> list = service.searchByAccountCode(user, START, CLOSE, ACCOUNT, null, null, null, null);
         long groupId = service.insertRdSub(user, new JournalSubRdReq("X17_TEST", START, CLOSE, ACCOUNT, null, null, null, ""));
