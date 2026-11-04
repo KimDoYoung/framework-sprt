@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS dbConfig.getSeq (server/utils/db/mapper/DBConfig.xml:13)
+  AS-IS fnd01_fund_code.selectByCompanyIdAndFundCode (:793) · insertUpdate (:690, PostgreSQL 분기)
+  AS-IS fnd02_fund_info.selectOneByWorkDate (:120) · insert (:358) · deleteByWorkDateAndFundCodeId (:466)
+  본문은 원본 그대로(원칙 4). selectOne*은 열 별칭만 DTO 필드로 바꿨다. insert의 쓰지 않는 열(신탁구분·운용역ID …)은 AS-IS처럼 null.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchFundMapper">
+
+    <select id="selectSeq" resultType="java.lang.Long" flushCache="true">
+    SELECT CAST(to_char(f_today(),'yyyymmdd') as numeric) * 10000000 + CAST(lpad(CAST(nextval('seq') as varchar),7,'0') as numeric)
+    </select>
+
+    <select id="selectFundCodes" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchFundCode">
+    SELECT fnd01_fund_code_id AS fundCodeId
+         , fnd01_fund_cd      AS fundCode
+         , CAST(fnd01_start_date AS date) AS startDate
+         , CAST(fnd01_end_date   AS date) AS endDate
+         , fnd01_close_yn     AS closeYn
+         , fnd01_plan_yn      AS planYn
+         , fnd01_real_fund_id AS realFundId
+         , fnd01_company_id   AS companyId
+         , fnd01_icam_yn      AS icamYn
+      FROM fnd01_fund_code
+     WHERE fnd01_company_id = #{companyId}
+       AND fnd01_fund_cd    = #{fundCode}
+    </select>
+
+    <select id="selectFundInfoByWorkDate" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchFundInfo">
+    SELECT fnd02_fund_code_id         AS fundCodeId
+         , CAST(fnd02_work_date AS date) AS workDate
+         , fnd02_fund_nm              AS fundName
+         , fnd02_fund_full_nm         AS fundFullName
+         , fnd02_consignment_cd       AS consignmentCode
+         , fnd02_office_work_cd       AS officeWorkCode
+         , fnd02_org_code_nm          AS orgCodeName
+         , fnd02_kofia_fund_cd        AS kofiaFundCode
+         , fnd02_kofia_trust_cd       AS kofiaTrustCode
+         , fnd02_kofia_fund_type_cd   AS kofiaFundTypeCode
+         , fnd02_kofia_public_cd      AS kofiaPublicCode
+         , fnd02_kofia_parent_cd      AS kofiaParentCode
+         , fnd02_kofia_class_type_cd  AS kofiaClassTypeCode
+         , fnd02_kofia_fund_unit_cd   AS kofiaFundUnitCode
+         , fnd02_kofia_char_class_cd  AS kofiaCharClassCode
+         , fnd02_end_expect_date      AS endExpectDate
+         , fnd02_trust_bank_cd        AS trustBankCode
+         , fnd02_operator1            AS operator1
+         , fnd02_operator2            AS operator2
+         , fnd02_cur                  AS cur
+         , fnd02_next_close_date      AS nextCloseDate
+         , fnd02_next_fee_date        AS nextFeeDate
+         , fnd02_ksd_fund_cd          AS ksdFundCode
+         , fnd02_ksd_item_cd          AS ksdItemCode
+         , fnd02_management_rate      AS managementRate
+         , fnd02_sales_rate           AS salesRate
+         , fnd02_consignment_rate     AS consignmentRate
+         , fnd02_office_work_rate     AS officeWorkRate
+         , fnd02_seolj_aek            AS seoljAek
+         , fnd02_sunjasan_aek         AS sunjasanAek
+         , fnd02_diff_div_yn          AS diffDivYn
+      FROM fnd02_fund_info
+     WHERE fnd02_fund_code_id = #{fundCodeId}
+       AND fnd02_work_date <![CDATA[<=]]> #{workDate}
+     ORDER BY fnd02_work_date DESC
+     LIMIT 1
+    </select>
+
+    <insert id="upsertFundCode">
+    WITH  upsert AS (
+        UPDATE
+            fnd01_fund_code
+        SET
+            fnd01_fund_cd      = #{p.fundCode}
+          , fnd01_start_date   = #{p.startDate}
+          , fnd01_end_date     = #{p.endDate}
+          , fnd01_close_yn     = #{p.closeYn}
+          , fnd01_plan_yn      = #{p.planYn}
+          , fnd01_real_fund_id = #{p.realFundId}
+          , fnd01_company_id   = #{p.companyId}
+          , fnd01_icam_yn      = #{p.icamYn}
+        WHERE
+           fnd01_fund_code_id = #{p.fundCodeId}
+        RETURNING *
+    )
+    INSERT INTO fnd01_fund_code
+    (
+        fnd01_fund_code_id
+    ,   fnd01_fund_cd
+    ,   fnd01_start_date
+    ,   fnd01_end_date
+    ,   fnd01_close_yn
+    ,   fnd01_plan_yn
+    ,   fnd01_real_fund_id
+    ,   fnd01_company_id
+    ,   fnd01_icam_yn
+    )
+    SELECT
+        #{p.fundCodeId}
+    ,   #{p.fundCode}
+    ,   #{p.startDate}
+    ,   #{p.endDate}
+    ,   #{p.closeYn}
+    ,   #{p.planYn}
+    ,   #{p.realFundId}
+    ,   #{p.companyId}
+    ,   #{p.icamYn}
+    WHERE NOT EXISTS ( SELECT * from upsert )
+    </insert>
+
+    <delete id="deleteFundInfo">
+    DELETE
+      FROM fnd02_fund_info
+     WHERE fnd02_work_date = f_trunc(#{p.workDate})
+       AND fnd02_fund_code_id = #{p.fundCodeId}
+    </delete>
+
+    <insert id="insertFundInfo">
+    INSERT
+      INTO fnd02_fund_info
+    SELECT f_create_seq()
+         , #{p.fundCodeId}
+         , #{p.workDate}::date
+         , #{p.fundName}
+         , null
+         , null
+         , null
+         , #{p.seoljAek}
+         , #{p.sunjasanAek}
+         , null
+         , null
+         , null
+         , #{p.managementRate}
+         , #{p.salesRate}
+         , #{p.consignmentCode}
+         , #{p.consignmentRate}
+         , #{p.officeWorkCode}
+         , #{p.officeWorkRate}
+         , null
+         , null
+         , null
+         , null
+         , null
+         , #{p.orgCodeName}
+         , f_sysdate()
+         , #{p.kofiaFundCode}
+         , #{p.kofiaTrustCode}
+         , #{p.kofiaFundTypeCode}
+         , #{p.kofiaPublicCode}
+         , #{p.kofiaParentCode}
+         , #{p.kofiaClassTypeCode}
+         , #{p.kofiaFundUnitCode}
+         , #{p.kofiaCharClassCode}
+         , #{p.endExpectDate}
+         , #{p.trustBankCode}
+         , #{p.operator1}
+         , #{p.operator2}
+         , #{p.cur}
+         , #{p.nextCloseDate}
+         , #{p.nextFeeDate}
+         , #{p.ksdFundCode}
+         , #{p.ksdItemCode}
+         , #{p.diffDivYn}
+         , #{p.fundFullName}
+    </insert>
+</mapper>

@@ -24,4 +24,14 @@ public class BatchNoticeLogService {
             log.error("배치 알림 로그 저장 실패: actionCode={}, {}", actionCode, e.toString());
         }
     }
+
+    /** AS-IS insertNoticeLog(proc, 알림문구, 상세) — 오류는 아니지만 확인이 필요한 일(예: ICAM에서 0건)을 남긴다 */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notice(String actionCode, String noticeMsg, String detail) {
+        try {
+            mapper.insert(new BatchNoticeLogParam("BatchMain." + actionCode, noticeMsg, detail, null));
+        } catch (RuntimeException e) {
+            log.error("배치 알림 로그 저장 실패: actionCode={}, {}", actionCode, e.toString());
+        }
+    }
 }

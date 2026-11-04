@@ -6,6 +6,8 @@
 <!--
   AS-IS sys01_company.selectIcamCompanyCode (server/sys/mapper/sys01_company.xml:289)
   AS-IS icam02_data.insert (server/icam/mapper/icam02_data.xml:164) — 본문은 원본 그대로(원칙 4)
+  AS-IS sys12_calendar.selectByDate (sys12_calendar.xml:45), icam03_fund.insert·delete (icam03_fund.xml:277·323)
+  AS-IS fnd03_consignment.insert2 (:215), fnd09_trust_bank.insert2 (:224), fnd06_office_work.insert2 (:249)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchIcamMapper">
 
@@ -48,5 +50,131 @@
          , #{p.creater}
          , 'false'
          , null
+    </insert>
+
+    <select id="selectCalendarDays" resultType="java.time.LocalDate">
+    SELECT CAST(sys12_day AS date)
+      FROM sys12_calendar
+     WHERE sys12_company_id = 0
+       AND sys12_day BETWEEN #{startDate}::timestamp AND #{closeDate}::timestamp
+     ORDER BY sys12_day
+    </select>
+
+    <delete id="deleteIcamFund">
+    DELETE
+      FROM icam03_fund
+     WHERE icam03_icam_company_cd = #{p.icamCompanyCode}
+       AND icam03_std_date        = #{p.stdDate}
+       AND icam03_fund_cd         = #{p.fundCode}
+    </delete>
+
+    <insert id="insertIcamFund">
+    INSERT
+      INTO icam03_fund
+    SELECT f_create_batchseq()
+         , #{p.icamCompanyCode}
+         , #{p.icamCompanyName}
+         , #{p.stdDate}
+         , #{p.fundCode}
+         , #{p.fundName}
+         , #{p.kofiaFundCode}
+         , #{p.trustCode}
+         , #{p.fundTypeCode}
+         , #{p.publicCode}
+         , #{p.parentCode}
+         , #{p.classTypeCode}
+         , #{p.fundUnitCode}
+         , #{p.charClassCode}
+         , #{p.setDate}
+         , #{p.endDate}
+         , #{p.endExpectDate}
+         , #{p.operator1}
+         , #{p.operator2}
+         , #{p.oprDept}
+         , #{p.consignmentCode}
+         , #{p.consignmentName}
+         , #{p.trustBankCode}
+         , #{p.trustBankName}
+         , #{p.officeWorkCode}
+         , #{p.officeWorkName}
+         , #{p.cur}
+         , #{p.closeDate}
+         , #{p.feeDate}
+         , f_sysdate()
+         , #{p.worker}
+         , #{p.ksdFundCode}
+         , #{p.ksdItemCode}
+         , #{p.managementRate}
+         , #{p.salesRate}
+         , #{p.consignmentRate}
+         , #{p.officeWorkRate}
+         , #{p.setAmt}
+         , #{p.nav}
+         , #{p.diffDivYn}
+         , #{p.fundFullName}
+    </insert>
+
+    <insert id="insertConsignments">
+    INSERT
+      INTO fnd03_consignment
+    SELECT f_create_seq()
+         , icam03_consignment_cd
+         , icam03_consignment_nm
+         , 'true'
+         , null
+         , #{companyId}
+      FROM (
+             SELECT icam03_consignment_cd , icam03_consignment_nm
+               FROM icam03_fund
+              WHERE icam03_icam_company_cd = #{icamCompanyCode}
+              GROUP BY icam03_consignment_cd , icam03_consignment_nm
+           ) t
+     WHERE NOT EXISTS ( SELECT 1
+                          FROM fnd03_consignment
+                         WHERE fnd03_company_id     = #{companyId}
+                           AND fnd03_consignment_cd = icam03_consignment_cd )
+    </insert>
+
+    <insert id="insertTrustBanks">
+    INSERT
+      INTO fnd09_trust_bank
+    SELECT f_create_seq()
+         , icam03_trust_bank_cd
+         , icam03_trust_bank_nm
+         , 'true'
+         , null
+         , #{companyId}
+      FROM (
+             SELECT icam03_trust_bank_cd , COALESCE(icam03_trust_bank_nm, icam03_trust_bank_cd) icam03_trust_bank_nm
+               FROM icam03_fund
+              WHERE icam03_icam_company_cd = #{icamCompanyCode}
+                AND icam03_trust_bank_cd IS NOT NULL
+              GROUP BY icam03_trust_bank_cd , icam03_trust_bank_nm
+           ) t
+     WHERE NOT EXISTS ( SELECT 1
+                          FROM fnd09_trust_bank
+                         WHERE fnd09_company_id    = #{companyId}
+                           AND fnd09_trust_bank_cd = icam03_trust_bank_cd )
+    </insert>
+
+    <insert id="insertOfficeWorks">
+    INSERT
+      INTO fnd06_office_work
+    SELECT f_create_seq()
+         , icam03_office_work_cd
+         , icam03_office_work_nm
+         , 'true'
+         , null
+         , #{companyId}
+      FROM (
+             SELECT icam03_office_work_cd , icam03_office_work_nm
+               FROM icam03_fund
+              WHERE icam03_icam_company_cd = #{icamCompanyCode}
+              GROUP BY icam03_office_work_cd , icam03_office_work_nm
+           ) t
+     WHERE NOT EXISTS ( SELECT 1
+                          FROM fnd06_office_work
+                         WHERE fnd06_company_id     = #{companyId}
+                           AND fnd06_office_work_cd = icam03_office_work_cd )
     </insert>
 </mapper>
