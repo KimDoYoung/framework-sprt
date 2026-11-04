@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys10_file.selectByYear (server/sys/mapper/sys10_file.xml:63) — `SELECT a.*` 대신 쓰는 열만 적음, 조건 그대로 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchFileMapper">
+
+    <select id="selectByYear" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchFileRow">
+        SELECT a.sys10_file_id     AS file_id
+             , a.sys10_server_path AS server_path
+             , a.sys10_size        AS size
+          FROM sys10_file a
+         WHERE to_char(sys10_reg_date,'yyyy') = #{year}
+    </select>
+
+</mapper>
