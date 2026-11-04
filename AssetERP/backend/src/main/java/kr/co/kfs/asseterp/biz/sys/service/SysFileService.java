@@ -17,19 +17,12 @@ import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +33,8 @@ import java.util.Set;
 /**
  * 파일 공통 (B10) — AS-IS 서블릿 FileUpload(uploadFile·uploadEmpFile)·FileDownload(file·image)·FileDelete(deleteFile)와 server/sys/Sys10_File.selectByParentId.
  * 저장: {asseterp.upload.dir}/{로그인 회사코드}/{yyyyMM}/{fileId}(확장자 없음), sys10_server_path = 그 폴더 (AS-IS FileUpload.uploadFolder).
- * 사용자 결정(2026-10-13): 형식 검사(asseterp.upload.allowed-types, Tika 내용 판별)는 TOBE에서 더한다. 권한은 로그인만(원본도 검사 없음).
+ * 허용 형식: 사용자 결정(2026-11-04)으로 AS-IS와 같이 DB sys60_file_policy의 확장자 목록만 본다(내용 판별·properties 목록은 뺐다). 권한은 로그인만(원본도 검사 없음).
+ * 사원 사진 축소(옛 원본 uploadEmpFile): 현재 원본에 없어 사용자 결정(2026-11-04)으로 뺐다 — `mode`는 받지만 쓰지 않는다.
  */
 @Slf4j
 @Service
@@ -48,10 +42,7 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class SysFileService {
 
-    /** AS-IS FileUpload mode=emp01 (사원 사진) */
-    public static final String MODE_EMP01 = "emp01";
     private static final String NONAMED_IMAGE = "nonamed.jpg";
-    private static final Tika TIKA = new Tika();
 
     private final SysFileMapper sysFileMapper;
     private final UploadProperties uploadProperties;
@@ -126,8 +117,9 @@ public class SysFileService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
         }
         String fileNm = upload.getOriginalFilename();
-        String ext = fileNm.substring(fileNm.lastIndexOf('.') + 1); // makeFileModel L861
-        checkAllowedType(user, fileNm, ext, upload);
+        int dot = fileNm.lastIndexOf('.');
+        String ext = dot > -1 ? fileNm.substring(dot + 1) : ""; // FileUpload.getExtension
+        checkAllowedType(user, fileNm, ext);
 
         Long fileId = sysFileMapper.selectNextId();
         String serverPath = uploadFolder(user.getCompanyCode());
@@ -137,12 +129,7 @@ public class SysFileService {
             if (!subDir.exists() && !subDir.mkdirs()) {
                 throw new IOException("폴더를 만들 수 없습니다: " + serverPath);
             }
-            // uploadEmpFile L792: 사원이 있고 jpg·jpeg·png면 800×600으로 줄여 저장
-            if (MODE_EMP01.equalsIgnoreCase(mode) && isImageFile(fileNm) && sysFileMapper.countPersonById(parentId) > 0) {
-                ImageIO.write(resizeImage(upload, 800, 600), ext, target);
-            } else {
-                upload.transferTo(target);
-            }
+            upload.transferTo(target);
         } catch (IOException e) {
             log.error("파일 생성시 오류발생 fileId={}", fileId, e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 업로드 중 오류가 발생하였습니다.");
@@ -329,19 +316,13 @@ public class SysFileService {
         return newFileId;
     }
 
-    /** TOBE 추가(사용자 결정): 확장자가 allowed-types에 있고, Tika가 내용으로 판별한 MIME이 그 확장자의 허용 목록에 있어야 한다 */
-    private void checkAllowedType(UserPrincipal user, String fileNm, String ext, MultipartFile upload) {
-        Set<String> allowed = uploadProperties.allowedTypes() == null ? null
-                : uploadProperties.allowedTypes().get(ext.toLowerCase(Locale.ROOT));
-        String detected;
-        try (InputStream in = new BufferedInputStream(upload.getInputStream())) {
-            detected = TIKA.detect(in);
-        } catch (IOException e) {
-            detected = null;
-        }
-        if (allowed == null || detected == null || !allowed.contains(detected)) {
-            auditLogService.record(AuditEventType.FILE_UPLOAD_REJECTED, AuditResult.FAIL, user.getUsername(), null,
-                    fileNm + " (" + detected + ")");
+    /**
+     * AS-IS FilePolicyService.isAllowed(ext, mime): DB sys60_file_policy의 확장자 목록에 있는 확장자만 받는다(소문자 비교, MIME 검사는 원본도 주석 처리).
+     * AS-IS는 시작할 때 한 번 읽지만 TOBE는 올릴 때마다 읽어 [파일보안정책] 화면 저장이 바로 반영된다
+     */
+    private void checkAllowedType(UserPrincipal user, String fileNm, String ext) {
+        if (!sysFileMapper.selectAllowedExts().contains(ext.toLowerCase(Locale.ROOT))) {
+            auditLogService.record(AuditEventType.FILE_UPLOAD_REJECTED, AuditResult.FAIL, user.getUsername(), null, fileNm);
             throw new BusinessException(ErrorCode.INVALID_FILE);
         }
     }
@@ -361,33 +342,5 @@ public class SysFileService {
         } else {
             log.info("삭제 실패 fileId : {}", fileId);
         }
-    }
-
-    /** AS-IS FileUpload.isImageFile L814-817 */
-    private static boolean isImageFile(String fileName) {
-        String lower = fileName.toLowerCase(Locale.ROOT);
-        return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png");
-    }
-
-    /** AS-IS FileUpload.resizeImage L823-846 */
-    private static BufferedImage resizeImage(MultipartFile upload, int maxWidth, int maxHeight) throws IOException {
-        BufferedImage originalImage;
-        try (InputStream in = upload.getInputStream()) {
-            originalImage = ImageIO.read(in);
-        }
-        float aspectRatio = (float) originalImage.getWidth() / originalImage.getHeight();
-        int newWidth = maxWidth;
-        int newHeight = maxHeight;
-        if (aspectRatio > 1) {
-            newHeight = Math.round(maxWidth / aspectRatio);
-        } else {
-            newWidth = Math.round(maxHeight * aspectRatio);
-        }
-        Image resized = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-        BufferedImage result = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2d = result.createGraphics();
-        g2d.drawImage(resized, 0, 0, null);
-        g2d.dispose();
-        return result;
     }
 }

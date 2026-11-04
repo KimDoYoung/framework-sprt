@@ -36,7 +36,8 @@ public interface SysFileMapper {
 
     FileRes selectOneByParentId(@Param("parentId") Long parentId);
 
-    int countPersonById(@Param("personId") Long personId);
+    /** AS-IS sys60_file_policy.getAll — 허용 확장자(소문자) 전체 */
+    java.util.List<String> selectAllowedExts();
 
     Long selectNextId();
 

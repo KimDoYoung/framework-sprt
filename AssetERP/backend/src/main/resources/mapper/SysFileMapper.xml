@@ -152,9 +152,10 @@ SELECT <include refid="fileColumns"/>
     </select>
 
     <!-- AS-IS FileUpload.uploadEmpFile L754: emp01_person.selectById 결과가 있는지만 본다 -->
-    <select id="countPersonById" resultType="int">
-        SELECT COUNT(*) FROM emp01_person WHERE emp01_person_id = #{personId}
+    <select id="selectAllowedExts" resultType="string">
+        SELECT lower(sys60_ext) FROM sys60_file_policy WHERE sys60_ext IS NOT NULL
     </select>
+
 
     <!-- AS-IS IsNewData.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">

@@ -71,7 +71,7 @@ export const fileApi = {
     return res.data.data ?? [];
   },
 
-  /** AS-IS FileUpload?parentId=&[mode=emp01]&[fileYn=] → 저장된 행 */
+  /** AS-IS FileUpload?parentId=&[fileYn=] → 저장된 행 (mode=emp01 사진 축소는 2026-11-04 뺌, mode는 무시) */
   upload: async (parentId: number, file: File, opts?: { mode?: 'emp01'; fileYn?: boolean }): Promise<FileInfo> => {
     const form = new FormData();
     form.append('file', file);
