@@ -65,4 +65,9 @@ public interface EmpTransInfoMapper {
 
     /** AS-IS org00_org_info.selectByOrgCode (SEU03): 조직코드 → 조직ID(첫 이력 기준), 없으면 null */
     Long selectOrgCodeIdByOrgCode(@Param("companyId") Long companyId, @Param("orgCode") String orgCode);
+
+    /** AS-IS emp00_trans_info.getOnlineList — 접속 중인 사원(personIds) 목록 (EE51 Emp00_Lookup_SendMessage). personId·transId는 emp00With 조건이라 null로 넘긴다 */
+    List<TransInfoRes> selectOnlineList(@Param("companyId") Long companyId, @Param("transDate") String transDate,
+                                        @Param("searchText") String searchText, @Param("personIds") List<Long> personIds,
+                                        @Param("personId") Long personId, @Param("transId") Long transId);
 }

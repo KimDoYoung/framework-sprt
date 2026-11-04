@@ -30,6 +30,12 @@ export const authApi = {
     return res.data;
   },
 
+  /** 겸직전환 (EE52, AS-IS Emp04_Lookup_AddTitleList → Sys02_User.getChangeInfo): 겸직 목록의 사원으로 새 토큰 쿠키를 받는다 */
+  switchTitle: async (addPersonId: number): Promise<ApiResponse<User>> => {
+    const res = await apiClient.post<ApiResponse<User>>('/auth/switch-title', { addPersonId });
+    return res.data;
+  },
+
   refresh: async (): Promise<ApiResponse<User>> => {
     const res = await apiClient.post<ApiResponse<User>>('/auth/refresh');
     return res.data;

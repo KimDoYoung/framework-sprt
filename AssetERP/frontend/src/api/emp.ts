@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget } from '../types/emp';
+import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -43,6 +43,18 @@ export const empApi = {
   searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string, separateAddTitle?: boolean, leaveManager?: boolean): Promise<TransInfo[]> => {
     const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode, separateAddTitle, leaveManager } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp00_TransInfo.getOnlineList (EE51 Emp00_Lookup_SendMessage) — 지금 접속 중인 사원. 검색어는 성명·조직·사번 */
+  searchOnlineTransInfos: async (transDate: string | undefined, searchText: string): Promise<TransInfo[]> => {
+    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos/online', { params: { transDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS Emp00_Lookup_SendMessage.sendMessage (EE51) — 선택한 사원 중 접속 중인 사원에게 알림. 못 보낸(오프라인) 사원 ID도 돌려준다 */
+  sendAlarm: async (personIds: number[], message: string): Promise<{ sentPersonIds: number[]; offlinePersonIds: number[] }> => {
+    const res = await apiClient.post<ApiResponse<{ sentPersonIds: number[]; offlinePersonIds: number[] }>>('v1/emp/alarms', { personIds, message });
+    return res.data.data as { sentPersonIds: number[]; offlinePersonIds: number[] };
   },
 
   /** AS-IS ExcelDownload?actionCode=empList (Emp00_Tab_TransInfo [다운로드], .xls → .xlsx) → "사원정보.xlsx" 브라우저 저장 */
@@ -466,6 +478,12 @@ export const empProjectApi = {
 
 /** AS-IS Emp04_TabPage_AddTitle, Emp04_Edit_AddTitle */
 export const empAddTitleApi = {
+  /** AS-IS emp.Emp04_AddTitle.getAddTitleList (EE52 Emp04_Lookup_AddTitleList) — 로그인 사원의 본업무 + 유효한 겸직 */
+  getLoginList: async (): Promise<AddTitleLogin[]> => {
+    const res = await apiClient.get<ApiResponse<AddTitleLogin[]>>('v1/emp/add-titles/login-list');
+    return res.data.data ?? [];
+  },
+
   getAddTitles: async (personId: number): Promise<AddTitle[]> => {
     const res = await apiClient.get<ApiResponse<AddTitle[]>>('v1/emp/add-titles', { params: { personId } });
     return res.data.data ?? [];

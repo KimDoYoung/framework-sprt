@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { message, Dropdown, MenuProps, ConfigProvider, Tooltip } from 'antd';
 import koKR from 'antd/locale/ko_KR';
+import dayjs from 'dayjs';
 import {
   Layout,
   Model,
@@ -31,6 +32,10 @@ import { sysApi } from './api/sys';
 import { User } from './types/auth';
 import { LoginUserContext } from './hooks/useLoginUser';
 import { realtime } from './ws/stompClient';
+import { attApi } from './api/att';
+import { Att02_Lookup_Commute } from './pages/att/Att02_Lookup_Commute';
+import { Emp00_Lookup_SendMessage } from './pages/emp/Emp00_Lookup_SendMessage';
+import { Emp04_Lookup_AddTitleList } from './pages/emp/Emp04_Lookup_AddTitleList';
 
 /** 탭 헤더 hover 툴팁 내용. 지금(개발 중)은 클래스명. 끝나면 undefined(없음) 또는 `${menuNo} ${title}` 등으로 바꾼다 */
 const tabTooltip = (config: { classNm?: string; title?: string; menuNo?: string }): string | undefined => config.classNm;
@@ -157,6 +162,39 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
       onLogout();
     }
   };
+
+  // ── 출퇴근 창 (AS-IS MainFrame.checkCommute() L336-374, 생성자 L307: 회사 commutePopupYn일 때만 로그인 직후 한 번) ──
+  const [commuteOpen, setCommuteOpen] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    attApi.getMyCommuteLast().then(res => {
+      if (!alive || !res.popupYn) return;
+      let pass = false;
+      const last = res.last;
+      if (last) {
+        if (res.lockYn) pass = last.statusCode !== '99';
+        if (dayjs().format('YYYY-MM-DD') === last.workDate) {
+          if (last.checkInTime == null) pass = true;
+        } else {
+          pass = true;
+        }
+      } else {
+        pass = true;
+      }
+      if (pass) setCommuteOpen(true);
+    }).catch(err => console.error(err));
+    return () => { alive = false; };
+  }, [user.userId, user.companyId]);
+
+  // ── 알림발송 창 (AS-IS MainFrame webAlarmAnchor E8 L605: 관리자는 "관리자는 해당기능을 제공하지않습니다") ──
+  const [sendMessageOpen, setSendMessageOpen] = useState(false);
+  const openSendMessage = () => {
+    if (user.userId < 0) { message.info('관리자는 해당기능을 제공하지않습니다'); return; }
+    setSendMessageOpen(true);
+  };
+
+  // ── 겸직전환 창 (AS-IS MainFrame addTitleAnchor E11 L670 → Emp04_Lookup_AddTitleList.open(callback)) ──
+  const [addTitleOpen, setAddTitleOpen] = useState(false);
 
   // ── 메뉴 (GET /api/v1/sys/menus, 로그인 사용자 권한 기준) ──
   const [menus, setMenus] = useState<MenuLevel_1[]>([]);
@@ -575,7 +613,15 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           onChangeFont={(id) => setFontFamily(id)}
           userName={`${user.companyName} ${user.name}님`}
           onLogout={handleLogout}
+          onOpenCommute={() => setCommuteOpen(true)}
+          onOpenSendMessage={openSendMessage}
+          onOpenAddTitle={() => setAddTitleOpen(true)}
         />
+        {/* callback "change": AS-IS는 상단·MyPage·메뉴를 다시 만든다 → TOBE는 새 토큰 쿠키로 화면을 다시 연다 */}
+        <Emp04_Lookup_AddTitleList open={addTitleOpen} onClose={() => setAddTitleOpen(false)}
+          onChanged={() => { setAddTitleOpen(false); window.setTimeout(() => window.location.reload(), 700); }} />
+        <Emp00_Lookup_SendMessage open={sendMessageOpen} onClose={() => setSendMessageOpen(false)} />
+        <Att02_Lookup_Commute open={commuteOpen} onClose={() => setCommuteOpen(false)} />
 
         {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>

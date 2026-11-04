@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.dto.AddTitleLoginRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -41,4 +42,7 @@ public interface EmpAddTitleMapper {
     int deleteTrans(@Param("personId") Long personId);
 
     int deleteAddTitle(@Param("addTitleId") Long addTitleId, @Param("companyId") Long companyId);
+
+    /** AS-IS emp04_add_title.getAddTitleList — 로그인 사원의 본업무 + 유효한 겸직 (EE52) */
+    List<AddTitleLoginRes> selectLoginList(@Param("personId") Long personId);
 }

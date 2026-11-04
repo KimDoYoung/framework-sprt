@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.auth.service;
 import kr.co.kfs.asseterp.biz.audit.dto.AuditEventType;
 import kr.co.kfs.asseterp.biz.audit.dto.AuditResult;
 import kr.co.kfs.asseterp.biz.audit.service.AuditLogService;
+import kr.co.kfs.asseterp.biz.emp.service.EmpAddTitleService;
 import kr.co.kfs.asseterp.biz.auth.dto.AuthResult;
 import kr.co.kfs.asseterp.biz.auth.dto.LoginReq;
 import kr.co.kfs.asseterp.biz.auth.dto.LoginRes;
@@ -56,6 +57,8 @@ public class AuthService {
     private final AuditLogService auditLogService;
     /** 세션 종료 이벤트 → push 도메인이 WebSocket으로 즉시 알림 (SessionTerminatedEvent) */
     private final ApplicationEventPublisher eventPublisher;
+    /** 겸직전환 대상 확인 (EE52) */
+    private final EmpAddTitleService empAddTitleService;
 
     /**
      * 로그인. AS-IS Sys02_User.getLoginInfo 흐름을 따른다.
@@ -246,6 +249,39 @@ public class AuthService {
         AuthResult result = issueTokens(account, tokenTenant, jti, rotation.refreshId());
 
         log.info("토큰 갱신(Refresh) 성공: userId={}, username={}, jti={}", userId, account.qualifiedUsername(), jti);
+        return result;
+    }
+
+    /**
+     * 겸직전환 (EE52, AS-IS Emp04_Lookup_AddTitleList.login → sys.Sys02_User.getChangeInfo → LoginUser.setUserModel).
+     * 로그인 사원의 겸직전환 목록(본업무 + 유효한 겸직)에 있는 사원으로만 바꿀 수 있고, 새 세션(jti)의 토큰을 발급한다.
+     * 이전 사원의 세션은 조용히 지운다(같은 사용자가 스스로 바꾼 것이라 다른 화면에 종료 알림을 보내지 않는다).
+     */
+    public AuthResult switchTitle(UserPrincipal current, Long addPersonId, Tenant tenant) {
+        if (current.getUserId() == null || current.getUserId() <= 0) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        if (addPersonId == null || addPersonId.equals(current.getUserId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "전환할 직책을 선택해주세요");
+        }
+        if (!empAddTitleService.canSwitchTo(current.getUserId(), addPersonId)) {
+            auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, current.getUsername(), String.valueOf(addPersonId), "겸직전환 대상 아님");
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        LoginAccount account = findAccount(addPersonId)
+                .filter(a -> a.companyId() != null && a.companyId().equals(current.getCompanyId()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
+        if (account.isLocked()) throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+
+        String jti = UUID.randomUUID().toString();
+        String refreshId = UUID.randomUUID().toString();
+        AuthResult result = issueTokens(account, tenant.code(), jti, refreshId);
+        redisTokenService.removeSession(current.getUserId());
+        redisTokenService.startSession(account.sessionUserId(), jti, refreshId, sessionTtl());
+        publishSessionTerminated(account.sessionUserId(), jti, SessionTerminateReason.MULTI_LOGIN);
+        log.info("겸직전환: {} → {}", current.getUserId(), account.sessionUserId());
+        auditLogService.record(AuditEventType.LOGIN_SUCCESS, AuditResult.SUCCESS, account.qualifiedUsername(), null,
+                "겸직전환 from=" + current.getUserId() + ", jti=" + jti);
         return result;
     }
 

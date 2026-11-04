@@ -99,3 +99,26 @@ export interface AttCommuteStatus {
   overtimeWorkTimeStr: string | null;
   nightWorkTimeStr: string | null;
 }
+
+/** 로그인 사원 본인의 출퇴근 한 건 (AS-IS Att02_CommuteModel 일부 — Att02_Lookup_Commute, EE50). checkInTime/checkOutTime은 `yyyy-MM-ddTHH:mm:ss` */
+export interface AttMyCommute {
+  commuteId: number;
+  personId: number;
+  workDate: string;
+  statusCode?: string | null;
+  statusName?: string | null;
+  checkInTime?: string | null;
+  checkInTimeStr?: string | null;
+  checkOutTime?: string | null;
+  checkOutTimeStr?: string | null;
+  inReason?: string | null;
+  outReason?: string | null;
+}
+
+/** 마지막 출퇴근 + 회사 근태 설정 (MainFrame.checkCommute) */
+export interface AttMyCommuteLast {
+  popupYn: boolean;
+  lockYn: boolean;
+  last: AttMyCommute | null;
+}
+

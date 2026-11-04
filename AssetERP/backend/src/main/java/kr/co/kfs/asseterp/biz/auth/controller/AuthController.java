@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.auth.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.AuthResult;
 import kr.co.kfs.asseterp.biz.auth.dto.LoginReq;
 import kr.co.kfs.asseterp.biz.auth.dto.LoginRes;
+import kr.co.kfs.asseterp.biz.auth.dto.SwitchTitleReq;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.auth.service.AuthService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -52,6 +53,15 @@ public class AuthController {
         authService.logout(cookieManager.resolveRefreshToken(request));
         cookieManager.clearTokens(request, response);
         return ApiResponse.ok("로그아웃되었습니다.", null);
+    }
+
+    /** 겸직전환 (AS-IS Emp04_Lookup_AddTitleList → Sys02_User.getChangeInfo): 로그인 사원의 겸직 목록에 있는 사원으로 새 토큰을 발급한다 */
+    @PostMapping("/switch-title")
+    public ApiResponse<LoginRes> switchTitle(@AuthenticationPrincipal UserPrincipal principal, @RequestBody SwitchTitleReq req,
+                                             HttpServletRequest request, HttpServletResponse response) {
+        AuthResult result = authService.switchTitle(principal, req.addPersonId(), TenantFilter.current(request));
+        cookieManager.writeTokens(request, response, result.accessToken(), result.refreshToken());
+        return ApiResponse.ok("겸직전환되었습니다.", result.loginRes());
     }
 
     @GetMapping("/me")

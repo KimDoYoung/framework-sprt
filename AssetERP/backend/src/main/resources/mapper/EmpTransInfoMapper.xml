@@ -421,4 +421,25 @@
            AND org00_mod_date = ( SELECT min(org00_mod_date) FROM org00_org_info x WHERE x.org00_org_code_id = o.org00_org_code_id )
          LIMIT 1
     </select>
+
+    <!-- AS-IS emp00_trans_info.getOnlineList (IDMS-IC) — 웹소켓에 접속 중인 사원(personIds)만. 검색어는 성명·조직·사번.
+         AS-IS 서버는 접속자가 없으면 loginList에 "1"을 넣어 빈 결과를 만든다 → 서비스가 목록이 비면 바로 빈 목록을 돌려준다 -->
+    <select id="selectOnlineList" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
+        <include refid="emp00With"/>
+        SELECT <include refid="transInfoColumns"/>
+          FROM emp00 trans
+               INNER JOIN emp01_person         ON emp00_person_id = emp01_person_id
+               INNER JOIN org00                ON emp00_org_code_id = org00_org_code_id
+               LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
+         WHERE 1=1
+           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no) LIKE #{searchText}
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date )
+           AND emp01_person_id IN   <!-- AS-IS는 CAST(… AS VARCHAR) IN (문자열 목록) — TOBE는 숫자 목록 -->
+        <foreach collection="personIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         ORDER BY org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+    </select>
+
 </mapper>

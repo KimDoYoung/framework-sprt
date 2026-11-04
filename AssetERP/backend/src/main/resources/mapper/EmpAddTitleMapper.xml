@@ -157,4 +157,163 @@
            AND emp04_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
     </delete>
 
+    <!-- AS-IS emp04_add_title.getAddTitleList (IDMS-IC) emp04_add_title.xml — 로그인 사원의 본업무 + 유효한 겸직 목록 (EE52 Emp04_Lookup_AddTitleList).
+         본문은 그대로, 바깥에서 그리드에 쓰는 열만 고른다 -->
+    <select id="selectLoginList" resultType="kr.co.kfs.asseterp.biz.emp.dto.AddTitleLoginRes">
+<![CDATA[
+SELECT	b.emp04_add_person_id		AS add_person_id
+	 ,	b.emp04_main_title_yn		AS main_title_yn
+	 ,	b.emp04_org_nm				AS org_name
+	 ,	b.emp04_org_full_nm			AS org_full_name
+	 ,	b.emp04_title_nm			AS title_name
+	 ,	b.emp04_outstanding_cnt		AS outstanding_cnt
+	 ,	b.emp04_close_date::date	AS close_date
+  FROM	(
+SELECT	1																			AS emp04_add_title_id
+     ,	emp03_person_id																AS emp04_person_id
+     ,	emp03_trans_date															AS emp04_start_date
+     ,	NULL																		AS emp04_close_date
+     ,	emp03_org_code_id															AS emp04_org_code_id
+     ,	emp03_title_cd																AS emp04_title_cd
+     ,	NULL																		AS emp04_trans_reason
+     ,	NULL																		AS emp04_note
+     ,	emp03_person_id																AS emp04_add_person_id
+     ,	emp03_trans.*
+	 ,	f_cdnm('EmpKindCode',	emp03_kind_cd,	emp01_company_id, f_sysdate()) 		AS emp03_kind_nm
+	 ,	f_cdnm('EmpPosCode',	emp03_pos_cd,	emp01_company_id, f_sysdate()) 		AS emp03_pos_nm
+     ,  f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')         AS emp03_title_nm
+	 ,	f_cdnm('EmpGradeCode',	emp03_grade_cd, emp01_company_id, f_sysdate()) 		AS emp03_grade_nm
+     ,	f_cdnm('EmpTitleCode',	emp03_title_cd, emp01_company_id, f_sysdate())		AS emp04_title_nm
+	 ,	f_org_nm(emp03_org_code_id, f_sysdate())									AS emp04_org_nm
+	 ,	f_org_parent_full_nm(emp03_org_code_id, f_sysdate())						AS emp04_org_full_nm
+	 ,	'true'																		AS emp04_main_title_yn
+	 ,	(
+	 		' • '
+	 		||
+	 		f_org_parent_full_nm(emp03_org_code_id, f_sysdate())
+	 		||
+	 		' / '
+	 		||
+	 		f_cdnm('EmpTitleCode',	emp03_title_cd, emp01_company_id, f_sysdate())
+	 	)																			AS emp04_mobi_title
+	 ,	(
+	 		SELECT	COUNT(a.apr01_appr_id)
+			  FROM	apr01_appr a
+			  		INNER JOIN	(
+			  						SELECT	*
+			  						  FROM	apr04_appr_step
+									 WHERE	apr04_step_type_cd NOT IN ('30')
+						 	   		   AND	apr04_step_status_cd NOT IN ('20','30')
+						 	           AND	apr04_step_emp_id IN ( 
+						 	           								emp01_person_id, ( 
+							 	             											SELECT	apr07_target_emp_id
+																						  FROM	apr07_alt_appr
+																						 WHERE	1=1 
+																						   AND	apr07_alt_emp_id = emp01_person_id
+																						   AND	f_trunc(f_sysdate()) BETWEEN apr07_start_date AND apr07_close_date
+																						 LIMIT 1 
+																					  )
+																	)             
+								) b ON a.apr01_appr_id = b.apr04_appr_id
+			 WHERE	1=1
+			   AND	a.apr01_status_cd NOT IN ('30','40','99')
+		)																			AS emp04_outstanding_cnt
+  FROM	emp01_person
+     	INNER JOIN emp03_trans	ON emp03_person_id = emp01_person_id
+ WHERE	1=1
+   AND	(
+	   		emp01_person_id = #{personId} 
+	        OR
+	   		emp01_person_id = (
+								SELECT	emp04_person_id
+								  FROM	emp04_add_title
+								 WHERE	emp04_add_person_id = #{personId}
+								)
+		)
+   AND	emp03_trans_date = ( 
+   								SELECT	MAX(a.emp03_trans_date)
+   								  FROM	emp03_trans a
+   								 WHERE	a.emp03_person_id = emp01_person_id
+   								   AND	a.emp03_trans_date <= f_sysdate()
+   							)
+   AND NOT EXISTS ( SELECT 1
+                      FROM emp04_add_title
+                     WHERE emp04_add_person_id = emp01_person_id )
+ UNION ALL
+SELECT	emp04_add_title_id
+	 ,	emp04_person_id
+	 ,	emp04_start_date
+	 ,	emp04_close_date
+	 ,	emp04_org_code_id
+	 ,	emp04_title_cd
+	 ,	emp04_trans_reason
+	 ,	emp04_note
+	 ,	emp04_add_person_id
+     ,	emp03_trans.*
+	 ,	f_cdnm('EmpKindCode',	emp03_kind_cd,	emp01_company_id, emp03_trans_date) AS emp03_kind_nm
+	 ,	f_cdnm('EmpPosCode',	emp03_pos_cd,	emp01_company_id, emp03_trans_date) AS emp03_pos_nm
+     ,  f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')         AS emp03_title_nm
+	 ,	f_cdnm('EmpGradeCode',	emp03_grade_cd, emp01_company_id, emp03_trans_date) AS emp03_grade_nm
+     ,	f_cdnm('EmpTitleCode', emp04_title_cd, emp01_company_id, emp04_start_date)	AS emp04_title_nm
+	 ,	f_org_nm(emp04_org_code_id, emp04_start_date)								AS emp04_org_nm
+	 ,	f_org_parent_full_nm(emp04_org_code_id, emp04_start_date)					AS emp04_org_full_nm
+	 ,	'false'																		AS emp04_main_title_yn
+	 ,	(
+	 		' • '
+	 		||
+	 		f_org_parent_full_nm(emp04_org_code_id, emp04_start_date)
+	 		||
+	 		' / '
+	 		||
+	 		f_cdnm('EmpTitleCode', emp04_title_cd, emp01_company_id, emp04_start_date)
+	 	)																			AS emp04_mobi_title
+	 ,	(
+	 		SELECT	COUNT(a.apr01_appr_id)
+			  FROM	apr01_appr a
+			  		INNER JOIN	(
+			  						SELECT	*
+			  						  FROM	apr04_appr_step
+									 WHERE	apr04_step_type_cd NOT IN ('30')
+						 	   		   AND	apr04_step_status_cd NOT IN ('20','30')
+						 	           AND	apr04_step_emp_id IN ( 
+						 	           								emp04_add_person_id, ( 
+							 	             												SELECT	apr07_target_emp_id
+																							  FROM	apr07_alt_appr
+																							 WHERE	1=1 
+																							   AND	apr07_alt_emp_id = emp04_add_person_id
+																							   AND	f_trunc(f_sysdate()) BETWEEN apr07_start_date AND apr07_close_date
+																							 LIMIT 1 
+																						  )
+																 )             
+								) b ON a.apr01_appr_id = b.apr04_appr_id
+			 WHERE	1=1
+			   AND	a.apr01_status_cd NOT IN ('30','40','99')
+		)																			AS emp04_outstanding_cnt
+  FROM	emp04_add_title
+     	INNER JOIN emp03_trans	ON emp03_person_id = emp04_add_person_id
+     	INNER JOIN emp01_person ON emp01_person_id = emp04_add_person_id
+ WHERE	1=1
+   AND	f_trunc(f_sysdate()) BETWEEN emp04_start_date AND COALESCE(emp04_close_date, to_date('29991231','yyyyMMdd'))
+   AND	(
+	   		emp04_person_id = #{personId} 
+	        OR
+	   		emp04_person_id = (
+	   							SELECT	a.emp04_person_id
+	   							  FROM	emp04_add_title a
+	   							 WHERE	emp04_add_person_id = #{personId} 
+	   						  )
+		)
+   AND  emp03_trans_date = ( 
+                                SELECT  MAX(a.emp03_trans_date)
+                                  FROM  emp03_trans a
+                                 WHERE  a.emp03_person_id = emp04_add_person_id
+                                   AND  a.emp03_trans_date <= f_sysdate()
+                            )
+ ORDER BY emp04_main_title_yn DESC, emp04_start_date, emp04_close_date
+) b
+ ORDER BY b.emp04_main_title_yn DESC, b.emp04_start_date, b.emp04_close_date
+]]>
+    </select>
+
+
 </mapper>

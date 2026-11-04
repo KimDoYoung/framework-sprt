@@ -116,4 +116,12 @@ public class EmpTransInfoController {
                                                          @PathVariable Long personId) {
         return ApiResponse.ok(empTransInfoService.getCurrentTransInfo(principal, personId));
     }
+
+    /** AS-IS emp.Emp00_TransInfo.getOnlineList (Emp00_Lookup_SendMessage) — 접속 중인 사원. 검색어는 성명·조직·사번 */
+    @GetMapping("/trans-infos/online")
+    public ApiResponse<List<TransInfoRes>> searchOnlineList(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+                                                            @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(empTransInfoService.searchOnlineList(principal, transDate, searchText));
+    }
 }

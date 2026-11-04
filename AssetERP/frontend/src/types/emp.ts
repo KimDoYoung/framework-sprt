@@ -1334,3 +1334,15 @@ export interface SmsNoticeTarget {
   personInfo?: string | null;
   note?: string | null;
 }
+
+/** 겸직전환 창 한 줄 (AS-IS Emp04_AddTitleModel, EE52). addPersonId = 그 직책으로 로그인할 사원 ID */
+export interface AddTitleLogin {
+  addPersonId: number;
+  mainTitleYn?: boolean | null;
+  orgName?: string | null;
+  orgFullName?: string | null;
+  titleName?: string | null;
+  outstandingCnt?: number | null;
+  closeDate?: string | null;
+}
+

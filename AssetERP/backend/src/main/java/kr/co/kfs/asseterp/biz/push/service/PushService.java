@@ -9,6 +9,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.push.dto.NoticeReq;
 import kr.co.kfs.asseterp.biz.push.dto.NotificationPayload;
 import kr.co.kfs.asseterp.biz.push.dto.NotificationReq;
+import kr.co.kfs.asseterp.biz.push.dto.PersonAlarmRes;
+import kr.co.kfs.asseterp.biz.push.dto.PresenceItemRes;
 import kr.co.kfs.asseterp.biz.push.dto.SessionTerminatedPayload;
 import kr.co.kfs.asseterp.biz.user.mapper.AccountMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -26,6 +28,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * 서버발 WebSocket 메시지: 전체 공지, 개인 알림, 세션 종료 알림
  */
@@ -38,6 +45,7 @@ public class PushService {
     private final WsPublisher wsPublisher;
     private final AccountMapper accountMapper;
     private final AuditLogService auditLogService;
+    private final PresenceService presenceService;
 
     /**
      * 전체 공지 (/topic/notice)
@@ -76,6 +84,38 @@ public class PushService {
         auditLogService.record(AuditEventType.NOTIFICATION_SEND, AuditResult.SUCCESS, sender.getUsername(),
                 receiver, req.title());
         return message.id();
+    }
+
+    /**
+     * 사원 알림 (EE51, AS-IS Emp00_Lookup_SendMessage.sendMessage). personIds 중 같은 회사에서 지금 접속한 사원에게만
+     * /user/queue/notifications 로 보내고, 접속하지 않은 사원은 offline으로 돌려준다(저장하지 않음).
+     */
+    public PersonAlarmRes sendToPersons(UserPrincipal sender, List<Long> personIds, String text) {
+        String companyPrefix = sender.getCompanyCode() + ":";
+        List<PresenceItemRes> presence = presenceService.searchPresence().stream()
+                .filter(p -> p.username() != null && p.username().startsWith(companyPrefix))
+                .toList();
+        String message = "['" + sender.getName() + "'님이 보낸 메세지입니다.]\r\n" + text;
+        List<Long> sent = new ArrayList<>();
+        List<Long> offline = new ArrayList<>();
+        Set<String> receivers = new LinkedHashSet<>();
+        for (Long personId : personIds) {
+            List<PresenceItemRes> mine = presence.stream().filter(p -> personId.equals(p.userId())).toList();
+            if (mine.isEmpty()) {
+                offline.add(personId);
+            } else {
+                sent.add(personId);
+                mine.forEach(p -> receivers.add(p.username()));
+            }
+        }
+        for (String receiver : receivers) {
+            WsMessage<NotificationPayload> msg = WsMessage.of(WsMessageType.NOTIFICATION, WsLevel.INFO, "알림", message,
+                    new NotificationPayload(null, null), senderOf(sender));
+            wsPublisher.publish(WsRoute.user(receiver, WsDestinations.QUEUE_NOTIFICATIONS), msg);
+        }
+        auditLogService.record(AuditEventType.NOTIFICATION_SEND, AuditResult.SUCCESS, sender.getUsername(),
+                sent.size() + "명", "알림발송");
+        return new PersonAlarmRes(sent, offline);
     }
 
     /**

@@ -10,6 +10,8 @@ import kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoSearchParam;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpTransInfoMapper;
+import kr.co.kfs.asseterp.biz.push.dto.PresenceItemRes;
+import kr.co.kfs.asseterp.biz.push.service.PresenceService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class EmpTransInfoService {
     private static final String TRANS_HIRE = "100";
 
     private final EmpTransInfoMapper empTransInfoMapper;
+    private final PresenceService presenceService;
 
     /**
      * AS-IS selectByText: 검색어는 '%입력값%', 기준일이 없으면 오늘.
@@ -147,5 +150,21 @@ public class EmpTransInfoService {
 
     private static BusinessException invalid(String message) {
         return new BusinessException(ErrorCode.INVALID_INPUT, message);
+    }
+
+    /**
+     * AS-IS Emp00_TransInfo.getOnlineList (EE51 알림발송 창): 지금 웹소켓에 접속한 사원 중 로그인 회사 사원 —
+     * AS-IS는 BroadcastWebsocket.getInfoList(), TOBE는 접속자 현황(Redis presence)
+     */
+    public List<TransInfoRes> searchOnlineList(UserPrincipal user, LocalDate transDate, String searchText) {
+        String date = (transDate == null ? LocalDate.now() : transDate).toString();
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        List<Long> onlineIds = presenceService.searchPresence().stream()
+                .map(PresenceItemRes::userId)
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+        if (onlineIds.isEmpty()) return List.of();
+        return empTransInfoMapper.selectOnlineList(user.getCompanyId(), date, like, onlineIds, null, null);
     }
 }

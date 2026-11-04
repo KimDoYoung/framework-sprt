@@ -4,6 +4,11 @@ import kr.co.kfs.asseterp.biz.att.dto.AttCommuteAutoReq;
 import kr.co.kfs.asseterp.biz.att.dto.AttCommuteBatchReq;
 import kr.co.kfs.asseterp.biz.att.dto.AttCommuteHistReq;
 import kr.co.kfs.asseterp.biz.att.dto.AttCommuteRes;
+import kr.co.kfs.asseterp.biz.att.dto.AttMyCheckOutTimeReq;
+import kr.co.kfs.asseterp.biz.att.dto.AttMyCommuteLastRes;
+import kr.co.kfs.asseterp.biz.att.dto.AttMyCommuteReasonReq;
+import kr.co.kfs.asseterp.biz.att.dto.AttMyCommuteReq;
+import kr.co.kfs.asseterp.biz.att.dto.AttMyCommuteRes;
 import kr.co.kfs.asseterp.biz.att.service.AttCommuteHistService;
 import kr.co.kfs.asseterp.biz.att.service.AttCommuteService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -67,5 +72,46 @@ public class AttCommuteController {
     @PutMapping("/time")
     public ApiResponse<Integer> updateTimes(@AuthenticationPrincipal UserPrincipal principal, @RequestBody AttCommuteHistReq req) {
         return ApiResponse.ok(histService.insertList(principal, req, "일괄수정"));
+    }
+
+    // ── 로그인 사원 본인의 출퇴근 (AS-IS Att02_Lookup_Commute · Att02_Edit_Reason · Att02_Edit_CheckOutTime, EE50) ──
+
+    /** AS-IS att.Att02_Commute.getLastInfo (+ 회사 근태 설정) */
+    @GetMapping("/me/last-info")
+    public ApiResponse<AttMyCommuteLastRes> getLastInfo(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.getLastInfo(principal));
+    }
+
+    /** AS-IS att.Att02_Commute.selectByDate (baseDate 없으면 오늘) */
+    @GetMapping("/me")
+    public ApiResponse<List<AttMyCommuteRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+        return ApiResponse.ok(service.searchByDate(principal, baseDate));
+    }
+
+    /** AS-IS att.Att02_Commute.insert — 1 성공 / -1 이미 처리됨 / -2 출근 기록 없음 */
+    @PostMapping("/me/check")
+    public ApiResponse<Integer> checkInOut(@AuthenticationPrincipal UserPrincipal principal, @RequestBody AttMyCommuteReq req) {
+        return ApiResponse.ok(service.checkInOut(principal, Boolean.TRUE.equals(req.on()), req.baseDate()));
+    }
+
+    /** AS-IS att.Att02_Commute.insertOffWork — 1 성공 / -2 출근 기록 없음 */
+    @PostMapping("/me/off-work")
+    public ApiResponse<Integer> offWork(@AuthenticationPrincipal UserPrincipal principal, @RequestBody AttMyCommuteReq req) {
+        return ApiResponse.ok(service.offWork(principal, req.baseDate()));
+    }
+
+    /** AS-IS att.Att02_Commute.updateReason */
+    @PutMapping("/me/{commuteId}/reason")
+    public ApiResponse<Integer> updateReason(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long commuteId,
+                                             @RequestBody AttMyCommuteReasonReq req) {
+        return ApiResponse.ok(service.updateReason(principal, commuteId, req.actionCode(), req.reason()));
+    }
+
+    /** AS-IS att.Att02_Commute.updateCheckOutTime */
+    @PutMapping("/me/{commuteId}/check-out-time")
+    public ApiResponse<Integer> updateCheckOutTime(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long commuteId,
+                                                   @RequestBody AttMyCheckOutTimeReq req) {
+        return ApiResponse.ok(service.updateCheckOutTime(principal, commuteId, req.checkOutTime(), req.checkOutTimeStr()));
     }
 }

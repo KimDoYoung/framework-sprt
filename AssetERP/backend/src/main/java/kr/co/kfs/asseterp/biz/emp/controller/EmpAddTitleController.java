@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.AddTitleLoginRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpAddTitleService;
@@ -45,5 +46,11 @@ public class EmpAddTitleController {
     public ApiResponse<Integer> deleteAddTitle(@AuthenticationPrincipal UserPrincipal principal,
                                                @PathVariable Long addTitleId) {
         return ApiResponse.ok(empAddTitleService.deleteAddTitle(principal, addTitleId));
+    }
+
+    /** AS-IS emp.Emp04_AddTitle.getAddTitleList (Emp04_Lookup_AddTitleList) — 로그인 사원의 본업무 + 유효한 겸직 */
+    @GetMapping("/login-list")
+    public ApiResponse<List<AddTitleLoginRes>> getLoginList(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(empAddTitleService.getLoginList(principal));
     }
 }

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AttCommute, AttCommuteStatus, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
+import { AttCommute, AttCommuteStatus, AttMyCommute, AttMyCommuteLast, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
 
 /** att(근태) 화면 API (T06~) */
 export const attApi = {
@@ -95,5 +95,43 @@ export const attApi = {
   searchPersonStatus: async (p: { startDate: string; closeDate: string }): Promise<AttCommuteStatus[]> => {
     const res = await apiClient.get<ApiResponse<AttCommuteStatus[]>>('v1/att/commutes/person-status', { params: p });
     return res.data.data ?? [];
+  },
+
+  // ── EE50 로그인 사원 본인의 출퇴근 (Att02_Lookup_Commute · Att02_Edit_Reason · Att02_Edit_CheckOutTime) ──
+
+  /** AS-IS att.Att02_Commute.getLastInfo (+ 회사 근태 설정 commutePopupYn·commuteLockYn) */
+  getMyCommuteLast: async (): Promise<AttMyCommuteLast> => {
+    const res = await apiClient.get<ApiResponse<AttMyCommuteLast>>('v1/att/commutes/me/last-info');
+    return res.data.data as AttMyCommuteLast;
+  },
+
+  /** AS-IS att.Att02_Commute.selectByDate (baseDate 'yyyy-MM-dd') */
+  searchMyCommute: async (baseDate: string): Promise<AttMyCommute[]> => {
+    const res = await apiClient.get<ApiResponse<AttMyCommute[]>>('v1/att/commutes/me', { params: { baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS att.Att02_Commute.insert — on: 출근 true / 퇴근 false. 1 성공, -1 이미 처리됨, -2 출근 기록 없음 */
+  checkMyCommute: async (on: boolean, baseDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/att/commutes/me/check', { on, baseDate });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS att.Att02_Commute.insertOffWork — 1 성공, -2 출근 기록 없음 */
+  offWorkMyCommute: async (baseDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/att/commutes/me/off-work', { baseDate });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS att.Att02_Commute.updateReason — actionCode 'in' 지각 / 그 밖 퇴근 사유 */
+  updateMyCommuteReason: async (commuteId: number, actionCode: string, reason: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/att/commutes/me/${commuteId}/reason`, { actionCode, reason });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS att.Att02_Commute.updateCheckOutTime — checkOutTime 'yyyy-MM-dd', checkOutTimeStr 'HH:mm' */
+  updateMyCheckOutTime: async (commuteId: number, checkOutTime: string, checkOutTimeStr: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/att/commutes/me/${commuteId}/check-out-time`, { checkOutTime, checkOutTimeStr });
+    return res.data.data ?? 0;
   },
 };

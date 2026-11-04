@@ -10,6 +10,8 @@ import {
   RobotOutlined,
   MessageOutlined,
   SendOutlined,
+  ClockCircleOutlined,
+  SwapOutlined,
   SoundOutlined,
   SettingOutlined,
   PoweroffOutlined,
@@ -41,6 +43,12 @@ interface TopBarProps {
   onChangeFont?: (id: FontFamilyId) => void;
   userName?: string;
   onLogout?: () => void;
+  /** AS-IS MainFrame.checkCommute() / JSCaller — 출퇴근 창 (EE50, 진입 아이콘은 TOBE 확인용 추가) */
+  onOpenCommute?: () => void;
+  /** AS-IS MainFrame webAlarmAnchor L605 — 알림발송(쪽지) 창 (EE51) */
+  onOpenSendMessage?: () => void;
+  /** AS-IS MainFrame addTitleAnchor L670 — 겸직전환 창 (EE52) */
+  onOpenAddTitle?: () => void;
 }
 
 interface ScreenSearchItem {
@@ -65,6 +73,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   onChangeFont,
   userName,
   onLogout,
+  onOpenCommute,
+  onOpenSendMessage,
+  onOpenAddTitle,
 }) => {
   const loginUser = useLoginUser();
   const photoUrl = useMemo(() => fileApi.monitoringUrl(loginUser.userId), [loginUser.userId]);
@@ -315,6 +326,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '내 정보 수정' },
     { key: 'setting', icon: <SettingOutlined />, label: '개인 환경설정' },
+    { key: 'addTitle', icon: <SwapOutlined />, label: '겸직전환' },
     { type: 'divider' },
     { key: 'logout', icon: <PoweroffOutlined />, label: '로그아웃', danger: true },
   ];
@@ -458,7 +470,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </Tooltip>
 
           {/* User Profile dropdown */}
-          <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => { if (key === 'logout') onLogout?.(); } }} trigger={['click']} placement="bottomRight">
+          <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => { if (key === 'logout') onLogout?.(); if (key === 'addTitle') onOpenAddTitle?.(); } }} trigger={['click']} placement="bottomRight">
             <div
               style={{
                 display: 'flex',
@@ -511,8 +523,13 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
               </span>
             </Tooltip>
+            <Tooltip title="출퇴근" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }} onClick={() => onOpenCommute?.()}>
+                <ClockCircleOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
             <Tooltip title="업무 전송 / 쪽지" placement="bottom">
-              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }} onClick={() => onOpenSendMessage?.()}>
                 <SendOutlined style={{ fontSize: 17, color: '#fff' }} />
               </span>
             </Tooltip>

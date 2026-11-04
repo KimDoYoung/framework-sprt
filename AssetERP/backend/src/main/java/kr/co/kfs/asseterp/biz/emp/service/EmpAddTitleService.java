@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.AddTitleLoginRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddTitleSaveReq;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpAddTitleMapper;
@@ -88,5 +89,16 @@ public class EmpAddTitleService {
         empAddTitleMapper.deleteOthers(row.addPersonId());
         empAddTitleMapper.deleteTrans(row.addPersonId());
         return empAddTitleMapper.deleteAddTitle(addTitleId, companyId);
+    }
+
+    /** AS-IS getAddTitleList (EE52 겸직전환 창): 로그인 사원의 본업무 + 유효한 겸직 */
+    public List<AddTitleLoginRes> getLoginList(UserPrincipal user) {
+        return empAddTitleMapper.selectLoginList(user.getUserId());
+    }
+
+    /** 겸직전환 대상 확인 (TOBE 보안): 로그인 사원의 겸직전환 목록에 addPersonId가 있는가 */
+    public boolean canSwitchTo(Long currentPersonId, Long addPersonId) {
+        return empAddTitleMapper.selectLoginList(currentPersonId).stream()
+                .anyMatch(r -> addPersonId != null && addPersonId.equals(r.addPersonId()));
     }
 }
