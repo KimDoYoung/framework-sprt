@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { MenuInfoNotice, SmsNotice, LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget } from '../types/emp';
+import { MenuInfoNotice, SmsNotice, LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget, SmsNoticeKind, Notice } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -1658,6 +1658,12 @@ export const empSmsNoticeTargetApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp93_SmsNoticeTarget.getSmsNoticeList (EE65 특정알림 설정 창의 왼쪽 구분 목록) */
+  kinds: async (): Promise<SmsNoticeKind[]> => {
+    const res = await apiClient.get<ApiResponse<SmsNoticeKind[]>>('v1/emp/sms-notice-targets/kinds');
+    return res.data.data ?? [];
+  },
+
   /** AS-IS emp.Emp93_SmsNoticeTarget.update — 새 행은 smsNoticeTargetId 0 이하 */
   save: async (rows: SmsNoticeTarget[]): Promise<SmsNoticeTarget[]> => {
     const res = await apiClient.put<ApiResponse<SmsNoticeTarget[]>>('v1/emp/sms-notice-targets', rows.map(r => ({
@@ -1713,5 +1719,24 @@ export const empSmsNoticeApi = {
       smsNoticeCode: r.smsNoticeCode, talkNoticeYn: r.talkNoticeYn, smsNoticeYn: r.smsNoticeYn, mailNoticeYn: r.mailNoticeYn,
     })));
     return rows;
+  },
+};
+
+/** EE66 캘린더 알림설정(차단) (Emp90_Lookup_Notice) */
+export const empNoticeApi = {
+  /** AS-IS emp.Emp90_Notice.selectByPersonId (검색어는 서버가 %글자%로) */
+  search: async (searchText: string): Promise<Notice[]> => {
+    const res = await apiClient.get<ApiResponse<Notice[]>>('v1/emp/notices', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp90_Notice.updateList — [차단] */
+  block: async (keywords: string[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/notices', keywords);
+  },
+
+  /** AS-IS emp.Emp90_Notice.deleteList — [차단해제] */
+  unblock: async (keywords: string[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>('v1/emp/notices', { data: keywords });
   },
 };

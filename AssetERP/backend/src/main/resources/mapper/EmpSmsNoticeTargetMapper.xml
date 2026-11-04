@@ -25,6 +25,20 @@
          ORDER BY emp93_sms_notice_cd, emp93_person_id
     </select>
 
+    <!-- AS-IS emp93_sms_notice_target.getSmsNoticeList (IDMS-IC): 본문 그대로, 열 이름만 DTO에 맞춤 (EE65) -->
+    <select id="selectKinds" resultType="kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeKindRes">
+        SELECT ROW_NUMBER() OVER ()  AS sms_notice_target_id
+             , sys09_name            AS sms_notice_name
+             , sys09_code            AS sms_notice_cd
+          FROM sys09_code a
+               INNER JOIN sys08_code_kind b ON sys08_code_kind_id = sys09_code_kind_id AND sys08_kind_cd = 'SmsNoticeCode'
+         WHERE 1=1
+           AND sys09_code_id IN ( SELECT sys13_code_id
+                                    FROM sys13_code_group
+                                   WHERE sys13_kind_group_cd = 'SmsNoticeCode0001' )
+         ORDER BY sys09_code
+    </select>
+
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetRes">
         SELECT <include refid="targetColumns"/>
           FROM emp93_sms_notice_target

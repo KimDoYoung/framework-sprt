@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeKindRes;
 import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetSaveReq;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpSmsNoticeTargetMapper;
@@ -20,6 +21,11 @@ import java.util.List;
 public class EmpSmsNoticeTargetService {
 
     private final EmpSmsNoticeTargetMapper mapper;
+
+    /** AS-IS Emp93_Lookup_SmsNoticeTargetList.retrieve() L106-117: emp.Emp93_SmsNoticeTarget.getSmsNoticeList */
+    public List<SmsNoticeKindRes> kinds() {
+        return mapper.selectKinds();
+    }
 
     /** AS-IS Emp93_Lookup_SmsNoticeTarget.retrieve() L127-139: 로그인 회사의 그 구분(smsNoticeCode) 수신인 */
     public List<SmsNoticeTargetRes> search(UserPrincipal user, String smsNoticeCd) {

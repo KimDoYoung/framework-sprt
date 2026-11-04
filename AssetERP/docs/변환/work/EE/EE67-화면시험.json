@@ -1,0 +1,13 @@
+{
+  "id": "EE67",
+  "screen": "Sys00_Lookup_Mapping",
+  "menuNo": null,
+  "accounts": [
+    "kfstest/admin"
+  ],
+  "steps": [
+    "[개인 환경설정] → [특정양식 지정 (연봉계약서)] → 'Mapping' 창 '계약서' 탭: 4행",
+    "[행 추가] → 제목·사원구분 입력 → [저장], [행 삭제] 후 [저장]",
+    "내용 아이콘 → 양식 편집창 → [저장] 후 Mapping 창 [저장]"
+  ]
+}

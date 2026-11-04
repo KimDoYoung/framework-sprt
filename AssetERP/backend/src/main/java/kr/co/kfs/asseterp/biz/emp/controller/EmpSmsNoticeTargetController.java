@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeKindRes;
 import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetRes;
 import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpSmsNoticeTargetService;
@@ -24,6 +25,12 @@ import java.util.List;
 public class EmpSmsNoticeTargetController {
 
     private final EmpSmsNoticeTargetService service;
+
+    /** AS-IS emp.Emp93_SmsNoticeTarget.getSmsNoticeList (EE65) */
+    @GetMapping("/kinds")
+    public ApiResponse<List<SmsNoticeKindRes>> kinds() {
+        return ApiResponse.ok(service.kinds());
+    }
 
     /** AS-IS emp.Emp93_SmsNoticeTarget.selectBySmsNoticeCode */
     @GetMapping

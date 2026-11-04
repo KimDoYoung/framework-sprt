@@ -1365,3 +1365,17 @@ export interface SmsNotice {
   smsNoticeYn: boolean;
   mailNoticeYn: boolean;
 }
+
+/** 특정알림 구분 한 행 (AS-IS Emp93_SmsNoticeTargetModel — getSmsNoticeList, EE65) */
+export interface SmsNoticeKind {
+  smsNoticeTargetId: number;
+  smsNoticeCd: string;
+  smsNoticeName: string;
+}
+
+/** 캘린더 알림 차단 한 행 (AS-IS Emp90_NoticeModel — EE66): 알림항목과 차단 여부 */
+export interface Notice {
+  noticeId: number;
+  noticeKeyword: string;
+  noticeYn: boolean;
+}

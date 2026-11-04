@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp90_notice.xml (selectByPersonId·selectByText·insert·delete)  (EE66 Emp90_Lookup_Notice) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpNoticeMapper">
+
+    <!-- AS-IS emp90_notice.selectByPersonId: 본문 그대로, 열 이름만 DTO에 맞추고 'true'/'false' 글자는 불리언으로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.NoticeRes">
+<![CDATA[
+SELECT	ROW_NUMBER() OVER ()     AS notice_id
+     ,  t.notice_keyword
+     ,  (t.notice_yn = 'true')   AS notice_yn
+  FROM  ( SELECT  DISTINCT
+                  sys09_name     AS notice_keyword
+               ,  CASE WHEN emp90_notice_keyword IS NOT NULL
+                       THEN 'true'
+                       ELSE 'false'
+                       END                              AS notice_yn
+            FROM  sys09_code a
+                  INNER JOIN  sys08_code_kind b   ON  sys08_code_kind_id = sys09_code_kind_id AND sys08_kind_cd = 'BizNoticeCode'
+                  LEFT JOIN   emp90_notice c      ON  emp90_notice_keyword = sys09_name AND emp90_person_id = #{personId}
+           WHERE  sys09_name ILIKE #{searchText}
+        ) t
+ ORDER BY notice_keyword COLLATE "ko_KR.utf8" DESC
+]]>
+    </select>
+
+    <select id="countByText" resultType="int">
+        SELECT COUNT(*) FROM emp90_notice
+         WHERE emp90_person_id = #{personId}
+           AND emp90_notice_keyword = #{keyword}
+    </select>
+
+    <!-- AS-IS emp90_notice.insert -->
+    <insert id="insert">
+        INSERT INTO emp90_notice (emp90_notice_id, emp90_person_id, emp90_notice_keyword, emp90_note)
+        VALUES (f_create_seq(), #{personId}, #{keyword}, null)
+    </insert>
+
+    <!-- AS-IS emp90_notice.delete -->
+    <delete id="delete">
+        DELETE FROM emp90_notice
+         WHERE emp90_person_id = #{personId}
+           AND emp90_notice_keyword = #{keyword}
+    </delete>
+</mapper>

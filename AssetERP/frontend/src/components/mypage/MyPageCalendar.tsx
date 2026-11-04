@@ -9,6 +9,7 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
+import { Emp90_Lookup_Notice } from '@/pages/emp/Emp90_Lookup_Notice';
 
 interface CalendarProps {
   selectedDate?: number;
@@ -60,6 +61,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
     dayjs('2026-09-01').set('date', selectedDate)
   );
 
+  const [noticeOpen, setNoticeOpen] = useState(false);   // EE66 [🔔 일정표시] → Emp90_Lookup_Notice
   const currentValue = propValue ?? internalValue;
   const calendarRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
           </span>
 
           <Space size={4}>
-            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }} onClick={() => setNoticeOpen(true)}>
               <span style={{ color: '#eab308', marginRight: 2 }}>🔔</span> 일정표시
             </Button>
             <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
@@ -334,6 +336,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         flexDirection: 'column',
       }}
     >
+      <Emp90_Lookup_Notice open={noticeOpen} onClose={() => setNoticeOpen(false)} />
       <style>{`
         /* 캘린더 전체 및 내부 테이블 높이 가변 100% 확장 */
         .mypage-calendar-container .ant-picker-calendar {

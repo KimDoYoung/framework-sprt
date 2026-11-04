@@ -1,0 +1,13 @@
+{
+  "id": "EE66",
+  "screen": "Emp90_Lookup_Notice",
+  "menuNo": null,
+  "accounts": [
+    "kfstest/admin"
+  ],
+  "steps": [
+    "MyPage 달력 [🔔 일정표시] → '알림설정' 창: 알림항목 28개",
+    "항목 체크 → [차단] → 차단 열에 체크 표시, 다시 체크 → [차단해제]",
+    "검색어 입력 + Enter → 필터"
+  ]
+}

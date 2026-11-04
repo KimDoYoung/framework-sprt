@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeKindRes;
 import kr.co.kfs.asseterp.biz.emp.dto.SmsNoticeTargetRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -11,6 +12,9 @@ import java.util.List;
 public interface EmpSmsNoticeTargetMapper {
     /** AS-IS selectBySmsNoticeCode */
     List<SmsNoticeTargetRes> selectBySmsNoticeCode(@Param("companyId") Long companyId, @Param("smsNoticeCd") String smsNoticeCd);
+
+    /** AS-IS getSmsNoticeList (EE65 특정알림 설정 창 왼쪽 구분 목록) */
+    List<SmsNoticeKindRes> selectKinds();
 
     /** AS-IS selectById (저장 뒤 한 행) */
     SmsNoticeTargetRes selectById(@Param("companyId") Long companyId, @Param("smsNoticeTargetId") Long smsNoticeTargetId);
