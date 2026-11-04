@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr50_bookmark.xml selectByPersonIdPaging·selectByPersonIdPagingTotal (Apr50_Lookup_ApprList, EE40) — yunhee port-sql로 옮김 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprBookmarkListMapper">
+
+    <!-- 안쪽 SELECT는 두 문장이 같다 (AS-IS 그대로) -->
+    <sql id="bookmarkInner">
+        SELECT apr50_bookmark.*
+             , ( f_emp_kor_nm(apr50_person_id)
+                 ||' ('
+                 ||f_get_emptrans(apr50_person_id, f_sysdate()::date, 'org_code_nm')
+                 ||')' )                                                                    AS apr50_person_info
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)   AS apr50_status_nm
+             , apr01_reg_date                                                               AS apr50_reg_date
+             , f_cdnm('AprInOutTypeCode', apr01_inout_cd, apr01_company_id, f_sysdate())    AS apr50_inout_nm
+             , apr01_title                                                                  AS apr50_title
+             , f_emp_kor_nm(apr01_reg_emp_id)                                               AS apr50_reg_emp_nm
+             , apr01_effect_date                                                            AS apr50_effect_date
+             , f_class_tree_nm_allpath(apr01_class_tree_id)                                 AS apr50_class_tree_nm
+          FROM apr50_bookmark
+               INNER JOIN apr01_appr ON apr01_appr_id = apr50_appr_id
+         WHERE apr50_company_id = #{companyId}
+           AND ( apr50_person_id = #{personId}
+                 OR apr50_public_yn = #{publicYn} )
+    </sql>
+
+    <!-- AS-IS apr50_bookmark.selectByPersonIdPaging — 열은 그리드가 쓰는 것만, 조건·정렬·페이징은 그대로 -->
+    <select id="selectByPersonIdPaging" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprBookmarkListRes">
+        SELECT apr50_bookmark_id    AS bookmark_id
+             , apr50_appr_id        AS appr_id
+             , apr50_status_nm      AS status_name
+             , apr50_reg_date       AS reg_date
+             , apr50_inout_nm       AS in_out_type_name
+             , apr50_title          AS title
+             , apr50_reg_emp_nm     AS reg_emp_name
+             , apr50_effect_date    AS effect_date
+             , apr50_class_tree_nm  AS class_tree_name
+          FROM ( <include refid="bookmarkInner"/> ) apr50
+         WHERE CONCAT(apr50_title, apr50_person_info, apr50_class_tree_nm) ILIKE #{searchText}
+         ORDER BY apr50_person_id
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS apr50_bookmark.selectByPersonIdPagingTotal -->
+    <select id="selectByPersonIdPagingTotal" resultType="long">
+        SELECT COUNT(apr50.*)
+          FROM ( <include refid="bookmarkInner"/> ) apr50
+         WHERE CONCAT(apr50_title, apr50_person_info, apr50_class_tree_nm) ILIKE #{searchText}
+    </select>
+</mapper>

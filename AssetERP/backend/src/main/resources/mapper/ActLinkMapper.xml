@@ -82,6 +82,26 @@
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
 
+    <!-- AS-IS act14_link.selectByProvideContentCode (IDMS-IC, Act14_Lookup_LinkProvideContent) -->
+    <select id="selectByProvideContentCode" resultType="kr.co.kfs.asseterp.biz.act.dto.ActLinkContentRes">
+        SELECT act14_link_id            AS link_id
+             , act14_company_id         AS company_id
+             , act14_account_cd         AS account_code
+             , f_get_account_nm(act14_company_id, act14_account_cd) AS account_name
+             , act14_provide_content_cd AS provide_content_code
+             , act14_seq                AS seq
+          FROM act14_link
+         WHERE act14_company_id = #{companyId}
+           AND act14_provide_content_cd = #{provideContentCode}
+         ORDER BY act14_seq, act14_provide_content_cd
+    </select>
+
+    <!-- AS-IS act.Act14_Link.modelUpdate → UpdateDataModel(act14_link) INSERT (조회순서 = 화면이 넘긴 값) -->
+    <insert id="insertWithSeq">
+        INSERT INTO act14_link (act14_link_id, act14_company_id, act14_account_cd, act14_provide_content_cd, act14_seq)
+        VALUES (#{linkId}, #{companyId}, #{accountCode}, #{provideContentCode}, #{seq})
+    </insert>
+
     <!-- AS-IS sys09_code.selectByKindCode (IDMS-IC): kindCode ProvideContentCode, code LIKE 목적코드% -->
     <select id="selectProvideContents" resultType="kr.co.kfs.asseterp.biz.act.dto.ActCodeOptionRes">
         SELECT sys09_code.sys09_code AS code

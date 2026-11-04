@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Tab_CardManagement.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L124-217: north(95) = 왼쪽 86% 툴바 두 줄(1줄 기준년월 70 · 사용자 85 · 제공목적 90 · 검색 320 · [조회][엑셀다운로드] / 2줄 [일괄저장][마감][취소][마감문자발송][계정과목연결]) + 오른쪽 14% 총 승인금액,
  *   center = 사용내역 그리드(체크박스 다중) + 페이징 툴바(500건) + 아래 테두리 칸(문서분류 600 · 상신상태 200 · [상신] · [문서보기]), east 420 = `Biz01_Edit_Account`
- * 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(link A13)은 V38에서 연결했다. [계정과목연결]의 `Act14_Lookup_LinkProvideContent`(act 도메인)는 다음 단계.
+ * 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(link A13)은 V38에서 연결했다. [계정과목연결]의 `Act14_Lookup_LinkProvideContent`(act 도메인)는 EE37에서 연결했다.
  *   RD 엑셀은 `rdDownload`(docs/RD-대책.md).
  * 스타일: SGHF (견본 — docs/page-style.md; `yunhee page-style`은 SGVF로 판정하나 구조는 좌우 분할 + 오른쪽 편집 폼). 툴바가 전체 폭 north(총 승인금액 라벨 포함)라 견본처럼 왼쪽 패널 안에 두지 않는다 (L04와 같음)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 버튼이 많아 UX-02 초기화는 뺀다), 그리드 날짜 폭(UX-08)
@@ -22,6 +22,7 @@ import { MultiGrid, PagingToolBar, gbFor } from '@/components/grid';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Act14_Lookup_LinkProvideContent } from '@/components/lookup/Act14_Lookup_LinkProvideContent';
 import { rdDownload } from '@/utils/rdDownload';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Crd02_Lookup_OtherList } from '../crd/Crd02_Lookup_OtherList';
@@ -93,6 +94,7 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
   const [messageOpen, setMessageOpen] = useState(false);
   const [compareYm, setCompareYm] = useState<string | null>(null);
   const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [linkDoc, setLinkDoc] = useState<{ dataYm: string; closeDate: string; classTreeId: number } | null>(null);
 
   // getDataYm(): 읽을 수 없는 기준년월은 안내한다
@@ -324,8 +326,8 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
     }
   };
 
-  // [E11] connectButton[계정과목연결].Select (L315) → Act14_Lookup_LinkProvideContent.open() — act 도메인 조회창은 다음 단계
-  const connect = () => { message.info('계정과목연결 창은 다음 단계에서 연결됩니다'); };
+  // [E11] connectButton[계정과목연결].Select (L315) → Act14_Lookup_LinkProvideContent.open()
+  const connect = () => setLinkOpen(true);
 
   // [E13] apprButton[상신].Select (L329) → checkApproval() L617-644: 문서분류가 없으면 "문서분류를 선택해주세요" → 확인창 "[ 기준년월 : … ] 상신을 진행하시겠습니까?"
   const checkApproval = () => {
@@ -479,6 +481,7 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
       <Biz01_Lookup_CardManagementDownload open={downloadOpen} dataYm={ym} onResult={p => void createRdExcel(p)} onClose={() => setDownloadOpen(false)} />
       <Biz01_Lookup_Message open={messageOpen} dataYm={ym} onClose={() => setMessageOpen(false)} />
       <Crd02_Lookup_OtherList open={compareYm != null} dataYm={compareYm ?? ym} onClose={() => setCompareYm(null)} />
+      <Act14_Lookup_LinkProvideContent open={linkOpen} onClose={() => setLinkOpen(false)} />
       {/* insertLinkApprovals() L726-754: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A13", 내역·마감일, isAdmin, callback → updateApprId) / [문서보기] retrieveApproval(callback → apprChk()) */}
       <Apr01_Edit_ApprDoc
         apprId={viewApprId}

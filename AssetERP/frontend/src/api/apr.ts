@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -395,6 +395,15 @@ export const aprApi = {
   },
 };
 
+/** EE40 AS-IS Apr50_Lookup_ApprList (중요표시 문서) */
+export const aprBookmarkListApi = {
+  /** AS-IS apr.Apr50_Bookmark.selectByPersonIdPaging(+Total): 내가 중요표시했거나 전체공유된 문서 */
+  search: async (searchText: string, offset: number, limit: number): Promise<PageRes<AprBookmarkList>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AprBookmarkList>>>('v1/apr/bookmarks', { params: { searchText, offset, limit } });
+    return res.data.data;
+  },
+};
+
 /** G05 AS-IS Apr07_Tab_AltAppr (대결자 지정) */
 export const aprAltApprApi = {
   /** AS-IS apr.Apr07_AltAppr.selectByEmpId */
@@ -402,10 +411,15 @@ export const aprAltApprApi = {
     const res = await apiClient.get<ApiResponse<AprAltAppr[]>>('v1/apr/alt-apprs');
     return res.data.data ?? [];
   },
+  /** AS-IS apr.Apr07_AltAppr.selectByToDay (Apr07_Lookup_AltAppr) — 오늘 이후까지 걸친 대결자만 */
+  searchAltApprsToday: async (): Promise<AprAltAppr[]> => {
+    const res = await apiClient.get<ApiResponse<AprAltAppr[]>>('v1/apr/alt-apprs/today');
+    return res.data.data ?? [];
+  },
   /** AS-IS apr.Apr07_AltAppr.notAltApprIdList + update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
   saveAltApprs: async (rows: AprAltAppr[]): Promise<AprAltAppr[]> => {
-    const body = rows.map(({ altApprId, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint }) =>
-      ({ altApprId: altApprId > 0 ? altApprId : null, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint }));
+    const body = rows.map(({ altApprId, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint, leaveId }) =>
+      ({ altApprId: altApprId > 0 ? altApprId : null, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint, leaveId: leaveId ?? null }));
     const res = await apiClient.put<ApiResponse<AprAltAppr[]>>('v1/apr/alt-apprs', body);
     return res.data.data ?? [];
   },

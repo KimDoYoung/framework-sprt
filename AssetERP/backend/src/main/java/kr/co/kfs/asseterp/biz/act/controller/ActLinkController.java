@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.act.controller;
 
 import kr.co.kfs.asseterp.biz.act.dto.ActCodeOptionRes;
 import kr.co.kfs.asseterp.biz.act.dto.ActLinkCreateReq;
+import kr.co.kfs.asseterp.biz.act.dto.ActLinkContentAddReq;
+import kr.co.kfs.asseterp.biz.act.dto.ActLinkContentRes;
 import kr.co.kfs.asseterp.biz.act.dto.ActLinkRes;
 import kr.co.kfs.asseterp.biz.act.service.ActLinkService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -31,6 +33,19 @@ public class ActLinkController {
     @GetMapping
     public ApiResponse<List<ActLinkRes>> search(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String accountCode) {
         return ApiResponse.ok(service.search(principal, accountCode));
+    }
+
+    /** AS-IS act.Act14_Link.selectByProvideContentCode (Act14_Lookup_LinkProvideContent, 로그인 회사) */
+    @GetMapping("/by-content")
+    public ApiResponse<List<ActLinkContentRes>> searchByContent(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam String provideContentCode) {
+        return ApiResponse.ok(service.searchByProvideContent(principal, provideContentCode));
+    }
+
+    /** AS-IS act.Act14_Link.modelUpdate (Act14_Lookup_LinkProvideContent.insertAccount) → 넣은 건수 */
+    @PostMapping("/by-content")
+    public ApiResponse<Integer> addByContent(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ActLinkContentAddReq req) {
+        return ApiResponse.ok(service.addToProvideContent(principal, req));
     }
 
     /** AS-IS act.Act14_Link.insert → 추가한 행 */

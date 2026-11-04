@@ -37,13 +37,15 @@ interface Props {
   companyId?: number;
   /** 기준일 'yyyy-MM-dd' (open의 transDate) */
   transDate: string;
+  /** AS-IS open(transDate, isSeparateAddTitle=true, cb) (EE44): 재직구분 콤보에 "겸직"을 넣는다. 회사를 지정한 열기는 항상 넣는다 */
+  withAddTitle?: boolean;
   /** AS-IS callback.execute(list): 확인이면 고른 사원 목록 */
   onResult: (list: TransInfo[]) => void;
   /** 취소: hide()만 (callback 없음) */
   onClose: () => void;
 }
 
-export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, transDate, onResult, onClose }) => {
+export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, transDate, withAddTitle, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
   // L125: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
   const openValues = useMemo(() => ({ baseDate: transDate, findText: '', transName: '재직' }), [transDate]);
@@ -53,7 +55,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
   const columnDefs = useMemo(buildGrid, []);
 
   // 재직구분 항목 (L117-125): 전체·재직·겸직(isSeparateAddTitle일 때)·퇴직 — 회사를 준 열기만 true
-  const transNames = companyId !== undefined ? ['전체', '재직', '겸직', '퇴직'] : ['전체', '재직', '퇴직'];
+  const transNames = companyId !== undefined || withAddTitle ? ['전체', '재직', '겸직', '퇴직'] : ['전체', '재직', '퇴직'];
 
   // retrieve() L181-216: searchText '%' + 입력 + '%'(서버가 만든다), transDate, transCode → emp.Emp00_TransInfo.selectByText
   const retrieve = useCallback(async (date: string, text: string, name: string) => {

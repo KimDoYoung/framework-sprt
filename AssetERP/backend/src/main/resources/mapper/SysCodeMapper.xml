@@ -67,7 +67,7 @@
              AND X.sys09_apply_date > A.sys09_apply_date )   AS last_date
     </sql>
 
-    <!-- AS-IS selectByCodeKindId (PostgreSQL 분기. taskId(TdmLawCode) 분기는 이 화면이 안 보내서 뺌) -->
+    <!-- AS-IS selectByCodeKindId (PostgreSQL 분기). taskId(TdmLawCode)는 Sys09_Lookup_CodeKind.tdmLawOpen(EE43 Tdm11)이 보낸다 -->
     <select id="searchCodesByKindId" resultType="kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes">
         SELECT <include refid="codeAdminColumns"/>
           FROM sys09_code A
@@ -75,6 +75,14 @@
          WHERE A.sys09_code_kind_id = #{codeKindId}
            AND A.sys09_company_id = CASE WHEN sys08_sys_yn = 'true' THEN 0 ELSE #{companyId} END
            AND CONCAT(A.sys09_code, A.sys09_name) ILIKE '%' || #{searchText} || '%'
+        <if test="taskId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm11_task_relate_rule
+                             WHERE tdm11_task_id     = #{taskId}
+                               AND tdm11_company_id  = #{companyId}
+                               AND tdm11_relate_type = '1'
+                               AND tdm11_rule_cd     = sys09_code )
+        </if>
          ORDER BY A.sys09_seq
     </select>
 

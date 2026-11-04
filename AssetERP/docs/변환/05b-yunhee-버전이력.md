@@ -2,6 +2,13 @@
 
 2026-10-29에 `05-작업방법.md` §7의 긴 버전 문단을 분리했다. 기준 버전·세션 시작 절차는 05 §7에 있고, 이 문서는 버전별 한계·새 기능을 확인해야 할 때(막힐 때, 버전이 바뀔 때)만 연다. 새 버전 기록은 맨 위에 더한다.
 
+## 0.7.3 (2026-11-04, EE44 세션 시작에서 `changelog --since 0.7.0`로 확인)
+
+- **`cat --head/--tail`·`yunhee grep`(0.7.2~)**: 문서·TOBE 코드의 앞뒤 몇 줄, `파일:줄: 내용` 검색(출력 상한 80줄, `-C`·`-A`·`-B`, 정규식은 `|`로 묶어 쓸 수 있다, `--include`·`-n` 옵션은 없다). 훅이 막는 `sed`·`head`·`grep -C` 대신 쓴다.
+- **`sql-check --tobe`(0.7.2~)**: Java `record` DTO에 결과 열이 하나라도 빠지면 `❌`(런타임 500)로 올린다. `<include><property>` 전개.
+- **`mapper-run`(0.7.3~)**: `<foreach>` 컬렉션을 `-p ids=1,2`로 준다(EE44 `deleteByIds` 시험에 사용). 숫자로 읽히는 값이 문자열 파라미터여야 하면 `-p accountIdStr=s:202204…`처럼 `s:` 접두사(EE46 `f_insert_floorTrBook` 시험에서 씀 — 접두사 없이 주면 함수 인자 타입이 맞지 않아 실패한다).
+- **`analysis ui`**: 색인(`docs/as-is/src/…screens/*.md`)이 없는 화면(`Flt02_Lookup_Emp`·`Flt13_Lookup_BookInit`)은 `색인 화면 파일을 찾을 수 없습니다`로 끝난다. `analysis screen`/`method`는 소스에서 바로 분석한다. 이런 화면은 TOBE 소스의 `[E…]`·`<Button`·그리드 태그 수를 직접 세어 대조표로 쓴다(EE45·EE46).
+
 ## 0.7.0 (2026-10-30, U15 세션 시작에서 `changelog --since 0.6.5`로 확인)
 
 - **`compare`**: API가 HTTP 4xx/5xx나 `ApiResponse.success=false`를 돌려주면 0행(`rows=0 ✅`)으로 통과시키지 않고 `❌ API 실패…`/`❌ API 업무 오류…`와 종료 코드 1로 끝낸다. 이전에는 오류가 "0=0 ✅"로 보였으므로, 0.6.x에서 `rows=0 ✅`로 적은 결과확인은 의심해 볼 만하다(실제 데이터가 없어 0행인 달과 구분).

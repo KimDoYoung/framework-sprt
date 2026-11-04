@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { message } from 'antd';
 import { openMenuByNo } from '@/utils/tempData';
+import { Flt02_Lookup_Emp } from './Flt02_Lookup_Emp';
+import { Flt13_Lookup_BookInit } from './Flt13_Lookup_BookInit';
 
 // Flt00_Tab_Info (client/vi/flt/Flt00_Tab_Info.java, IDMS-IC) — 임직원매매 화면사용순서 안내. 조회·저장 없음, HTML 안내문 + 링크.
 // 스타일: IN (견본 — docs/page-style.md)
@@ -10,8 +12,8 @@ const SP = '    ';  // space = &nbsp; ×4
 
 // 링크 id → 열 메뉴 번호 (생성자 L156-240 클릭 핸들러). 팝업을 여는 링크는 null
 const MENU_NO: Record<string, string | null> = {
-  link01: null,  // Flt02_Lookup_Emp (다음 단계)
-  link02: null,  // Flt02_Lookup_Emp (다음 단계)
+  link01: null,  // Flt02_Lookup_Emp (EE45)
+  link02: null,  // Flt02_Lookup_Emp (EE45)
   link03: '1125',
   link04: '1126',
   link05: '1127',
@@ -19,7 +21,7 @@ const MENU_NO: Record<string, string | null> = {
   'link06-2': '1372',
   link07: '1142',
   link08: '1144',
-  link09: null,  // Flt13_Lookup_BookInit (다음 단계)
+  link09: null,  // Flt13_Lookup_BookInit (EE46)
   link10: '1143',
 };
 
@@ -32,10 +34,20 @@ const POPUP_NAME: Record<string, string> = {
 const sp = (n: number) => SP.repeat(n);
 
 export const Flt00_Tab_Info: React.FC = () => {
+  const [empSetOpen, setEmpSetOpen] = useState(false);
+  const [bookInitOpen, setBookInitOpen] = useState(false);
   // [E1] html.Click (L156) → 링크 id에 따라 팝업 또는 메뉴 탭 열기
   const click = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     const menuNo = MENU_NO[id];
+    if (id === 'link01' || id === 'link02') {
+      setEmpSetOpen(true);  // Flt02_Lookup_Emp.open(null)
+      return;
+    }
+    if (id === 'link09') {
+      setBookInitOpen(true);  // Flt13_Lookup_BookInit.open(오늘, null)
+      return;
+    }
     if (menuNo == null) {
       // [E1 다음 단계] Flt02_Lookup_Emp / Flt13_Lookup_BookInit 조회창은 아직 없다
       message.info(`${POPUP_NAME[id]} 조회창은 다음 단계에서 연결합니다.`);
@@ -133,6 +145,8 @@ export const Flt00_Tab_Info: React.FC = () => {
           {content}
         </span>
       </div>
+      <Flt02_Lookup_Emp open={empSetOpen} onClose={() => setEmpSetOpen(false)} />
+      <Flt13_Lookup_BookInit open={bookInitOpen} onClose={() => setBookInitOpen(false)} />
     </div>
   );
 };

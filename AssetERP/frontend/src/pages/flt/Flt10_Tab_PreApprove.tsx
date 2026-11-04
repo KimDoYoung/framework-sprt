@@ -5,7 +5,7 @@
  *   2줄: [승인][반려][취소][협의승인자 지정] [펀드보유종목 확인][일괄 알림발송] + 안내 글) / "▶ 매 수" + 매수 그리드(체크 다중) / "▶ 매 도" + 매도 그리드(체크 다중)
  * 열릴 때(E0)는 조회하지 않는다 — settings()가 조회기간·설정만 채운다
  * 협의승인(회사 설정 sys01_flt_add_confirm_yn): 켜져 있을 때만 [협의승인자 지정] 버튼과 승인자·승인상태 열을 보인다(setInitData L693-742)
- * 1단계에서 뺀 것: 알림수신인 설정(Emp93_Lookup_SmsNoticeTarget)·펀드보유종목 확인(Fnd10_Lookup_RelateFund)은 다른 도메인 조회창 → 안내 메시지(다음 단계)
+ * 1단계에서 뺀 것: 펀드보유종목 확인(Fnd10_Lookup_RelateFund)은 다른 도메인 조회창 → 안내 메시지(다음 단계). 알림수신인 설정(Emp93_Lookup_SmsNoticeTarget "B01")은 EE44에서 연결
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,6 +22,7 @@ import { MultiGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
+import { Emp93_Lookup_SmsNoticeTarget } from '@/components/lookup/Emp93_Lookup_SmsNoticeTarget';
 import { Flt10_Lookup_RejectReasonWrite, RejectReasonTarget } from './Flt10_Lookup_RejectReasonWrite';
 
 const gb = gbFor<FltPreApprove>();
@@ -98,6 +99,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
   const [sellLoading, setSellLoading] = useState(false);
   const [empOpen, setEmpOpen] = useState(false);
   const [confirmerOpen, setConfirmerOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
   const [reasonTarget, setReasonTarget] = useState<RejectReasonTarget | null>(null);
   const buyGridRef = useRef<AgGridReact<FltPreApprove>>(null);
   const sellGridRef = useRef<AgGridReact<FltPreApprove>>(null);
@@ -233,8 +235,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
   const fundStock = () => message.info('펀드보유종목 확인 창(Fnd10_Lookup_RelateFund)은 다음 단계에서 제공됩니다');
 
   // [E13] noticeButton[알림수신인 설정].Select (L334) → Emp93_Lookup_SmsNoticeTarget.open("B01")
-  // [E13 생략] 다른 도메인(사원) 조회창 — 다음 단계
-  const noticeTarget = () => message.info('알림수신인 설정 창(Emp93_Lookup_SmsNoticeTarget)은 다음 단계에서 제공됩니다');
+  const noticeTarget = () => setNoticeOpen(true);  // EE44
 
   // [E12] sendMessageButton[일괄 알림발송].Select (L328) → sendMessage() L371-386
   const sendMessage = async () => {
@@ -344,6 +345,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
       <Emp00_Lookup_SelectSingle open={empOpen} noneLabel={null} transDate={dayjs().format(DATE_FORMAT)} onResult={onEmpResult} onClose={() => setEmpOpen(false)} />
       <Emp00_Lookup_SelectSingle open={confirmerOpen} separateAddTitle noneLabel="선택안함" transDate={dayjs().format(DATE_FORMAT)}
         onResult={onConfirmerResult} onClose={() => setConfirmerOpen(false)} />
+      <Emp93_Lookup_SmsNoticeTarget smsNoticeCode={noticeOpen ? 'B01' : null} onClose={() => setNoticeOpen(false)} />
       <Flt10_Lookup_RejectReasonWrite target={reasonTarget} onResult={onReasonResult} onSaved={onReasonSaved} onClose={() => setReasonTarget(null)} />
     </div>
   );

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Grid_DocList.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 init() L77-139: vlc = 툴바(49: 등록기간 · 검색 · [검색] · [신규문서 작성] · 작성도움말 · 북마크) / 문서 그리드(1) | 회색 칸(10) | Apr03_TabPage_Relate(300)
  * 1단계(F01과 같은 사유): 보기·[신규문서 작성]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 
- *   메일 아이콘은 Dcr10_Lookup_MailSender.open(apprId)을 연다(EE35).
+ *   북마크 아이콘은 Apr50_Lookup_ApprList를 연다(EE40). 메일 아이콘은 Dcr10_Lookup_MailSender.open(apprId)을 연다(EE35).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +20,7 @@ import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { Apr03_TabPage_Relate } from './Apr03_TabPage_Relate';
+import { Apr50_Lookup_ApprList } from './Apr50_Lookup_ApprList';
 import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprDoc>();
@@ -48,6 +49,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
   const [enabled, setEnabled] = useState(false);
   const [linkModel, setLinkModel] = useState<DcrClassLink | null>(null);
   const [apprId, setApprId] = useState<number | null>(null);
+  const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const seq = useRef(0);
 
   // private retrieve() L248-277: apr.Apr01_Appr.selectByClassTreeId2 (검색어는 서버가 %…%로)
@@ -105,8 +107,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
   };
 
   // [E2] bookmarkAnchor.MouseDown (L96) → Apr50_Lookup_ApprList.open()
-  // [E2 생략] 북마크 문서 조회창은 다음 단계에서 연결한다
-  const openBookmark = () => message.info('북마크 문서 조회창은 다음 단계에서 연결됩니다');
+  const openBookmark = () => setBookmarkOpen(true);
 
   // [E3] insertButton[신규문서 작성].Select (L120) → insertApproval() L279-306
   // [E3 일부 생략] Apr01_Edit_ApprDoc.insertApproval(classTreeModel, isAdmin, callback: retrieve())는 다음 단계
@@ -184,6 +185,8 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
       </div>
       {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
+      {/* [E2] bookmarkAnchor.MouseDown (L96) → Apr50_Lookup_ApprList.open() (EE40) */}
+      <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
     </div>
   );
 };

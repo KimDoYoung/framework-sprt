@@ -1325,3 +1325,12 @@ export interface EmpAddrBookSelect {
   empName: string | null;
   note: string | null;
 }
+
+/** 알림수신인 (GET /api/v1/emp/sms-notice-targets, AS-IS Emp93_SmsNoticeTargetModel). personInfo = "이름 (조직)" */
+export interface SmsNoticeTarget {
+  smsNoticeTargetId: number;
+  personId: number;
+  smsNoticeCd: string;
+  personInfo?: string | null;
+  note?: string | null;
+}

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm10_Tab_Task.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L81-123: 가운데(여백 20, 테두리) = 툴바(기준일 · 전체보기 · 책무구분 · 검색 · [조회][등록][등록(복사)][삭제] · 오른쪽 [책무유형 관리][변경이력]) + 책무 그리드(MultiGrid)
  * 함께: Tdm10_Edit_Task(편집창), Tdm12_Lookup_TaskRelateDetail(세부내용), Tdm14_Lookup_TaskType(책무유형 관리), Tdm95_Lookup_ChangeHistory(변경이력)
- * 1단계: 연결법규·연결내규 아이콘이 여는 Tdm11_Lookup_TaskRelateRule(+ Bbs15_Lookup_CompanyRule·Sys09_Lookup_CodeKind 법규 고르기)은 다음 단계 — 건수 열은 보이고 아이콘은 안내만
+ * 연결법규·연결내규 아이콘은 Tdm11_Lookup_TaskRelateRule(+ Bbs15_Lookup_CompanyRule·Sys09_Lookup_CodeKind 법규 고르기)를 연다(EE43) — 닫으면 그 줄의 건수를 다시 읽는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,6 +21,7 @@ import { SearchBar } from '@/components/search';
 import { Tdm10_Edit_Task } from './Tdm10_Edit_Task';
 import { Tdm12_Lookup_TaskRelateDetail } from './Tdm12_Lookup_TaskRelateDetail';
 import { Tdm14_Lookup_TaskType } from './Tdm14_Lookup_TaskType';
+import { Tdm11_Lookup_TaskRelateRule } from './Tdm11_Lookup_TaskRelateRule';
 import { Tdm95_Lookup_ChangeHistory } from './Tdm95_Lookup_ChangeHistory';
 
 const gb = gbFor<TdmTask>();
@@ -38,6 +39,7 @@ export const Tdm10_Tab_Task: React.FC = () => {
   const [detailTask, setDetailTask] = useState<TdmTask | null>(null);
   const [typeLookup, setTypeLookup] = useState(false);
   const [history, setHistory] = useState<{ targetId: number | null } | null>(null);
+  const [relate, setRelate] = useState<{ taskId: number; relateType: string } | null>(null);
   const [deleteIds, setDeleteIds] = useState<number[] | null>(null);
 
   // retrieve() L312-327: tdm.Tdm10_Task.selectByText (companyId는 서버, baseDate, taskClassCode, allYn, searchText = '%' + 글자 + '%' — 서버가 감싼다)
@@ -70,11 +72,11 @@ export const Tdm10_Tab_Task: React.FC = () => {
     // L296 actionCell02 → Tdm12_Lookup_TaskRelateDetail.open(selectModel, 건수 → 그 행의 세부내용 건수)
     iconCell<TdmTask>('edit', 'editDetail', 35, '', row => setDetailTask(row)),
     gb.textCenter('taskRelateLawCnt', 60, '연결법규', { valueGetter: p => cntStr(p.data?.taskRelateLawCnt ?? null) }),  // L297 (getTaskRelateLawCntStr)
-    // L298 actionCell03 → Tdm11_Lookup_TaskRelateRule.open(taskId, "1", …): 다음 단계
-    iconCell<TdmTask>('edit', 'editLaw', 35, '', () => nextStep('연결법규')),
+    // L298 actionCell03 → Tdm11_Lookup_TaskRelateRule.open(taskId, "1", callback → grid.getStore().update(model))
+    iconCell<TdmTask>('edit', 'editLaw', 35, '', row => setRelate({ taskId: row.taskId, relateType: '1' })),
     gb.textCenter('taskRelateRuleCnt', 60, '연결내규', { valueGetter: p => cntStr(p.data?.taskRelateRuleCnt ?? null) }),  // L299 (getTaskRelateRuleCntStr)
-    // L300 actionCell04 → Tdm11_Lookup_TaskRelateRule.open(taskId, "2", …): 다음 단계
-    iconCell<TdmTask>('edit', 'editRule', 35, '', () => nextStep('연결내규')),
+    // L300 actionCell04 → Tdm11_Lookup_TaskRelateRule.open(taskId, "2", callback → grid.getStore().update(model))
+    iconCell<TdmTask>('edit', 'editRule', 35, '', row => setRelate({ taskId: row.taskId, relateType: '2' })),
     gb.booleanYn2('commonYn', 80, '공통책무'),  // L301
     gb.booleanYn2('ceoYn', 80, 'CEO책무'),  // L302
     gb.date('startDate', 90, '사용시작일'),  // L303
@@ -84,10 +86,6 @@ export const Tdm10_Tab_Task: React.FC = () => {
     // L307 historyCell(ImageCell "View") → Tdm95_Lookup_ChangeHistory.open("tdm10_task", 그 행의 ID)
     iconCell<TdmTask>('view', 'history', 70, '변경이력 ', row => setHistory({ targetId: row.taskId })),
   ], []);
-
-  const nextStep = (name: string) => {
-    message.info(`${name} 창(Tdm11_Lookup_TaskRelateRule)은 아직 변환되지 않았습니다 (다음 단계).`);
-  };
 
   // [E6] copyButton[등록(복사)].Select (L174) → copyRow() L339-352: 선택이 없으면 안내, 첫 선택 행을 복사
   const copyRow = () => {
@@ -199,6 +197,9 @@ export const Tdm10_Tab_Task: React.FC = () => {
         onClose={() => setDetailTask(null)}
       />
       <Tdm14_Lookup_TaskType mode={typeLookup ? 'edit' : null} onClose={() => setTypeLookup(false)} />
+      <Tdm11_Lookup_TaskRelateRule taskId={relate?.taskId ?? null} relateType={relate?.relateType ?? null}
+        onClosed={task => setRows(prev => prev.map(r => (r.taskId === task.taskId ? { ...r, ...task } : r)))}
+        onClose={() => setRelate(null)} />
       <Tdm95_Lookup_ChangeHistory targetTable={history ? 'tdm10_task' : null} targetId={history?.targetId} onClose={() => setHistory(null)} />
       <AreaMessage open={!!deleteIds} title="삭제사유" required onResult={deleteRow} onClose={() => setDeleteIds(null)} />
     </div>

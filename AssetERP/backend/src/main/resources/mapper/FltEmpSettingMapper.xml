@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt02_emp.xml (selectByPersonId) · flt04_oath.xml (selectByPersonId, selectByStratDate, insertApprId, updateApprId)
+  · flt07_family_consent.xml (deleteByFamilyConsentId) · FileUpload.uploadFlt07 (insert) + UpdateDataModel(flt02_emp) 저장·삭제 (EE45)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltEmpSettingMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="empColumns">
+        flt02_emp_id            AS emp_id
+      , flt02_start_date        AS start_date
+      , flt02_year_invest_limit AS year_invest_limit
+      , flt02_check_cycle       AS check_cycle
+      , f_cdnm('FloorTrCheckCycle', flt02_check_cycle, flt02_company_id, f_sysdate()) AS check_cycle_name
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpSettingRes">
+        SELECT <include refid="empColumns"/>
+          FROM flt02_emp
+         WHERE 1=1
+           AND flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+         ORDER BY flt02_start_date DESC
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpSettingRes">
+        SELECT <include refid="empColumns"/>
+          FROM flt02_emp
+         WHERE flt02_emp_id = #{empId}
+           AND flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flt02_emp (flt02_emp_id, flt02_company_id, flt02_person_id, flt02_start_date, flt02_year_invest_limit, flt02_check_cycle)
+        VALUES (#{id}, #{companyId}, #{personId}, #{startDate}, #{yearInvestLimit}, #{checkCycle})
+    </insert>
+
+    <update id="update">
+        UPDATE flt02_emp
+           SET flt02_start_date        = #{startDate},
+               flt02_year_invest_limit = #{yearInvestLimit},
+               flt02_check_cycle       = #{checkCycle}
+         WHERE flt02_emp_id = #{id}
+           AND flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM flt02_emp
+         WHERE flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+           AND flt02_emp_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- 정렬은 원본에 없다(마지막 행을 쓰는 화면이라 시작일 순으로 정했다) -->
+    <select id="selectOathByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpOathRes">
+        SELECT flt04_appr_id                                                               AS appr_id
+             , apr01_status_cd                                                             AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)  AS status_name
+          FROM flt04_oath
+               LEFT OUTER JOIN apr01_appr ON flt04_appr_id = apr01_appr_id
+         WHERE 1=1
+           AND flt04_company_id = #{companyId}
+           AND flt04_person_id  = #{personId}
+         ORDER BY flt04_start_date
+    </select>
+
+    <select id="countOathByStartDate" resultType="int">
+        SELECT count(*)
+          FROM flt04_oath
+         WHERE flt04_company_id = #{companyId}
+           AND flt04_person_id  = #{personId}
+           AND flt04_start_date = #{regDate}
+    </select>
+
+    <insert id="insertOathApprId">
+        INSERT INTO flt04_oath (flt04_oath_id, flt04_company_id, flt04_person_id, flt04_start_date, flt04_appr_id, flt04_use_yn)
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{regDate}, #{apprId}, 'true'
+    </insert>
+
+    <update id="updateOathApprId">
+        UPDATE flt04_oath
+           SET flt04_appr_id    = #{apprId},
+               flt04_start_date = #{regDate}
+         WHERE flt04_company_id = #{companyId}
+           AND flt04_person_id  = #{personId}
+    </update>
+
+    <select id="selectApprRegDate" resultType="java.time.LocalDate">
+        SELECT apr01_reg_date
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertFamilyConsent">
+        INSERT INTO flt07_family_consent (flt07_family_consent_id, flt07_person_id)
+        VALUES (#{id}, #{personId})
+    </insert>
+
+    <delete id="deleteFamilyConsent">
+        DELETE FROM flt07_family_consent
+         WHERE flt07_family_consent_id = #{id}
+           AND flt07_person_id = #{personId}
+    </delete>
+</mapper>

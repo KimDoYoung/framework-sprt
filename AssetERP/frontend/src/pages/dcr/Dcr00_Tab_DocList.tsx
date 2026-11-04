@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr00_Tab_DocList.java (386줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L92-157: 바깥 여백 20, 박스 안 툴바 2줄(조회기간 · 문서분류 / 결재상태 · 문서구분 · 검색 · 수신처 · [조회] [엑셀다운로드] · 북마크) + 문서 그리드(1) | 회색 칸(10) | Apr03_TabPage_Relate(300)
  * 1단계(F01~F04와 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 댓글 아이콘이 여는
- *   Apr42_Lookup_CommentView는 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ *   Apr42_Lookup_CommentView는 EE39, Apr50_Lookup_ApprList(북마크 별 아이콘)는 EE40에서 연결했다(나머지 둘은 다른 도메인(apr)이라 다음 단계 — 지금은 안내만 띄운다).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건이 길어 한 줄을 넘기므로 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -20,6 +20,8 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Apr03_TabPage_Relate } from '@/pages/apr/Apr03_TabPage_Relate';
+import { Apr42_Lookup_CommentView } from '@/pages/apr/Apr42_Lookup_CommentView';
+import { Apr50_Lookup_ApprList } from '@/pages/apr/Apr50_Lookup_ApprList';
 import { Dcr01_Lookup_DcrClass } from './Dcr01_Lookup_DcrClass';
 
 const gb = gbFor<AprDocSearch>();
@@ -40,6 +42,8 @@ export const Dcr00_Tab_DocList: React.FC = () => {
   const [inoutCode, setInoutCode] = useState<string>(ALL);
   const [searchText, setSearchText] = useState('');
   const [receiveName, setReceiveName] = useState('');
+  const [commentApprId, setCommentApprId] = useState<number | null>(null);
+  const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const [rows, setRows] = useState<AprDocSearch[]>([]);
   const [loading, setLoading] = useState(false);
   const [apprId, setApprId] = useState<number | null>(null);
@@ -83,8 +87,7 @@ export const Dcr00_Tab_DocList: React.FC = () => {
   };
 
   // [E1] bookmarkAnchor.MouseDown (L117) → Apr50_Lookup_ApprList.open()
-  // [E1 생략] 북마크 문서 조회창은 다음 단계에서 연결한다
-  const openBookmark = () => message.info('북마크 문서 조회창은 다음 단계에서 연결됩니다');
+  const openBookmark = () => setBookmarkOpen(true);
 
   // buildGrid() L246-287 (체크박스 단일 선택)
   const columnDefs = useMemo(() => [
@@ -102,8 +105,7 @@ export const Dcr00_Tab_DocList: React.FC = () => {
     gb.textCenter('stampSeq', 100, '대외문서번호'),  // L280
     gb.textCenter('relateDisplayName', 80, '펀드/일임'),  // L281
     // L282 actionCell(View) → Apr42_Lookup_CommentView.open(apprId)
-    // [L282 생략] 댓글 조회창은 다음 단계
-    iconCell<AprDocSearch>('view', 'actionCell02', 50, '댓글', () => message.info('댓글 조회창은 다음 단계에서 연결됩니다')),
+    iconCell<AprDocSearch>('view', 'actionCell02', 50, '댓글', row => setCommentApprId(row.apprId)),
     gb.text('note', 300, '비고'),  // L284
   ], []);
 
@@ -174,6 +176,8 @@ export const Dcr00_Tab_DocList: React.FC = () => {
         onAll={() => { setClassTreeId(null); setClassTreeName(ALL_TEXT); }}
         onClose={() => setClassOpen(false)}
       />
+      <Apr42_Lookup_CommentView apprId={commentApprId} onClose={() => setCommentApprId(null)} />
+      <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
     </div>
   );
 };

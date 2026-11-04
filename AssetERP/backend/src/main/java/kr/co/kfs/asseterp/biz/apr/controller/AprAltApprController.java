@@ -25,6 +25,12 @@ public class AprAltApprController {
         return ApiResponse.ok(service.search(principal));
     }
 
+    /** AS-IS apr.Apr07_AltAppr.selectByToDay (Apr07_Lookup_AltAppr, 로그인 사원) */
+    @GetMapping("/today")
+    public ApiResponse<List<AprAltApprRes>> searchToday(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.searchByToday(principal));
+    }
+
     /** AS-IS apr.Apr07_AltAppr.notAltApprIdList + update → 저장된 행 */
     @PutMapping
     public ApiResponse<List<AprAltApprRes>> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<AprAltApprSaveReq> rows) {

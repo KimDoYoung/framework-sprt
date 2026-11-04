@@ -26,6 +26,11 @@ public class AprAltApprService {
 
     private final AprAltApprMapper mapper;
 
+    /** AS-IS Apr07_Lookup_AltAppr.open()/retrieve(): selectByToDay(empId = LoginUser.getUserId()) — 오늘 이후까지 걸친 대결자만 */
+    public List<AprAltApprRes> searchByToday(UserPrincipal user) {
+        return mapper.selectByToDay(user.getUserId());
+    }
+
     /** AS-IS selectByEmpId(empId = LoginUser.getUserId()) */
     public List<AprAltApprRes> search(UserPrincipal user) {
         return mapper.selectByEmpId(user.getUserId());
@@ -41,7 +46,7 @@ public class AprAltApprService {
         validate(user, rows);
         return rows.stream().map(r -> {
             long id = (r.altApprId() == null || r.altApprId() <= 0) ? mapper.selectNextId() : r.altApprId();
-            AprAltApprSaveReq row = new AprAltApprSaveReq(id, r.altEmpId(), r.altEmpName(), r.startDate(), r.closeDate(), r.stampYn(), r.reasonCd(), r.emgrPoint());
+            AprAltApprSaveReq row = new AprAltApprSaveReq(id, r.altEmpId(), r.altEmpName(), r.startDate(), r.closeDate(), r.stampYn(), r.reasonCd(), r.emgrPoint(), r.leaveId());
             if (mapper.update(empId, row) == 0) {
                 mapper.insert(empId, row);
             }

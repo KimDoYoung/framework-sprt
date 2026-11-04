@@ -58,9 +58,14 @@ public class BbsCompanyRuleService {
 
     /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchText (Z01 회사규정 — 로그인 회사, 기준일 = 오늘) */
     public List<CompanyRuleRes> searchPublic(UserPrincipal user, String ruleType, String searchText) {
+        return searchPublic(user, ruleType, searchText, null);
+    }
+
+    /** Bbs15_Lookup_CompanyRule.retrieve() L134-150: taskId가 있으면 그 직무에 이미 연결된 내규(tdm11_relate_type '2')는 뺀다 */
+    public List<CompanyRuleRes> searchPublic(UserPrincipal user, String ruleType, String searchText, Long taskId) {
         return mapper.selectBySearchText(user.companyOf(null),
                 ruleType == null || ruleType.isEmpty() ? "%" : ruleType, "%" + (searchText == null ? "" : searchText) + "%",
-                LocalDate.now().toString());
+                LocalDate.now().toString(), taskId);
     }
 
     /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchTextManager (고객사는 관리자 회사만 고른다. 그 밖에는 로그인 회사) */

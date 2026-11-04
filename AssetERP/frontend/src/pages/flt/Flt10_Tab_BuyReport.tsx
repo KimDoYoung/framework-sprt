@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt10_Tab_BuyReport.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L131-212: north(330) = 툴바(기준일자 · [조회][기간조회][보고주기 변경 및 서약서 서명]) + 안내 3줄(보고주기·서약서·연간 추가 투자한도)
  *                  + 계좌 그리드(750) | 투자한도 그리드(780) + 안내 한 줄, center = 툴바 + 사전신고 체크박스 다중 셀 편집 그리드(맨 아래 합계 행)
- * 1단계: [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp)은 다음 단계 (I02 E1·I01 link01·02와 같은 창)
+ * [보고주기 변경 및 서약서 서명]은 Flt02_Lookup_Emp를 연다 (EE45, I02 E1·I01 link01·02와 같은 창)
  * UX보강(10): 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -21,6 +21,8 @@ import { useGridCrud } from '@/hooks/useGridCrud';
 import { Com50_Lookup_StkItem } from '@/components/lookup/Com50_Lookup_StkItem';
 import { Flt10_Lookup_ExpectTr } from './Flt10_Lookup_ExpectTr';
 import { Flt10_Lookup_Item } from './Flt10_Lookup_Item';
+
+import { Flt02_Lookup_Emp } from './Flt02_Lookup_Emp';
 
 const gb = gbFor<FltTr>();
 const gbAccount = gbFor<FltTrAccount>();
@@ -58,6 +60,7 @@ const limitColumns = [
 interface Enabled { upd: boolean; ins: boolean; del: boolean; fix: boolean; cancel: boolean }
 
 export const Flt10_Tab_BuyReport: React.FC = () => {
+  const [empSetOpen, setEmpSetOpen] = useState(false);
   const [baseDate, setBaseDate] = useState<string>(dayjs().format(DATE_FORMAT));
   const [searchText, setSearchText] = useState('');
   // 처음 모양 = Quarterly·Finish·SalaryLimit·limitNotice1 (L106-122)
@@ -618,8 +621,8 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
                 <Button type="search" onClick={() => check()}>조회</Button>
                 {/* [E5] periodRetrieveButton[기간조회].Select (L254) → lookupPeriod() */}
                 <Button type="search" onClick={() => setPeriodOpen(true)}>기간조회</Button>
-                {/* [E3] openButton[보고주기 변경 및 서약서 서명].Select (L236) → Flt02_Lookup_Emp.open(→ check()): [E3 다음 단계] */}
-                <Button type="download" style={{ width: 250 }} onClick={() => message.info('임직원매매 설정(보고주기·서약서) 창은 다음 단계에서 연결합니다.')}>보고주기 변경 및 서약서 서명</Button>
+                {/* [E3] openButton[보고주기 변경 및 서약서 서명].Select (L236) → Flt02_Lookup_Emp.open(→ check()): */}
+                <Button type="download" style={{ width: 250 }} onClick={() => setEmpSetOpen(true)}>보고주기 변경 및 서약서 서명</Button>
               </div>
               <div style={{ padding: '10px 15px 5px', fontSize: 14, fontWeight: 'bold', lineHeight: '30px' }}>
                 <div>* 보고주기 : <span style={{ color: cycleLabel.color }}>{cycleLabel.text}</span> (조사분석인력 및 투자운용인력은 월별점검 대상입니다)</div>
@@ -714,6 +717,8 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
         }}
         onClose={() => setStkLookup(null)}
       />
+      {/* [E3] Flt02_Lookup_Emp.open(→ check()) — 닫으면 보고주기·서약서 상태를 다시 읽는다 */}
+      <Flt02_Lookup_Emp open={empSetOpen} onClose={() => { setEmpSetOpen(false); void check(); }} />
     </div>
   );
 };

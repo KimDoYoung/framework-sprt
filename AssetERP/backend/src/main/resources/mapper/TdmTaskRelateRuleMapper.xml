@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm11_task_relate_rule.xml selectBySearchText·countUseByRuleCode + UpdateDataModel(tdm11_task_relate_rule) (Tdm11_Lookup_TaskRelateRule, EE43) — yunhee port-sql·port-save -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmTaskRelateRuleMapper">
+
+    <!-- AS-IS tdm11_task_relate_rule.selectBySearchText — 열은 그리드가 쓰는 것만, 조건·정렬은 그대로 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskRelateRuleRes">
+        SELECT t.tdm11_task_relate_rule_id                                       AS task_relate_rule_id
+             , t.tdm11_task_id                                                   AS task_id
+             , t.tdm11_relate_type                                               AS relate_type
+             , f_cdnm('Ruletype', tdm11_relate_type, tdm11_company_id, f_today()) AS relate_type_name
+             , t.tdm11_rule_cd                                                   AS rule_code
+             , t.tdm11_rule_nm                                                   AS rule_name
+             , t.tdm11_close_date::date                                          AS close_date
+          FROM (
+                SELECT tdm11_task_relate_rule.*
+                     , law_nm                   AS tdm11_rule_nm
+                     , close_date               AS tdm11_close_date
+                  FROM tdm11_task_relate_rule
+                       INNER JOIN ( SELECT sys09_code       law_cd
+                                         , sys09_name       law_nm
+                                         , sys09_close_date close_date
+                                      FROM sys08_code_kind
+                                           INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                                     WHERE sys08_kind_cd    = 'TdmLawCode'
+                                       AND sys09_company_id = 0 ) law ON law_cd = tdm11_rule_cd
+                 WHERE tdm11_task_id     = #{taskId}
+                   AND tdm11_relate_type = '1'
+                 UNION ALL
+                SELECT tdm11_task_relate_rule.*
+                     , COALESCE(bbs15_title,'**연결끊김. "1345 회사규정(관리자)" 화면에서 확인해주세요') AS tdm11_rule_nm
+                     , bbs15_close_date                                                     AS tdm11_close_date
+                  FROM tdm11_task_relate_rule
+                       LEFT JOIN getCompanyRule(#{companyId}, null) ON bbs15_company_rule_cd = tdm11_rule_cd
+                 WHERE tdm11_task_id     = #{taskId}
+                   AND tdm11_relate_type = '2'
+               ) t
+         WHERE tdm11_relate_type LIKE #{relateType}
+           AND CONCAT(tdm11_rule_nm, tdm11_rule_cd) ILIKE #{searchText}
+         ORDER BY tdm11_relate_type, tdm11_rule_cd
+    </select>
+
+    <select id="countTask" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm10_task
+         WHERE tdm10_company_id = #{companyId}
+           AND tdm10_task_id    = #{taskId}
+    </select>
+
+    <!-- AS-IS tdm11_task_relate_rule.countUseByRuleCode -->
+    <select id="countUseByRuleCode" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm11_task_relate_rule
+               INNER JOIN tdm10_task ON tdm10_task_id = tdm11_task_id
+         WHERE tdm11_task_id              = #{taskId}
+           AND tdm11_relate_type          = #{relateType}
+           AND tdm11_rule_cd              = #{ruleCode}
+           AND tdm11_task_relate_rule_id != #{taskRelateRuleId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertRule">
+        INSERT INTO tdm11_task_relate_rule (tdm11_task_relate_rule_id, tdm11_company_id, tdm11_task_id, tdm11_relate_type, tdm11_rule_cd, tdm11_upd_nm, tdm11_upd_date)
+        VALUES (#{id}, #{companyId}, #{taskId}, #{relateType}, #{ruleCode}, #{updName}, f_sysdate())
+    </insert>
+
+    <delete id="deleteRules">
+        DELETE FROM tdm11_task_relate_rule
+         WHERE tdm11_company_id = #{companyId}
+           AND tdm11_task_relate_rule_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

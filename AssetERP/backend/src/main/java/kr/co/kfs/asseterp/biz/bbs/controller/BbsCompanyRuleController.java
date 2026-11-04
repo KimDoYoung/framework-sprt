@@ -38,8 +38,9 @@ public class BbsCompanyRuleController {
     @GetMapping("/public")
     public ApiResponse<List<CompanyRuleRes>> searchPublic(@AuthenticationPrincipal UserPrincipal principal,
                                                           @RequestParam(required = false) String ruleType,
-                                                          @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(service.searchPublic(principal, ruleType, searchText));
+                                                          @RequestParam(required = false) String searchText,
+                                                          @RequestParam(required = false) Long taskId) {
+        return ApiResponse.ok(service.searchPublic(principal, ruleType, searchText, taskId));
     }
 
     /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchTextManager */

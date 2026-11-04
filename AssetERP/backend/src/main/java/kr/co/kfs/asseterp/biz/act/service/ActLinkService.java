@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.act.service;
 
 import kr.co.kfs.asseterp.biz.act.dto.ActCodeOptionRes;
 import kr.co.kfs.asseterp.biz.act.dto.ActLinkCreateReq;
+import kr.co.kfs.asseterp.biz.act.dto.ActLinkContentAddReq;
+import kr.co.kfs.asseterp.biz.act.dto.ActLinkContentRes;
 import kr.co.kfs.asseterp.biz.act.dto.ActLinkRes;
 import kr.co.kfs.asseterp.biz.act.mapper.ActLinkMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -38,6 +40,24 @@ public class ActLinkService {
         Long id = mapper.selectNextId();
         mapper.insert(id, user.getCompanyId(), req.accountCode(), req.provideContentCode());
         return mapper.selectById(id);
+    }
+
+    /** AS-IS Act14_Lookup_LinkProvideContent.retrieve() L229-253: act.Act14_Link.selectByProvideContentCode(로그인 회사, 제공내역) */
+    public List<ActLinkContentRes> searchByProvideContent(UserPrincipal user, String provideContentCode) {
+        return mapper.selectByProvideContentCode(user.getCompanyId(), provideContentCode);
+    }
+
+    /** AS-IS Act14_Lookup_LinkProvideContent.insertAccount() L305-322: 회사·계정·제공내역·조회순서(현재 행 수+1)로 한 건 넣는다 */
+    @Transactional
+    public int addToProvideContent(UserPrincipal user, ActLinkContentAddReq req) {
+        if (req.accountCode() == null || req.accountCode().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "계정코드는 필수입력 항목입니다");
+        }
+        if (req.provideContentCode() == null || req.provideContentCode().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "제공내역을 선택해주시길 바랍니다.");
+        }
+        long seq = req.seq() == null ? 1L : req.seq();
+        return mapper.insertWithSeq(mapper.selectNextId(), user.getCompanyId(), req.accountCode(), req.provideContentCode(), seq);
     }
 
     /** AS-IS Act01_Edit_AccountCode.getSeq() L387-414: ▲▼로 순서를 바꾸면 보이는 순서대로 조회순서를 1부터 다시 매긴다 → 바뀐 건수 */

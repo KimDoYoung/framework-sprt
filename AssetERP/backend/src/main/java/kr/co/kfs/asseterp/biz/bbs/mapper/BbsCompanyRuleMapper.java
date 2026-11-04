@@ -13,7 +13,8 @@ import java.util.List;
 public interface BbsCompanyRuleMapper {
 
     List<CompanyRuleRes> selectBySearchText(@Param("companyId") Long companyId, @Param("ruleType") String ruleType,
-                                            @Param("searchText") String searchText, @Param("stdDate") String stdDate);
+                                            @Param("searchText") String searchText, @Param("stdDate") String stdDate,
+                                            @Param("taskId") Long taskId);
 
     List<CompanyRuleRes> selectBySearchTextManager(@Param("companyId") Long companyId, @Param("ruleType") String ruleType,
                                                    @Param("searchText") String searchText);

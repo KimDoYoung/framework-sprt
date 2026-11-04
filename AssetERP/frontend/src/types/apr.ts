@@ -325,6 +325,19 @@ export interface AprSubList {
   statusName?: string | null;
 }
 
+/** 중요표시 문서 한 줄 (GET apr/bookmarks, AS-IS Apr50_BookmarkModel — Apr50_Lookup_ApprList). 날짜는 'yyyy-MM-ddTHH:mm:ss' */
+export interface AprBookmarkList {
+  bookmarkId: number;
+  apprId: number;
+  statusName?: string | null;
+  regDate?: string | null;
+  inOutTypeName?: string | null;
+  title?: string | null;
+  regEmpName?: string | null;
+  effectDate?: string | null;
+  classTreeName?: string | null;
+}
+
 /** 대결자 지정 한 행 (AS-IS Apr07_AltApprModel, G05). 날짜는 'yyyy-MM-dd', stampYn은 'true'/'false' 문자열 */
 export interface AprAltAppr {
   altApprId: number;
@@ -339,6 +352,8 @@ export interface AprAltAppr {
   stampYn?: string | null;
   reasonCd?: string | null;
   emgrPoint?: string | null;
+  /** 휴가신청ID — 휴가신청 [대결자 지정] 창(Apr07_Lookup_AltAppr)이 새 행에 붙인다 */
+  leaveId?: number | null;
 }
 
 /** 대결자 지정(관리자) 한 행 (AS-IS Apr07_AltApprModel, EE02). 날짜는 'yyyy-MM-dd', stampYn은 'true'/'false' 문자열 */

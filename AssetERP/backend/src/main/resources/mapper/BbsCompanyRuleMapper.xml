@@ -35,7 +35,7 @@
          WHERE bbs15_company_rule_id = #{companyRuleId}
     </select>
 
-    <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectBySearchText L45 (Z01 회사규정: 공개된 최신 개정회차 + 종료일 안 지난 규정. taskId 분기는 Tdm10 쪽이라 옮기지 않음) -->
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectBySearchText L45 (Z01 회사규정: 공개된 최신 개정회차 + 종료일 안 지난 규정. taskId 분기는 Bbs15_Lookup_CompanyRule(EE42, Tdm10 연결내규 고르기)가 쓴다) -->
     <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleRes">
         SELECT <include refid="companyRuleColumns"/>
           FROM (
@@ -51,6 +51,14 @@
                                                 AND COALESCE(b.bbs15_public_yn, 'false') = 'true' )
                ) t
          WHERE COALESCE(bbs15_close_date, '2999-12-31'::date) &gt;= #{stdDate}::date
+        <if test="taskId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm11_task_relate_rule
+                             WHERE tdm11_task_id     = #{taskId}
+                               AND tdm11_company_id  = #{companyId}
+                               AND tdm11_relate_type = '2'
+                               AND tdm11_rule_cd     = bbs15_company_rule_cd )
+        </if>
          ORDER BY bbs15_company_rule_cd
     </select>
 

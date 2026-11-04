@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
 
 import kr.co.kfs.asseterp.biz.act.dto.ActCodeOptionRes;
+import kr.co.kfs.asseterp.biz.act.dto.ActLinkContentRes;
 import kr.co.kfs.asseterp.biz.act.dto.ActLinkRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,6 +30,14 @@ public interface ActLinkMapper {
     int updateSeq(@Param("companyId") Long companyId, @Param("linkId") Long linkId, @Param("seq") long seq);
 
     int deleteByIds(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);
+
+    /** AS-IS selectByProvideContentCode (Act14_Lookup_LinkProvideContent) */
+    List<ActLinkContentRes> selectByProvideContentCode(@Param("companyId") Long companyId,
+                                                       @Param("provideContentCode") String provideContentCode);
+
+    /** AS-IS act.Act14_Link.modelUpdate(UpdateDataModel INSERT): 조회순서는 화면이 넘긴 값 */
+    int insertWithSeq(@Param("linkId") Long linkId, @Param("companyId") Long companyId, @Param("accountCode") String accountCode,
+                      @Param("provideContentCode") String provideContentCode, @Param("seq") long seq);
 
     /** AS-IS sys09_code.selectByKindCode('ProvideContentCode', 목적코드||'%') */
     List<ActCodeOptionRes> selectProvideContents(@Param("code") String code);

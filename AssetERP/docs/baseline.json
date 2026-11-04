@@ -15707,5 +15707,32 @@
     "note": "docs/변환/work/EE/EE35-작업기록.md",
     "history": [],
     "id": "EE35"
+  },
+  "Emp93_Lookup_SmsNoticeTarget": {
+    "commit": "f22447cffa5c03d8f9b1e00e8875ee5938162554",
+    "commit_short": "f22447c",
+    "branch": "ioc",
+    "commit_date": "2026-11-03",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp93_Lookup_SmsNoticeTarget.java": "e6c07c80f5e732987c7f20c9aac3cae7b192780d",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp92_SmsNoticeModel.java": "bc3040b439fefcc75990d502b0dffaef6004effc",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp93_SmsNoticeTargetModel.java": "f518284dc612bb2e26ed4fc429bbbe0b22b10f0b",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp93_SmsNoticeTargetModelProperties.java": "93cfd20ab219fccc0aae2e5f49018a4d32e813c9",
+      "application/src/main/java/myApp/server/emp/Emp93_SmsNoticeTarget.java": "d6575caddac71709bf4a19ed2668ab00c9b1fe7b",
+      "application/src/main/java/myApp/server/emp/mapper/emp93_sms_notice_target.xml": "8b799d6dd314a3a76ff497610886fdf944e26334"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-11-04T17:07:21+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE44-작업기록.md",
+    "history": [],
+    "id": "EE44"
   }
 }

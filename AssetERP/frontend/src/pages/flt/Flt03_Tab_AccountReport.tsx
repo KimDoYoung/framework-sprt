@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt03_Tab_AccountReport.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L110-163: center(60%, 분할) = 위 안내 두 줄(보고주기·서약서) + [보고주기 변경 및 서약서 서명] / 툴바 / 체크박스 다중 셀 편집 그리드 / 아래 "문서분류" 칸 + [상신],
  *                  south(40%) = Flt06_TabPage_AccountClose(폐쇄계좌)
- * 1단계: [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp)·[최초원장 등록](Flt13_Lookup_BookInit)은 다음 단계. [상신]/상세보기(전자결재 편집창 Apr01_Edit_ApprDoc, link B05)는 V30에서 연결했다
+ * [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp, EE45)·[최초원장 등록](Flt13_Lookup_BookInit, EE46)은 창을 연다. [상신]/상세보기(전자결재 편집창 Apr01_Edit_ApprDoc, link B05)는 V30에서 연결했다
  * UX보강(10): 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -28,6 +28,9 @@ import { Flt03_Lookup_MainAccount } from './Flt03_Lookup_MainAccount';
 import { Flt06_TabPage_AccountClose } from './Flt06_TabPage_AccountClose';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
+import { Flt02_Lookup_Emp } from './Flt02_Lookup_Emp';
+import { Flt13_Lookup_BookInit } from './Flt13_Lookup_BookInit';
+
 const gb = gbFor<FltAccount>();
 
 const BLUE = '#456EA6';
@@ -40,6 +43,8 @@ const inApproval = (m: FltAccount) => IN_APPROVAL.includes(m.apprStatusCode ?? '
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
 
 export const Flt03_Tab_AccountReport: React.FC = () => {
+  const [empSetOpen, setEmpSetOpen] = useState(false);
+  const [bookInitOpen, setBookInitOpen] = useState(false);
   const [status, setStatus] = useState<FltAccountStatus>({ checkCycle: '1', oathStatusCode: '30', oathStatusName: null });  // 처음 모양 = Quarterly·Finish (L94-95)
   const [classTree, setClassTree] = useState<{ id: number | null; name: string }>({ id: null, name: '' });
   const [docOpen, setDocOpen] = useState(false);
@@ -296,8 +301,8 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
                   <div>* 임직원 금융투자상품 매매 법규준수 서약서 : <span style={{ color: oathDone ? BLUE : RED }}>{oathDone ? '서명완료' : '미완료'}</span></div>
                 </div>
                 <div style={{ margin: 20 }}>
-                  {/* [E1] openButton[보고주기 변경 및 서약서 서명].Select (L174) → Flt02_Lookup_Emp.open(→ check()): [E1 다음 단계] */}
-                  <Button type="download" style={{ width: 250 }} onClick={() => message.info('임직원매매 설정(보고주기·서약서) 창은 다음 단계에서 연결합니다.')}>보고주기 변경 및 서약서 서명</Button>
+                  {/* [E1] openButton[보고주기 변경 및 서약서 서명].Select (L174) → Flt02_Lookup_Emp.open(→ check()): */}
+                  <Button type="download" style={{ width: 250 }} onClick={() => setEmpSetOpen(true)}>보고주기 변경 및 서약서 서명</Button>
                 </div>
               </div>
               <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px' }}>
@@ -312,8 +317,8 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
                 <Button type="close" onClick={insertAccountClose}>계좌폐쇄</Button>
                 {/* [E7] mainAccountButton[주계좌 설정].Select (L216) → Flt03_Lookup_MainAccount.open(→ retrieve()) */}
                 <Button type="save" onClick={() => setMainOpen(true)}>주계좌 설정</Button>
-                {/* [E8] initBookButton[최초원장 등록].Select (L228) → Flt13_Lookup_BookInit.open(오늘): [E8 다음 단계] */}
-                <Button type="register" onClick={() => message.info('최초원장 등록 창은 다음 단계에서 연결합니다.')}>최초원장 등록</Button>
+                {/* [E8] initBookButton[최초원장 등록].Select (L228) → Flt13_Lookup_BookInit.open(오늘): */}
+                <Button type="register" onClick={() => setBookInitOpen(true)}>최초원장 등록</Button>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <CellEditGrid<FltAccount> crud={crud} columnDefs={columnDefs} />
@@ -352,6 +357,10 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
         onClosed={() => void crud.retrieve()}
         onClose={() => { setViewApprId(null); setLinkDoc(null); }}
       />
+      {/* [E1] Flt02_Lookup_Emp.open(→ check()) — 닫으면 보고주기·서약서 상태를 다시 읽는다 */}
+      <Flt02_Lookup_Emp open={empSetOpen} onClose={() => { setEmpSetOpen(false); void check(); }} />
+      {/* [E8] Flt13_Lookup_BookInit.open(오늘) — 최초원장 등록 */}
+      <Flt13_Lookup_BookInit open={bookInitOpen} onClose={() => setBookInitOpen(false)} />
       <Sys15_Lookup_Corp open={corpRow != null} regYn onResult={c => corpRow && pickCorp(corpRow, c)} onClose={() => setCorpRow(null)} />
       <Flt03_Lookup_ItemType open={itemRow != null} itemType={itemRow?.itemType ?? null} onResult={r => itemRow && pickItem(itemRow, r)} onClose={() => setItemRow(null)} />
     </div>

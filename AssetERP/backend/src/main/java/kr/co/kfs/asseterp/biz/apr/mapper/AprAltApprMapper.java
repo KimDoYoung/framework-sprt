@@ -13,6 +13,9 @@ public interface AprAltApprMapper {
     /** AS-IS apr07_alt_appr.selectByEmpId — 원결재자(로그인 사원)의 대결자 목록 */
     List<AprAltApprRes> selectByEmpId(@Param("empId") Long empId);
 
+    /** AS-IS apr07_alt_appr.selectByToDay — 오늘 이후 종료되는(또는 오늘이 기간 안인) 대결자 (Apr07_Lookup_AltAppr) */
+    List<AprAltApprRes> selectByToDay(@Param("empId") Long empId);
+
     /** AS-IS apr07_alt_appr.notAltApprIdList — 화면 목록(altApprIds)에 없는 같은 회사·사원의 대결자 (중복 기간 검사용). altApprIds는 비어 있으면 조건 없음 */
     List<AprAltApprRes> selectNotInIds(@Param("companyId") Long companyId, @Param("empId") Long empId, @Param("altApprIds") List<Long> altApprIds);
 

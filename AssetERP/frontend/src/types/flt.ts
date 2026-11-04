@@ -600,3 +600,42 @@ export interface FltCeoAppr {
   statusCode: string | null;
   statusName: string | null;
 }
+
+/** 임직원매매 기본설정 한 줄 (GET /api/v1/flt/emp-settings, AS-IS Flt02_EmpModel): 적용시작일자 'yyyy-MM-dd'·연간추가 투자한도·보고주기 코드/이름(FloorTrCheckCycle) */
+export interface FltEmpSetting {
+  empId: number;
+  startDate: string | null;
+  yearInvestLimit: number | null;
+  checkCycle: string | null;
+  checkCycleName: string | null;
+}
+
+/** 법규준수서약서 상신 상태 (GET /api/v1/flt/emp-settings/oath, AS-IS Flt04_OathModel) — 서약서가 없으면 null */
+export interface FltEmpOath {
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}
+
+/** 최초원장 한 줄 (GET /api/v1/flt/book-inits, AS-IS Flt13_BookInitModel). bookDate 'yyyy-MM-dd', 새 행은 bookInitId 0 이하 */
+export interface FltBookInit {
+  bookInitId: number;
+  bookDate: string | null;
+  accountId: number | null;
+  accountInfo: string | null;
+  itemType: string | null;
+  itemTypeName: string | null;
+  /** 주식시세적용 종목유형인가 (종목유형을 아직 안 골랐으면 null — "종목유형 선택 후 종목 선택이 가능합니다") */
+  stkPriceYn: boolean | null;
+  itemName: string | null;
+  itemCode: string | null;
+  bookQty: number | null;
+  bookAmt: number | null;
+}
+
+/** 등록·저장·삭제·엑셀업로드 전 점검 결과 (AS-IS checkPreTr). revert=true면 잔고기준일을 되돌린다 */
+export interface FltBookInitCheck {
+  ok: boolean;
+  message: string | null;
+  revert: boolean;
+}

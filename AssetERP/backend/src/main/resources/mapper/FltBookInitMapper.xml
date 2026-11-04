@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt13_book_init.xml (selectByPersonId, getInitDate, excelInsert) · flt10_tr.xml (countByTrDate, insertFloorTrBook)
+  · flt11_book.xml (deleteByItemName, insertByFlt13) · flt14_relate_appr.xml (checkAppr) · sys12_calendar.xml (selectByDay) + UpdateDataModel(flt13_book_init) 저장·삭제 (EE46)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltBookInitMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="bookInitSelect">
+        SELECT flt13_book_init_id                                                               AS book_init_id
+             , flt13_book_date                                                                  AS book_date
+             , flt13_account_id                                                                 AS account_id
+             , TO_DECRYPTS(flt03_account_no) || ' ' || sys15_corp_nm || ' ' || flt03_account_nm AS account_info
+             , flt13_item_type                                                                  AS item_type
+             , flt05_item_type_nm                                                               AS item_type_name
+             , COALESCE(flt05_stk_price_yn::varchar, 'false') = 'true'                          AS stk_price_yn
+             , flt13_item_nm                                                                    AS item_name
+             , flt13_item_cd                                                                    AS item_code
+             , flt13_book_qty                                                                   AS book_qty
+             , flt13_book_amt                                                                   AS book_amt
+          FROM flt13_book_init
+               INNER JOIN flt03_account    ON flt03_account_id = flt13_account_id
+               INNER JOIN sys15_corp       ON sys15_corp_id    = flt03_corp_id
+               INNER JOIN flt05_item_type  ON ( flt05_company_id   = flt13_company_id      AND
+                                                flt05_item_type_cd = flt13_item_type       AND
+                                                flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                         FROM flt05_item_type
+                                                                        WHERE flt05_company_id   = flt13_company_id
+                                                                          AND flt05_item_type_cd = flt13_item_type
+                                                                          AND flt05_start_date &lt;= flt13_book_date ) )
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookInitRes">
+        SELECT *
+          FROM ( <include refid="bookInitSelect"/>
+                  WHERE flt13_company_id = #{companyId}
+                    AND flt13_person_id  = #{personId}
+               ) t
+         WHERE UPPER(CONCAT(account_info, item_name, item_type_name)) LIKE UPPER(#{searchText})
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookInitRes">
+        <include refid="bookInitSelect"/>
+         WHERE flt13_book_init_id = #{bookInitId}
+           AND flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+    </select>
+
+    <select id="selectInitDate" resultType="java.time.LocalDate">
+        SELECT MAX(flt13_book_date)
+          FROM flt13_book_init
+         WHERE flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO flt13_book_init (flt13_book_init_id, flt13_company_id, flt13_person_id, flt13_account_id, flt13_item_nm, flt13_item_type,
+                                     flt13_book_date, flt13_book_amt, flt13_book_qty, flt13_item_cd)
+        VALUES (#{id}, #{companyId}, #{personId}, #{req.accountId}, #{req.itemName}, #{req.itemType},
+                #{req.bookDate}, #{req.bookAmt}, #{req.bookQty}, #{req.itemCode})
+    </insert>
+
+    <update id="update">
+        UPDATE flt13_book_init
+           SET flt13_account_id = #{req.accountId},
+               flt13_item_nm    = #{req.itemName},
+               flt13_item_type  = #{req.itemType},
+               flt13_book_date  = #{req.bookDate},
+               flt13_book_amt   = #{req.bookAmt},
+               flt13_book_qty   = #{req.bookQty},
+               flt13_item_cd    = #{req.itemCode}
+         WHERE flt13_book_init_id = #{req.bookInitId}
+           AND flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM flt13_book_init
+         WHERE flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+           AND flt13_book_init_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <insert id="insertExcel">
+        INSERT INTO flt13_book_init (flt13_book_init_id, flt13_company_id, flt13_person_id, flt13_account_id, flt13_item_nm, flt13_item_type,
+                                     flt13_book_date, flt13_book_amt, flt13_book_qty, flt13_note, flt13_item_cd)
+        VALUES (f_create_seq(), #{companyId}, #{personId}, #{accountId}, #{itemName}, #{itemType},
+                #{bookDate}, #{bookAmt}, #{bookQty}, NULL, #{itemCode})
+    </insert>
+
+    <!-- AS-IS sys12_calendar.selectByDay (companyId 0 = 전체 회사 가운데 사용 회사의 첫 행) -->
+    <select id="selectWorkingYn" resultType="string">
+        SELECT sys12_working_yn
+          FROM sys12_calendar
+               INNER JOIN sys01_company ON sys01_company_id = sys12_company_id
+         WHERE sys12_company_id != 0
+           AND sys12_day = CAST(#{stdDate} AS timestamp)
+           AND sys01_use_yn = 'true'
+         ORDER BY sys01_company_id
+         LIMIT 1
+    </select>
+
+    <select id="countTrByDate" resultType="int">
+        SELECT COUNT(*)
+          FROM flt10_tr
+         WHERE flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+           AND flt10_tr_date &lt;= #{stdDate}
+    </select>
+
+    <select id="countRelateAppr" resultType="int">
+        SELECT COUNT(*)
+          FROM flt14_relate_appr
+               INNER JOIN apr01_appr ON apr01_appr_id = flt14_appr_id
+         WHERE flt14_person_id = #{personId}
+           AND COALESCE(apr01_status_cd, '99') NOT IN ('99', '40')
+    </select>
+
+    <delete id="deleteBookByItem">
+        DELETE
+          FROM flt11_book
+         WHERE flt11_company_id = #{companyId}
+           AND flt11_person_id  = #{personId}
+           AND flt11_account_id = #{accountId}
+           AND flt11_item_type  = #{itemType}
+           AND ( ( #{stkPriceYn}  = 'true' AND flt11_item_cd = #{itemCode} ) OR
+                 ( #{stkPriceYn} != 'true' AND flt11_item_nm = #{itemName} ) )
+    </delete>
+
+    <insert id="insertBookByFlt13">
+        INSERT
+          INTO flt11_book
+        SELECT f_create_seq()
+             , flt13_company_id
+             , flt13_person_id
+             , flt13_account_id
+             , flt13_item_nm
+             , flt13_item_type
+             , flt13_book_date
+             , flt13_book_amt
+             , flt13_book_qty
+             , flt13_note
+             , flt13_book_date
+             , TRUNC(flt13_book_amt / flt13_book_qty)
+             , flt13_book_amt
+             , flt13_item_cd
+          FROM flt13_book_init
+               INNER JOIN flt05_item_type ON (    flt05_company_id   = flt13_company_id
+                                              AND flt05_item_type_cd = flt13_item_type
+                                              AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                           FROM flt05_item_type
+                                                                          WHERE flt05_company_id   = flt13_company_id
+                                                                            AND flt05_item_type_cd = flt13_item_type
+                                                                            AND flt05_start_date &lt;= flt13_book_date ) )
+         WHERE flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+           AND flt13_account_id = #{accountId}
+           AND flt13_item_type  = #{itemType}
+           AND ( ( COALESCE(flt05_stk_price_yn::varchar, 'false')  = 'true' AND flt13_item_cd = #{itemCode} ) OR
+                 ( COALESCE(flt05_stk_price_yn::varchar, 'false') != 'true' AND flt13_item_nm = #{itemName} ) )
+    </insert>
+
+    <!-- AS-IS flt10_tr.insertFloorTrBook (함수 f_insert_floorTrBook) → 'Y' 또는 오류 메시지 -->
+    <select id="insertFloorTrBook" resultType="string" flushCache="true">
+        SELECT f_insert_floorTrBook(#{companyId}, #{personId}, #{accountIdStr}, #{itemType}, #{itemName}, #{itemCode}, CAST(#{startDate} AS date))
+    </select>
+</mapper>

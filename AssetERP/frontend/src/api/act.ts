@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountNum, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, GenLedgerFssRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountNum, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, ActLinkContent, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, GenLedgerFssRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -85,6 +85,18 @@ export const actApi = {
   searchLinks: async (accountCode: string): Promise<ActLink[]> => {
     const res = await apiClient.get<ApiResponse<ActLink[]>>('v1/act/links', { params: { accountCode } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act14_Link.selectByProvideContentCode (Act14_Lookup_LinkProvideContent): 로그인 회사 */
+  searchLinksByContent: async (provideContentCode: string): Promise<ActLinkContent[]> => {
+    const res = await apiClient.get<ApiResponse<ActLinkContent[]>>('v1/act/links/by-content', { params: { provideContentCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act14_Link.modelUpdate (Act14_Lookup_LinkProvideContent.insertAccount): seq는 현재 행 수 + 1 */
+  addLinkByContent: async (accountCode: string, provideContentCode: string, seq: number): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/links/by-content', { accountCode, provideContentCode, seq });
+    return res.data.data;
   },
 
   /** AS-IS act.Act14_Link.insert → 추가한 행 */

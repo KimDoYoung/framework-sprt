@@ -67,8 +67,9 @@ public class SysCodeKindController {
     public ApiResponse<List<CodeAdminRes>> searchCodes(@AuthenticationPrincipal UserPrincipal principal,
                                                        @PathVariable Long codeKindId,
                                                        @RequestParam(required = false) Long companyId,
-                                                       @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(sysCodeService.searchCodesByKindId(principal, codeKindId, companyId, searchText));
+                                                       @RequestParam(required = false) String searchText,
+                                                       @RequestParam(required = false) Long taskId) {
+        return ApiResponse.ok(sysCodeService.searchCodesByKindId(principal, codeKindId, companyId, searchText, taskId));
     }
 
     /** AS-IS sys.Sys09_Code.codeInsert (A14 Sys08_Tab_CodeKindClient 코드복사) → 복사한 행 수 */

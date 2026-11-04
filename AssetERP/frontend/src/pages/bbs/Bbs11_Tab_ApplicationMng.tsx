@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs11_Tab_ApplicationMng.java (402줄) + Bbs12_Lookup_ApplicationMng (246줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L85-159: north 툴바 50(조회기간 ~ · 신청구분 · ☑미완료건만 보기 · [조회][저장][증명서 발급 바로가기] · 오른쪽 [신청구분별 내용관리][알림수신인 설정])
  *   · center 셀 편집 그리드(행번호, 체크박스 단일) · east 650 "내    용" 머리 + HTML 편집기(행을 고르기 전에는 가려 둔다)
- * 1단계: [알림수신인 설정](Emp93_Lookup_SmsNoticeTarget, 다른 도메인 조회창)은 안내 메시지만 — 다음 단계
+ * [알림수신인 설정]은 Emp93_Lookup_SmsNoticeTarget("B03")을 연다 (EE44, 다른 도메인 공통 조회창)
  * 스타일: CG로 분류되나 견본이 없어 SG 견본(Tdm01_Tab_Hr: SearchBar + 그리드)을 뼈대로 썼다 — 결과확인 13
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화는 원본 버튼이 많아 넣지 않음), 저장 = 저장(n)(UX-03)
  */
@@ -22,6 +22,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { openMenuByNo } from '@/utils/tempData';
+import { Emp93_Lookup_SmsNoticeTarget } from '@/components/lookup/Emp93_Lookup_SmsNoticeTarget';
 import { Bbs12_Lookup_ApplicationMng } from './Bbs12_Lookup_ApplicationMng';
 
 const gb = gbFor<BbsApplicationMng>();
@@ -33,6 +34,7 @@ export const Bbs11_Tab_ApplicationMng: React.FC = () => {
   const [statuses, setStatuses] = useState<Code[]>([]);
   const [selected, setSelected] = useState<BbsApplicationMng | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
   // 편집기 내용(AS-IS getHtmlText()) — 고치지 않았으면 null, 저장 때 원래 내용을 그대로 둔다(편집기가 HTML을 다시 쓰므로)
   const html = useRef<string | null>(null);
 
@@ -148,7 +150,7 @@ export const Bbs11_Tab_ApplicationMng: React.FC = () => {
             {/* [E5] updateFormButton[신청구분별 내용관리].Select (L208) → Bbs12_Lookup_ApplicationMng.open() */}
             <Button type="register" onClick={() => setFormOpen(true)}>신청구분별 내용관리</Button>
             {/* [E6] noticeButton[알림수신인 설정].Select (L220) → Emp93_Lookup_SmsNoticeTarget.open("B03") */}
-            <Button type="register" onClick={() => message.info('알림수신인 설정 창(Emp93_Lookup_SmsNoticeTarget)은 다음 단계에서 제공됩니다')}>알림수신인 설정</Button>
+            <Button type="register" onClick={() => setNoticeOpen(true)}>알림수신인 설정</Button>
           </>
         }
       >
@@ -187,6 +189,7 @@ export const Bbs11_Tab_ApplicationMng: React.FC = () => {
         </Splitter>
       </div>
       <Bbs12_Lookup_ApplicationMng open={formOpen} onClose={() => setFormOpen(false)} />
+      <Emp93_Lookup_SmsNoticeTarget smsNoticeCode={noticeOpen ? 'B03' : null} onClose={() => setNoticeOpen(false)} />
     </div>
   );
 };

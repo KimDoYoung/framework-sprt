@@ -4,7 +4,7 @@
  * 레이아웃 L82-90·getEditor L234-253: 헤더 없음, 폼(라벨 120) = 제공목적(300, 파란 라벨) · 제공내역(300, 파란 라벨) · 계정코드(300) · 계정과목(400, 읽기 전용) · 비고(사용내역)(400×100)
  *   · 비품대장등록(400) · 과세구분(300, 파란 라벨) · 실사용자(300, 회사 설정 `cardRealUserYn`일 때만), 창 아래 가운데 [저장][증빙자료(n건)].
  *   고른 내역이 없으면 통째로 비활성, 마감이면 setButtonVisible(false) L307-337이 제공목적·제공내역·계정코드·계정과목·비품대장·과세구분을 잠근다(비고·실사용자는 그대로).
- * 1단계: 비품대장등록의 `Ast06_Lookup_TrBizCard`(ast 도메인)는 다음 단계 — 칸을 누르면 안내만 띄운다
+ * 비품대장등록 칸은 `Ast06_Lookup_TrBizCard`(ast 도메인)를 연다(EE41) — 저장하면 목록을 다시 읽어 '등록완료'가 보인다
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message, Select, Space } from 'antd';
@@ -21,6 +21,7 @@ import { Act01_Lookup_AccountCode } from '@/components/lookup/Act01_Lookup_Accou
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Biz05_Lookup_RelateAppr } from './Biz05_Lookup_RelateAppr';
+import { Ast06_Lookup_TrBizCard } from '../ast/Ast06_Lookup_TrBizCard';
 
 const BLUE = '#0069B4';
 
@@ -57,6 +58,7 @@ export const Biz01_Edit_Account: React.FC<Props> = ({ promo, closed, realUser, o
   const [fileOpen, setFileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState<{ open: boolean; text?: string }>({ open: false });
   const [personOpen, setPersonOpen] = useState(false);
+  const [depnOpen, setDepnOpen] = useState(false);
   const promoId = promo?.promoId ?? null;
   /** 마지막으로 확정한 계정코드 글자 — ValueChange는 값이 바뀐 때만 */
   const committedCode = useRef('');
@@ -136,10 +138,10 @@ export const Biz01_Edit_Account: React.FC<Props> = ({ promo, closed, realUser, o
   };
 
   // [E9] depnBookYn[비품대장등록].TriggerClick (L188) → lookupDepnTr() L373-386: 고른 내역이 없으면 "카드사용내역을 선택해주세요."
-  //   → Ast06_Lookup_TrBizCard.open(promoModel, note, callback → depnBookYn) — ast 도메인 조회창은 다음 단계
+  //   → Ast06_Lookup_TrBizCard.open(promoModel, note, callback → depnBookYn)
   const lookupDepnTr = () => {
     if (promoId == null) { message.warning('카드사용내역을 선택해주세요.'); return; }
-    message.info('비품대장 등록 창은 다음 단계에서 연결됩니다');
+    setDepnOpen(true);
   };
 
   // [E10] realPersonName[실사용자].TriggerClick (L196) → openLookupPerson() L411-433: 고른 내역이 없으면 "카드사용내역을 선택해주세요."
@@ -254,6 +256,7 @@ export const Biz01_Edit_Account: React.FC<Props> = ({ promo, closed, realUser, o
           <Button type="attach" onClick={() => setFileOpen(true)}>{`증빙자료(${fileCount})`}</Button>
         </Space>
       </div>
+      <Ast06_Lookup_TrBizCard promoId={depnOpen ? promoId : null} note={note} onSaved={onSaved} onClose={() => setDepnOpen(false)} />
       <Biz05_Lookup_RelateAppr
         open={fileOpen}
         title="법인카드 증빙자료"

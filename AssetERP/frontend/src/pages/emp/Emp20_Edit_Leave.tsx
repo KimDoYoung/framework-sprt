@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L296-366: 줄1 휴가구분·특별휴가/포상 사유·비상망·[대결자 지정] / 줄2 휴가시작일·사유·대직자 / 줄3 휴가종료일 / 줄4 기간·[계산]·비고·문서분류, 아래 가운데 [임시저장][상신하기][초과사용 승인요청] (라벨 폭 105)
  * [E0] 화면 열림 (생성자 L121-180) → defaultCheck() L259-294(A01 문서분류·휴가기준), getEditor(), refreshCode01() L182-193(콤보 읽기)
  * 결재요청 = 전자결재 편집창 Apr01_Edit_ApprDoc 링크코드 A01 — updateRow() L438 → chkReward() L795 → 저장 → checkA() L494 → checkExcess() L516 → insertLinkApproval() L649 → updateApprId() L699
- * 다음 단계: [대결자 지정] 단추(E5 L158-166, Apr07_Lookup_AltAppr.open(leaveModel)) — 조회창이 아직 없어 안내만 한다
+ * [대결자 지정] 단추(E5 L158-166) = Apr07_Lookup_AltAppr.open(leaveModel) — EE38에서 연결했다(editDriver.flush()처럼 폼의 현재 값을 넘긴다)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, Select, message } from 'antd';
@@ -19,6 +19,7 @@ import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr07_Lookup_AltAppr } from '@/components/lookup/Apr07_Lookup_AltAppr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Emp22_Lookup_EtcLeave } from './Emp22_Lookup_EtcLeave';
@@ -96,6 +97,7 @@ export const Emp20_Edit_Leave: React.FC<Props> = ({ model, refreshDays, getRemai
   const [etcOpen, setEtcOpen] = useState(false);
   const [classOpen, setClassOpen] = useState(false);
   const [confirmerOpen, setConfirmerOpen] = useState(false);
+  const [altOpen, setAltOpen] = useState(false);
   const [link, setLink] = useState<{ classTreeId: number; linkCode: string; refId: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const fRef = useRef(f);
@@ -308,8 +310,8 @@ export const Emp20_Edit_Leave: React.FC<Props> = ({ model, refreshDays, getRemai
     }
   };
 
-  // [E5] altApprButton[대결자 지정].Select (L158-166) → Apr07_Lookup_AltAppr.open(leaveModel) — 조회창은 다음 단계
-  const altAppr = () => message.info('대결자 지정 창(Apr07_Lookup_AltAppr)은 다음 단계에서 변환합니다');
+  // [E5] altApprButton[대결자 지정].Select (L158-166) → leaveModel = editDriver.flush() → Apr07_Lookup_AltAppr.open(leaveModel)
+  const altAppr = () => setAltOpen(true);
 
   const disabled = model == null;
   // retrieve() L396-429: 결재가 진행 중·완료이거나 취소된 문서는 단추를 숨기고 [계산]을 막는다
@@ -383,6 +385,14 @@ export const Emp20_Edit_Leave: React.FC<Props> = ({ model, refreshDays, getRemai
       </div>
 
       <Emp22_Lookup_EtcLeave personId={etcOpen ? user.userId : null} onSelect={onEtcPick} onClose={() => setEtcOpen(false)} />
+      <Apr07_Lookup_AltAppr open={altOpen} onClose={() => setAltOpen(false)}
+        leave={{
+          leaveId: f.leaveId,
+          startDate: f.startDate ? f.startDate.format('YYYY-MM-DD') : null,
+          closeDate: f.closeDate ? f.closeDate.format('YYYY-MM-DD') : null,
+          reason: f.reason || null,
+          emergencyTelno: f.emergencyTelno || null,
+        }} />
       <Dcr30_Move_DcrClass
         open={classOpen}
         authCheck

@@ -1,7 +1,7 @@
 /**
  * 코드 목록 조회창 (A13 — Sys13_TabPage_Code 등록에서 연다)
- * AS-IS: myApp/client/vi/sys/Sys09_Lookup_CodeKind.java — open(codeKindId, companyId, callback) 만 옮김
- * (open(kindCode, …)·tdmLawOpen(taskId, …)의 TdmLawCode 법규목록은 이 화면에서 안 쓴다 — 쓰는 화면에서 더한다)
+ * AS-IS: myApp/client/vi/sys/Sys09_Lookup_CodeKind.java — open(codeKindId, companyId, callback)과 tdmLawOpen(taskId, callback)(EE43, kindCode 'TdmLawCode'·taskId) 을 옮김
+ * tdmLawOpen L61-65 → open(kindCode) L67-81: 코드구분을 코드로 찾고, 제목 "법규목록" 800×600, 열 코드 70·코드명 650, 그 직무에 이미 연결된 법규는 뺀다(retrieve L175-177)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -25,27 +25,50 @@ const buildGrid = () => [
 
 interface Props {
   open: boolean;
-  codeKindId: number;
-  companyId: number;
+  /** open(codeKindId, …). kindCode를 주면 필요 없다 */
+  codeKindId?: number;
+  /** 없으면 로그인 회사 */
+  companyId?: number;
+  /** open(kindCode, …) L67-81: 코드구분 코드(예 'TdmLawCode')로 코드구분을 찾는다 */
+  kindCode?: string;
+  /** tdmLawOpen(taskId, …): kindCode 'TdmLawCode'일 때 그 직무에 이미 연결된 법규(연결구분 '1')는 뺀다 */
+  taskId?: number | null;
   /** callback.execute(list) — 고른 코드들. 닫기는 onClose */
   onResult: (codes: CodeAdmin[]) => void;
   onClose: () => void;
 }
 
-export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, companyId, onResult, onClose }) => {
+export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId: kindIdProp, companyId, kindCode, taskId, onResult, onClose }) => {
+  const [codeKindId, setCodeKindId] = useState<number | null>(kindIdProp ?? null);
+  const tdmLaw = kindCode === 'TdmLawCode';
   const gridRef = useRef<AgGridReact<CodeAdmin>>(null);
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<CodeAdmin[]>([]);
-  const columnDefs = useMemo(buildGrid, []);
+  const columnDefs = useMemo(() => tdmLaw
+    ? [gb.textCenter('code', 70, '코드'), gb.text('name', 650, '코드명')]  // L100-101 setColumnWidth(2, 70) · (3, 650)
+    : buildGrid(), [tdmLaw]);
+
+  // open(kindCode, callback) L67-81: sys.Sys08_CodeKind.selectByKindCode(kindCode) → codeKindId
+  useEffect(() => {
+    if (!open) return;
+    if (kindIdProp != null) { setCodeKindId(kindIdProp); return; }
+    if (!kindCode) return;
+    let alive = true;
+    sysApi.getCodeKindByCode(kindCode)
+      .then(k => { if (alive && k) setCodeKindId(k.codeKindId); })
+      .catch(err => message.error(errorMessage(err, '조회 실패')));
+    return () => { alive = false; };
+  }, [open, kindIdProp, kindCode]);
 
   // retrieve() L169-185: codeKindId·companyId·searchText
   const retrieve = useCallback(async (text: string) => {
+    if (codeKindId == null) return;
     try {
-      setRows(await sysApi.searchCodesByKind(codeKindId, companyId, text));
+      setRows(await sysApi.searchCodesByKind(codeKindId, companyId, text, tdmLaw ? taskId : undefined));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [codeKindId, companyId]);
+  }, [codeKindId, companyId, tdmLaw, taskId]);
 
   // open() L83-124: 열 때마다 새 창 → 검색어를 비우고 바로 retrieve()
   useEffect(() => {
@@ -68,10 +91,13 @@ export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, compa
   return (
     <LookupModal
       open={open}
-      title="코드목록"
-      width={400}
+      title={tdmLaw ? '법규목록' : '코드목록'}
+      width={tdmLaw ? 900 : 400}
+      style={{ top: 20 }}
       maskClosable={false}
       onCancel={onClose}
+      destroyOnHidden
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 12 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -83,7 +109,7 @@ export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, compa
         </div>
       }
     >
-      <div style={{ height: 450, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: 'min(450px, calc(100vh - 260px))', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* retrieveButton[조회].Select (L136) → retrieve() */}
         <SearchBar onSearch={() => retrieve(searchText)}>
           <SearchBar.Field label="검색">

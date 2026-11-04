@@ -86,8 +86,13 @@ public class SysCodeService {
      * 회사는 로그인 회사(sys admin만 다른 회사를 지정 — A14가 고객사를 고른다).
      */
     public List<CodeAdminRes> searchCodesByKindId(UserPrincipal user, Long codeKindId, Long companyId, String searchText) {
+        return searchCodesByKindId(user, codeKindId, companyId, searchText, null);
+    }
+
+    /** Sys09_Lookup_CodeKind.tdmLawOpen(taskId) L61-65 · retrieve() L169-185: taskId가 있으면 그 직무에 이미 연결된 법규(tdm11_relate_type '1')는 뺀다 */
+    public List<CodeAdminRes> searchCodesByKindId(UserPrincipal user, Long codeKindId, Long companyId, String searchText, Long taskId) {
         return sysCodeMapper.searchCodesByKindId(new CodeListParam(codeKindId, user.companyOf(companyId),
-                searchText == null ? "" : searchText));
+                searchText == null ? "" : searchText, taskId));
     }
 
     /**

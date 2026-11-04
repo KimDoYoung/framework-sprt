@@ -682,6 +682,21 @@ export interface AstTrCodeTreeNode {
   trUnit: number | null;
 }
 
+/** 법인카드 사용내역의 비품대장 거래 (GET ast/trs/biz-card, AS-IS Ast06_Lookup_TrBizCard 편집 값). 거래가 아직 없으면 trId·거래유형·거래처·종목은 비어 있다 */
+export interface AstTrBizCard {
+  trId: number | null;
+  /** 'yyyy-MM-dd' — 카드 승인일 */
+  date: string | null;
+  trCode: string | null;
+  trName: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  astClassTreeId: number | null;
+  classTreeFullName: string | null;
+  note: string | null;
+  cardApprovalNo: string | null;
+}
+
 /** AS-IS ast.Ast06_Tr.selectEvalList (Ast06_Tab_EvalFinance, W09) — 금융상품 평가처리 한 줄. 아직 평가하지 않은 줄은 evalYnName이 빈칸 */
 export interface AstEval {
   evalYnName: string | null;

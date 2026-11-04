@@ -111,8 +111,8 @@ export const bbsApi = {
   // ── Z01 회사규정 (Bbs15_Tab_CompanyRule) ──
 
   /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchText: 로그인 회사의 공개된 최신 개정회차(종료일 안 지난 것). ruleType 전체는 '%' */
-  searchPublicCompanyRules: async (ruleType: string, searchText: string): Promise<BbsCompanyRule[]> => {
-    const res = await apiClient.get<ApiResponse<BbsCompanyRule[]>>('v1/bbs/company-rules/public', { params: { ruleType, searchText } });
+  searchPublicCompanyRules: async (ruleType: string, searchText: string, taskId?: number | null): Promise<BbsCompanyRule[]> => {
+    const res = await apiClient.get<ApiResponse<BbsCompanyRule[]>>('v1/bbs/company-rules/public', { params: { ruleType, searchText, taskId: taskId ?? undefined } });
     return res.data.data ?? [];
   },
 

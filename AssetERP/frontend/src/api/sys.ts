@@ -447,8 +447,8 @@ export const sysApi = {
   },
 
   /** AS-IS sys.Sys09_Code.selectByCodeKindId: 시스템 코드구분이면 서버 SQL이 회사 0으로 바꾼다. 회사는 sys admin만 지정 */
-  searchCodesByKind: async (codeKindId: number, companyId: number | undefined, searchText: string): Promise<CodeAdmin[]> => {
-    const res = await apiClient.get<ApiResponse<CodeAdmin[]>>(`v1/sys/code-kinds/${codeKindId}/codes`, { params: { companyId, searchText } });
+  searchCodesByKind: async (codeKindId: number, companyId: number | undefined, searchText: string, taskId?: number | null): Promise<CodeAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<CodeAdmin[]>>(`v1/sys/code-kinds/${codeKindId}/codes`, { params: { companyId, searchText, taskId: taskId ?? undefined } });
     return res.data.data ?? [];
   },
 

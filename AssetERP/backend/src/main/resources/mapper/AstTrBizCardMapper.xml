@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml selectByCardApprovalNo + UpdateDataModel(ast06_tr) (Ast06_Lookup_TrBizCard, EE41) — INSERT/UPDATE는 yunhee port-save -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrBizCardMapper">
+
+    <!-- 카드 사용내역의 승인정보 (AS-IS는 Biz01_PromoModel이 들고 있던 approvalNo·approvalDt·approvalAmount·tax) -->
+    <select id="selectPromo" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrBizCardPromo">
+        SELECT crd02_approval_no          AS approval_no
+             , crd02_approval_dt::date    AS approval_dt
+             , crd02_approval_amount      AS approval_amount
+             , COALESCE(biz01_tax, 0)     AS tax
+          FROM biz01_promo
+               INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_promo_id   = #{promoId}
+    </select>
+
+    <!-- AS-IS ast06_tr.selectByCardApprovalNo — ast06_tr.* 중 이 창이 쓰는 열만 -->
+    <select id="selectByCardApprovalNo" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrBizCardRes">
+        SELECT ast06_tr_id                                              AS tr_id
+             , ast06_date                                               AS date
+             , ast06_tr_cd                                              AS tr_code
+             , f_cdnm('trCode', ast06_tr_cd, ast06_company_id, ast06_date) AS tr_name
+             , ast06_corp_id                                            AS corp_id
+             , f_get_corp_nm(ast06_corp_id)                             AS corp_name
+             , ast06_ast_class_tree_id                                  AS ast_class_tree_id
+             , f_ast_class_tree_nm_allpath(ast06_ast_class_tree_id)     AS class_tree_full_name
+             , ast06_note                                               AS note
+             , ast06_card_approval_no                                   AS card_approval_no
+          FROM ast06_tr
+         WHERE ast06_company_id       = #{companyId}
+           AND ast06_card_approval_no = #{cardApprovalNo}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 새 거래: 정산관리 'true'·통화 KRW·환율 1·외화금액 = 금액·취득거래ID = 자기 자신 (AS-IS insertRow L214-241) -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_amt, ast06_tax, ast06_cont_amt,
+                              ast06_settle_mng_yn, ast06_cur_cd, ast06_fx_rate, ast06_for_amt, ast06_for_cont_amt,
+                              ast06_card_approval_no, ast06_pur_tr_id, ast06_tr_cd, ast06_corp_id, ast06_ast_class_tree_id, ast06_note)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{date}, #{amt}, #{tax}, #{contAmt},
+                'true', 'KRW', 1, #{amt}, #{contAmt},
+                #{cardApprovalNo}, #{trId}, #{trCd}, #{corpId}, #{astClassTreeId}, #{note})
+    </insert>
+
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_tr_cd             = #{trCd},
+               ast06_corp_id           = #{corpId},
+               ast06_ast_class_tree_id = #{astClassTreeId},
+               ast06_note              = #{note}
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+</mapper>

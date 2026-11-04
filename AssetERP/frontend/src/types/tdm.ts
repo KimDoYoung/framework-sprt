@@ -533,6 +533,18 @@ export interface TdmAddTitle {
 }
 
 /** 책무 한 행 (GET /api/v1/tdm/tasks, AS-IS Tdm10_TaskModel) */
+/** 책무에 연결된 규정(법규/내규) 한 줄 (AS-IS Tdm11_TaskRelateRuleModel — Tdm11_Lookup_TaskRelateRule). 화면에서 새로 더한 줄은 taskRelateRuleId가 음수 */
+export interface TdmTaskRelateRule {
+  taskRelateRuleId: number;
+  taskId: number;
+  /** '1' 법규 / '2' 내규 */
+  relateType: string;
+  relateTypeName: string | null;
+  ruleCode: string | null;
+  ruleName: string | null;
+  closeDate?: string | null;
+}
+
 export interface TdmTask {
   taskId: number;
   taskClassCode: string | null;

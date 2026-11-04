@@ -6,7 +6,7 @@ import {
   FltViolate, FltAccount, FltAccountAdmin,FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList, FltEmpAppr, FltEmpApprDoc, FltEmpInfo, FltEmpInfoSetting, FltTrStatus,
   FltPreApprove, FltPreApproveSetting, FltCeoAccount, FltCeoReportPerson, FltCeoTr, FltCeoAppr,
-  FltCompanyStd, FltCompanyStdLockup, FltBuyLockupItem, FltExceptPerson,
+  FltCompanyStd, FltCompanyStdLockup, FltBuyLockupItem, FltExceptPerson, FltEmpSetting, FltEmpOath, FltBookInit, FltBookInitCheck,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -661,3 +661,113 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
     throw await readBlobError(err);
   }
 }
+
+/** EE45 임직원매매 기본설정 (Flt02_Lookup_Emp) — 로그인 사원 본인 것 */
+export const fltEmpSettingApi = {
+  /** AS-IS flt.Flt02_Emp.selectByPersonId */
+  search: async (): Promise<FltEmpSetting[]> => {
+    const res = await apiClient.get<ApiResponse<FltEmpSetting[]>>('v1/flt/emp-settings');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt02_Emp.update — 새 행은 empId 0 이하 */
+  save: async (rows: FltEmpSetting[]): Promise<FltEmpSetting[]> => {
+    const res = await apiClient.put<ApiResponse<FltEmpSetting[]>>('v1/flt/emp-settings', rows.map(r => ({
+      empId: r.empId, startDate: r.startDate, yearInvestLimit: r.yearInvestLimit ?? null, checkCycle: r.checkCycle,
+    })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt02_Emp.delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/emp-settings', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt04_Oath.selectByPersonId — 서약서가 없으면 null */
+  getOath: async (): Promise<FltEmpOath | null> => {
+    const res = await apiClient.get<ApiResponse<FltEmpOath | null>>('v1/flt/emp-settings/oath');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS flt.Flt04_Oath.updateApprId — 상신한 서약서 문서 ID 기록 */
+  updateOathApprId: async (apprId: number): Promise<void> => {
+    await apiClient.put('v1/flt/emp-settings/oath/appr-id', { apprId });
+  },
+
+  /** AS-IS FileUpload?mode=flt07 — 가족금융거래정보 이용동의서 파일 올리기 */
+  uploadFamilyConsent: async (file: File): Promise<FileInfo> => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await apiClient.post<ApiResponse<FileInfo>>('v1/flt/emp-settings/family-consents', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt07_FamilyConsent.deleteByFamilyConsentId */
+  deleteFamilyConsent: async (consentId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/flt/emp-settings/family-consents/${consentId}`);
+    return res.data.data ?? 0;
+  },
+};
+
+/** EE46 최초원장 등록 (Flt13_Lookup_BookInit) — 로그인 사원 본인 것 */
+export const fltBookInitApi = {
+  /** AS-IS flt.Flt13_BookInit.selectByPersonId — searchText는 서버가 `%…%`로 */
+  search: async (searchText: string): Promise<FltBookInit[]> => {
+    const res = await apiClient.get<ApiResponse<FltBookInit[]>>('v1/flt/book-inits', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt13_BookInit.getInitDate — 최초원장이 없으면 null ('yyyy-MM-dd') */
+  getInitDate: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/flt/book-inits/init-date');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS checkPreTr — 영업일 · 잔고기준일 이전 실거래 · 정기보고 상신문서 */
+  check: async (stdDate: string): Promise<FltBookInitCheck> => {
+    const res = await apiClient.get<ApiResponse<FltBookInitCheck>>('v1/flt/book-inits/check', { params: { stdDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt13_BookInit.update — 새 행은 bookInitId 0 이하 → 저장된 행(요청과 같은 순서) */
+  save: async (rows: FltBookInit[]): Promise<FltBookInit[]> => {
+    const res = await apiClient.put<ApiResponse<FltBookInit[]>>('v1/flt/book-inits', rows.map(r => ({
+      bookInitId: r.bookInitId, bookDate: r.bookDate, accountId: r.accountId, itemType: r.itemType,
+      itemName: r.itemName, itemCode: r.itemCode ?? null, bookQty: r.bookQty, bookAmt: r.bookAmt,
+    })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt13_BookInit.delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/book-inits', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ./excelTemplete/Template_초기원장등록.xlsx 받기 */
+  downloadTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get('v1/flt/book-inits/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_초기원장등록.xlsx';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS ExcelUpload?uploadType=fltBookInitUpload&stdDate= → 안내 문구 */
+  uploadExcel: async (stdDate: string, file: File): Promise<string> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<string>>('v1/flt/book-inits/excel', form, {
+      params: { stdDate },
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data.data;
+  },
+};

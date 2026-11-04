@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
  * - A09 개인별 매매 및 보유내역 신고서: `TrRealHtmlData.getHtmlContent` (호출 Flt10_Tab_RealTransaction.insertLinkApprovals L2099-2134)
  * - B05 계좌개설 신고서: `AccountHtmlData.getHtmlContent` (호출 Flt03_Tab_AccountReport.insertLinkApproval L627-695)
  * - B06 계좌폐쇄 신고서: `AccountCloseHtmlData.getHtmlContent` (호출 Flt06_TabPage_AccountClose.insertLinkApproval L253-289)
+ * - A06 법규준수서약서: 본문 없음 — 문서분류 대표 양식 (L1912-1916, 호출 Flt02_Lookup_Emp.insertLinkApproval, EE45)
  * 호출 화면이 GWT 모델 목록을 `linkParam`으로 넘기던 것을 `args.ids`(고른 행 ID, 고른 순서)로 받고 서버가 행을 다시 읽는다(본인 행만).
  * 제목은 읽기전용, [저장]은 감춘다(기본). 본문 표는 원본 문자열 순서·스타일 그대로 만든다.
  * A08(자기매매 사전신고)은 원본에서도 호출하는 화면이 없어 만들지 않았다.
@@ -55,7 +56,7 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
 
     @Override
     public Set<String> linkCodes() {
-        return Set.of("A09", "B05", "B06");
+        return Set.of("A06", "A09", "B05", "B06");
     }
 
     @Override
@@ -65,6 +66,10 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
 
     @Override
     public Seed seed(UserPrincipal user, String linkCode, Long refId, Map<String, String> args) {
+        // A06 법규준수서약서 (Apr01_Edit_ApprDoc L1912-1916): 제목·본문 없이 문서분류의 대표 양식(checkContent(null)), 제목은 고칠 수 있고 [저장]은 감춘다 — 호출 Flt02_Lookup_Emp.insertLinkApproval
+        if ("A06".equals(linkCode)) {
+            return new Seed(null, null, null, false, false);
+        }
         // A09는 고른 매매내역이 없어도 열린다("선택된 매매내역이 없습니다. 매매내역 없이 진행하시겠습니까?" → 예) — 거래내역 없음(O)으로 쓴다
         List<Long> ids = ids(args, !"A09".equals(linkCode));
         return switch (linkCode) {

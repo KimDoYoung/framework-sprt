@@ -32,6 +32,20 @@
          ORDER BY apr07_start_date
     </select>
 
+    <!-- AS-IS apr07_alt_appr.selectByToDay (IDMS-IC, Apr07_Lookup_AltAppr) — WHERE 조건은 원본 그대로, ORDER BY 없음 -->
+    <select id="selectByToDay" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprRes">
+        SELECT <include refid="altApprColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+         WHERE apr07_target_emp_id = #{empId}
+           AND (
+                   (f_sysdate() &lt;= apr07_start_date)
+                OR (f_sysdate() &lt;= apr07_close_date)
+                OR (f_sysdate() BETWEEN apr07_start_date AND apr07_close_date)
+               )
+    </select>
+
     <!-- AS-IS apr07_alt_appr.notAltApprIdList L71 (IDMS-IC) -->
     <select id="selectNotInIds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprRes">
         SELECT <include refid="altApprColumns"/>
@@ -65,9 +79,9 @@
     <insert id="insert">
         INSERT INTO apr07_alt_appr
                ( apr07_alt_appr_id, apr07_target_emp_id, apr07_start_date, apr07_close_date, apr07_alt_emp_id,
-                 apr07_reason_cd, apr07_emgr_point, apr07_stamp_yn )
+                 apr07_reason_cd, apr07_emgr_point, apr07_stamp_yn, apr07_leave_id )
         VALUES ( #{req.altApprId}, #{empId}, #{req.startDate}, #{req.closeDate}, #{req.altEmpId},
-                 #{req.reasonCd}, #{req.emgrPoint}, #{req.stampYn} )
+                 #{req.reasonCd}, #{req.emgrPoint}, #{req.stampYn}, #{req.leaveId} )
     </insert>
 
     <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열만 -->

@@ -20,6 +20,7 @@ import {
   AstBookSum,
   AstCorpAccount,
   AstTr,
+  AstTrBizCard,
   AstTrCodeByWindow,
   AstTrCodeTreeNode,
   AstHoldBook,
@@ -934,6 +935,18 @@ export const astApi = {
   searchWindowTrCodes: async (className: string): Promise<AstCodeName[]> => {
     const res = await apiClient.get<ApiResponse<AstCodeName[]>>('v1/ast/trs/window-codes', { params: { className } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectByCardApprovalNo (Ast06_Lookup_TrBizCard): 카드 사용내역(promoId)의 비품대장 거래. 없으면 새 거래의 기본값 */
+  getTrBizCard: async (promoId: number, note: string): Promise<AstTrBizCard> => {
+    const res = await apiClient.get<ApiResponse<AstTrBizCard>>('v1/ast/trs/biz-card', { params: { promoId, note } });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepn (Ast06_Lookup_TrBizCard): 거래 저장 + 비품원장 반영 → 거래ID */
+  saveTrBizCard: async (req: { promoId: number; trCode: string | null; corpId: number | null; astClassTreeId: number | null; note: string | null }): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/biz-card', req);
+    return res.data.data;
   },
 
   /** AS-IS ast.Ast06_Tr.selectByExpenseId */

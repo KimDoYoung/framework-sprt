@@ -76,6 +76,16 @@ export interface ActLink {
   provideName: string | null;
 }
 
+/** 제공내역에 연결된 계정과목 한 행 (act14_link.selectByProvideContentCode — Act14_Lookup_LinkProvideContent) */
+export interface ActLinkContent {
+  linkId: number;
+  companyId: number;
+  accountCode: string;
+  accountName: string | null;
+  provideContentCode: string;
+  seq: number | null;
+}
+
 /** 이익제공(수령) 내용 콤보 한 항목 */
 export interface ActCodeOption {
   code: string;
