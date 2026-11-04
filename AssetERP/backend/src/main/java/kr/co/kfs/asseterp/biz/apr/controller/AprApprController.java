@@ -84,6 +84,16 @@ public class AprApprController {
         return ApiResponse.ok(service.searchDocListAdmin(principal, classTreeId, startDate, endDate, searchText));
     }
 
+    /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 admin=LoginUser.getIsManager() (Dcr01_Tab_DcrManager #1003, EE36) */
+    @GetMapping("/doc-list/manager")
+    public ApiResponse<List<AprDocRes>> searchDocListManager(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam Long classTreeId,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                              @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchDocListManager(principal, classTreeId, startDate, endDate, searchText));
+    }
+
     /** AS-IS apr.Apr01_Appr.updateParentId (Dcr01_Move_DcrClass.update, EE05) — 고른 문서를 최하위 문서분류로 이동 */
     @PutMapping("/class-tree")
     public ApiResponse<Void> moveClass(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody AprMoveClassReq req) {

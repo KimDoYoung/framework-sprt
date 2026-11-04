@@ -1,4 +1,5 @@
 /**
+ * 스타일: TG
  * 문서작성 > 01. 문서작성 > 업무별 문서작성 — 왼쪽 분류 트리 + 오른쪽 문서 목록 (F02, 1단계)
  * AS-IS: myApp/client/vi/dcr/Dcr01_Tab_DcrManager.java (277줄) — Dcr01_Tab_DcrUser(#1002)와 관리자판(#1003)이 같이 쓰는 부모 클래스.
  *   함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
@@ -10,6 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Splitter, Tree, Typography } from 'antd';
 import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { errorMessage } from '@/api/client';
+import { dcrApi } from '@/api/dcr';
 import { DcrWriteTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { Apr01_Grid_DocList } from '../apr/Apr01_Grid_DocList';
@@ -26,7 +28,7 @@ interface Props {
   padded?: boolean;
 }
 
-export const Dcr01_Tab_DcrManager: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded }) => {
+export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded }) => {
   const [rows, setRows] = useState<DcrWriteTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrWriteTree | null>(null);
@@ -107,4 +109,26 @@ export const Dcr01_Tab_DcrManager: React.FC<Props> = ({ loadTree, admin = false,
       </Splitter>
     </div>
   );
+};
+
+/**
+ * [1003] 관리자 > 03. 문서관리 > 업무별 문서작성(관리자) (EE36)
+ * AS-IS: Dcr01_Tab_DcrManager 자체가 메뉴 화면이다(DcrUser가 상속). 생성자 L68-70: managerYn = LoginUser.getIsManager(),
+ *   [신규문서 작성] 버튼은 DcrUser만 단다(addInsertButton) → 이 화면은 숨긴다.
+ * retrieve() L197-208: dcr.Dcr01_ClassTree.selectByCompanyId(companyId, typeCode '%') — 문서구분(T)까지 모두. 작성권한(updateYn)은 읽지 않는다
+ */
+export const Dcr01_Tab_DcrManager: React.FC = () => {
+  const loadTree = async (): Promise<DcrWriteTree[]> => {
+    const list = await dcrApi.searchClassTree('%');
+    return list.map(r => ({
+      classTreeId: r.classTreeId,
+      parentTreeId: r.parentTreeId,
+      classTreeName: r.classTreeName,
+      typeCode: r.typeCode,
+      note: r.note,
+      depth: r.depth ?? 0,
+      updateYn: false,
+    }));
+  };
+  return <DcrManagerView loadTree={loadTree} admin showInsert={false} />;
 };

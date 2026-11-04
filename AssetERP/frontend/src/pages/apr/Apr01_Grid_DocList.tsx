@@ -28,7 +28,7 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 interface Props {
   /** 왼쪽 트리에서 고른 분류 (없으면 툴바 전체 비활성) */
   node: DcrWriteTree | null;
-  /** AS-IS Dcr01_Tab_DcrManager.managerYn — 관리자판(#1003)에서만 true. 이 메뉴(#1002)는 false */
+  /** AS-IS Dcr01_Tab_DcrManager.managerYn — 관리자판(#1003)은 LoginUser.getIsManager(), #1002는 false — 서버가 관리자 여부로 admin 분기를 고른다 */
   admin?: boolean;
   /** addInsertButton() L141-143: [신규문서 작성] 버튼 표시 (S1 고객사는 숨김) */
   showInsert: boolean;
@@ -36,7 +36,7 @@ interface Props {
   padded?: boolean;
 }
 
-export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }) => {
+export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showInsert, padded }) => {
   // [E0] 화면 열림 (생성자 L69-71) → init() L77-139, settings() L145-176
   // settings() L145-176: 등록기간 = 올해 1월 1일 ~ 오늘(LoginUser.getToday())
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
@@ -56,7 +56,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }
     const my = ++seq.current;
     setLoading(true);  // grid.mask("Loading")
     try {
-      const list = await aprApi.searchDocList({
+      const list = await (admin ? aprApi.searchDocListManager : aprApi.searchDocList)({
         classTreeId: target.classTreeId,
         startDate: startDate.format(DATE_FORMAT),
         endDate: endDate.format(DATE_FORMAT),

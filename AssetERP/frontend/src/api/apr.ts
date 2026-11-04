@@ -201,6 +201,12 @@ export const aprApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 admin=LoginUser.getIsManager() (Dcr01_Tab_DcrManager #1003, EE36): 관리자면 열람권한 조건 없이, 아니면 F02와 같게 */
+  searchDocListManager: async (params: { classTreeId: number; startDate: string; endDate: string; searchText: string }): Promise<AprDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprDoc[]>>('v1/apr/apprs/doc-list/manager', { params });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS apr.Apr01_Appr.updateParentId (Dcr01_Move_DcrClass, EE05): 고른 문서를 최하위 문서분류로 이동 */
   moveDocClass: async (apprIds: number[], classTreeId: number): Promise<void> => {
     await apiClient.put('v1/apr/apprs/class-tree', { apprIds, classTreeId });

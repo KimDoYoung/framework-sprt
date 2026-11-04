@@ -386,6 +386,7 @@ import { Dcr03_Tab_OrgAuth } from './dcr/Dcr03_Tab_OrgAuth';
 import { Dcr04_Tab_EmpAuth } from './dcr/Dcr04_Tab_EmpAuth';
 import { Dcr10_Tab_MailHistory_Manager } from './dcr/Dcr10_Tab_MailHistory_Manager';
 import { Dcr01_Tab_DcrUser } from './dcr/Dcr01_Tab_DcrUser';
+import { Dcr01_Tab_DcrManager } from './dcr/Dcr01_Tab_DcrManager';
 import { Dcr01_Tab_DcrWrite } from './dcr/Dcr01_Tab_DcrWrite';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
 import { Sch01_Tab_Info } from './sch/Sch01_Tab_Info';
@@ -642,6 +643,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr03_Tab_OrgAuth, // EE07 (메뉴 #1074 + Dcr03_TabPage_OrgAuth·Dcr03_LinkNote. 권한복사 조직찾기 Org00_Lookup_SelectMulti·문서분류지정 창 Dcr30_Lookup_Link 연결)
   Dcr04_Tab_EmpAuth, // EE08 (메뉴 #1491 + Dcr04_TabPage_EmpAuth·Dcr04_Lookup_DocList·Dcr04_TabPage_DocList. 사원찾기 Emp00_Lookup_SelectMulti·조직찾기 Org00_Lookup_SelectSingle 재사용)
   Dcr10_Tab_MailHistory_Manager, // EE09 (메뉴 #1024 + 메일 상세 Dcr10_Lookup_MailViwer(manager)·연관펀드 Fnd01_Lookup_SelectSingle·문서 Apr01_Edit_ApprDoc 재사용)
+  Dcr01_Tab_DcrManager, // EE36 (메뉴 #1003 업무별 문서작성(관리자) — 본체 DcrManagerView·Apr01_Grid_DocList는 F02와 공통)
   Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 다음 단계, 메일 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt01_Tab_DailyConfirm, // Z09 (+ Rpt01_Edit_DailyConfirm, RD Rpt01_Rd_Daily)

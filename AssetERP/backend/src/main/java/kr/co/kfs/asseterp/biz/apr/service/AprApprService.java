@@ -86,6 +86,16 @@ public class AprApprService {
         return mapper.selectByClassTreeId2Admin(new AprDocListCond(classTreeId, 0L, user.getUserId(), startDate, endDate, like(searchText)));
     }
 
+    /**
+     * AS-IS Apr01_Appr.selectByClassTreeId2 (EE36 업무별 문서작성(관리자) #1003): admin = LoginUser.getIsManager()(Dcr01_Tab_DcrManager L70).
+     * 관리자(회사관리자·관리자 회사)면 admin=true 분기, 아니면 F02와 같은 admin=false 분기
+     */
+    public List<AprDocRes> searchDocListManager(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
+        return SysMenuSearchService.isManager(user)
+                ? searchDocListAdmin(user, classTreeId, startDate, endDate, searchText)
+                : searchDocList(user, classTreeId, startDate, endDate, searchText);
+    }
+
     /** AS-IS Apr01_Appr.updateParentId (EE05): 고른 문서를 최하위 문서분류로 옮긴다("최하위 문서분류를 선택해주세요"는 화면이, 서버도 다시 검사). 한 트랜잭션 */
     @Transactional
     public void moveClass(UserPrincipal user, List<Long> apprIds, Long classTreeId) {
