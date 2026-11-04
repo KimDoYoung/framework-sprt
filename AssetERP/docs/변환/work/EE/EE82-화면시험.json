@@ -1,0 +1,9 @@
+{
+  "id": "EE82",
+  "screen": "Bbs01_Lookup_BoardUpdate",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(자유게시판이 메뉴 없음) — 일괄 시험 대상 아님"
+  ]
+}

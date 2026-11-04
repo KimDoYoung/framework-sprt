@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeTarget, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
+import { BbsBoard, BbsBoardSaveReq, BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeTarget, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -508,6 +508,32 @@ export const bbsBoardApi = {
   /** AS-IS bbs.Bbs33_Role.delete (체크한 행) */
   deleteRoles: async (classTreeId: number, ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/bbs/class-trees/${classTreeId}/roles`, { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** 자유게시판(bbs01_board) 등록·수정 창 (Bbs01_Lookup_BoardInsert·BoardUpdate, EE81·EE82) — 게시판 화면용 bbsBoardApi와 다르다 */
+export const bbsFreeBoardApi = {
+  /** 수정 창이 열 때 읽는 글 한 건 */
+  get: async (boardId: number): Promise<BbsBoard> => {
+    const res = await apiClient.get<ApiResponse<BbsBoard>>(`v1/bbs/boards/${boardId}`);
+    return res.data.data as BbsBoard;
+  },
+
+  /** AS-IS DBUtil.setSeq: 새 글 번호 (첨부파일을 글 저장 전에 이 번호로 올린다) */
+  nextId: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/bbs/boards/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs01_Board.update: 있으면 고치고 없으면 만든다 */
+  save: async (req: BbsBoardSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/bbs/boards', req);
+  },
+
+  /** AS-IS bbs.Bbs01_Board.delete */
+  delete: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/bbs/boards', { data: ids });
     return res.data.data ?? 0;
   },
 };

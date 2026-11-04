@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprApprBrief;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprRelateReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcrOriginRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsOriginRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveRow;
@@ -41,6 +42,13 @@ public class AprRelateEditService {
     public List<AprRelateIcsRow> getRelateIcs(UserPrincipal user, Long apprId) {
         detailService.getDetail(user, apprId);
         return mapper.selectRelateIcs(apprId);
+    }
+
+    /** AS-IS apr.Apr20_RelateIcs.selectById — 법규정보 창(원인문서가 있는 연관법규) */
+    public AprRelateIcsOriginRes getRelateIcsOrigin(UserPrincipal user, Long relateIcsId) {
+        AprRelateIcsOriginRes row = mapper.selectRelateIcsOrigin(relateIcsId, user.getCompanyId());
+        if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        return row;
     }
 
     /** AS-IS apr.Apr22_RelateIcr.selectById — 내규정보 창(원인문서가 있는 연관내규) */

@@ -1,0 +1,10 @@
+{
+  "id": "EE81",
+  "screen": "Bbs01_Lookup_BoardInsert",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(자유게시판이 메뉴 없음) — 일괄 시험 대상 아님",
+    "(연결된다면) 제목·구분·내용 입력, 파일등록으로 첨부, [저장]"
+  ]
+}

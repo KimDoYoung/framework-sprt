@@ -1209,3 +1209,10 @@ export interface AprRelateIcrOrigin {
   apprId: number;
   apprTitle?: string | null;
 }
+
+/** 연관법규 한 건의 법규·원인문서 (GET /api/v1/apr/relate-ics/origin, AS-IS Apr20_RelateIcs.selectById + 상신문서 제목) */
+export interface AprRelateIcsOrigin {
+  classTreeId: number;
+  apprId: number;
+  apprTitle?: string | null;
+}

@@ -433,3 +433,24 @@ export interface BbsNoticeTarget {
   fromDate?: string | null;
 }
 
+
+/** 게시판 한 건 (GET /api/v1/bbs/boards/{id}, AS-IS Bbs01_BoardModel 중 등록·수정 창이 다루는 값). writeUserName은 "이름 직위" */
+export interface BbsBoard {
+  boardId: number;
+  typeCode?: string | null;
+  typeName?: string | null;
+  title?: string | null;
+  content?: string | null;
+  writeUserId?: number | null;
+  writeUserName?: string | null;
+  writeDate?: string | null;
+}
+
+/** 게시판 저장 요청 (AS-IS bbs.Bbs01_Board.update) */
+export interface BbsBoardSaveReq {
+  boardId: number;
+  typeCode: string | null;
+  title: string | null;
+  content: string | null;
+  writeDate: string | null;
+}

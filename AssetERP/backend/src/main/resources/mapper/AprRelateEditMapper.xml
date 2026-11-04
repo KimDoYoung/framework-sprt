@@ -11,6 +11,17 @@
         SELECT f_create_seq()
     </select>
 
+    <!-- AS-IS apr20_relate_ics.selectById (IDMS-IC) + apr01_appr.selectById의 제목. 회사 조건은 더했다 -->
+    <select id="selectRelateIcsOrigin" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsOriginRes">
+        SELECT a.apr20_class_tree_id AS class_tree_id
+             , a.apr20_appr_id       AS appr_id
+             , b.apr01_title         AS appr_title
+          FROM apr20_relate_ics a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.apr20_appr_id
+         WHERE a.apr20_relate_ics_id = #{relateIcsId}
+           AND b.apr01_company_id = #{companyId}
+    </select>
+
     <!-- AS-IS apr22_relate_icr.selectById (IDMS-IC) + apr01_appr.selectById의 제목. 회사 조건은 더했다 -->
     <select id="selectRelateIcrOrigin" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcrOriginRes">
         SELECT a.apr22_class_tree_id AS class_tree_id
