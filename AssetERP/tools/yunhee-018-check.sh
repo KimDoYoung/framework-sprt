@@ -133,10 +133,10 @@ fi
 # ── A-8 run ──
 if want A-8; then
   PW=${PW:-$(ls -d /tmp/claude-1000/*/*/scratchpad/pw/node_modules 2>/dev/null | head -1)}
-  if [ -n "$PW" ]; then
+  if [ -n "$PW" ] && [ -f tools/screens/A03.js ]; then
     yunhee run "bash -c 'NODE_PATH=$PW node tools/screens/A03.js $LOG'" >/dev/null 2>&1
     chk "A-8 run last --json --keys" 0 "yunhee analysis run last --json --keys errs,msgs,roles" '"errs"' '사원을 선택해주세요' '"roles"' '!pickHeaders'
-  else echo "ℹ A-8: playwright-core 폴더(PW=…/node_modules)를 못 찾아 건너뜀"; fi
+  else echo "ℹ A-8: playwright-core 폴더(PW=…/node_modules) 또는 tools/screens/A03.js(2026-11-04 삭제)가 없어 건너뜀"; fi
 fi
 
 # ── A-9 _index.json ──

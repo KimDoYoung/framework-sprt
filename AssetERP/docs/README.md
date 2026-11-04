@@ -15,4 +15,5 @@
 - `as-is/` : AS-IS 소스·DB 색인 (재생성 가능, git-ignored)
 - `page-style.md`·`grid-style.md`·`modal-style.md` 와 같은 이름 폴더 : 화면 이름표와 견본
 - `메뉴별_클래스명.csv`, `baseline.json`
+- `../tools/README.md` : 시험·점검 스크립트와 시뮬레이터 안내
 - 저장소 루트 `../../docs/` : 프레임워크 설계 (TOBE-Framework, security, websocket, log)
