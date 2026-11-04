@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/crm/mapper/crm14_share_default.xml · crm15_share.xml (EE86 Crm14_Lookup_ShareDefault · EE87 Crm15_Lookup_Share) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.crm.mapper.CrmShareMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS crm14_share_default.selectByContactId — 로그인 회사 줄만 -->
+    <select id="selectDefaultByContactId" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmShareRes">
+        SELECT crm14_share_default_id AS share_id
+             , crm14_share_cd         AS share_code
+             , crm14_share_nm         AS share_name
+             , crm14_person_id        AS person_id
+             , crm14_person_nm        AS person_name
+             , crm14_org_id           AS org_id
+             , crm14_org_nm           AS org_name
+          FROM (
+                SELECT crm14_share_default.*
+                     , f_cdnm('ShareCode', crm14_share_cd, crm14_company_id, f_today())    AS crm14_share_nm
+                     , f_emp_kor_nm(crm14_person_id)                                       AS crm14_person_nm
+                     , f_org_nm(crm14_org_id, f_today())                                   AS crm14_org_nm
+                  FROM crm14_share_default
+                 WHERE crm14_contact_id = #{contactId}
+                   AND crm14_company_id = #{companyId}
+               ) t
+         ORDER BY crm14_share_cd DESC
+                , crm14_org_nm COLLATE "ko_KR.utf8"
+                , crm14_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS Crm14_ShareDefault.delete (UpdateDataModel DELETE) — 로그인 회사·이 거래처의 줄만 -->
+    <delete id="deleteDefault">
+        DELETE FROM crm14_share_default
+         WHERE crm14_contact_id = #{contactId}
+           AND crm14_company_id = #{companyId}
+           AND crm14_share_default_id IN
+           <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS Crm14_ShareDefault.update (UpdateDataModel INSERT) -->
+    <insert id="insertDefault">
+        INSERT INTO crm14_share_default
+               ( crm14_share_default_id, crm14_contact_id, crm14_share_cd, crm14_person_id, crm14_org_id, crm14_company_id )
+        VALUES ( #{shareId}, #{contactId}, #{shareCode}, #{personId}, #{orgId}, #{companyId} )
+    </insert>
+
+    <!-- AS-IS crm14_share_default.selectShareInfo -->
+    <select id="selectDefaultShareInfo" resultType="string">
+        SELECT (SELECT CASE WHEN crm14_share_cd = '1'
+                            THEN f_emp_kor_nm(crm14_person_id)
+                            ELSE f_org_nm(crm14_org_id, f_today()) END
+                  FROM crm14_share_default
+                 WHERE crm14_contact_id = #{contactId}
+                 ORDER BY crm14_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM crm14_share_default
+         WHERE crm14_contact_id = #{contactId}
+    </select>
+
+    <select id="countContact" resultType="int">
+        SELECT count(*) FROM crm09_contact
+         WHERE crm09_contact_id = #{contactId} AND crm09_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS crm15_share.selectByWorkDetailId — 로그인 회사 줄만 -->
+    <select id="selectByWorkDetailId" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmShareRes">
+        SELECT crm15_share_id   AS share_id
+             , crm15_share_cd   AS share_code
+             , crm15_share_nm   AS share_name
+             , crm15_person_id  AS person_id
+             , crm15_person_nm  AS person_name
+             , crm15_org_id     AS org_id
+             , crm15_org_nm     AS org_name
+          FROM (
+                SELECT crm15_share.*
+                     , f_cdnm('ShareCode', crm15_share_cd, crm15_company_id, COALESCE(crm12_reg_date, f_today())) AS crm15_share_nm
+                     , f_emp_kor_nm(crm15_person_id)                                                              AS crm15_person_nm
+                     , f_org_nm(crm15_org_id, COALESCE(crm12_reg_date, f_today()))                                AS crm15_org_nm
+                  FROM crm15_share
+                       LEFT OUTER JOIN crm12_work_detail ON crm12_work_detail_id = crm15_work_detail_id
+                 WHERE crm15_work_detail_id = #{workDetailId}
+                   AND crm15_company_id = #{companyId}
+               ) t
+         ORDER BY crm15_share_cd DESC
+                , crm15_org_nm COLLATE "ko_KR.utf8"
+                , crm15_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS Crm15_Share.delete (UpdateDataModel DELETE) — 로그인 회사·이 업무활동의 줄만 -->
+    <delete id="deleteShares">
+        DELETE FROM crm15_share
+         WHERE crm15_work_detail_id = #{workDetailId}
+           AND crm15_company_id = #{companyId}
+           AND crm15_share_id IN
+           <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS Crm15_Share.update (UpdateDataModel INSERT) -->
+    <insert id="insertShare">
+        INSERT INTO crm15_share
+               ( crm15_share_id, crm15_work_detail_id, crm15_share_cd, crm15_person_id, crm15_org_id, crm15_company_id )
+        VALUES ( #{shareId}, #{workDetailId}, #{shareCode}, #{personId}, #{orgId}, #{companyId} )
+    </insert>
+
+    <!-- AS-IS crm15_share.selectShareInfo -->
+    <select id="selectShareInfo" resultType="string">
+        SELECT (SELECT CASE WHEN crm15_share_cd = '1'
+                            THEN f_emp_kor_nm(crm15_person_id)
+                            ELSE f_org_nm(crm15_org_id, f_today()) END
+                  FROM crm15_share
+                 WHERE crm15_work_detail_id = #{workDetailId}
+                 ORDER BY crm15_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM crm15_share
+         WHERE crm15_work_detail_id = #{workDetailId}
+    </select>
+
+    <select id="countWorkDetail" resultType="int">
+        SELECT count(*) FROM crm12_work_detail
+         WHERE crm12_work_detail_id = #{workDetailId} AND crm12_company_id = #{companyId}
+    </select>
+</mapper>

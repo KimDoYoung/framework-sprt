@@ -14,6 +14,17 @@ export interface DcrLinkClassTree {
   classTreeFullName: string;
 }
 
+/** 리서치용 문서분류 트리 한 행 (AS-IS Dcr01_ClassTreeModel — selectByParentIdResrchYn, EE88). 전위 순서 + depth */
+export interface DcrResearchTree {
+  classTreeId: number;
+  parentTreeId?: number | null;
+  classTreeName: string;
+  classTreeCode?: string | null;
+  typeCode?: string | null;
+  researchYn?: string | null;
+  depth: number;
+}
+
 export interface DcrClassTree {
   classTreeId: number;
   companyId: number;

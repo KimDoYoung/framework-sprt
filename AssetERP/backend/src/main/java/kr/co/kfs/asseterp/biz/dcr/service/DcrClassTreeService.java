@@ -14,6 +14,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrResearchTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrUseYnReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.mapper.DcrClassTreeMapper;
@@ -100,6 +101,40 @@ public class DcrClassTreeService {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         List<String> yn = mapper.selectOrgAuthUpdateYn(orgId, classTreeId);
         return !yn.isEmpty() && "true".equals(yn.get(0));
+    }
+
+    /**
+     * AS-IS dcr.Dcr01_ClassTree.selectByParentIdResrchYn L107-131 + getChildResearch L133-154 (EE88 Dcr01_Lookup_ClassTree).
+     * 루트(상위 0)부터 한 단계씩 내려가며, 아래에 남은 분류가 있는 루트만 남기고 아래 단계는 (아래가 남았거나 리서치사용 true)인 것만 남긴다.
+     * 루트 조회만 사원 권한(empId)을 보고 아래 단계는 조직 권한만 본다(AS-IS 그대로). 전위 순서 평평한 목록 + depth
+     */
+    public List<DcrResearchTreeRes> searchResearchTree(UserPrincipal user) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        List<DcrResearchTreeRes> out = new ArrayList<>();
+        for (DcrResearchTreeRes root : mapper.selectResearchChildren(user.getCompanyId(), user.getUserId(), orgId, 0L)) {
+            List<DcrResearchTreeRes> sub = new ArrayList<>();
+            collectResearch(user.getCompanyId(), orgId, root.classTreeId(), 1, sub);
+            if (!sub.isEmpty()) {
+                out.add(withDepth(root, 0));
+                out.addAll(sub);
+            }
+        }
+        return out;
+    }
+
+    private void collectResearch(Long companyId, Long orgId, Long parentId, int depth, List<DcrResearchTreeRes> out) {
+        for (DcrResearchTreeRes child : mapper.selectResearchChildren(companyId, null, orgId, parentId)) {
+            List<DcrResearchTreeRes> sub = new ArrayList<>();
+            collectResearch(companyId, orgId, child.classTreeId(), depth + 1, sub);
+            if (!sub.isEmpty() || "true".equals(child.researchYn())) {
+                out.add(withDepth(child, depth));
+                out.addAll(sub);
+            }
+        }
+    }
+
+    private static DcrResearchTreeRes withDepth(DcrResearchTreeRes r, int depth) {
+        return new DcrResearchTreeRes(r.classTreeId(), r.parentTreeId(), r.classTreeName(), r.classTreeCode(), r.typeCode(), r.researchYn(), depth);
     }
 
     /** AS-IS selectByAll: 사용 여부와 관계없는 전체 트리 + 문서구분별 상신문서 건수 (Dcr01_Lookup_UseYn) */

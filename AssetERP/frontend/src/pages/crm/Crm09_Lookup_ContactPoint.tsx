@@ -1,6 +1,7 @@
 /**
  * 영업거래처 추가·수정 창 (EE84) — AS-IS는 Crm09_Tab_ContactPoint·Crm09_Lookup_Select(Multi)가 연다 (TOBE는 CRM 화면이 없어 연결 안 함)
  * AS-IS: myApp/client/vi/crm/Crm09_Lookup_ContactPoint.java (315줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
+ * [설정] = Crm14_Lookup_ShareDefault(EE86)
  * 생성자 L140-181: 950×530 모달 "영업거래처추가", 폼 + [저장][닫기]. getEditor() L193-243:
  *   영업구분(콤보 CrmItemTypeCode) / 회사명 300·담당자명 200·직위 200·부서 200 / 이메일 300·직책 200·회사전화 200·휴대폰 200 / 주요사항 100 / 비고 100 / 공유기본(읽기 전용 500)+[설정]
  * openEdit L73 = 기존 거래처 수정, openNew L84 = 새 거래처, open(contactModel) L122 = 영업구분·회사명·공유정보를 미리 채워 새로 등록
@@ -14,6 +15,7 @@ import { CrmContactDetail } from '@/types/crm';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
+import { Crm14_Lookup_ShareDefault } from './Crm14_Lookup_ShareDefault';
 
 const LABEL: React.CSSProperties = { width: 80, flex: 'none', textAlign: 'right', paddingRight: 10, fontSize: 12 };
 const REQ: React.CSSProperties = { ...LABEL, color: '#0069B4', fontWeight: 'bold' };
@@ -60,6 +62,7 @@ interface Props {
 export const Crm09_Lookup_ContactPoint: React.FC<Props> = ({ open, contactId, preset, onSaved, onClose }) => {
   const [form, setForm] = useState<FormValue>(EMPTY);
   const [ready, setReady] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const set = (p: Partial<FormValue>) => setForm(f => ({ ...f, ...p }));
 
   // [E0] 화면 열림 (생성자 L140-181, openEdit/openNew/open)
@@ -98,7 +101,7 @@ export const Crm09_Lookup_ContactPoint: React.FC<Props> = ({ open, contactId, pr
   };
 
   // [E3] shareButton[설정].Select (L175) → lookupShare() L283-293: Crm14_Lookup_ShareDefault.open(contactId, 결과 문자열 → shareInfo)
-  const lookupShare = () => { message.info('공유기본 설정 창(Crm14_Lookup_ShareDefault)은 다음 단계에서 제공합니다'); };
+  const lookupShare = () => setShareOpen(true);
 
   const hasId = form.contactId != null;
   const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5 };
@@ -165,6 +168,7 @@ export const Crm09_Lookup_ContactPoint: React.FC<Props> = ({ open, contactId, pr
           (업무활동내역 생성시 공유기본 설정에 따라 공유정보가 기본값으로 초기 등록됩니다.)
         </div>
       </div>
+      <Crm14_Lookup_ShareDefault contactId={shareOpen ? form.contactId : null} onResult={info => set({ shareInfo: info })} onClose={() => setShareOpen(false)} />
     </LookupModal>
   );
 };

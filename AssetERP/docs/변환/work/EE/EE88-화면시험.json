@@ -1,0 +1,9 @@
+{
+  "id": "EE88",
+  "screen": "Dcr01_Lookup_ClassTree",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(리서치 상세 창이 TOBE에 없음) — 일괄 시험 대상 아님"
+  ]
+}

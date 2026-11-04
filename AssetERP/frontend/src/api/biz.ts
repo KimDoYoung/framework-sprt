@@ -7,7 +7,7 @@ import {
   BizWithCorp, FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
 import { MktSelect, MktTarget } from '../types/mkt';
-import { CrmContact, CrmContactDetail, CrmContactSaveReq, CrmRelateFund, CrmWorkDetail, CrmWorkDetailSaveReq } from '../types/crm';
+import { CrmContact, CrmShare, CrmContactDetail, CrmContactSaveReq, CrmRelateFund, CrmWorkDetail, CrmWorkDetailSaveReq } from '../types/crm';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
 export const bizLimitApi = {
@@ -250,6 +250,33 @@ export const crmWorkDetailApi = {
   /** AS-IS crm.Crm13_RelateFund.delete */
   deleteFund: async (relateFundId: number): Promise<void> => {
     await apiClient.delete(`v1/crm/work-details/funds/${relateFundId}`);
+  },
+};
+
+/** EE86·EE87 AS-IS Crm14_Lookup_ShareDefault · Crm15_Lookup_Share (server/crm/Crm14_ShareDefault · Crm15_Share) — 공유지정 창 */
+export const crmShareApi = {
+  /** AS-IS crm.Crm14_ShareDefault.selectByContactId — 거래처 기본 공유 */
+  searchDefault: async (contactId: number): Promise<CrmShare[]> => {
+    const res = await apiClient.get<ApiResponse<CrmShare[]>>(`v1/crm/shares/default/${contactId}`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS crm.Crm14_ShareDefault.delete + update → selectShareInfo 문구 */
+  saveDefault: async (contactId: number, deleteIds: number[], rows: { shareCode: string; personId: number | null; orgId: number | null }[]): Promise<string> => {
+    const res = await apiClient.put<ApiResponse<string>>(`v1/crm/shares/default/${contactId}`, { deleteIds, rows });
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS crm.Crm15_Share.selectByWorkDetailId — 업무활동 공유 */
+  searchByWorkDetail: async (workDetailId: number): Promise<CrmShare[]> => {
+    const res = await apiClient.get<ApiResponse<CrmShare[]>>(`v1/crm/shares/work-detail/${workDetailId}`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS crm.Crm15_Share.delete + update → selectShareInfo 문구 */
+  saveByWorkDetail: async (workDetailId: number, deleteIds: number[], rows: { shareCode: string; personId: number | null; orgId: number | null }[]): Promise<string> => {
+    const res = await apiClient.put<ApiResponse<string>>(`v1/crm/shares/work-detail/${workDetailId}`, { deleteIds, rows });
+    return res.data.data ?? '';
   },
 };
 

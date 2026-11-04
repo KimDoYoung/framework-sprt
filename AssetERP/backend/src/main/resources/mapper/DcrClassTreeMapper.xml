@@ -760,4 +760,23 @@
          ORDER BY dcr03_org_auth_id DESC
     </select>
 
+
+    <!-- AS-IS dcr01_class_tree.selectByParentIdResrchYn (IDMS-IC) — 열은 DTO에 맞춰 줄였다(인감명·결재유형명은 이 창이 안 쓴다). 로그인 회사 조건은 AS-IS와 같다 -->
+    <select id="selectResearchChildren" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrResearchTreeRes">
+        SELECT a.dcr01_class_tree_id    AS class_tree_id
+             , a.dcr01_parent_tree_id   AS parent_tree_id
+             , a.dcr01_class_tree_nm    AS class_tree_name
+             , a.dcr01_class_tree_cd    AS class_tree_code
+             , a.dcr01_type_cd          AS type_code
+             , a.dcr01_resrch_use_yn    AS research_yn
+             , 0                        AS depth
+          FROM dcr01_class_tree a
+               LEFT OUTER JOIN dcr03_org_auth b ON (a.dcr01_class_tree_id = b.dcr03_class_tree_id AND b.dcr03_org_code_id = #{orgId})
+               LEFT OUTER JOIN dcr04_emp_auth c ON (a.dcr01_class_tree_id = c.dcr04_class_tree_id AND c.dcr04_person_id = #{empId,jdbcType=NUMERIC})
+         WHERE a.dcr01_use_yn = 'true'
+           AND a.dcr01_company_id = #{companyId}
+           AND a.dcr01_parent_tree_id = #{parentId}
+           AND COALESCE(c.dcr04_retrieve_yn, b.dcr03_retrieve_yn, 'true') = 'true'
+         ORDER BY a.dcr01_seq
+    </select>
 </mapper>

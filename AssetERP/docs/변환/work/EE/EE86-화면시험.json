@@ -1,0 +1,9 @@
+{
+  "id": "EE86",
+  "screen": "Crm14_Lookup_ShareDefault",
+  "menuNo": null,
+  "accounts": ["kfstest/104"],
+  "steps": [
+    "열 방법이 없다(EE84 창이 열리는 곳이 없음) — 일괄 시험 대상 아님"
+  ]
+}

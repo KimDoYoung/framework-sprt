@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrCheckRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCheckRowReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeAllRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrResearchTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyReq;
@@ -66,6 +67,12 @@ public class DcrClassTreeController {
             return ApiResponse.ok(dcrClassTreeService.searchTreeByOrg(principal, typeCode, orgCodeId));
         }
         return ApiResponse.ok(dcrClassTreeService.searchTree(principal, typeCode, companyId));
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByParentIdResrchYn — 리서치용 문서분류 트리(EE88 Dcr01_Lookup_ClassTree): 전위 평평한 목록 + depth */
+    @GetMapping("/research")
+    public ApiResponse<List<DcrResearchTreeRes>> searchResearchTree(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(dcrClassTreeService.searchResearchTree(principal));
     }
 
     /** AS-IS dcr.Dcr01_ClassTree.selectByOrgIdRoleWrite — 업무별 문서작성(F02): 내 조직이 작성권한을 가진 분류 트리(전위 평평한 목록 + depth) */

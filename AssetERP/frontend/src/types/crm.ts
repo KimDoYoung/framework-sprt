@@ -75,3 +75,14 @@ export interface CrmWorkDetailSaveReq {
   privateYn: boolean;
   fundIds: number[];
 }
+
+/** 공유지정 한 줄 (AS-IS Crm14_ShareDefaultModel · Crm15_ShareModel, EE86·EE87). 새로 더한 줄은 shareId가 0 이하(임시) */
+export interface CrmShare {
+  shareId: number;
+  shareCode?: string | null;
+  shareName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  orgId?: number | null;
+  orgName?: string | null;
+}

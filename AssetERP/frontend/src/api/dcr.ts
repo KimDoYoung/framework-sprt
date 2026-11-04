@@ -5,6 +5,7 @@ import {
   DcrCopyCompany, DcrFundPlanLookup, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
   DcrEmpAuth, DcrEmpAuthClass, DcrEmpAuthTarget, DcrMailFile, DcrMailHistory, DcrOrgAuthClass, DcrOrgAuthOrg,
+  DcrResearchTree,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
@@ -31,6 +32,12 @@ export const dcrApi = {
   /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId: 사용 중인 분류 트리(전위 순서, depth). typeCode 기본 'C', 이동·반영 창은 '%'. companyId(E17)는 다른 회사 지정 — 관리자 회사만 */
   searchClassTree: async (typeCode = 'C', companyId?: number, orgCodeId?: number): Promise<DcrClassTree[]> => {
     const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode, companyId, orgCodeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr01_ClassTree.selectByParentIdResrchYn (EE88 Dcr01_Lookup_ClassTree): 리서치용 문서분류 트리(조직·사원 조회권한 적용, 전위 순서 + depth) */
+  searchResearchTree: async (): Promise<DcrResearchTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrResearchTree[]>>('v1/dcr/class-trees/research');
     return res.data.data ?? [];
   },
 

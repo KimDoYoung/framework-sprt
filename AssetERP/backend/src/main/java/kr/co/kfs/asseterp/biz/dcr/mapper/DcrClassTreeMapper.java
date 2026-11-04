@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.ClassTreeNoteRow;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrAdminTreeRow;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeAllRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrResearchTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
@@ -128,4 +129,8 @@ public interface DcrClassTreeMapper {
 
     /** 로그인 회사의 sys01_erp_product_cd (사용여부설정 버튼: S1은 숨김) */
     String selectErpProductCode(@Param("companyId") Long companyId);
+
+    /** AS-IS dcr01_class_tree.selectByParentIdResrchYn (EE88 Dcr01_Lookup_ClassTree) — 조직·사원 조회권한이 있는 한 단계 아래 분류 */
+    List<DcrResearchTreeRes> selectResearchChildren(@Param("companyId") Long companyId, @Param("empId") Long empId,
+                                                    @Param("orgId") Long orgId, @Param("parentId") Long parentId);
 }

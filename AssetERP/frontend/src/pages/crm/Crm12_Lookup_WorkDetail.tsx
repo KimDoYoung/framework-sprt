@@ -21,6 +21,7 @@ import { LookupModal } from '@/components/lookup/LookupModal';
 import { Fnd01_Lookup_SelectMulti } from '@/components/lookup/Fnd01_Lookup_SelectMulti';
 import { FileUpdownForm, type FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 import { Sys10_Lookup_FileViewer } from '@/pages/sys/Sys10_Lookup_FileViewer';
+import { Crm15_Lookup_Share } from './Crm15_Lookup_Share';
 
 const gbFund = gbFor<CrmRelateFund>();
 const gbFile = gbFor<FileInfo>();
@@ -54,6 +55,7 @@ export const Crm12_Lookup_WorkDetail: React.FC<Props> = ({ open, action, workDet
   const [funds, setFunds] = useState<CrmRelateFund[]>([]);
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [fundOpen, setFundOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const [ready, setReady] = useState(false);
   const upload = useRef<FileUpdownFormHandle>(null);
@@ -102,7 +104,7 @@ export const Crm12_Lookup_WorkDetail: React.FC<Props> = ({ open, action, workDet
   const shareEnabled = !view && !privateYn;
 
   // [E7] shareButton[설정].Select (L243) → lookupShare() L290-300: Crm15_Lookup_Share.open(workDetailId, 결과 문자열 → shareInfo)
-  const lookupShare = () => { message.info('공유 설정 창(Crm15_Lookup_Share)은 다음 단계에서 제공합니다'); };
+  const lookupShare = () => setShareOpen(true);
 
   // [E3] insertButton[연결펀드].Select (L214) → insertRelateFundList() L302-337: Fnd01_Lookup_SelectMulti.open(이미 연결된 펀드 번호들, …) → 고른 펀드를 그리드에 더한다
   const onFundsPicked = (list: FundMulti[]) => {
@@ -262,6 +264,7 @@ export const Crm12_Lookup_WorkDetail: React.FC<Props> = ({ open, action, workDet
           </div>
         </div>
       </LookupModal>
+      <Crm15_Lookup_Share workDetailId={shareOpen ? id : null} onResult={setShareInfo} onClose={() => setShareOpen(false)} />
       <Fnd01_Lookup_SelectMulti open={fundOpen} excludeIds={funds.map(f => f.fundId)} onSelect={onFundsPicked} onClose={() => setFundOpen(false)} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
       <FileUpdownForm ref={upload} onChange={f => void onFile(f)} />
