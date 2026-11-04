@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  알림 배치 (BatchMain alarm·sendFlt10Report·sendExpenseRequest). 본문은 원본 그대로(원칙 4), 달라진 곳만 적는다.
+  - sch06_alarm.insertAlarmTarget (server/sch/mapper/sch06_alarm.xml:60)·selectEmp(같은 파일:382) — 본문 그대로
+  - sch07_alarm_record.selectByAlarmType (server/sch/mapper/sch07_alarm_record.xml:26)·updateInfo(같은 파일:34) — `SELECT *`를 쓰는 열만 적음
+  - sys01_company.selectByName (server/sys/mapper/sys01_company.xml:150) — 알림에 쓰는 열(ID·위치명)만 적음, 조건·정렬 그대로
+  - flt10_tr.getTotalCount (server/flt/mapper/flt10_tr.xml:2054) — `flt10_tr.*` 목록의 건수만 필요해 COUNT로 바꿈, 조건 그대로
+  - emp01_person.getSmsNoticeCode (server/emp/mapper/emp01_person.xml:699)·selectById(같은 파일:61), apr07_alt_appr.getToDay (server/apr/mapper/apr07_alt_appr.xml:135),
+    pay50_expense.getExpenseRequestCount (server/pay/mapper/pay50_expense.xml:1290) — 쓰는 열만 적음, 조건 그대로
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.batch.mapper.BatchNoticeMapper">
+
+    <insert id="insertAlarmTarget">
+    INSERT
+      INTO sch07_alarm_record
+	SELECT f_create_batchseq()
+         , #{companyId}
+         , sch06_person_id
+         , sch06_target_cd
+         , sch06_target_id
+         , sch06_alarm_id
+         , sch06_alarm_type
+         , CASE sch06_target_cd
+	            WHEN 'IPO' THEN '[AssetERP공모주알림] '
+	            WHEN 'BBS' THEN '[AssetERP공지알림] '
+	                       ELSE '[AssetERP알림] '
+                END
+           ||sch06_alarm_message
+           ||f_get_alarm_date_nm(sch06_alarm_id)
+         , sch06_alarm_date_time
+         , null
+	  FROM ( -------------------------------------------------------------
+	         -- 스케줄
+	         -------------------------------------------------------------
+	         SELECT sch06_alarm_id
+	              , sch06_alarm_message
+	              , emp01_person_id                                        as sch06_person_id
+	              , sch06_sch_date
+	              , f_get_alarm_datetime(sch06_alarm_id, sch06_sch_date)   as sch06_alarm_date_time
+	              , sch06_target_cd
+	              , sch06_target_id
+	              , sch06_alarm_type
+	           FROM (
+			         SELECT sch06_alarm_id                                                    as sch06_alarm_id
+			              , sch01_title                                                       as sch06_alarm_message
+			              , sch01_manager_id                                                  as sch06_person_id
+			              , f_get_std_date(sch03_deadline_id, f_today(), sch06_company_id)    as sch06_sch_date
+			              , sch06_target_cd                                                   as sch06_target_cd
+			              , sch01_info_id                                                     as sch06_target_id
+			              , sch06_alarm_type                                                  as sch06_alarm_type
+			           FROM sch06_alarm
+			                INNER JOIN sch01_info     ON sch01_info_id = sch06_target_id
+			                INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'SCH'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch01_use_yn,'false') = 'true'
+			          UNION
+			         SELECT sch06_alarm_id       as sch06_alarm_id
+			              , sch01_title          as sch06_alarm_message
+			              , sch01_manager_id     as sch06_person_id
+			              , CASE WHEN sch03_cycle_cd = '03' /*월별  */ THEN f_get_std_date(sch03_deadline_id, (f_today() + INTERVAL '-1month')::date, sch06_company_id)
+		                         WHEN sch03_cycle_cd = '04' /*분기별*/ THEN f_get_std_date(sch03_deadline_id, (f_today() + INTERVAL '-3month')::date, sch06_company_id)
+		                         WHEN sch03_cycle_cd = '05' /*반기별*/ THEN f_get_std_date(sch03_deadline_id, (f_today() + INTERVAL '-6month')::date, sch06_company_id)
+		                         WHEN sch03_cycle_cd = '06' /*연별  */ THEN f_get_std_date(sch03_deadline_id, (f_today() + INTERVAL '-12month')::date, sch06_company_id)
+		                    END                  as sch06_sch_date
+                          , sch06_target_cd      as sch06_target_cd
+		                  , sch01_info_id        as sch06_target_id
+                          , sch06_alarm_type     as sch06_alarm_type
+			           FROM sch06_alarm
+			                INNER JOIN sch01_info     ON sch01_info_id = sch06_target_id
+			                INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'SCH'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch01_use_yn,'false') = 'true'
+			            AND sch03_cycle_cd IN ('03','04','05','06') /* (월/분기/반기/연) */
+	                ) sch
+	                INNER JOIN (<include refid="selectEmp"/>) emp ON emp01_company_id = #{companyId}
+	          WHERE ( ( emp01_person_id IN ( SELECT sch06_person_id
+					                          UNION
+					                         SELECT sch02_person_id
+					                           FROM sch02_share
+					                          WHERE sch02_info_id = sch06_target_id
+					                            AND sch02_share_cd = '1' )      ) OR
+					   ( emp03_org_code_id IN ( SELECT sch02_org_id
+					                              FROM sch02_share
+	                                             WHERE sch02_info_id = sch06_target_id
+	                                               AND sch02_share_cd = '2' )   ) )
+	         -------------------------------------------------------------
+	         -- 공모주
+	         -------------------------------------------------------------
+	          UNION
+	         SELECT sch06_alarm_id
+	              , sch06_alarm_message
+	              , emp01_person_id as sch06_person_id
+	              , sch06_sch_date
+	              , sch06_alarm_date_time
+                  , sch06_target_cd
+                  , sch06_target_id
+                  , sch06_alarm_type
+	           FROM (
+			         SELECT *
+			              , sch10_demand_start_date                                         as sch06_sch_date
+	                      , '"'||sch10_item_nm||'" 수요예측 시작일'                             as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_demand_start_date)   as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_demand_sdate_alarm_yn,'false') = 'true'
+			            AND sch10_demand_start_date <![CDATA[>=]]> f_today()
+			          UNION
+			         SELECT *
+	                      , sch10_demand_close_date                                         as sch06_sch_date
+			              , '"'||sch10_item_nm||'" 수요예측 종료일'                             as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_demand_close_date)   as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_demand_cdate_alarm_yn,'false') = 'true'
+			            AND sch10_demand_close_date <![CDATA[>=]]> f_today()
+			          UNION
+			         SELECT *
+	                      , sch10_subscription_start_date                                       as sch06_sch_date
+			              , '"'||sch10_item_nm||'" 청약 시작일'                                    as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_subscription_start_date) as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_subscription_sdate_alarm_yn,'false') = 'true'
+			            AND sch10_subscription_start_date <![CDATA[>=]]> f_today()
+			          UNION
+			         SELECT *
+	                      , sch10_subscription_close_date                                       as sch06_sch_date
+			              , '"'||sch10_item_nm||'" 청약 종료일'                                    as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_subscription_close_date) as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_subscription_cdate_alarm_yn,'false') = 'true'
+			            AND sch10_subscription_close_date <![CDATA[>=]]> f_today()
+			          UNION
+			         SELECT *
+	                      , sch10_pay_date                                                      as sch06_sch_date
+			              , '"'||sch10_item_nm||'" 공모주 납입일'                                    as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_pay_date)                as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_pay_date_alarm_yn,'false') = 'true'
+			            AND sch10_pay_date <![CDATA[>=]]> f_today()
+			          UNION
+			         SELECT *
+	                      , sch10_list_date                                                     as sch06_sch_date
+			              , '"'||sch10_item_nm||'" 공모주 상장일'                                   as sch06_alarm_message
+			              , f_get_alarm_datetime(sch06_alarm_id, sch10_list_date)               as sch06_alarm_date_time
+			           FROM sch06_alarm
+			                INNER JOIN sch10_ipo         ON sch10_ipo_id = sch06_target_id
+			                INNER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id       AND
+			                                                  sch11_company_id = sch06_company_id   )
+			          WHERE sch06_company_id = #{companyId}
+			            AND sch06_target_cd  = 'IPO'
+			            AND COALESCE(sch06_use_yn,'false') = 'true'
+			            AND COALESCE(sch11_list_date_alarm_yn,'false') = 'true'
+			            AND sch10_list_date <![CDATA[>=]]> f_today()
+	                ) ipo
+	                INNER JOIN (<include refid="selectEmp"/>) emp ON emp01_company_id = sch06_company_id
+	          WHERE ( ( emp01_person_id IN ( SELECT sch02_person_id
+	                                           FROM sch02_share
+	                                          WHERE sch02_info_id    = sch10_ipo_id
+	                                            AND sch02_company_id = sch06_company_id
+	                                            AND sch02_share_cd   = '1' )    ) OR
+	                   ( emp03_org_code_id IN ( SELECT sch02_org_id
+	                                              FROM sch02_share
+	                                             WHERE sch02_info_id    = sch10_ipo_id
+	                                               AND sch02_company_id = sch06_company_id
+	                                               AND sch02_share_cd   = '2' ) ) )
+	         -------------------------------------------------------------
+	         -- 공지사항
+	         -------------------------------------------------------------
+	          UNION
+	         SELECT *
+	           FROM ( -------------------------------
+	                  -- 회사공지(전체)
+	                  SELECT sch06_alarm_id                                                 as sch06_alarm_id
+	                       , bbs02_title                                                    as sch06_alarm_message
+	                       , emp01_person_id                                                as sch06_person_id
+	                       , bbs02_from_date                                                as sch06_sch_date
+	                       , f_get_alarm_datetime(sch06_alarm_id, bbs02_from_date::date)    as sch06_alarm_date_time
+                           , sch06_target_cd                                                as sch06_target_cd
+                           , sch06_target_id                                                as sch06_target_id
+                           , sch06_alarm_type                                               as sch06_alarm_type
+	                    FROM sch06_alarm
+			                 INNER JOIN bbs02_notice ON bbs02_notice_id  = sch06_target_id
+			                 INNER JOIN (<include refid="selectEmp"/>) emp ON emp01_company_id = sch06_company_id
+			           WHERE sch06_company_id = #{companyId}
+			             AND sch06_target_cd  = 'BBS'
+			             AND COALESCE(sch06_use_yn,'false') = 'true'
+			             AND bbs02_open_yn = '알림'
+			             AND bbs02_to_date <![CDATA[>=]]> f_today()
+			             AND bbs02_notice_type = '01'
+	                  -------------------------------
+	                  -- 회사공지(개별)
+	                   UNION ALL
+	                  SELECT sch06_alarm_id                                                 as sch06_alarm_id
+                           , bbs02_title                                                    as sch06_alarm_message
+	                       , bbs03_person_id                                                as sch06_person_id
+	                       , bbs02_from_date                                                as sch06_sch_date
+	                       , f_get_alarm_datetime(sch06_alarm_id, bbs02_from_date::date)    as sch06_alarm_date_time
+                           , sch06_target_cd                                                as sch06_target_cd
+                           , sch06_target_id                                                as sch06_target_id
+                           , sch06_alarm_type                                               as sch06_alarm_type
+	                    FROM sch06_alarm
+	                         INNER JOIN bbs02_notice ON bbs02_notice_id = sch06_target_id
+	                         INNER JOIN bbs03_target ON bbs03_notice_id = bbs02_notice_id
+	                   WHERE sch06_company_id = #{companyId}
+	                     AND sch06_target_cd  = 'BBS'
+	                     AND COALESCE(sch06_use_yn,'false') = 'true'
+	                     AND bbs02_open_yn = '알림'
+	                     AND bbs02_to_date <![CDATA[>=]]> f_today()
+	                     AND bbs02_notice_type = '02'
+	                  -------------------------------
+	                  -- 법규/경영/시스템 공지(전고객사)
+	                   UNION ALL
+	                  SELECT sch06_alarm_id                                                 as sch06_alarm_id
+                           , bbs02_title                                                    as sch06_alarm_message
+	                       , emp01_person_id                                                as sch06_person_id
+	                       , bbs02_from_date                                                as sch06_sch_date
+	                       , f_get_alarm_datetime(sch06_alarm_id, bbs02_from_date::date)    as sch06_alarm_date_time
+                           , sch06_target_cd                                                as sch06_target_cd
+                           , sch06_target_id                                                as sch06_target_id
+                           , sch06_alarm_type                                               as sch06_alarm_type
+	                    FROM sch06_alarm
+	                         INNER JOIN bbs02_notice ON bbs02_notice_id = sch06_target_id
+	                         INNER JOIN (<include refid="selectEmp"/>) emp ON emp01_company_id = #{companyId}
+	                   WHERE sch06_company_id = 0
+	                     AND sch06_target_cd  = 'BBS'
+	                     AND COALESCE(sch06_use_yn,'false') = 'true'
+	                     AND bbs02_open_yn = '알림'
+	                     AND bbs02_to_date <![CDATA[>=]]> f_today()
+	                     AND bbs02_public_company_yn = 'true'
+	                     AND ( ( /*** (9010:관리자공지)인 경우 관리자권한에 등록되어 있는 사용자만 알람 ***/
+	                             COALESCE(bbs02_notice_detail_cd,'') = '9010'                                          AND
+	                             emp01_person_id IN ( SELECT sys05_user_id
+	                                                    FROM sys05_user_role
+		                                               WHERE sys05_role_id IN ( SELECT sys04_role_id
+		                                                                          FROM sys04_role
+		                                                                         WHERE sys04_company_id = #{companyId}
+		                                                                           AND sys04_admin_yn   = 'true' ) )   ) OR
+	                           ( COALESCE(bbs02_notice_detail_cd,'') != '9010'                                         ) )
+	                     AND ( ( /*** 전체공지가 아닌 경우 경영공지(20)는 경영공지 화면 권한등록 사용자만 알람 ***/
+	                                COALESCE(bbs02_public_yn, 'true') != 'true'                             
+	                            AND 'Y' = ( CASE WHEN bbs02_notice_type = '20' THEN
+			                                        (CASE WHEN (SELECT COUNT(*) 
+			                                                      FROM sys06_menu
+			                                                           INNER JOIN sys07_role_menu on sys07_menu_id = sys06_menu_id
+			                                                           INNER JOIN sys04_role      on sys04_role_id = sys07_role_id
+			                                                           INNER JOIN sys05_user_role on sys05_role_id = sys04_role_id
+			                                                     WHERE sys06_class_nm = 'Bbs02_Tab_NoticeViewMgt'
+			                                                       AND coalesce(sys07_use_yn,'false') = 'true'
+			                                                       AND sys04_company_id = #{companyId}
+			                                                       AND sys05_user_id    = emp01_person_id) = 0 THEN 'N' ELSE 'Y' END)
+			                                     ELSE 'Y' END )
+			                   ) OR ( COALESCE(bbs02_public_yn, 'true') = 'true' ) )
+	                  -------------------------------
+	                  -- 법규/경영/시스템 공지(개별고객사)
+	                   UNION ALL
+	                  SELECT sch06_alarm_id                                                 as sch06_alarm_id
+                           , bbs02_title                                                    as sch06_alarm_message
+	                       , emp01_person_id                                                as sch06_person_id
+	                       , bbs02_from_date                                                as sch06_sch_date
+	                       , f_get_alarm_datetime(sch06_alarm_id, bbs02_from_date::date)    as sch06_alarm_date_time
+                           , sch06_target_cd                                                as sch06_target_cd
+                           , sch06_target_id                                                as sch06_target_id
+                           , sch06_alarm_type                                               as sch06_alarm_type
+	                    FROM sch06_alarm
+	                         INNER JOIN bbs02_notice ON bbs02_notice_id = sch06_target_id
+	                         INNER JOIN bbs04_target_company ON ( bbs04_notice_id  = bbs02_notice_id  AND
+	                                                              bbs04_company_id = #{companyId}     )
+	                         INNER JOIN (<include refid="selectEmp"/>) emp ON emp01_company_id = bbs04_company_id
+	                   WHERE sch06_company_id = 0
+	                     AND sch06_target_cd  = 'BBS'
+	                     AND COALESCE(sch06_use_yn,'false') = 'true'
+	                     AND bbs02_open_yn = '알림'
+	                     AND bbs02_to_date <![CDATA[>=]]> f_today()
+	                     AND COALESCE(bbs02_public_company_yn,'false') = 'false'
+	                     AND ( ( /*** (9010:관리자공지)인 경우 관리자권한에 등록되어 있는 사용자만 알람 ***/
+	                             COALESCE(bbs02_notice_detail_cd,'') = '9010'                                          AND
+	                             emp01_person_id IN ( SELECT sys05_user_id
+	                                                    FROM sys05_user_role
+	                                                   WHERE sys05_role_id IN ( SELECT sys04_role_id
+	                                                                              FROM sys04_role
+	                                                                             WHERE sys04_company_id = bbs04_company_id
+	                                                                               AND sys04_admin_yn   = 'true' ) )   ) OR
+	                           ( COALESCE(bbs02_notice_detail_cd,'') != '9010'                                         ) )
+	                     AND ( ( /*** 전체공지가 아닌 경우 경영공지(20)는 경영공지 화면 권한등록 사용자만 알람 ***/
+	                                COALESCE(bbs02_public_yn, 'true') != 'true'                             
+	                            AND 'Y' = ( CASE WHEN bbs02_notice_type = '20' THEN
+	                                                (CASE WHEN (SELECT COUNT(*) 
+	                                                              FROM sys06_menu
+	                                                                   INNER JOIN sys07_role_menu on sys07_menu_id = sys06_menu_id
+	                                                                   INNER JOIN sys04_role      on sys04_role_id = sys07_role_id
+	                                                                   INNER JOIN sys05_user_role on sys05_role_id = sys04_role_id
+	                                                             WHERE sys06_class_nm = 'Bbs02_Tab_NoticeViewMgt'
+	                                                               AND coalesce(sys07_use_yn,'false') = 'true'
+	                                                               AND sys04_company_id = bbs04_company_id
+	                                                               AND sys05_user_id    = emp01_person_id) = 0 THEN 'N' ELSE 'Y' END)
+	                                             ELSE 'Y' END )
+	                           ) OR ( COALESCE(bbs02_public_yn, 'true') = 'true' ) )
+	                ) bbs
+	       ) t
+	 WHERE sch06_alarm_date_time = to_char(f_sysdate(),'yyyy-mm-dd hh24:mi')::timestamp
+    </insert>
+
+    <sql id="selectEmp">
+        SELECT *
+          FROM emp01_person
+               INNER JOIN emp03_trans ON (    emp03_person_id  = emp01_person_id
+                                          AND emp03_trans_date = (SELECT MAX(emp03_trans_date)
+                                                                    FROM emp03_trans
+                                                                   WHERE emp03_person_id  = emp01_person_id
+                                                                     AND emp03_trans_date <![CDATA[<=]]> f_today()) )
+         WHERE emp01_company_id = #{companyId}
+           AND emp03_trans_cd NOT IN ('900')  /*(800:겸직/900:퇴직)*/
+           AND COALESCE(emp03_non_stay_yn,'false') != 'true'
+    </sql>
+
+    <select id="selectPendingAlarms" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchAlarmRecord">
+        SELECT sch07_alarm_record_id AS alarm_record_id
+             , sch07_company_id      AS company_id
+             , sch07_person_id       AS person_id
+             , sch07_alarm_message   AS alarm_message
+          FROM sch07_alarm_record
+         WHERE sch07_alarm_type = #{alarmType}
+           AND sch07_alarm_date_time <![CDATA[>=]]> f_sysdate() + interval '-1day'
+           AND sch07_send_date_time IS NULL
+    </select>
+
+    <update id="updateAlarmSendInfo">
+        UPDATE sch07_alarm_record
+           SET sch07_send_info      = #{sendInfo}
+             , sch07_send_date_time = f_sysdate()
+         WHERE sch07_alarm_record_id = #{alarmRecordId}
+    </update>
+
+    <select id="selectNoticeCompanies" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchNoticeCompany">
+        SELECT sys01_company_id AS company_id
+             , sys01_loc_nm     AS loc_name
+          FROM sys01_company
+         WHERE 1=1
+           AND UPPER(CONCAT(sys01_company_nm,sys01_loc_nm,sys01_erp_product_cd,sys01_note)) LIKE UPPER('%')
+           AND ( ('true' = 'true' AND COALESCE(sys01_use_yn,'true') = 'true' )
+                 OR
+                 ('true' = 'false') )
+         ORDER BY sys01_company_id
+    </select>
+
+    <select id="selectCompanyLoc" resultType="String">
+        SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <select id="countFlt10Pending" resultType="int">
+        SELECT COUNT(*)
+          FROM flt10_tr
+               INNER JOIN sys12_calendar ON sys12_company_id = flt10_company_id
+         WHERE COALESCE(sys12_working_yn, 'false') = 'true'
+           AND TO_CHAR(sys12_day, 'yyyyMMdd') = TO_CHAR(f_sysdate(), 'yyyyMMdd')
+           AND flt10_company_id = #{companyId}
+           AND COALESCE(flt10_status_cd, '00') = '10'
+           AND flt10_company_id != 83211   /*demo제외*/
+    </select>
+
+    <select id="selectSmsNoticeTargets" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchNoticePerson">
+        SELECT emp01_person.emp01_person_id                       AS person_id
+             , emp01_person.emp01_mobile_telno                    AS mobile_telno
+             , emp01_person.emp01_email_addr                      AS email_address
+             , (to_decrypts(emp01_password) IS NOT NULL)          AS has_password
+          FROM emp01_person
+               INNER JOIN emp03_trans ON (
+                                            emp03_person_id = emp01_person_id AND emp03_trans_date = (
+                                                                                                        SELECT MAX(a.emp03_trans_date)
+                                                                                                          FROM emp03_trans a
+                                                                                                         WHERE a.emp03_person_id = emp01_person_id
+                                                                                                           AND a.emp03_trans_date <![CDATA[ <= ]]> f_sysdate()
+                                                                                                      )
+                                         )
+               INNER JOIN emp93_sms_notice_target ON emp93_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp93_sms_notice_cd = #{noticeCode}
+           AND emp93_company_id = #{companyId}
+           AND emp03_trans_cd NOT IN ('900')
+           AND emp01_person_id NOT IN (
+                                        SELECT emp04_add_person_id
+                                          FROM emp04_add_title
+                                         WHERE emp04_person_id IN (
+                                                                    SELECT emp03_person_id
+                                                                      FROM emp03_trans
+                                                                     WHERE emp03_trans_cd = '900'
+                                                                  )
+                                      )
+           AND emp01_mobile_telno IS NOT NULL
+    </select>
+
+    <select id="selectTodayAltAppr" resultType="kr.co.kfs.asseterp.biz.batch.mapper.BatchNoticeMapper$AltAppr">
+        SELECT apr07_alt_appr.apr07_target_emp_id                 AS target_emp_id
+             , tgt.emp01_mobile_telno                             AS mobile_telno
+             , tgt.emp01_email_addr                               AS email_address
+             , (to_decrypts(tgt.emp01_password) IS NOT NULL)      AS has_password
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+         WHERE apr07_target_emp_id = #{empId}
+           AND (
+                   (f_sysdate() <![CDATA[ <= ]]> apr07_start_date )
+                   OR
+                   (f_sysdate() <![CDATA[ <= ]]> apr07_close_date )
+                   OR
+                   (f_sysdate() BETWEEN apr07_start_date AND apr07_close_date)
+               )
+           AND emp01_mobile_telno IS NOT NULL
+    </select>
+
+    <select id="selectExpenseRequests" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchExpenseRequest">
+        SELECT pay50_confirmer_id AS confirmer_id
+             , count(*)           AS request_cnt
+          FROM pay50_expense
+         WHERE pay50_company_id         = #{companyId}
+           AND pay50_confirm_status_cd  = '10'  /*(10:신청)*/
+           AND pay50_confirmer_id IS NOT NULL
+         GROUP BY pay50_confirmer_id
+    </select>
+
+    <select id="selectPerson" resultType="kr.co.kfs.asseterp.biz.batch.dto.BatchNoticePerson">
+        SELECT emp01_person_id                          AS person_id
+             , emp01_mobile_telno                       AS mobile_telno
+             , emp01_email_addr                         AS email_address
+             , (to_decrypts(emp01_password) IS NOT NULL) AS has_password
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
+</mapper>
