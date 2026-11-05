@@ -50,4 +50,10 @@ public class EmpMenuInfoNoticeService {
         }
         return mapper.deleteByIds(user.getUserId(), ids);
     }
+
+    /** AS-IS Emp91_MenuInfoNotice.deleteMenuId L84-91: 화면안내를 저장하면 그 회사 사원들의 "다시 표시하지 않음" 기록을 지운다 */
+    @Transactional
+    public int deleteByMenu(UserPrincipal user, Long menuId) {
+        return mapper.deleteByCompanyMenu(user.getCompanyId(), menuId);
+    }
 }

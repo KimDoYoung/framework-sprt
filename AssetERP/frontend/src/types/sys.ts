@@ -748,3 +748,21 @@ export interface LeaveCompany {
   unUseYn: boolean;
   note: string | null;
 }
+
+/** 회사 메일 한 행 (AS-IS Sys22_MailModel) — Sys22_Lookup_Mail */
+export interface SysMail {
+  mailId: number | null;
+  mailAddress: string | null;
+  mailDecPassword: string | null;
+  note: string | null;
+}
+
+/** 회사 화면안내 한 건 (AS-IS Sys55_MenuGuideCompanyModel) — Sys55_Lookup_Content */
+export interface MenuGuideContent {
+  menuGuideCompanyId: number | null;
+  companyId: number | null;
+  menuId: number | null;
+  content: string | null;
+  note: string | null;
+  menuNoPlusNm: string | null;
+}

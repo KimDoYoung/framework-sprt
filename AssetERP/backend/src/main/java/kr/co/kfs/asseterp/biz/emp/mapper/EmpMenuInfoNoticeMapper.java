@@ -28,4 +28,7 @@ public interface EmpMenuInfoNoticeMapper {
     /** AS-IS UpdateDataModel.deleteModel(emp91_menu_info_notice) — 본인 행만 */
     int deleteByIds(@Param("personId") Long personId, @Param("ids") List<Long> ids);
 
+
+    /** AS-IS emp91_menu_info_notice.deleteMenuId — 그 회사 사원들의 이 메뉴 차단 기록 */
+    int deleteByCompanyMenu(@Param("companyId") Long companyId, @Param("menuId") Long menuId);
 }

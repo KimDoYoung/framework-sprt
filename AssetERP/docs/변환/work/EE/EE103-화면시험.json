@@ -1,0 +1,12 @@
+{
+  "id": "EE103",
+  "screen": "Sys55_Lookup_Content",
+  "menuNo": null,
+  "accounts": [
+    "kfstest/admin"
+  ],
+  "steps": [
+    "기본설정 > Asset-ERP 화면안내 창을 열어 목록에서 보기 아이콘을 누른다 (회사 화면안내 데이터가 있어야 이 창이 뜬다; 없으면 메뉴 안내문)",
+    "작성 창은 여는 곳이 없다(Sys55_Tab_MenuGuideCompany 미변환)"
+  ]
+}

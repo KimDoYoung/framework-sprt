@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, LeaveCompany, AdviceMember, ManagementTeam, Manual, FilePolicy, MenuSearch, Bookmark } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, LeaveCompany, AdviceMember, ManagementTeam, Manual, FilePolicy, MenuSearch, Bookmark, SysMail, MenuGuideContent } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -1265,5 +1265,38 @@ export const sysSecondaryAuthApi = {
   verify: async (code: string): Promise<boolean> => {
     const res = await apiClient.post<ApiResponse<boolean>>('v1/sys/secondary-auths/verify', { code });
     return res.data.data === true;
+  },
+};
+
+/** EE102 Sys22_Lookup_Mail — 회사 메일 등록·수정 창 */
+export const sysMailApi = {
+  /** AS-IS sys.Sys22_Mail.modelUpdate: 비밀번호는 서버가 암호화해 저장. mailId가 없으면 새 메일 */
+  save: async (mailId: number | null, mailAddress: string, mailDecPassword: string, note: string): Promise<SysMail> => {
+    const body = { mailAddress, mailDecPassword, note };
+    const res = mailId == null
+      ? await apiClient.post<ApiResponse<SysMail>>('v1/sys/mails', body)
+      : await apiClient.put<ApiResponse<SysMail>>(`v1/sys/mails/${mailId}`, body);
+    return res.data.data;
+  },
+
+  /** AS-IS utils.mail.SendMailSMTP.checkCompanyMail: 회사 메일서버로 시험 메일을 보낸다 */
+  check: async (mailAddress: string, password: string): Promise<{ ok: boolean; message: string }> => {
+    const res = await apiClient.post<ApiResponse<{ ok: boolean; message: string }>>('v1/sys/mails/check', { mailAddress, password });
+    return res.data.data;
+  },
+};
+
+/** EE103 Sys55_Lookup_Content — 회사 화면안내 보기·작성 창 */
+export const sysMenuGuideContentApi = {
+  /** AS-IS sys.Sys55_MenuGuideCompany.getMenuDetailModel: 로그인 회사의 그 메뉴 화면안내. 없으면 null */
+  getByMenuNo: async (menuNo: string): Promise<MenuGuideContent | null> => {
+    const res = await apiClient.get<ApiResponse<MenuGuideContent | null>>('v1/sys/menu-guide-contents', { params: { menuNo } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys55_MenuGuideCompany.upsertContent: menuGuideCompanyId가 없으면 새로 넣고 있으면 내용을 고친다 */
+  save: async (menuGuideCompanyId: number | null, menuId: number | null, content: string): Promise<MenuGuideContent> => {
+    const res = await apiClient.put<ApiResponse<MenuGuideContent>>('v1/sys/menu-guide-contents', { menuGuideCompanyId, menuId, content });
+    return res.data.data;
   },
 };

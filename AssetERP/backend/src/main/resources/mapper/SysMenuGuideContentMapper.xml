@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys55_menu_guide_company.xml (EE103 Sys55_Lookup_Content) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysMenuGuideContentMapper">
+
+    <!-- AS-IS sys55_menu_guide_company.getMenuDetailModel L67 — 열만 고른다 -->
+    <select id="selectByMenuNo" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuGuideContentRes">
+        SELECT sys55_menu_guide_company_id AS menu_guide_company_id
+             , sys55_company_id            AS company_id
+             , sys55_menu_id               AS menu_id
+             , sys55_content               AS content
+             , sys55_note                  AS note
+             , CASE WHEN sys06_menu_no IS NOT NULL
+                    THEN sys06_menu_no||' '||sys06_menu_nm
+                    ELSE sys06_menu_nm
+               END                         AS menu_no_plus_nm
+          FROM sys55_menu_guide_company
+               INNER JOIN sys06_menu ON sys55_menu_id = sys06_menu_id
+         WHERE sys55_company_id = #{companyId}
+           AND sys06_menu_no    = #{menuNo}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys55_menu_guide_company.insert L92 (note는 AS-IS가 새 모델을 만들어 null) -->
+    <insert id="insertContent">
+        INSERT INTO sys55_menu_guide_company
+             ( sys55_menu_guide_company_id, sys55_company_id, sys55_menu_id, sys55_content, sys55_note )
+        VALUES ( #{id}, #{companyId}, #{menuId}, #{content}, NULL )
+    </insert>
+
+    <!-- AS-IS sys55_menu_guide_company.updateContent L83 (note도 null로 덮는다 — AS-IS 그대로) -->
+    <update id="updateContent">
+        UPDATE sys55_menu_guide_company
+           SET sys55_content = #{content}
+             , sys55_note    = NULL
+         WHERE sys55_menu_guide_company_id = #{id}
+           AND sys55_company_id = #{companyId}
+           AND sys55_menu_id    = #{menuId}
+    </update>
+</mapper>

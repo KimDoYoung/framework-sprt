@@ -44,4 +44,10 @@ public class EmpMenuInfoNoticeController {
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
     }
+
+    /** AS-IS emp.Emp91_MenuInfoNotice.deleteMenuId — 회사 전체 (화면안내 저장 뒤) */
+    @DeleteMapping("/menus/{menuId}")
+    public ApiResponse<Integer> deleteByMenu(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long menuId) {
+        return ApiResponse.ok(service.deleteByMenu(principal, menuId));
+    }
 }

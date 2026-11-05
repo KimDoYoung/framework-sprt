@@ -1704,6 +1704,12 @@ export const empMenuInfoNoticeApi = {
     await apiClient.put<ApiResponse<void>>('v1/emp/menu-info-notices/all', { blocked });
   },
 
+  /** AS-IS emp.Emp91_MenuInfoNotice.deleteMenuId: 화면안내를 저장하면 그 회사 사원들의 이 메뉴 "다시 표시하지 않음" 기록을 지운다 */
+  removeByMenu: async (menuId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/emp/menu-info-notices/menus/${menuId}`);
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS emp.Emp91_MenuInfoNotice.delete */
   remove: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/menu-info-notices', { data: ids });

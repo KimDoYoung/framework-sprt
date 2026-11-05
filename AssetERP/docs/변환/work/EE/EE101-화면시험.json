@@ -1,0 +1,11 @@
+{
+  "id": "EE101",
+  "screen": "Scm11_Lookup_DevNote",
+  "menuNo": null,
+  "accounts": [
+    "kfstest/admin"
+  ],
+  "steps": [
+    "열 방법이 없다(호출처 Scm11_Tab_DevTest가 TOBE에 없음) — 일괄 시험 대상 아님"
+  ]
+}

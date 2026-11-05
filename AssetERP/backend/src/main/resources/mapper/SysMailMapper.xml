@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys22_mail.xml (EE102 Sys22_Lookup_Mail) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysMailMapper">
+
+    <!-- AS-IS sys22_mail.selectById L20 — 저장한 행을 다시 읽는다, 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.SysMailRes">
+        SELECT sys22_mail_id                AS mail_id
+             , sys22_mail_address           AS mail_address
+             , to_decrypts(sys22_mail_passwd) AS mail_dec_password
+             , sys22_note                   AS note
+          FROM sys22_mail
+         WHERE sys22_mail_id   = #{mailId}
+           AND sys22_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS dbConfig.getEncrypts -->
+    <select id="getEncrypts" resultType="string">
+        SELECT to_encrypts(#{text})
+    </select>
+
+    <!-- AS-IS Sys22_Mail.modelUpdate → UpdateDataModel 동적 INSERT (회사 = 로그인) -->
+    <insert id="insertMail">
+        INSERT INTO sys22_mail (sys22_mail_id, sys22_company_id, sys22_mail_address, sys22_mail_passwd, sys22_note)
+        VALUES (#{id}, #{companyId}, #{mailAddress}, #{password}, #{note})
+    </insert>
+
+    <!-- AS-IS Sys22_Mail.modelUpdate → UpdateDataModel 동적 UPDATE (메일주소·비밀번호·비고), 회사 조건 추가 -->
+    <update id="updateMail">
+        UPDATE sys22_mail
+           SET sys22_mail_address = #{mailAddress}
+             , sys22_mail_passwd  = #{password}
+             , sys22_note         = #{note}
+         WHERE sys22_mail_id    = #{mailId}
+           AND sys22_company_id = #{companyId}
+    </update>
+</mapper>

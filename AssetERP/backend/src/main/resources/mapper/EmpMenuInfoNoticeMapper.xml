@@ -51,4 +51,15 @@ SELECT	emp91_menu_info_notice_id	AS menu_info_notice_id
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
 
+    <!-- AS-IS emp91_menu_info_notice.deleteMenuId L75 -->
+    <delete id="deleteByCompanyMenu">
+        DELETE FROM emp91_menu_info_notice AS n
+         WHERE n.emp91_menu_id = #{menuId}
+           AND EXISTS ( SELECT 1
+                          FROM emp01_person p
+                               JOIN sys01_company c ON c.sys01_company_id = p.emp01_company_id
+                         WHERE p.emp01_person_id = n.emp91_person_id
+                           AND c.sys01_company_id = #{companyId} )
+    </delete>
+
 </mapper>

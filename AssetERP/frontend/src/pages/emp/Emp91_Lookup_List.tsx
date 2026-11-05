@@ -7,12 +7,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, Modal, message } from 'antd';
 import { empMenuInfoNoticeApi } from '@/api/emp';
+import { sysMenuGuideContentApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { MenuInfoNotice } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { LookupModal } from '@/components/lookup/LookupModal';
+import { Sys55_Lookup_Content } from '../sys/Sys55_Lookup_Content';
 
 const gb = gbFor<MenuInfoNotice>();
 
@@ -25,6 +27,7 @@ export const Emp91_Lookup_List: React.FC<Props> = ({ open, onClose }) => {
   const [rows, setRows] = useState<MenuInfoNotice[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [guideContent, setGuideContent] = useState<string | null>(null);   // 회사 화면안내(Sys55_Lookup_Content.view)
   const [allBlocked, setAllBlocked] = useState(false);   // settings() L89-99: 전체 차단이면 체크, 그리드 가림, 검색·조회 꺼짐
 
   // retrieve() L208-219 — emp.Emp91_MenuInfoNotice.selectByText
@@ -69,10 +72,19 @@ export const Emp91_Lookup_List: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
-  // [E5] 보기 아이콘 (viewCell L171-198): 회사 화면안내(sys55) 내용이 있으면 Sys55_Lookup_Content, 없으면 MenuInfoNotice.message(메뉴 안내문)
-  // ※ sys55 테이블이 로컬 DB에 없고 Sys55_Lookup_Content도 아직 없어 안내문만 보여 준다(다음 단계)
-  const view = (row: MenuInfoNotice) => {
-    Modal.info({ title: '화면안내', content: row.menuNote ?? '', okText: '닫기', width: 450 });
+  // [E5] 보기 아이콘 (viewCell L171-198): sys.Sys55_MenuGuideCompany.getMenuDetailModel(companyId, menuNo)
+  //      결과가 없거나 내용이 비었으면 MenuInfoNotice.message(메뉴 안내문), 있으면 Sys55_Lookup_Content.view(resultModel, false)
+  const view = async (row: MenuInfoNotice) => {
+    try {
+      const guide = row.menuNo ? await sysMenuGuideContentApi.getByMenuNo(row.menuNo) : null;
+      if (guide && (guide.content ?? '').trim() !== '') {
+        setGuideContent(guide.content);
+      } else {
+        Modal.info({ title: '화면안내', content: row.menuNote ?? '', okText: '닫기', width: 450 });
+      }
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
   };
 
   const columns = [
@@ -83,6 +95,7 @@ export const Emp91_Lookup_List: React.FC<Props> = ({ open, onClose }) => {
   ];
 
   return (
+    <>
     <LookupModal
       open={open}
       title="화면안내"
@@ -109,5 +122,7 @@ export const Emp91_Lookup_List: React.FC<Props> = ({ open, onClose }) => {
         </div>
       </div>
     </LookupModal>
+    <Sys55_Lookup_Content open={guideContent != null} mode="view" content={guideContent} onClose={() => setGuideContent(null)} />
+    </>
   );
 };
