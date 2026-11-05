@@ -8,7 +8,7 @@
  *   edit: 상태 10·20·80이면 [저장][삭제] 비활성, 준감인 의견이 있으면 [삭제] 비활성
  * 서버: PUT /api/v1/ics/dcr-preconfirms (modelUpdate + 회사 설정 dcrPreconfirmSkipYn이면 updateByStatus01), DELETE /api/v1/ics/dcr-preconfirms/{id} (delete)
  * AS-IS와 다른 점: 원본은 PASS(80)일 때 modelUpdate 뒤 updateByStatus01을 따로 부른다 — TOBE는 서버 한 번(한 트랜잭션). 80 판정도 서버가 한다.
- * 버튼 "신청"은 button-types.md에 없는 문구라 `register`(상신·결재요청과 같은 줄)로 둔다.
+ * 버튼 "신청"은 button-types.md `register`(2026-11-05 등록).
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Select, Space } from 'antd';
