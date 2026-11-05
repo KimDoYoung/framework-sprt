@@ -13,7 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 작업의 구성
 
-작업은 아래 여섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
+작업은 아래 다섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
+
+**작업을 시작하기 전에 그 작업 폴더의 `README.md`를 반드시 먼저 읽는다**(예: 변환 → `AssetERP/docs/변환/README.md`). 요청이 어느 작업인지 애매하면 가장 가까운 작업의 README를 읽고, 여러 작업에 걸치면 해당 README를 모두 읽는다.
 
 | 작업 | 뜻 | docs 폴더 | 핵심 명령 |
 |:---|:---|:---|:---|
