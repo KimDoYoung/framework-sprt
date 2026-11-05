@@ -22,14 +22,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/변환/` (규칙: `변환-가이드.md`) | `yunhee analysis`·`port-sql`·`run` |
 | 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | `AssetERP/docs/업무분석/` (참고: `변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
 | 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/변경반영/` | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
-| 대체 | AS-IS의 UI·로직(업무흐름)을 TOBE로 실제 대신 쓰게 함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/대체/` | |
+| 재설계 | AS-IS의 UI·로직(업무흐름)을 TOBE에서 다르게 바꾸고 새 기능을 더함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/재설계/` | |
 | 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/테스트/` | `yunhee run "gradle test"` |
 
 * 기술스택이 바뀌면서 달라지는 것
    - 보안: 세션 → JWT (`docs/security-설계.md`)
    - 실시간 통신: WebSocket (`docs/websocket-설계.md`)
    - 로그: `docs/log-설계.md`
-* Strangler Fig: 화면(메뉴) 단위로 AS-IS를 TOBE로 바꾼다. 전환 단위, 기존 세션과 JWT의 공존, 문제가 생겼을 때 되돌리는 방법은 아직 문서가 없다 — `대체` 작업에서 정한다.
+* Strangler Fig: 화면(메뉴) 단위로 AS-IS를 TOBE로 바꾼다. 전환 단위, 기존 세션과 JWT의 공존, 문제가 생겼을 때 되돌리는 방법은 아직 문서가 없다 — `재설계` 작업에서 정한다.
 
 
 ## 저장소 구조
