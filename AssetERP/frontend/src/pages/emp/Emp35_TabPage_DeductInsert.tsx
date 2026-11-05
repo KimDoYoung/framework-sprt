@@ -1,5 +1,6 @@
 /**
  * 급여공제 편집 폼 (C01-3 → S28에서 파일 분리) — AS-IS: myApp/client/vi/emp/Emp35_TabPage_DeductInsert.java (282줄)
+ * "4대보험 신고정보" 아이콘 → `pages/pay/Pay31_Popup_InsureApply`(13-누락대장 4-3, 2026-11-05)
  * 날짜 목록 오른쪽 85%. C01 하위 탭 `Emp35_TabPage_DeductDate`·급여공제정보 화면 `Emp35_Tab_DeductPerson`의 아래 `Emp35_Page_DeductDate`가 같이 쓴다
  */
 import React, { useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import { errorMessage } from '@/api/client';
 import { Deduct } from '@/types/emp';
 import { Button } from '@/components/button';
 import { Emp36_Popup_AddDeduct } from './Emp36_Popup_AddDeduct';
+import { Pay31_Popup_InsureApply } from '../pay/Pay31_Popup_InsureApply';
 
 export interface DeductFormProps {
   deduct: Deduct | null;
@@ -22,6 +24,7 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
   const [form, setForm] = useState<Partial<Deduct>>({});
   const [saving, setSaving] = useState(false);
   const [addDeductOpen, setAddDeductOpen] = useState(false);
+  const [insurePersonId, setInsurePersonId] = useState<number | null>(null);
 
   useEffect(() => { setForm(deduct ?? {}); }, [deduct]);
 
@@ -158,10 +161,10 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
             <div style={{ width: 350 }} />
             <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Typography.Text>4대보험 신고정보</Typography.Text>
-              {/* [E4 생략] anchor2.MouseDown (L139) → Pay31_Popup_InsureApply — 급여 도메인(Pay31) 범위 밖 */}
+              {/* [E4] anchor2.MouseDown (L139) → Pay31_Popup_InsureApply.open(deductModel, 빈 콜백) */}
               <EditOutlined
-                style={{ cursor: 'pointer', color: '#aaa' }}
-                onClick={() => message.info('4대보험 신고정보는 급여 도메인에서 구현 예정입니다.')}
+                style={{ cursor: 'pointer', color: '#1677ff', fontSize: 20 }}
+                onClick={() => setInsurePersonId(deduct?.personId ?? null)}
               />
             </div>
           </div>
@@ -189,6 +192,7 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
         deductId={deduct?.deductId}
         onClose={() => setAddDeductOpen(false)}
       />
+      <Pay31_Popup_InsureApply personId={insurePersonId} onClose={() => setInsurePersonId(null)} />
     </div>
   );
 };

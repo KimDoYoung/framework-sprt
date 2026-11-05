@@ -72,6 +72,18 @@
          ORDER BY emp01_emp_no
     </select>
 
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.selectByPersonId L47 — 4대보험 신고정보 창(Pay31_Popup_InsureApply). 회사는 로그인 회사 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsureApplyRes">
+        SELECT <include refid="insureApplyColumns"/>,
+               NULL::numeric                                                             AS insure_year_pay
+          FROM pay31_insure_apply
+               INNER JOIN emp01_person ON emp01_person_id = pay31_person_id
+         WHERE pay31_company_id = #{companyId}
+           AND pay31_person_id = #{personId}
+           AND pay31_insure_apply_cd between '1' and '3'
+         ORDER BY pay31_apply_date, pay31_insure_cd, pay31_insure_apply_cd
+    </select>
+
     <!-- AS-IS(IDMS-IC) pay31_insure_apply.selectById L22 — 회사 조건은 TOBE 추가 -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsureApplyRes">
         SELECT <include refid="insureApplyColumns"/>,
@@ -99,11 +111,12 @@
                 CASE WHEN #{req.npsInitPayYn,jdbcType=BOOLEAN} IS NULL THEN NULL ELSE #{req.npsInitPayYn,jdbcType=BOOLEAN}::text END)
     </insert>
 
-    <!-- UpdateDataModel 동적 UPDATE — 탭 1·2·4 그리드가 바꾸는 열(+회사 조건) -->
+    <!-- UpdateDataModel 동적 UPDATE — 탭 1·2·4·신고정보 창 그리드가 바꾸는 열(+회사 조건). 신고구분은 신고정보 창만 바꾼다(안 보내면 그대로) -->
     <update id="update">
         UPDATE pay31_insure_apply
            SET pay31_person_id         = #{req.personId},
                pay31_insure_cd         = #{req.insureCode},
+               pay31_insure_apply_cd   = COALESCE(#{req.insureApplyCode}, pay31_insure_apply_cd),
                pay31_apply_date        = #{req.applyDate},
                pay31_init_date         = #{req.initDate},
                pay31_apply_month       = #{req.applyMonth},

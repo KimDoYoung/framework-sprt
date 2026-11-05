@@ -18,6 +18,9 @@ public interface PayInsureApplyMapper {
                                               @Param("year") String year, @Param("startDate") LocalDate startDate,
                                               @Param("closeDate") LocalDate closeDate);
 
+    /** AS-IS selectByPersonId — 그 사원의 자격취득·보수변동·착오정정(신고구분 1~3), 신고일·보험·신고구분 순 */
+    List<PayInsureApplyRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
     /** AS-IS selectById (UpdateDataModel 뒤) + 회사 조건 */
     PayInsureApplyRes selectById(@Param("companyId") Long companyId, @Param("insureApplyId") Long insureApplyId);
 

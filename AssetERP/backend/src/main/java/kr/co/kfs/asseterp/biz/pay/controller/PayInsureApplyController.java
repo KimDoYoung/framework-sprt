@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +49,13 @@ public class PayInsureApplyController {
                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate) {
         return ApiResponse.ok(service.search(principal, personId, insureCode, gubun, year, startDate, closeDate));
+    }
+
+    /** pay.Pay31_InsureApply.selectByPersonId — 4대보험 신고정보 창(급여공제정보 아이콘) */
+    @GetMapping("/persons/{personId}")
+    public ApiResponse<List<PayInsureApplyRes>> searchByPerson(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @PathVariable Long personId) {
+        return ApiResponse.ok(service.searchByPerson(principal, personId));
     }
 
     /** pay.Pay31_InsureApply.update */

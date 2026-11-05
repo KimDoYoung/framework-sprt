@@ -888,6 +888,12 @@ export const payApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS pay.Pay31_InsureApply.selectByPersonId — 4대보험 신고정보 창(급여공제정보 아이콘), 그 사원의 신고구분 1~3 */
+  searchInsureAppliesByPerson: async (personId: number): Promise<PayInsureApply[]> => {
+    const res = await apiClient.get<ApiResponse<PayInsureApply[]>>(`v1/pay/insure-applies/persons/${personId}`);
+    return res.data.data ?? [];
+  },
+
   /** AS-IS pay.Pay31_InsureApply.update — 저장한 행(요청 순서) */
   saveInsureApplies: async (rows: PayInsureApply[]): Promise<PayInsureApply[]> => {
     const body = rows.map(({ insureApplyId, personId, insureCode, insureApplyCode, applyDate, initDate, applyMonth, applyMonthPay, payCode, payDiv, note, npsInitPayYn }) => ({ insureApplyId, personId, insureCode, insureApplyCode, applyDate, initDate, applyMonth, applyMonthPay, payCode, payDiv, note, npsInitPayYn }));

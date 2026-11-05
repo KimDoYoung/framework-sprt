@@ -62,8 +62,13 @@ public class PayInsureApplyService {
         return mapper.selectByCompanyId(user.getCompanyId(), personId, insureCode, insureApplyGubun, year, startDate, closeDate);
     }
 
+    /** 4대보험 신고정보 창(Pay31_Popup_InsureApply) retrieve() — AS-IS selectByPersonId L35. 회사는 로그인 회사(원본은 공제 모델의 회사) */
+    public List<PayInsureApplyRes> searchByPerson(UserPrincipal user, Long personId) {
+        return mapper.selectByPersonId(user.getCompanyId(), personId);
+    }
+
     /**
-     * 탭 1·2·4 [저장] — AS-IS pay.Pay31_InsureApply.update(UpdateDataModel). 화면이 보낸 변경 행을 요청 순서대로 저장하고 다시 읽어 돌려준다.
+     * 탭 1·2·4·신고정보 창 [저장] — AS-IS pay.Pay31_InsureApply.update(UpdateDataModel). 화면이 보낸 변경 행을 요청 순서대로 저장하고 다시 읽어 돌려준다.
      * 사원이 로그인 회사 소속인지는 TOBE가 더 본다
      */
     @Transactional

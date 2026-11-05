@@ -2,10 +2,11 @@
  * 기타정보 탭 (C01-2) — Emp00_Tab_TransInfo 아래 탭 2번째.
  * AS-IS: myApp/client/vi/emp/Emp02_TabPage_Others.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 선택한 사원의 emp02_others를 폼으로 보여 주고 저장한다(emp02_others.upsert). 사진(E1~E3)은 파일 공통(B10) 뒤.
+ * 주민번호는 원본처럼 마스킹 칸 + 수정 아이콘 → `Emp02_Edit_CtzNo`(13-누락대장 4-3, 사용자 결정 2026-11-05)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Space, Typography } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { EditOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -13,6 +14,7 @@ import { Others } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
+import { Emp02_Edit_CtzNo } from './Emp02_Edit_CtzNo';
 
 /** AS-IS Emp02_OthersModel.getKorAge() L243-253: 올해 - 생년 + 1 */
 const getKorAge = (b: Dayjs | null) => (b ? String(dayjs().year() - b.year() + 1) : '');
@@ -27,6 +29,13 @@ const getAge = (b: Dayjs | null) => {
 };
 
 const MSG_CTZ = '주민등록번호를 형식에 맞게 입력하세요.';
+
+/** setMaskCtzNo() L328-350: '-'를 뺀 값이 7자리 이상이면 "앞6자리-뒷첫자리XXXXXX", 아니면 빈 칸 */
+const setMaskCtzNo = (ctz?: string | null) => {
+  if (!ctz) return '';
+  const v = ctz.replaceAll('-', '');
+  return v.length >= 7 ? `${v.substring(0, 6)}-${v.substring(6, 7)}XXXXXX` : '';
+};
 
 /**
  * autodecCtzNo() L302-346: 주민번호('-' 뺀 13자리)로 생년월일·성별. 형식이 아니면 null
@@ -57,6 +66,7 @@ const FormRow: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
 
 export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowChanged }) => {
   const [f, setF] = useState<Others | null>(null);
+  const [ctzEditOpen, setCtzEditOpen] = useState(false);
   const set = <K extends keyof Others>(k: K, v: Others[K]) => setF(prev => (prev ? { ...prev, [k]: v } : prev));
   const birthday = f?.birthday ? dayjs(f.birthday) : null;
 
@@ -119,7 +129,15 @@ export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowCh
             <Field label="주소" width={550}>{text('zipAddress')}</Field>
           </FormRow>
           <FormRow>
-            <Field label="주민번호">{text('decCtzNo')}</Field>
+            <Field label="주민번호">
+              {/* L278-283: 마스킹 칸(읽기 전용·비활성) + 수정 아이콘 25×25 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Input value={setMaskCtzNo(f?.decCtzNo)} disabled />
+                {/* [E10] anchorHire.MouseDown (L261) → Emp02_Edit_CtzNo.edit(decCtzNo, 결과를 decCtzNo에 넣고 setMaskCtzNo()) */}
+                <EditOutlined style={{ fontSize: 25, color: disabled ? '#bbb' : '#1677ff', cursor: disabled ? 'default' : 'pointer' }}
+                  onClick={() => { if (!disabled) setCtzEditOpen(true); }} />
+              </div>
+            </Field>
             <Field label="나이(만)"><Input value={getAge(birthday)} placeholder="생년월일 미입력" disabled /></Field>
             <Field label="상세" width={550}>{text('zipDetail')}</Field>
           </FormRow>
@@ -147,6 +165,9 @@ export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowCh
       <div style={{ textAlign: 'center', padding: 8 }}>
         <Button type="save" onClick={update} disabled={disabled}>저장</Button>
       </div>
+      {ctzEditOpen && (
+        <Emp02_Edit_CtzNo ctzNo={f?.decCtzNo} onResult={v => set('decCtzNo', v)} onClose={() => setCtzEditOpen(false)} />
+      )}
     </div>
   );
 };
