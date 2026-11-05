@@ -19,7 +19,7 @@ const gb = gbFor<Company>();
 /** AS-IS buildGrid() L109-117 (setChecked SINGLE) */
 const buildGrid = () => [
   gb.text('locNm', 100, '고객코드'),  // L113
-  gb.text('companyNm', 300, '고객명'),  // L114
+  gb.text('companyNm', 220, '고객명'),  // L114
 ];
 
 interface Props {
@@ -74,7 +74,7 @@ export const Sys01_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult, sea
       maskClosable={false}
       onCancel={cancel}
       footer={
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center'  }}>
           <Space>
             {/* [E4] oKButton[확인].Select (L94) → confirm() */}
             <Button type="save" onClick={confirm}>확인</Button>

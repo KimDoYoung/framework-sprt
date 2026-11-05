@@ -23,7 +23,7 @@ const gb = gbFor<AddTitleLogin>();
 
 /** AS-IS buildGrid() L119-130 (setChecked SINGLE) */
 const columns = [
-  gb.booleanYn2('mainTitleYn', 50, '본업무'),      // L123
+  gb.booleanYn2('mainTitleYn', 70, '본업무'),      // L123
   gb.textArea('orgFullName', 250, '부서명'),        // L124
   gb.textCenter('titleName', 110, '직책'),          // L125
   gb.longCenter('outstandingCnt', 100, '미결함'),   // L126
@@ -109,7 +109,7 @@ export const Emp04_Lookup_AddTitleList: React.FC<Props> = ({ open, mode = 'open'
     <LookupModal
       open={open}
       title={isLogin ? '로그인 선택' : '겸직전환'}
-      width={800}
+      width={770}
       closable={false}
       keyboard={false}
       maskClosable={false}

@@ -290,8 +290,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
         {/* AS-IS 안내 문구 L290-295 (chromeDesc·loginDesc·memoDesc·alarmDesc) */}
         <div style={{ marginTop: 8 }}>
           <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
-            ※ 본 시스템은 <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">CHROME</a>에 최적화 되어 있습니다.
-            <br />※ Login ID는 사원번호(예:000)를 사용 바랍니다.
+            ※ Login ID는 사원번호(예:000)를 사용 바랍니다.
             <br />※ 신규사용자 및 비밀번호 초기화를 진행한 사용자는 Login ID만 입력 후 [로그인] 버튼을 클릭바랍니다.
             <br />※ 매일 20시~익일 8시까지 시스템 점검이 진행되며, 서비스 이용이 제한될 수 있습니다.
           </Paragraph>
