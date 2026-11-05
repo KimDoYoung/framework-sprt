@@ -10,6 +10,10 @@ import { Mkt01_Tab_TargetCompany } from './mkt/Mkt01_Tab_TargetCompany';
 import { Mkt03_Tab_HistoryManager } from './mkt/Mkt03_Tab_HistoryManager';
 import { Bbs10_Tab_BizShare } from './bbs/Bbs10_Tab_BizShare';
 import { Bbs30_Tab_ClassTree } from './bbs/Bbs30_Tab_ClassTree';
+import { Bbs01_Tab_Board } from './bbs/Bbs01_Tab_Board';
+import { Bbs01_Tab_BoardManager } from './bbs/Bbs01_Tab_BoardManager';
+import { Apr17_Tab_CorpDoc } from './apr/Apr17_Tab_CorpDoc';
+import { Apr17_Tab_CorpDocApp } from './apr/Apr17_Tab_CorpDocApp';
 import { Bbs11_Tab_Application } from './bbs/Bbs11_Tab_Application';
 import { Bbs11_Tab_ApplicationMng } from './bbs/Bbs11_Tab_ApplicationMng';
 import { Bbs20_Tab_FloralRequestMng } from './bbs/Bbs20_Tab_FloralRequestMng';
@@ -447,6 +451,10 @@ export const SCREENS: Record<string, React.FC> = {
   Bbs02_Tab_NoticeViewLaw, // H01 (+ Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File)
   Bbs10_Tab_BizShare, // Z07 (+ Bbs10_Edit_BizShare)
   Bbs30_Tab_ClassTree, // Z13 (+ Bbs31_Grid_Content·Lookup_Content·Edit_Content, Bbs32_TapPage_Comment·Lookup_FileList, Bbs30_Lookup_ClassTree·ParentTree, Bbs33_Lookup_Role)
+  Bbs01_Tab_Board, // U2-01 (+ Bbs01_Edit_Board) — AS-IS 메뉴 없음
+  Bbs01_Tab_BoardManager, // U2-01 (+ Bbs01_Edit_Board) — AS-IS 메뉴 없음
+  Apr17_Tab_CorpDoc, // U2-02 [1507] 구)법인서류 매수관리 (+ Apr17_Lookup_CorpDoc·Apr18_Lookup_RelateAppr)
+  Apr17_Tab_CorpDocApp, // U2-02 [1510] 구)법인서류 및 날인 신청 (+ Apr19_Grid_RelateStamp·Apr10_Lookup_Stamp·Apr18_Lookup_RelateAppr)
   Bbs11_Tab_Application, // Y13 (+ Bbs11_Edit_Application)
   Bbs11_Tab_ApplicationMng, // T22 (+ Bbs12_Lookup_ApplicationMng)
   Bbs20_Tab_FloralRequest, // Y12 (+ Bbs20_Edit_FloralRequest 등록·수정·Bbs20_Lookup_OccasionsOption·Mkt01_Lookup_Select)

@@ -1240,3 +1240,43 @@ export interface AprCorpDocRelate {
   regEmpName: string | null;
   statusName: string | null;
 }
+
+/** AS-IS Apr17_CorpDocModel (apr17_corp_doc.selectByCorpRegDate·selectByAppDate·selectById, U2-02) — 법인서류 매수관리·신청 한 줄. apprCntStr = "n 건", stampDateYn = 날인일자가 있는 인감이 있음 */
+export interface AprCorpDocRow {
+  corpDocId: number;
+  callDate: string | null;
+  regDate: string | null;
+  stampCertIssueCnt: number | null;
+  stampCertCallCnt: number | null;
+  stampCertUseCnt: number | null;
+  corpRegIssueCnt: number | null;
+  corpRegCallCnt: number | null;
+  corpRegUseCnt: number | null;
+  provideCo: string | null;
+  purpose: string | null;
+  requester: string | null;
+  note: string | null;
+  callEmpName: string | null;
+  apprCntStr: string | null;
+  stampDateYn: boolean | null;
+}
+
+/** AS-IS apr17_corp_doc.selectByRegDate (U2-02) — 법인서류 합계 한 줄 */
+export interface AprCorpDocTotal {
+  id: number;
+  typeName: string;
+  issueSum: number;
+  useSum: number;
+  remain: number;
+}
+
+/** AS-IS Apr19_RelateStampModel (apr19_relate_stamp.selectByCorpDocId, U2-02) — 법인서류에 붙은 인감날인 한 줄 */
+export interface AprRelateStamp {
+  relateStampId: number;
+  corpDocId: number | null;
+  stampId: number | null;
+  stampName: string | null;
+  stampCnt: number | null;
+  outYn: boolean | null;
+  stampDate: string | null;
+}

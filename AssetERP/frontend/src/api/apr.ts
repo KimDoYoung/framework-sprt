@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList, AprCorpDoc, AprCorpDocRelate } from '../types/apr';
+import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList, AprCorpDoc, AprCorpDocRelate, AprCorpDocRow, AprCorpDocTotal, AprRelateStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -1048,5 +1048,86 @@ export const aprCorpDocApi = {
   /** AS-IS apr.Apr18_RelateCorpDoc.delete */
   deleteRelates: async (ids: number[]): Promise<void> => {
     await apiClient.delete<ApiResponse<void>>('v1/apr/corp-docs/relates', { data: ids });
+  },
+};
+
+/** 법인서류 매수관리(Apr17_Tab_CorpDoc)·법인서류 및 날인 신청(Apr17_Tab_CorpDocApp)·인감날인(Apr19_Grid_RelateStamp) — U2-02 */
+export const aprCorpDocManageApi = {
+  /** AS-IS apr.Apr17_CorpDoc.selectByCorpRegDate */
+  searchRegistered: async (startDate: string, closeDate: string): Promise<AprCorpDocRow[]> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDocRow[]>>('v1/apr/corp-docs/registered', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.selectByRegDate */
+  searchTotals: async (): Promise<AprCorpDocTotal[]> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDocTotal[]>>('v1/apr/corp-docs/totals');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.selectById */
+  get: async (corpDocId: number): Promise<AprCorpDocRow> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDocRow>>(`v1/apr/corp-docs/${corpDocId}`);
+    return res.data.data as AprCorpDocRow;
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.update (법인서류 매수관리) — 저장한 줄을 요청 순서대로 돌려준다 */
+  saveRegistered: async (rows: AprCorpDocRow[]): Promise<AprCorpDocRow[]> => {
+    const res = await apiClient.put<ApiResponse<AprCorpDocRow[]>>('v1/apr/corp-docs/registered', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.regDelete + regDateUpdate(null) — 신청일 없는 줄은 지우고 나머지는 등록일만 비운다 */
+  deleteRegistered: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/corp-docs/registered', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdCorpDoc — 출력 그룹 ID */
+  rdPrint: async (startDate: string, closeDate: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/apr/corp-docs/registered/rd-print', null, { params: { startDate, closeDate } });
+    return res.data.data as string;
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.selectByAppDate */
+  searchApplications: async (startDate: string, closeDate: string, searchText: string, procResult: boolean): Promise<AprCorpDocRow[]> => {
+    const res = await apiClient.get<ApiResponse<AprCorpDocRow[]>>('v1/apr/corp-docs/applications', { params: { startDate, closeDate, searchText, procResult } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.update (신청 화면) */
+  saveApplications: async (rows: AprCorpDocRow[]): Promise<AprCorpDocRow[]> => {
+    const res = await apiClient.put<ApiResponse<AprCorpDocRow[]>>('v1/apr/corp-docs/applications', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.copyUpdate — 고른 줄을 복사한 새 신청 */
+  copyApplication: async (source: AprCorpDocRow): Promise<AprCorpDocRow> => {
+    const res = await apiClient.post<ApiResponse<AprCorpDocRow>>('v1/apr/corp-docs/applications/copy', source);
+    return res.data.data as AprCorpDocRow;
+  },
+
+  /** AS-IS apr.Apr17_CorpDoc.delete */
+  deleteApplications: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/corp-docs/applications', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr19_RelateStamp.selectByCorpDocId */
+  searchStamps: async (corpDocId: number): Promise<AprRelateStamp[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateStamp[]>>(`v1/apr/corp-docs/${corpDocId}/stamps`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr19_RelateStamp.update */
+  saveStamps: async (rows: AprRelateStamp[]): Promise<AprRelateStamp[]> => {
+    const res = await apiClient.put<ApiResponse<AprRelateStamp[]>>('v1/apr/corp-docs/stamps', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr19_RelateStamp.delete */
+  deleteStamps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/corp-docs/stamps', { data: ids });
+    return res.data.data ?? 0;
   },
 };

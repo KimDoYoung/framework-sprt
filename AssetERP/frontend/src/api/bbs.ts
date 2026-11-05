@@ -520,6 +520,12 @@ export const bbsBoardApi = {
 
 /** 자유게시판(bbs01_board) 등록·수정 창 (Bbs01_Lookup_BoardInsert·BoardUpdate, EE81·EE82) — 게시판 화면용 bbsBoardApi와 다르다 */
 export const bbsFreeBoardApi = {
+  /** AS-IS bbs.Bbs01_Board.selectByCompanyId (Bbs01_Tab_Board·Bbs01_Tab_BoardManager 목록) — typeCode '%'(전체)·제목 일부 */
+  search: async (typeCode: string, title: string): Promise<BbsBoard[]> => {
+    const res = await apiClient.get<ApiResponse<BbsBoard[]>>('v1/bbs/boards', { params: { typeCode, title } });
+    return res.data.data ?? [];
+  },
+
   /** 수정 창이 열 때 읽는 글 한 건 */
   get: async (boardId: number): Promise<BbsBoard> => {
     const res = await apiClient.get<ApiResponse<BbsBoard>>(`v1/bbs/boards/${boardId}`);

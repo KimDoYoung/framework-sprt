@@ -1,0 +1,11 @@
+{
+  "id": "U2-02",
+  "screen": "Apr17_Tab_CorpDoc / Apr17_Tab_CorpDocApp",
+  "menuNo": "1507,1510",
+  "accounts": ["kfstest/admin"],
+  "steps": [
+    "1507 열기 → 합계 2줄·그리드 조회 → [등록] 빈 행 → 저장 → 삭제",
+    "1507 [출력/다운로드] → RD 시뮬레이터 mrd Apr17_Rd_CorpDoc 확인",
+    "1510 열기 → 신청 행 선택 → 오른쪽 인감날인 등록/저장/삭제 → [등록(복사)]"
+  ]
+}

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr17_corp_doc.xml · apr19_relate_stamp.xml + UpdateDataModel(apr17_corp_doc·apr19_relate_stamp) — U2-02 Apr17_Tab_CorpDoc · Apr17_Tab_CorpDocApp -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprCorpDocManageMapper">
+
+    <sql id="rowColumns">
+        a.apr17_corp_doc_id             AS corp_doc_id
+      , a.apr17_call_date               AS call_date
+      , a.apr17_reg_date                AS reg_date
+      , a.apr17_stamp_cert_issue_cnt    AS stamp_cert_issue_cnt
+      , a.apr17_stamp_cert_call_cnt     AS stamp_cert_call_cnt
+      , a.apr17_stamp_cert_use_cnt      AS stamp_cert_use_cnt
+      , a.apr17_corp_reg_issue_cnt      AS corp_reg_issue_cnt
+      , a.apr17_corp_reg_call_cnt       AS corp_reg_call_cnt
+      , a.apr17_corp_reg_use_cnt        AS corp_reg_use_cnt
+      , a.apr17_provide_co              AS provide_co
+      , a.apr17_purpose                 AS purpose
+      , a.apr17_requester               AS requester
+      , a.apr17_note                    AS note
+      , f_emp_kor_nm(a.apr17_call_emp_id)   AS call_emp_name
+      , ( SELECT count(*)
+            FROM apr18_relate_corp_doc
+                 INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+           WHERE apr18_corp_doc_id = a.apr17_corp_doc_id ) || ' 건'   AS appr_cnt_str
+      , EXISTS ( SELECT 1
+                   FROM apr19_relate_stamp
+                  WHERE apr19_corp_doc_id = a.apr17_corp_doc_id
+                    AND apr19_stamp_date IS NOT NULL )                AS stamp_date_yn
+    </sql>
+
+    <!-- AS-IS apr17_corp_doc.selectByCorpRegDate -->
+    <select id="selectRegistered" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocRowRes">
+        SELECT <include refid="rowColumns"/>
+          FROM apr17_corp_doc a
+         WHERE a.apr17_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND a.apr17_company_id = #{companyId}
+         ORDER BY a.apr17_reg_date DESC
+    </select>
+
+    <!-- AS-IS apr17_corp_doc.selectByRegDate (조건은 회사뿐) -->
+    <select id="selectTotals" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocTotalRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY type_nm DESC) AS id
+             , type_nm                                  AS type_name
+             , issue_sum
+             , use_sum
+             , remain
+          FROM (
+                SELECT '법인인감증명서'                                      AS type_nm
+                     , COALESCE(SUM(apr17_stamp_cert_issue_cnt), 0)            AS issue_sum
+                     , COALESCE(SUM(apr17_stamp_cert_use_cnt), 0)              AS use_sum
+                     , COALESCE(SUM(apr17_stamp_cert_issue_cnt), 0) - COALESCE(SUM(apr17_stamp_cert_use_cnt), 0) AS remain
+                  FROM apr17_corp_doc
+                 WHERE apr17_company_id = #{companyId}
+                 UNION ALL
+                SELECT '법인등기부등본'                                      AS type_nm
+                     , COALESCE(SUM(apr17_corp_reg_issue_cnt), 0)              AS issue_sum
+                     , COALESCE(SUM(apr17_corp_reg_use_cnt), 0)                AS use_sum
+                     , COALESCE(SUM(apr17_corp_reg_issue_cnt), 0) - COALESCE(SUM(apr17_corp_reg_use_cnt), 0) AS remain
+                  FROM apr17_corp_doc
+                 WHERE apr17_company_id = #{companyId}
+               ) t
+         ORDER BY type_nm DESC
+    </select>
+
+    <!-- AS-IS apr17_corp_doc.selectByAppDate — procResult(미처리만 조회)이면 등록일이 없는 건만 -->
+    <select id="selectApplications" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocRowRes">
+        SELECT <include refid="rowColumns"/>
+          FROM apr17_corp_doc a
+         WHERE a.apr17_call_date BETWEEN #{startDate} AND #{closeDate}
+           AND a.apr17_company_id = #{companyId}
+           AND a.apr17_call_emp_id = #{personId}
+           AND UPPER(CONCAT(a.apr17_provide_co, a.apr17_purpose)) LIKE UPPER(#{searchText})
+        <if test="procResult">
+           AND a.apr17_reg_date IS NULL
+        </if>
+         ORDER BY a.apr17_call_date DESC
+    </select>
+
+    <!-- AS-IS apr17_corp_doc.selectById — 로그인 회사 것만(TOBE에서 더함) -->
+    <select id="selectRowById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpDocRowRes">
+        SELECT <include refid="rowColumns"/>
+          FROM apr17_corp_doc a
+         WHERE a.apr17_corp_doc_id = #{corpDocId}
+           AND a.apr17_company_id  = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 법인서류 매수관리 저장: 화면이 바꾸는 열(등록일·발급/신청/사용 매수·제공처·목적·요청자·비고) -->
+    <update id="updateRegistered">
+        UPDATE apr17_corp_doc
+           SET apr17_reg_date             = #{req.regDate}
+             , apr17_stamp_cert_issue_cnt = #{req.stampCertIssueCnt}
+             , apr17_stamp_cert_call_cnt  = #{req.stampCertCallCnt}
+             , apr17_stamp_cert_use_cnt   = #{req.stampCertUseCnt}
+             , apr17_corp_reg_issue_cnt   = #{req.corpRegIssueCnt}
+             , apr17_corp_reg_call_cnt    = #{req.corpRegCallCnt}
+             , apr17_corp_reg_use_cnt     = #{req.corpRegUseCnt}
+             , apr17_provide_co           = #{req.provideCo}
+             , apr17_purpose              = #{req.purpose}
+             , apr17_requester            = #{req.requester}
+             , apr17_note                 = #{req.note}
+         WHERE apr17_corp_doc_id = #{req.corpDocId}
+           AND apr17_company_id  = #{companyId}
+    </update>
+
+    <insert id="insertRegistered">
+        INSERT INTO apr17_corp_doc ( apr17_corp_doc_id, apr17_company_id, apr17_reg_date
+                                   , apr17_stamp_cert_issue_cnt, apr17_stamp_cert_call_cnt, apr17_stamp_cert_use_cnt
+                                   , apr17_corp_reg_issue_cnt, apr17_corp_reg_call_cnt, apr17_corp_reg_use_cnt
+                                   , apr17_provide_co, apr17_purpose, apr17_requester, apr17_note )
+        VALUES ( #{req.corpDocId}, #{companyId}, #{req.regDate}
+               , #{req.stampCertIssueCnt}, #{req.stampCertCallCnt}, #{req.stampCertUseCnt}
+               , #{req.corpRegIssueCnt}, #{req.corpRegCallCnt}, #{req.corpRegUseCnt}
+               , #{req.provideCo}, #{req.purpose}, #{req.requester}, #{req.note} )
+    </insert>
+
+    <!-- 신청 화면 저장: 신청일자·제공처·목적·비고·요청자·신청매수 -->
+    <update id="updateApplication">
+        UPDATE apr17_corp_doc
+           SET apr17_call_date            = #{req.callDate}
+             , apr17_provide_co           = #{req.provideCo}
+             , apr17_purpose              = #{req.purpose}
+             , apr17_note                 = #{req.note}
+             , apr17_requester            = #{req.requester}
+             , apr17_stamp_cert_call_cnt  = #{req.stampCertCallCnt}
+             , apr17_corp_reg_call_cnt    = #{req.corpRegCallCnt}
+         WHERE apr17_corp_doc_id = #{req.corpDocId}
+           AND apr17_company_id  = #{companyId}
+    </update>
+
+    <insert id="insertApplication">
+        INSERT INTO apr17_corp_doc ( apr17_corp_doc_id, apr17_company_id, apr17_call_emp_id, apr17_call_date
+                                   , apr17_provide_co, apr17_purpose, apr17_note, apr17_requester
+                                   , apr17_stamp_cert_call_cnt, apr17_corp_reg_call_cnt )
+        VALUES ( #{req.corpDocId}, #{companyId}, #{callEmpId}, #{req.callDate}
+               , #{req.provideCo}, #{req.purpose}, #{req.note}, #{req.requester}
+               , #{req.stampCertCallCnt}, #{req.corpRegCallCnt} )
+    </insert>
+
+    <!-- AS-IS apr17_corp_doc.regDelete — 신청일이 없는 줄만 지운다(AS-IS는 화면이 신청일 없는 줄에만 호출) -->
+    <delete id="deleteRegistered">
+        DELETE FROM apr17_corp_doc
+         WHERE apr17_company_id = #{companyId}
+           AND apr17_call_date IS NULL
+           AND apr17_corp_doc_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS apr17_corp_doc.regDateUpdate (regDate = null) -->
+    <update id="clearRegDate">
+        UPDATE apr17_corp_doc
+           SET apr17_reg_date = NULL
+         WHERE apr17_company_id = #{companyId}
+           AND apr17_corp_doc_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <delete id="deleteApplications">
+        DELETE FROM apr17_corp_doc
+         WHERE apr17_company_id = #{companyId}
+           AND apr17_corp_doc_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <sql id="stampColumns">
+        s.apr19_relate_stamp_id                               AS relate_stamp_id
+      , s.apr19_corp_doc_id                                   AS corp_doc_id
+      , s.apr19_stamp_id                                      AS stamp_id
+      , ( SELECT apr10_stamp_nm FROM apr10_stamp WHERE apr10_stamp_id = s.apr19_stamp_id ) AS stamp_name
+      , s.apr19_stamp_cnt                                     AS stamp_cnt
+      , COALESCE(s.apr19_out_yn, 'false') = 'true'            AS out_yn
+      , s.apr19_stamp_date                                    AS stamp_date
+    </sql>
+
+    <!-- AS-IS apr19_relate_stamp.selectByCorpDocId — 로그인 회사의 법인서류 것만(TOBE에서 더함) -->
+    <select id="selectStamps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateStampRes">
+        SELECT <include refid="stampColumns"/>
+          FROM apr19_relate_stamp s
+               INNER JOIN apr17_corp_doc a ON a.apr17_corp_doc_id = s.apr19_corp_doc_id
+         WHERE s.apr19_corp_doc_id = #{corpDocId}
+           AND a.apr17_company_id  = #{companyId}
+    </select>
+
+    <select id="selectStampById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateStampRes">
+        SELECT <include refid="stampColumns"/>
+          FROM apr19_relate_stamp s
+               INNER JOIN apr17_corp_doc a ON a.apr17_corp_doc_id = s.apr19_corp_doc_id
+         WHERE s.apr19_relate_stamp_id = #{relateStampId}
+           AND a.apr17_company_id      = #{companyId}
+    </select>
+
+    <!-- 화면이 바꾸는 열: 인감·날인부수·반출 (반출 여부는 AS-IS가 'true'/'false' 글자로 저장) -->
+    <update id="updateStamp">
+        UPDATE apr19_relate_stamp
+           SET apr19_stamp_id  = #{req.stampId}
+             , apr19_stamp_cnt = #{req.stampCnt}
+             , apr19_out_yn    = CASE WHEN COALESCE(#{req.outYn,jdbcType=BOOLEAN}, false) THEN 'true' ELSE 'false' END
+         WHERE apr19_relate_stamp_id = #{req.relateStampId}
+           AND apr19_corp_doc_id IN ( SELECT apr17_corp_doc_id FROM apr17_corp_doc WHERE apr17_company_id = #{companyId} )
+    </update>
+
+    <insert id="insertStamp">
+        INSERT INTO apr19_relate_stamp ( apr19_relate_stamp_id, apr19_corp_doc_id, apr19_stamp_id, apr19_stamp_cnt, apr19_out_yn )
+        SELECT #{req.relateStampId}, #{req.corpDocId}, #{req.stampId}, #{req.stampCnt}, CASE WHEN COALESCE(#{req.outYn,jdbcType=BOOLEAN}, false) THEN 'true' ELSE 'false' END
+          FROM apr17_corp_doc
+         WHERE apr17_corp_doc_id = #{req.corpDocId}
+           AND apr17_company_id  = #{companyId}
+    </insert>
+
+    <delete id="deleteStamps">
+        DELETE FROM apr19_relate_stamp
+         WHERE apr19_corp_doc_id IN ( SELECT apr17_corp_doc_id FROM apr17_corp_doc WHERE apr17_company_id = #{companyId} )
+           AND apr19_relate_stamp_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS sys99_print.deleteByPersonId -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (Sys99_Print.insertRdCorpDoc L3087) — date01 등록일 · long01~06 법인인감증명서 발급/신청/사용, 법인등기부등본 발급/신청/사용 · string01~04 제공처/목적/요청자/비고 (빈 값은 0·빈 글자) -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+                                , sys99_date01, sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06
+                                , sys99_string01, sys99_string02, sys99_string03, sys99_string04 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.regDate}, COALESCE(#{row.stampCertIssueCnt}, 0), COALESCE(#{row.stampCertCallCnt}, 0), COALESCE(#{row.stampCertUseCnt}, 0)
+               , COALESCE(#{row.corpRegIssueCnt}, 0), COALESCE(#{row.corpRegCallCnt}, 0), COALESCE(#{row.corpRegUseCnt}, 0)
+               , COALESCE(#{row.provideCo}, ''), COALESCE(#{row.purpose}, ''), COALESCE(#{row.requester}, ''), COALESCE(#{row.note}, '') )
+    </insert>
+</mapper>

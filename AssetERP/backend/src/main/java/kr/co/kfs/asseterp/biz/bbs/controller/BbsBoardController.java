@@ -19,6 +19,14 @@ public class BbsBoardController {
 
     private final BbsBoardService service;
 
+    /** AS-IS bbs.Bbs01_Board.selectByCompanyId — 자유게시판 목록 (Bbs01_Tab_Board·Bbs01_Tab_BoardManager) */
+    @GetMapping
+    public ApiResponse<List<BbsBoardRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam(required = false) String typeCode,
+                                                 @RequestParam(required = false) String title) {
+        return ApiResponse.ok(service.search(principal, typeCode, title));
+    }
+
     /** 수정 창이 열 때 읽는 글 한 건 */
     @GetMapping("/{boardId}")
     public ApiResponse<BbsBoardRes> get(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long boardId) {

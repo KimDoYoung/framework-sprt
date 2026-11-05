@@ -20,6 +20,12 @@ public class BbsBoardService {
 
     private final BbsBoardMapper mapper;
 
+    /** AS-IS Bbs01_Tab_Board.retrieve → bbs.Bbs01_Board.selectByCompanyId(typeCode, title, companyId). 구분은 없으면 전체('%'), 제목은 %…% */
+    public List<BbsBoardRes> search(UserPrincipal user, String typeCode, String title) {
+        String type = (typeCode == null || typeCode.isBlank()) ? "%" : typeCode;
+        return mapper.selectList(user.getCompanyId(), type, "%" + (title == null ? "" : title) + "%");
+    }
+
     /** 수정 창을 열 때 읽는 글 (회사 것만) */
     public BbsBoardRes get(UserPrincipal user, Long boardId) {
         BbsBoardRes row = mapper.selectById(user.getCompanyId(), boardId);

@@ -15734,5 +15734,78 @@
     "note": "docs/변환/work/EE/EE44-작업기록.md",
     "history": [],
     "id": "EE44"
+  },
+  "Apr17_Tab_CorpDoc": {
+    "commit": "0ab0d1e40e6027469646dfc08558e5bf0c89f00e",
+    "commit_short": "0ab0d1e",
+    "branch": "ioc",
+    "commit_date": "2026-11-04",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr17_Lookup_CorpDoc.java": "f18c4ea2bd86da5fe6934654db5637f135dc28eb",
+      "application/src/main/java/myApp/client/vi/apr/Apr17_Tab_CorpDoc.java": "80ede46de60445d5cf648f123b3e8a6d1ecd66a1",
+      "application/src/main/java/myApp/client/vi/apr/Apr18_Lookup_RelateAppr.java": "642626e2ca56f0502d393eacdffd65529dfcc5e5",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr17_CorpDocModel.java": "c2724c36e835f1246bc6d72a24edae8005805dde",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr17_CorpDocModelProperties.java": "26446ab92133a6a5af52537253fc0b7ded565bf8",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModel.java": "c5c1e763e640654f93835b493c7c7a5edb0a6867",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModelProperties.java": "1a473c65cf123f2046bfb09dac75a533fd6d2b90",
+      "application/src/main/java/myApp/server/apr/Apr17_CorpDoc.java": "57ee8a1ca2c346ad2c2a37d4d4514e384f1963cb",
+      "application/src/main/java/myApp/server/apr/Apr18_RelateCorpDoc.java": "1f68dd18b3560fa54f9f0e4e65f34262eb45216b",
+      "application/src/main/java/myApp/server/apr/mapper/apr17_corp_doc.xml": "d66f74561432914a030af2b849f1b7b0ba786edb",
+      "application/src/main/java/myApp/server/apr/mapper/apr18_relate_corp_doc.xml": "1af53d4144ea52a529a00be06a2bd9be3daf633a",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "722656ceec20244c2a6d488821a96545fb1e755e",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr05_Lookup_LoadDoc"
+    ],
+    "recorded_at": "2026-11-05T09:46:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/U/U2-02-작업기록.md",
+    "history": [],
+    "id": "U2-02"
+  },
+  "Apr17_Tab_CorpDocApp": {
+    "commit": "0ab0d1e40e6027469646dfc08558e5bf0c89f00e",
+    "commit_short": "0ab0d1e",
+    "branch": "ioc",
+    "commit_date": "2026-11-04",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr17_Tab_CorpDocApp.java": "a92cc32db75ab601f918066e5a493246d5b93852",
+      "application/src/main/java/myApp/client/vi/apr/Apr18_Lookup_RelateAppr.java": "642626e2ca56f0502d393eacdffd65529dfcc5e5",
+      "application/src/main/java/myApp/client/vi/apr/Apr19_Grid_RelateStamp.java": "ad52740e439df557402fd84bc7f9d0b408b079cb",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr17_CorpDocModel.java": "c2724c36e835f1246bc6d72a24edae8005805dde",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr17_CorpDocModelProperties.java": "26446ab92133a6a5af52537253fc0b7ded565bf8",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModel.java": "c5c1e763e640654f93835b493c7c7a5edb0a6867",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModelProperties.java": "1a473c65cf123f2046bfb09dac75a533fd6d2b90",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModel.java": "2a3f02899eec9f2844882ce79804dbc571d76dbd",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModelProperties.java": "3125eefe75cb9325afb9f24bab2f8946374e3fbb",
+      "application/src/main/java/myApp/server/apr/Apr17_CorpDoc.java": "57ee8a1ca2c346ad2c2a37d4d4514e384f1963cb",
+      "application/src/main/java/myApp/server/apr/Apr18_RelateCorpDoc.java": "1f68dd18b3560fa54f9f0e4e65f34262eb45216b",
+      "application/src/main/java/myApp/server/apr/Apr19_RelateStamp.java": "edde2707bf886ccee1686450cc812bc7804a067d",
+      "application/src/main/java/myApp/server/apr/mapper/apr17_corp_doc.xml": "d66f74561432914a030af2b849f1b7b0ba786edb",
+      "application/src/main/java/myApp/server/apr/mapper/apr18_relate_corp_doc.xml": "1af53d4144ea52a529a00be06a2bd9be3daf633a",
+      "application/src/main/java/myApp/server/apr/mapper/apr19_relate_stamp.xml": "4813a75959151beb07f53df37c22e806351ab1fc",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr05_Lookup_LoadDoc",
+      "Apr10_Lookup_Stamp"
+    ],
+    "recorded_at": "2026-11-05T09:46:52+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/U/U2-02-작업기록.md",
+    "history": [],
+    "id": "U2-02"
   }
 }

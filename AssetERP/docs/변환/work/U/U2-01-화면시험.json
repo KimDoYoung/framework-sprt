@@ -1,0 +1,9 @@
+{
+  "id": "U2-01",
+  "screen": "Bbs01_Tab_Board / Bbs01_Tab_BoardManager",
+  "menuNo": null,
+  "accounts": ["kfstest/admin"],
+  "steps": [
+    "메뉴가 없어 열 방법이 없다 — 일괄 시험은 메뉴 등록 뒤"
+  ]
+}

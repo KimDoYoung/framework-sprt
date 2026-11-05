@@ -22,6 +22,26 @@
            AND a.bbs01_company_id = #{companyId}
     </select>
 
+    <!-- AS-IS(IDMS-IC) bbs01_board.selectByCompanyId L37 — emp00_trans_info 안쪽 조인·정렬 그대로 -->
+    <select id="selectList" resultType="kr.co.kfs.asseterp.biz.bbs.dto.BbsBoardRes">
+        SELECT a.bbs01_board_id                                                                       AS board_id
+             , a.bbs01_type_cd                                                                        AS type_code
+             , f_cdnm('BoardTypeCode', a.bbs01_type_cd, a.bbs01_company_id, a.bbs01_write_date)       AS type_name
+             , a.bbs01_title                                                                          AS title
+             , a.bbs01_content                                                                        AS content
+             , a.bbs01_write_user_id                                                                  AS write_user_id
+             , f_emp_kor_nm(f.emp00_person_id) || ' ' || f.emp00_pos_nm                               AS write_user_name
+             , a.bbs01_write_date::date                                                               AS write_date
+          FROM bbs01_board a
+             , emp00_trans_info f
+         WHERE f.emp00_person_id = a.bbs01_write_user_id
+           AND a.bbs01_write_date BETWEEN f.emp00_trans_date AND f.emp00_close_date
+           AND a.bbs01_title    LIKE #{title}
+           AND a.bbs01_type_cd  LIKE #{typeCode}
+           AND a.bbs01_company_id = #{companyId}
+         ORDER BY a.bbs01_write_date DESC
+    </select>
+
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()
     </select>
