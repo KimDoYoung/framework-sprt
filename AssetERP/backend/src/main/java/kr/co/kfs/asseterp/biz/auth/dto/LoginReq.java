@@ -7,6 +7,8 @@ package kr.co.kfs.asseterp.biz.auth.dto;
 public record LoginReq(
         String username,
         String password,
-        String companyCode
+        String companyCode,
+        /** 로그인 상태유지 (AS-IS autoLoginCBox). true면 브라우저를 닫아도 세션 수명 동안 로그인이 유지된다 */
+        Boolean rememberMe
 ) {
 }

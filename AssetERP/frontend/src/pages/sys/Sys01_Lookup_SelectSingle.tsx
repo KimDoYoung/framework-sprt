@@ -1,5 +1,5 @@
 /**
- * 고객사 선택 조회창 (A07) — Sys07_Tab_CompanyRoleMenu 회사명 트리거에서 연다.
+ * 고객사 선택 조회창 (A07) — Sys07_Tab_CompanyRoleMenu 회사명 트리거, LoginPage(admin 서브도메인) 회사 칸 트리거(AS-IS L222-241)에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
@@ -26,9 +26,11 @@ interface Props {
   open: boolean;
   /** AS-IS callback.execute(result): 확인이면 고른 회사, 취소면 null */
   onResult: (company: Company | null) => void;
+  /** 조회 대신 쓸 함수 — 로그인 전(LoginPage)에는 로그인이 필요한 sysApi 대신 공개 회사 목록으로 찾는다 */
+  search?: (companyName: string) => Promise<Company[]>;
 }
 
-export const Sys01_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult }) => {
+export const Sys01_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult, search }) => {
   const gridRef = useRef<AgGridReact<Company>>(null);
   const [korName, setKorName] = useState('');
   const [rows, setRows] = useState<Company[]>([]);
@@ -37,11 +39,11 @@ export const Sys01_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult }) =
   // retrieve() L119-129: 서비스 sys.Sys01_Company.selectByName(companyName, useYn = true) — 서버가 '%' + 이름 + '%'
   const retrieve = useCallback(async (companyName: string) => {
     try {
-      setRows(await sysApi.searchCompanies(companyName, true));
+      setRows(await (search ? search(companyName) : sysApi.searchCompanies(companyName, true)));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, []);
+  }, [search]);
 
   // open() L45-70: 원본은 열 때마다 새 창 → 입력을 비우고 바로 retrieve()
   useEffect(() => {

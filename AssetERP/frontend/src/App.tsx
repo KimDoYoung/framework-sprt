@@ -10,6 +10,10 @@ import { realtime } from './ws/stompClient';
 import { appSettingsStorage } from './utils/storage';
 import { sysSecondaryAuthApi } from './api/sys';
 import { Sys83_Lookup_TempPassword } from './pages/sys/Sys83_Lookup_TempPassword';
+import { Emp04_Lookup_AddTitleList } from './pages/emp/Emp04_Lookup_AddTitleList';
+import { empAddTitleApi } from './api/emp';
+import { LoginUserContext } from './hooks/useLoginUser';
+import { loginGates } from './utils/loginGates';
 
 /**
  * 2차 인증 문 (EE64, AS-IS LoginPage.checkExt L594-606): 회사가 2차 인증을 쓰면(회사 설정, 회사관리자 제외) 인증번호를 확인한 뒤에야 화면을 연다.
@@ -17,9 +21,7 @@ import { Sys83_Lookup_TempPassword } from './pages/sys/Sys83_Lookup_TempPassword
  * ※ AS-IS와 같게 화면에서만 막는다(서버가 API를 막지는 않는다).
  */
 const SecondaryAuthGate: React.FC<{ user: User; onLogout: () => void; children: React.ReactNode }> = ({ user, onLogout, children }) => {
-  const okKey = `secondaryAuthOk:${user.jti}`;
-  const read = () => { try { return sessionStorage.getItem(okKey) === '1'; } catch { return false; } };
-  const [state, setState] = useState<'checking' | 'need' | 'ok'>(read() ? 'ok' : 'checking');
+  const [state, setState] = useState<'checking' | 'need' | 'ok'>(loginGates.isPassed('secondaryAuth', user.jti) ? 'ok' : 'checking');
 
   useEffect(() => {
     if (state !== 'checking') return;
@@ -36,10 +38,56 @@ const SecondaryAuthGate: React.FC<{ user: User; onLogout: () => void; children: 
       {state === 'checking' && <Spin size="large" />}
       <Sys83_Lookup_TempPassword
         open={state === 'need'}
-        onVerified={() => { try { sessionStorage.setItem(okKey, '1'); } catch { /* 저장 못 해도 이번 접속은 연다 */ } setState('ok'); }}
+        onVerified={() => { loginGates.pass('secondaryAuth', user.jti); setState('ok'); }}
         onClose={async () => { try { await authApi.logout(); } finally { onLogout(); } }}
       />
     </div>
+  );
+};
+
+/**
+ * 로그인 선택 문 (AS-IS LoginPage.openFrame3 L741-766): 회사관리자가 아니면 emp.Emp04_AddTitle.getAddTitleList(본업무 + 유효한 겸직)를 읽어
+ * 1건이 아니면 '로그인 선택' 창(Emp04_Lookup_AddTitleList.login)을 띄운다. 닫기(X)가 없어 하나를 골라야 MainFrame이 열린다.
+ * 다른 사원(겸직)을 고르면 /auth/switch-title 로 새 토큰을 받고 그 사용자로 연다. 새로고침은 같은 로그인(jti) 안에서 다시 묻지 않는다.
+ */
+const AddTitleGate: React.FC<{ user: User; onSwitched: (u: User) => void; children: React.ReactNode }> = ({ user, onSwitched, children }) => {
+  const isManager = user.userId <= 0; // AS-IS LoginUser.getIsManager() — 회사관리자 (userId = -sys02_user_id)
+  const [state, setState] = useState<'checking' | 'need' | 'ok'>(
+    isManager || loginGates.isPassed('addTitle', user.jti) ? 'ok' : 'checking');
+
+  useEffect(() => {
+    if (state !== 'checking') return;
+    let alive = true;
+    empAddTitleApi.getLoginList()
+      .then(rows => {
+        if (!alive) return;
+        if (rows.length === 1) { loginGates.pass('addTitle', user.jti); setState('ok'); } // result.getStatus() == 1 → openMainFrame()
+        else setState('need');
+      })
+      .catch(() => { if (alive) setState('ok'); }); // 목록을 못 읽으면 본업무로 연다
+    return () => { alive = false; };
+  }, [state, user.jti]);
+
+  if (state === 'ok') return <>{children}</>;
+  return (
+    <LoginUserContext.Provider value={user}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
+        {state === 'checking' && <Spin size="large" />}
+        <Emp04_Lookup_AddTitleList
+          open={state === 'need'}
+          mode="login"
+          onChanged={(switched) => {
+            if (switched) {
+              loginGates.passAll(switched.jti); // 2차 인증은 이미 지났다
+              onSwitched(switched);
+            } else {
+              loginGates.pass('addTitle', user.jti);
+              setState('ok');
+            }
+          }}
+        />
+      </div>
+    </LoginUserContext.Provider>
   );
 };
 
@@ -150,13 +198,15 @@ export const App: React.FC = () => {
     }}>
       {user ? (
         <SecondaryAuthGate user={user} onLogout={() => { setSessionNotice(null); setUser(null); }}>
-          <MainFrame
-            user={user}
-            onLogout={() => {
-              setSessionNotice(null);
-              setUser(null);
-            }}
-          />
+          <AddTitleGate key={user.jti} user={user} onSwitched={setUser}>
+            <MainFrame
+              user={user}
+              onLogout={() => {
+                setSessionNotice(null);
+                setUser(null);
+              }}
+            />
+          </AddTitleGate>
         </SecondaryAuthGate>
       ) : (
         <LoginPage

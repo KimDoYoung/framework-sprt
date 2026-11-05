@@ -1,19 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Typography, Alert, Select, Spin, Modal, message } from 'antd';
-import { UserOutlined, LockOutlined, SafetyCertificateOutlined, BankOutlined } from '@ant-design/icons';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Card, Form, Input, Button, Typography, Alert, Spin, Modal, Checkbox } from 'antd';
+import { UserOutlined, LockOutlined, SafetyCertificateOutlined, BankOutlined, WarningOutlined, SearchOutlined } from '@ant-design/icons';
 import { authApi } from '../api/auth';
 import { errorMessage } from '../api/client';
 import { CompanyItem, TenantInfo, User } from '../types/auth';
 import { Sys25_Lookup_Password } from './sys/Sys25_Lookup_Password';
 import { Sys25_Lookup_Reset } from './sys/Sys25_Lookup_Reset';
+import { Sys01_Lookup_SelectSingle } from './sys/Sys01_Lookup_SelectSingle';
+import { Company } from '../types/sys';
 
 const { Title, Text, Paragraph } = Typography;
 
 interface LoginFormValues {
   companyCode?: string;
   username: string;
-  password: string;
+  password?: string;
+  rememberMe?: boolean;
 }
+
+/** 로그인 상태유지로 기억한 로그인 ID (AS-IS SessionCookies pc_save 의 loginId) */
+const REMEMBER_ID_KEY = 'asseterp_remember_login_id';
+const readRememberedId = (): string | null => { try { return localStorage.getItem(REMEMBER_ID_KEY); } catch { return null; } };
+const writeRememberedId = (id: string | null) => {
+  try { if (id) localStorage.setItem(REMEMBER_ID_KEY, id); else localStorage.removeItem(REMEMBER_ID_KEY); } catch { /* 기억 못 해도 로그인은 된다 */ }
+};
 
 export interface LoginNotice {
   type: 'warning' | 'error' | 'info';
@@ -39,6 +49,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
   // 비밀번호 변경 창 (EE59, AS-IS LoginPage.changePassword L790-795) · 비밀번호 재설정 창 (EE60, AS-IS resetPassword L797-800)
   const [pwdTarget, setPwdTarget] = useState<{ companyCode: string; loginId: string; statusType: 'init' | 'modi'; noExtension: boolean } | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  // admin 서브도메인 회사 칸 (AS-IS subDomain TriggerField L218-241): 누르면 고객사 조회창, 칸에는 "코드 (회사명)"
+  const [companyLookupOpen, setCompanyLookupOpen] = useState(false);
+  const [companyLabel, setCompanyLabel] = useState<string | null>(null);
+  /** 고객사 조회창의 조회 — 로그인 전이라 공개 회사 목록(/public/companies)에서 이름으로 거른다 (AS-IS selectByName '%이름%', 사용 중인 회사) */
+  const searchPublicCompanies = useCallback(async (name: string): Promise<Company[]> => {
+    const key = name.trim();
+    return companies
+      .filter(c => !key || c.companyName.includes(key))
+      .map((c): Company => ({ companyId: c.companyId, locNm: c.companyCode, companyNm: c.companyName }));
+  }, [companies]);
+  // AS-IS checkCapsLock() L250-270: Caps Lock이 켜져 있으면 안내
+  const [capsLock, setCapsLock] = useState(false);
+  const onKeyCaps = (e: React.KeyboardEvent) => setCapsLock(e.getModifierState?.('CapsLock') ?? false);
+  const remembered = readRememberedId();
 
   useEffect(() => {
     const loadTenant = async () => {
@@ -63,11 +87,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
     setLoading(true);
     setLoginError(null);
     try {
-      const res = await authApi.login(values.username, values.password, values.companyCode);
+      // AS-IS는 admin 서브도메인에서 "로그인 상태유지"를 감춘다(L114-137)
+      const rememberMe = !tenant?.admin && values.rememberMe === true;
+      const res = await authApi.login(values.username, values.password ?? '', values.companyCode, rememberMe);
       if (res.success && res.data) {
-        message.success(`환영합니다, ${res.data.name}님!`);
-        onClearNotice?.();
-        onLoginSuccess(res.data);
+        writeRememberedId(tenant?.admin ? readRememberedId() : rememberMe ? values.username : null);
+        const user = res.data;
+        const proceed = () => {
+          onClearNotice?.();
+          onLoginSuccess(user);
+        };
+        // AS-IS getServiceResult() L487-514: 경과 80~89일 → "N일 남았습니다. 지금 변경하시겠습니까?" 예 = 비밀번호 변경(modi), 아니오 = 그대로 로그인
+        if (user.passwordWarnDays != null) {
+          Modal.confirm({
+            title: '확인', width: 550, okText: '예', cancelText: '아니오',
+            content: `비밀번호를 변경해 주세요. ${user.passwordWarnDays}일 남았습니다. 지금 변경하시겠습니까?`,
+            onOk: async () => {
+              // AS-IS는 이 질문 뒤에야 세션을 만든다 → TOBE는 받은 세션을 닫고 비밀번호 변경 창을 연다
+              try { await authApi.logout(); } catch { /* 이미 끊겼어도 변경 창은 연다 */ }
+              form.setFieldValue('password', undefined);
+              setPwdTarget({ companyCode: companyCodeOf(values), loginId: values.username, statusType: 'modi', noExtension: false });
+            },
+            onCancel: proceed,
+          });
+        } else {
+          proceed();
+        }
       } else {
         setLoginError(res.message || '로그인에 실패했습니다.');
       }
@@ -75,8 +120,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
       const msg = errorMessage(err, '로그인 요청 중 오류가 발생했습니다.');
       setLoginError(msg);
       // AS-IS getServiceResult() L538-561: status 99 최초로그인/초기화 후 → init, 98 비밀번호 만료 → modi. 안내 확인 뒤 비밀번호 변경 창
-      if (err?.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
-        const statusType = msg.includes('설정되지 않') ? 'init' : 'modi';
+      const code = err?.response?.data?.code;
+      if (code === 'PASSWORD_INIT_REQUIRED' || code === 'PASSWORD_CHANGE_REQUIRED') {
+        const statusType = code === 'PASSWORD_INIT_REQUIRED' ? 'init' : 'modi';
         Modal.confirm({
           title: '확인', content: msg, okText: '예', cancelButtonProps: { style: { display: 'none' } }, width: 450,
           onOk: () => {
@@ -107,14 +153,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <SafetyCertificateOutlined style={{ fontSize: 44, color: '#1677ff', marginBottom: 8 }} />
-          <Title level={3} style={{ margin: 0 }}>AssetERP 보안 테스트</Title>
-          {tenantValid ? (
+          <Title level={3} style={{ margin: 0, letterSpacing: 6 }}>LOGIN</Title>
+          {tenantValid && (
             <Text strong style={{ fontSize: 15 }}>
               <BankOutlined style={{ marginRight: 6 }} />
               {tenant!.admin ? 'AssetERP 관리자 (한국펀드서비스)' : tenant!.companyName}
             </Text>
-          ) : (
-            <Text type="secondary">JWT · 쿠키 인증 · 중복 로그인 차단 프로토타입</Text>
           )}
         </div>
 
@@ -168,19 +212,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           layout="vertical"
           onFinish={handleSubmit}
           disabled={!tenantValid}
+          initialValues={{ username: remembered ?? undefined, rememberMe: remembered != null }}
         >
           {/* admin 서브도메인: 로그인할 회사 선택 (미선택 시 admin 회사 = KFS 관리자) */}
           {tenant?.admin && (
-            <Form.Item name="companyCode" label="회사">
-              <Select
-                size="large"
-                allowClear
-                showSearch
-                placeholder="admin (관리자)"
-                optionFilterProp="label"
-                options={companies.map(c => ({ value: c.companyCode, label: `${c.companyCode} (${c.companyName})` }))}
-              />
-            </Form.Item>
+            <>
+              <Form.Item name="companyCode" hidden><Input /></Form.Item>
+              <Form.Item label="회사">
+                {/* AS-IS subDomain: 직접 입력 못 함(setEditable(false)), 트리거를 누르면 Sys01_Lookup_SelectSingle */}
+                <Input
+                  size="large"
+                  readOnly
+                  value={companyLabel ?? undefined}
+                  placeholder="admin (관리자)"
+                  prefix={<BankOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
+                  suffix={<SearchOutlined />}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setCompanyLookupOpen(true)}
+                />
+              </Form.Item>
+            </>
           )}
 
           <Form.Item
@@ -190,22 +241,39 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           >
             <Input
               prefix={<UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
-              placeholder="사번 (예: 000) 또는 관리자 ID"
+              placeholder="로그인 ID"
               size="large"
+              autoFocus
+              onKeyDown={onKeyCaps}
+              onKeyUp={onKeyCaps}
             />
           </Form.Item>
 
           <Form.Item
             name="password"
             label="비밀번호"
-            rules={[{ required: true, message: '비밀번호를 입력해주세요.' }]}
           >
+            {/* AS-IS memoDesc L293: 신규 사용자·초기화 사용자는 ID만 넣고 [로그인] → 서버가 비밀번호 등록 창으로 보낸다 (그래서 필수 아님) */}
             <Input.Password
               prefix={<LockOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
               placeholder="비밀번호"
               size="large"
+              onKeyDown={onKeyCaps}
+              onKeyUp={onKeyCaps}
             />
           </Form.Item>
+          {capsLock && (
+            <Text type="warning" style={{ display: 'block', marginTop: -12, marginBottom: 12 }}>
+              <WarningOutlined /> Caps Lock이 켜져 있습니다
+            </Text>
+          )}
+
+          {/* AS-IS autoLoginCBox "로그인 상태유지" L289, L325 — admin 서브도메인에서는 감춘다 */}
+          {!tenant?.admin && (
+            <Form.Item name="rememberMe" valuePropName="checked" style={{ marginBottom: 0 }}>
+              <Checkbox>로그인 상태유지</Checkbox>
+            </Form.Item>
+          )}
 
           <Form.Item style={{ marginTop: 24 }}>
             <Button type="primary" htmlType="submit" size="large" block loading={loading}>
@@ -219,10 +287,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           <Button type="link" disabled={!tenantValid} onClick={() => setResetOpen(true)}>비밀번호 재설정</Button>
         </div>
 
-        <div style={{ marginTop: 8, textAlign: 'center' }}>
+        {/* AS-IS 안내 문구 L290-295 (chromeDesc·loginDesc·memoDesc·alarmDesc) */}
+        <div style={{ marginTop: 8 }}>
           <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
-            * 회사는 접속한 서브도메인(<Text code>{tenant?.companyCode ?? '-'}</Text>)으로 정해집니다.
-            <br />* 사원(emp01_person)을 먼저 찾고, 없으면 회사관리자(sys02_user)로 로그인합니다.
+            ※ 본 시스템은 <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">CHROME</a>에 최적화 되어 있습니다.
+            <br />※ Login ID는 사원번호(예:000)를 사용 바랍니다.
+            <br />※ 신규사용자 및 비밀번호 초기화를 진행한 사용자는 Login ID만 입력 후 [로그인] 버튼을 클릭바랍니다.
+            <br />※ 매일 20시~익일 8시까지 시스템 점검이 진행되며, 서비스 이용이 제한될 수 있습니다.
           </Paragraph>
         </div>
       </Card>
@@ -232,6 +303,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
         companyCode={companyCodeOf(form.getFieldsValue())}
         onVerified={empNo => setPwdTarget({ companyCode: companyCodeOf(form.getFieldsValue()), loginId: empNo, statusType: 'init', noExtension: true })}
         onClose={() => setResetOpen(false)}
+      />
+      {/* AS-IS L225-238: 고르면 "코드 (회사명)", 취소하면 "admin (관리자)"로 되돌린다 */}
+      <Sys01_Lookup_SelectSingle
+        open={companyLookupOpen}
+        search={searchPublicCompanies}
+        onResult={company => {
+          setCompanyLookupOpen(false);
+          if (company) {
+            form.setFieldValue('companyCode', company.locNm);
+            setCompanyLabel(`${company.locNm} (${company.companyNm})`);
+          } else {
+            form.setFieldValue('companyCode', undefined);
+            setCompanyLabel(null);
+          }
+        }}
       />
       <Sys25_Lookup_Password
         open={pwdTarget != null}

@@ -23,6 +23,8 @@ export interface User {
   accessTokenLifetime: number;
   /** 서버 설정 세션(Refresh Token) 전체 수명(ms) - jwt.refresh-token-expiration */
   refreshTokenLifetime: number;
+  /** 로그인 응답에만: 비밀번호 만료까지 남은 날 (AS-IS 경과 80~89일 경고). 경고가 없으면 null */
+  passwordWarnDays?: number | null;
 }
 
 /** 접속한 서브도메인의 회사 정보 (GET /api/public/tenant) */

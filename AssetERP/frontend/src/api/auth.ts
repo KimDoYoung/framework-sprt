@@ -3,8 +3,9 @@ import { ApiResponse, CompanyItem, TenantInfo, User } from '../types/auth';
 
 export const authApi = {
   /** companyCode는 admin 서브도메인에서 회사를 선택한 경우에만 사용된다 (그 외에는 서버가 호스트로 판정) */
-  login: async (username: string, password: string, companyCode?: string): Promise<ApiResponse<User>> => {
-    const res = await apiClient.post<ApiResponse<User>>('/auth/login', { username, password, companyCode });
+  /** rememberMe: 로그인 상태유지 (AS-IS autoLoginCBox) — 브라우저를 닫아도 세션 수명 동안 로그인 유지 */
+  login: async (username: string, password: string, companyCode?: string, rememberMe?: boolean): Promise<ApiResponse<User>> => {
+    const res = await apiClient.post<ApiResponse<User>>('/auth/login', { username, password, companyCode, rememberMe });
     return res.data;
   },
 

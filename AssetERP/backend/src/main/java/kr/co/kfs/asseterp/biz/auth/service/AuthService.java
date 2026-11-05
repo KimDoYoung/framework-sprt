@@ -14,6 +14,7 @@ import kr.co.kfs.asseterp.biz.auth.mapper.LoginHistoryMapper;
 import kr.co.kfs.asseterp.biz.company.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.company.mapper.CompanyMapper;
 import kr.co.kfs.asseterp.biz.user.dto.LoginAccount;
+import kr.co.kfs.asseterp.biz.user.dto.LoginPolicy;
 import kr.co.kfs.asseterp.biz.user.mapper.AccountMapper;
 import kr.co.kfs.asseterp.common.config.properties.AuthProperties;
 import kr.co.kfs.asseterp.common.config.properties.TenantProperties;
@@ -78,6 +79,20 @@ public class AuthService {
         String attempted = companyCode + ":" + req.username();
         log.info("로그인 시도: tenant={}, company={}, loginId={}", tenant.code(), companyCode, req.username());
 
+        // AS-IS LoginPage L189-203: 보안로그인 회사는 허용 공인 IP에서만 (AS-IS는 접속한 서브도메인 회사로 로그인 화면을 열 때 검사)
+        accountMapper.findLoginPolicy(tenant.code()).filter(LoginPolicy::isLoginSecure).ifPresent(p -> {
+            if (accountMapper.countAllowedIp(p.companyId(), clientIp) == 0) {
+                log.warn("허용되지 않은 IP 로그인 시도: tenant={}, ip={}", tenant.code(), clientIp);
+                auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, attempted, null, "허용되지 않은 IP " + clientIp);
+                throw new BusinessException(ErrorCode.IP_NOT_ALLOWED);
+            }
+        });
+        // AS-IS LoginPage.loginCheck L401-411 (emp.Emp03_Trans.LoginCheck): 접근 만료된 사원은 getLoginInfo 전에 막는다
+        if (accountMapper.countAccessExpired(companyCode, req.username()) > 0) {
+            auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, attempted, null, "접근 만료(emp03_expiry_date)");
+            throw new BusinessException(ErrorCode.ACCESS_EXPIRED);
+        }
+
         Optional<LoginAccount> employee = accountMapper.findEmployee(companyCode, req.username());
         if (employee.filter(a -> LoginAccount.TRANS_RETIRED.equals(a.transCode())).isPresent()) {
             auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, attempted, null, "퇴사자");
@@ -101,16 +116,26 @@ public class AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
-        // 비밀번호 미설정/초기화 (AS-IS 99): 비교할 비밀번호가 없다
+        // 비밀번호 미설정/초기화 (AS-IS 99): 비교할 비밀번호가 없다 → 비밀번호 변경 창 init
         if (account.password() == null) {
             loginHistoryService.record(account, LoginHistoryMapper.STATUS_PASSWORD_NOT_SET, clientIp, userAgent);
             auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, attempted, null, "비밀번호 미설정");
-            throw new BusinessException(ErrorCode.PASSWORD_CHANGE_REQUIRED,
+            throw new BusinessException(ErrorCode.PASSWORD_INIT_REQUIRED,
                     "비밀번호가 설정되지 않았거나 초기화되었습니다. 비밀번호를 등록한 뒤 로그인해주세요.");
         }
 
         // 요구사항 6: 평문 패스워드 비교 (DB에서 TO_DECRYPTS로 복호화한 값)
-        if (!passwordEncoder.matches(req.password(), account.password())) {
+        // AS-IS Sys02_User.getLoginInfo L107: 사원은 회사 비상 비밀번호(sys01_emgrcy_passwd)로도 들어올 수 있다
+        // AS-IS LoginPage L482-485: 비밀번호가 있는 사원이 ID만 넣었으면 "비밀번호를 입력해주세요" (실패 횟수는 세지 않는다)
+        if (!StringUtils.hasText(req.password())) {
+            throw new BusinessException(ErrorCode.LOGIN_FAILED, "비밀번호를 입력해주세요");
+        }
+        boolean emergency = account.isEmployee() && isEmergencyPassword(companyCode, req.password());
+        if (emergency) {
+            log.warn("회사 비상 비밀번호로 로그인: {}", attempted);
+            auditLogService.record(AuditEventType.LOGIN_SUCCESS, AuditResult.SUCCESS, attempted, null, "회사 비상 비밀번호 사용");
+        }
+        if (!emergency && !passwordEncoder.matches(req.password(), account.password())) {
             loginHistoryService.record(account, LoginHistoryMapper.STATUS_WRONG_PASSWORD, clientIp, userAgent);
             handlePasswordMismatch(account, attempted);
         }
@@ -125,6 +150,13 @@ public class AuthService {
         }
         loginLockService.resetFailures(account.sessionUserId());
 
+        // AS-IS Sys02_User.getLoginInfo L131-134: 경과 80~89일 → "비밀번호를 변경해 주세요. N일 남았습니다. 지금 변경하시겠습니까?"
+        Integer warnDays = null;
+        if (account.isEmployee() && account.passwordAgeDays() != null
+                && account.passwordAgeDays() >= authProperties.passwordExpireDays() - PASSWORD_WARN_BEFORE_DAYS) {
+            warnDays = authProperties.passwordExpireDays() - account.passwordAgeDays();
+        }
+
         // 고유 jti 생성 (요구사항 7, 8) - 새 jti로 Redis를 덮어써 기존 세션을 차단
         String jti = UUID.randomUUID().toString();
         String refreshId = UUID.randomUUID().toString();
@@ -138,7 +170,19 @@ public class AuthService {
         log.info("로그인 성공: userId={}, username={}, jti={}", account.sessionUserId(), attempted, jti);
         auditLogService.record(AuditEventType.LOGIN_SUCCESS, AuditResult.SUCCESS, attempted, null,
                 "tenant=" + tenant.code() + ", jti=" + jti);
-        return result;
+        return warnDays == null ? result
+                : new AuthResult(result.loginRes().withPasswordWarnDays(warnDays), result.accessToken(), result.refreshToken());
+    }
+
+    /** 만료 며칠 전부터 경고하는지 (AS-IS 90일 만료, 80일부터 경고) */
+    private static final int PASSWORD_WARN_BEFORE_DAYS = 10;
+
+    private boolean isEmergencyPassword(String companyCode, String password) {
+        return StringUtils.hasText(password) && accountMapper.findLoginPolicy(companyCode)
+                .map(LoginPolicy::emergencyPassword)
+                .filter(StringUtils::hasText)
+                .map(password::equals)
+                .orElse(false);
     }
 
     /**
@@ -396,7 +440,8 @@ public class AuthService {
                 accessTokenExpiresIn,
                 refreshTokenExpiresIn,
                 tokenProvider.getAccessTokenExpiration(),
-                tokenProvider.getRefreshTokenExpiration()
+                tokenProvider.getRefreshTokenExpiration(),
+                null
         );
     }
 }

@@ -36,6 +36,8 @@ import { attApi } from './api/att';
 import { Att02_Lookup_Commute } from './pages/att/Att02_Lookup_Commute';
 import { Emp00_Lookup_SendMessage } from './pages/emp/Emp00_Lookup_SendMessage';
 import { Emp04_Lookup_AddTitleList } from './pages/emp/Emp04_Lookup_AddTitleList';
+import { loginGates } from './utils/loginGates';
+import { UserManual } from './components/UserManual';
 import { Frm01_Lookup_CheckList } from './pages/frm/Frm01_Lookup_CheckList';
 import { MySetting } from './pages/frm/MySetting';
 import { frmApi } from './api/frm';
@@ -159,7 +161,6 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     await realtime.disconnect();
     try {
       await authApi.logout();
-      message.info('로그아웃되었습니다.');
     } catch (err) {
       console.error(err);
     } finally {
@@ -216,6 +217,8 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   const [checkListOpen, setCheckListOpen] = useState(false);
   // ── 기본설정(도움말) 창 (AS-IS MainFrame settingAnchor L746 → MySetting.open(), EE62·EE63) ──
   const [settingOpen, setSettingOpen] = useState(false);
+  // ── 온라인 도움말 창 (AS-IS MainFrame helpAnchor "?" L754-767 → user_manual.jsp) ──
+  const [helpOpen, setHelpOpen] = useState(false);
   const [alarmState, setAlarmState] = useState<'none' | 'normal' | 'twinkle'>('none');
   const hasMenu1128 = menus.some(m1 => m1.groups.some(g => g.items.some(i => i.menuNo === '1128')));
   const applyCount = useCallback((c: FrmNoticeCnt) => {
@@ -231,6 +234,15 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     const timer = window.setInterval(tick, 60000);
     return () => { alive = false; window.clearInterval(timer); };
   }, [user.userId, user.companyId, applyCount]);
+
+  // ── 실시간 접속 기록 (AS-IS LoginPage.openFrame2 L678-731 로그인 직후 + MainFrame update 타이머 L426-444 2분마다, 회사관리자 제외) ──
+  useEffect(() => {
+    if (user.userId < 0) return;
+    const tick = () => { frmApi.updateLoginRealTime().catch(() => undefined); };
+    tick();
+    const timer = window.setInterval(tick, 120000); // updateTime = 120000 (L380)
+    return () => window.clearInterval(timer);
+  }, [user.userId]);
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
@@ -642,13 +654,15 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           onOpenAddTitle={() => setAddTitleOpen(true)}
           onOpenCheckList={() => setCheckListOpen(true)}
           onOpenSetting={() => setSettingOpen(true)}
+          onOpenHelp={() => setHelpOpen(true)}
           alarmState={alarmState}
         />
         <MySetting open={settingOpen} isManager={user.userId < 0} onClose={() => setSettingOpen(false)} />
+        <UserManual open={helpOpen} menus={menus} onClose={() => setHelpOpen(false)} />
         <Frm01_Lookup_CheckList open={checkListOpen} hasMenu1128={hasMenu1128} onCount={applyCount} onClose={() => setCheckListOpen(false)} />
         {/* callback "change": AS-IS는 상단·MyPage·메뉴를 다시 만든다 → TOBE는 새 토큰 쿠키로 화면을 다시 연다 */}
         <Emp04_Lookup_AddTitleList open={addTitleOpen} onClose={() => setAddTitleOpen(false)}
-          onChanged={() => { setAddTitleOpen(false); window.setTimeout(() => window.location.reload(), 700); }} />
+          onChanged={(switched) => { if (switched) loginGates.passAll(switched.jti); setAddTitleOpen(false); window.setTimeout(() => window.location.reload(), 700); }} />
         <Emp00_Lookup_SendMessage open={sendMessageOpen} onClose={() => setSendMessageOpen(false)} />
         <Att02_Lookup_Commute open={commuteOpen} onClose={() => setCommuteOpen(false)} />
 

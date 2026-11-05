@@ -17,4 +17,32 @@ SELECT	sys28_login_real_time_id							AS login_real_time_id
    AND	sys28_login_time BETWEEN (f_sysdate() - interval '10 minute') AND (f_sysdate() + interval '10 minute')
 ]]>
     </select>
+
+    <!-- AS-IS sys28_login_real_time.selectByPersonId L23 — 같은 사원·IP의 접속 기록이 있는지 (updateIpAddress) -->
+    <select id="countByPersonIp" resultType="int">
+SELECT	COUNT(*)
+  FROM	sys28_login_real_time
+ WHERE	sys28_person_id = #{personId}
+   AND	sys28_ip_address LIKE #{ipAddress}
+    </select>
+
+    <!-- AS-IS sys28_login_real_time.updateInfo L39 -->
+    <update id="updateInfo">
+UPDATE	sys28_login_real_time
+   SET	sys28_login_time = f_sysdate()
+ WHERE	1=1
+   AND	sys28_person_id = #{personId}
+   AND	sys28_ip_address LIKE #{ipAddress}
+    </update>
+
+    <!-- AS-IS sys28_login_real_time.insertInfo L47 -->
+    <insert id="insertInfo">
+INSERT
+  INTO	sys28_login_real_time
+SELECT	f_create_seq()
+     ,	#{personId}
+     ,	f_sysdate()
+     ,	#{ipAddress}
+     ,	null
+    </insert>
 </mapper>

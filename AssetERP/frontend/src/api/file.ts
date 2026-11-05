@@ -99,6 +99,12 @@ export const fileApi = {
     }
   },
 
+  /** A-View 미리보기 주소 (AS-IS JsonProvider mode=AView → fileViewer_AView.jsp). 로컬 환경이면 서버가 "로컬환경에서는 미리보기를 지원하지 않습니다" */
+  getAViewUrl: async (fileId: number): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<{ viewUrl: string }>>(`v1/sys/files/${fileId}/aview`);
+    return res.data.data.viewUrl;
+  },
+
   /** 미리보기용: 파일 내용을 blob으로 받는다(저장하지 않음). 형식은 부르는 쪽이 확장자로 정한다 */
   fetchBlob: async (fileId: number): Promise<Blob> => {
     try {

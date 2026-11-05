@@ -23,5 +23,13 @@ public interface AccountMapper {
     /** 회사의 사원 목록 (비밀번호 제외) */
     List<LoginAccount> findEmployeesByCompany(@Param("companyId") Long companyId);
 
+    /** AS-IS emp03_trans.LoginCheck — 접근 만료된 최근 발령 수 */
+    int countAccessExpired(@Param("companyCode") String companyCode, @Param("loginId") String loginId);
+
+    Optional<kr.co.kfs.asseterp.biz.user.dto.LoginPolicy> findLoginPolicy(@Param("companyCode") String companyCode);
+
+    /** AS-IS sys29_login_secure.checkLoginSecure */
+    int countAllowedIp(@Param("companyId") Long companyId, @Param("ipAddress") String ipAddress);
+
     int updateEmpLockYn(@Param("personId") Long personId, @Param("lockYn") String lockYn);
 }

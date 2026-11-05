@@ -32,7 +32,8 @@ public class AuthController {
                                        HttpServletResponse response) {
         AuthResult result = authService.login(req, TenantFilter.current(request),
                 request.getRemoteAddr(), request.getHeader(HttpHeaders.USER_AGENT));
-        cookieManager.writeTokens(request, response, result.accessToken(), result.refreshToken());
+        cookieManager.writeLoginTokens(request, response, result.accessToken(), result.refreshToken(),
+                Boolean.TRUE.equals(req.rememberMe()));
         return ApiResponse.ok("로그인에 성공했습니다.", result.loginRes());
     }
 

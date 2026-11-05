@@ -22,6 +22,12 @@ public record LoginRes(
         long accessTokenExpiresIn,
         long refreshTokenExpiresIn,
         long accessTokenLifetime,
-        long refreshTokenLifetime
+        long refreshTokenLifetime,
+        /** 로그인 응답에만: 비밀번호 만료까지 남은 날 (AS-IS 경과 80~89일 "N일 남았습니다. 지금 변경하시겠습니까?"). 경고가 없으면 null */
+        Integer passwordWarnDays
 ) {
+    public LoginRes withPasswordWarnDays(Integer days) {
+        return new LoginRes(userId, username, loginId, name, companyId, companyCode, companyName, tenant, deptId, roles, jti,
+                accessTokenExpiresIn, refreshTokenExpiresIn, accessTokenLifetime, refreshTokenLifetime, days);
+    }
 }

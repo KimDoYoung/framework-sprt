@@ -101,6 +101,46 @@
         ORDER BY (p.emp01_lock_yn = 'true') DESC, p.emp01_emp_no
     </select>
 
+    <!--
+      AS-IS emp03_trans.LoginCheck (otherwise: 회사 코드 + 사번) — 최근 발령(퇴직 900은 그 전날까지)의 접근 만료일(emp03_expiry_date)이 지났으면 행이 나온다.
+      1건 이상이면 "해당 사원은 접근권한이 없습니다" (LoginPage.loginCheck L409)
+    -->
+    <select id="countAccessExpired" resultType="int">
+        SELECT COUNT(*)
+          FROM emp03_trans
+               INNER JOIN emp01_person  ON emp01_person_id  = emp03_person_id
+               INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+         WHERE sys01_loc_nm  LIKE #{companyCode}
+           AND emp01_emp_no  LIKE #{loginId}
+           AND emp03_trans_date = (
+                   SELECT MAX(e.emp03_trans_date)
+                     FROM emp03_trans e
+                    WHERE e.emp03_person_id = emp01_person_id
+                      AND (   (e.emp03_trans_cd  = '900' AND e.emp03_trans_date <![CDATA[ <  ]]> f_sysdate()::date)
+                           OR (e.emp03_trans_cd != '900' AND e.emp03_trans_date <![CDATA[ <= ]]> f_sysdate()::date))
+                    LIMIT 1
+               )
+           AND COALESCE(emp03_expiry_date, '2999-12-31'::date) <![CDATA[ < ]]> f_sysdate()::date
+    </select>
+
+    <!-- 로그인 정책 (AS-IS sys01_company.selectByCompanyCode 중 loginSecureYn, emgrcyPasswd) -->
+    <select id="findLoginPolicy" resultType="kr.co.kfs.asseterp.biz.user.dto.LoginPolicy">
+        SELECT sys01_company_id                         AS company_id,
+               COALESCE(sys01_login_secure_yn, 'false') AS login_secure_yn,
+               sys01_emgrcy_passwd                      AS emergency_password
+          FROM sys01_company
+         WHERE sys01_loc_nm = #{companyCode}
+    </select>
+
+    <!-- AS-IS sys29_login_secure.checkLoginSecure — 오늘 유효한 허용 공인 IP (AS-IS 그대로 컬럼 LIKE 접속 IP) -->
+    <select id="countAllowedIp" resultType="int">
+        SELECT COUNT(*)
+          FROM sys29_login_secure
+         WHERE sys29_company_id = #{companyId}
+           AND sys29_public_ip LIKE #{ipAddress}
+           AND f_sysdate()::date BETWEEN sys29_start_date AND sys29_close_date
+    </select>
+
     <!-- AS-IS emp01_person.updateLockYn -->
     <update id="updateEmpLockYn">
         UPDATE emp01_person

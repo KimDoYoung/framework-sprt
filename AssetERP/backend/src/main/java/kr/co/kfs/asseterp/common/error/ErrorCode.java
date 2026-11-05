@@ -22,6 +22,12 @@ public enum ErrorCode {
     TENANT_MISMATCH(HttpStatus.UNAUTHORIZED, "다른 회사(서브도메인)에서 발급된 인증 정보입니다. 다시 로그인해주세요."),
     PASSWORD_CHANGE_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호를 설정(변경)해야 합니다. 관리자에게 문의해주세요."),
     RETIRED_EMPLOYEE(HttpStatus.UNAUTHORIZED, "퇴사한 사원입니다. 관리자에게 문의해주세요."),
+    /** AS-IS status 99 (최초 로그인·비밀번호 초기화) → 비밀번호 변경 창 init */
+    PASSWORD_INIT_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호를 설정하여 주십시오."),
+    /** AS-IS LoginPage.loginCheck L409-411 (emp.Emp03_Trans.LoginCheck: 최근 발령의 emp03_expiry_date 지남) */
+    ACCESS_EXPIRED(HttpStatus.UNAUTHORIZED, "해당 사원은 접근권한이 없습니다"),
+    /** AS-IS LoginPage L189-203 (sys01_login_secure_yn 회사, sys29_login_secure 공인 IP 목록에 없음) */
+    IP_NOT_ALLOWED(HttpStatus.UNAUTHORIZED, "허용되지않은 접근입니다. 관리자에게 문의해주세요"),
 
     // 인가 (403)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),

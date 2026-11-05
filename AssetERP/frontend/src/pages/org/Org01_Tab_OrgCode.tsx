@@ -16,6 +16,7 @@ import { SingleGrid, gbFor } from '@/components/grid';
 import { useTreeGrid } from '@/hooks/useTreeGrid';
 import { Org01_Edit_OrgCode, OrgEditTarget } from './Org01_Edit_OrgCode';
 import { Org02_Lookup_OrgInfo, OrgLookupTarget } from './Org02_Lookup_OrgInfo';
+import { Org02_View_Chart } from './Org02_View_Chart';
 
 const gb = gbFor<OrgCode>();
 
@@ -108,9 +109,9 @@ export const Org01_Tab_OrgCode: React.FC = () => {
     setEditTarget({ parentModel, editModel: { parentCodeId: parentModel.codeId }, baseDate: base(), actionCode: 'insertData' });
   };
 
-  // [E3 생략] viewOrgChart[조직도보기].Select (L103) → viewOrgChart() L125-133: Org02_View_Chart(orgchart.jsp + JsonProvider orgchart + jOrgChart)는
-  // 범위 밖 컴포넌트 — 별도 ID로 변환한다(C02-작업기록 의존)
-  const viewOrgChart = () => message.info('조직도보기(Org02_View_Chart)는 아직 변환 전입니다.');
+  // [E3] viewOrgChart[조직도보기].Select (L103) → viewOrgChart() L125-133: new Org02_View_Chart(companyId, 기준일 yyyyMMdd) — 조직명만
+  const [chartOpen, setChartOpen] = useState(false);
+  const viewOrgChart = () => setChartOpen(true);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, background: '#fff', boxSizing: 'border-box' }}>
@@ -137,6 +138,7 @@ export const Org01_Tab_OrgCode: React.FC = () => {
         onSaved={model => { updatedModel.current = model?.codeId ?? null; retrieve(); }}
       />
       <Org02_Lookup_OrgInfo target={lookupTarget} onClose={() => setLookupTarget(null)} onChanged={retrieve} />
+      <Org02_View_Chart open={chartOpen} baseDate={base()} onClose={() => setChartOpen(false)} />
     </div>
   );
 };

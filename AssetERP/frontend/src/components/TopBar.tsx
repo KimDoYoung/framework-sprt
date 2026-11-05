@@ -54,6 +54,8 @@ interface TopBarProps {
   onOpenCheckList?: () => void;
   /** AS-IS MainFrame settingAnchor L746 — 기본설정(도움말) 창 (EE62·EE63) */
   onOpenSetting?: () => void;
+  /** AS-IS MainFrame helpAnchor "?" L754-767 — 온라인 도움말 창 (user_manual.jsp) */
+  onOpenHelp?: () => void;
   alarmState?: 'none' | 'normal' | 'twinkle';
 }
 
@@ -84,6 +86,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenAddTitle,
   onOpenCheckList,
   onOpenSetting,
+  onOpenHelp,
   alarmState = 'none',
 }) => {
   const loginUser = useLoginUser();
@@ -467,7 +470,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Right section: Help, User, Messenger/Tool icons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }} onClick={() => onOpenHelp?.()}>
               <BulbOutlined
                 style={{
                   fontSize: 18,

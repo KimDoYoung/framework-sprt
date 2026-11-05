@@ -6,7 +6,9 @@ import kr.co.kfs.asseterp.biz.sys.service.SysLoginRealTimeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +26,12 @@ public class SysLoginRealTimeController {
     @GetMapping
     public ApiResponse<List<LoginRealTimeRes>> search(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.search(principal));
+    }
+
+    /** AS-IS sys.Sys28_LoginRealTime.updateIpAddress — IP는 요청에서 (AS-IS LoginUser.getIpAddress = 서버가 본 접속 IP) */
+    @PostMapping
+    public ApiResponse<Void> updateIpAddress(@AuthenticationPrincipal UserPrincipal principal, HttpServletRequest request) {
+        service.updateIpAddress(principal, request.getRemoteAddr());
+        return ApiResponse.ok(null);
     }
 }

@@ -27,4 +27,9 @@ export const frmApi = {
     const res = await apiClient.get<ApiResponse<FrmLoginRealTime[]>>('v1/sys/login-real-times');
     return res.data.data ?? [];
   },
+
+  /** AS-IS sys.Sys28_LoginRealTime.updateIpAddress — 접속 IP의 접속 시각 갱신 (로그인 직후 + 2분마다) */
+  updateLoginRealTime: async (): Promise<void> => {
+    await apiClient.post('v1/sys/login-real-times');
+  },
 };
