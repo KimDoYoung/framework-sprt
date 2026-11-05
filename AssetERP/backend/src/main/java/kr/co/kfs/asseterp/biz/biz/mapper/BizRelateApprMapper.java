@@ -38,6 +38,12 @@ public interface BizRelateApprMapper {
     int insertDataYm(@Param("relateApprId") long relateApprId, @Param("companyId") Long companyId, @Param("dataYm") String dataYm,
                      @Param("linkCode") String linkCode, @Param("apprId") Long apprId);
 
+    /** AS-IS UpdateDataModel(biz05_relate_appr) INSERT — Biz05_Lookup_RelateAppr [불러오기]. 화면 모델이 채우는 연결 ID·내역(promo)·문서만 (회사·기준월 등은 원본도 NULL) */
+    int insertPromo(@Param("relateApprId") long relateApprId, @Param("promoId") Long promoId, @Param("apprId") Long apprId);
+
+    /** 내역(promo)이 로그인 회사 것인지 (TOBE 보강) */
+    int countPromoOfCompany(@Param("companyId") Long companyId, @Param("promoId") Long promoId);
+
     /** AS-IS sys01_company.selectById의 위치 이름(첨부 폴더) */
     String selectLocName(@Param("companyId") Long companyId);
 

@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.crm.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactDetailRes;
+import kr.co.kfs.asseterp.biz.crm.dto.CrmContactEmpRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactSaveReq;
 import kr.co.kfs.asseterp.biz.crm.service.CrmContactService;
@@ -25,6 +26,13 @@ import java.util.List;
 public class CrmContactController {
 
     private final CrmContactService service;
+
+    /** AS-IS crm.Crm09_Contact.selectBiz02Emp — open("emp") */
+    @GetMapping("/biz02-emps")
+    public ApiResponse<List<CrmContactEmpRes>> searchBiz02Emps(@AuthenticationPrincipal UserPrincipal principal,
+                                                                                            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchBiz02Emps(principal, searchText));
+    }
 
     /** AS-IS crm.Crm09_Contact.selectKeyInCompanyName — open("keyInCompany") */
     @GetMapping("/key-in-companies")

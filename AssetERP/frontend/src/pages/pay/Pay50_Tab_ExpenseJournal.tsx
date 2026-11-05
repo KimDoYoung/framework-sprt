@@ -5,8 +5,7 @@
  * 생성자 L85-134: BorderLayout 가운데(여백 20,20,0,20) = 툴바 두 줄(조회기간 100~100 · 구분 150 · 검색 "구분/지출내역/지출처" · [조회][삭제] /
  *   새로고침 · 회계 미처리 안내 · 링크) + 전표 단위 그리드(체크 다중, 13열, 합계 행 "계"), 아래 250(여백 20, 크기 조절) = 분개 그리드 Act02_Grid_CreateJournal
  * 열 때 한 번 조회한다(구분 콤보 생성 콜백 → retrieve), 조회하면 첫 행을 고르고 그 전표의 분개를 아래에 보여 준다
- * 1단계: 그리드 [연관문서] 아이콘이 여는 Act80_Lookup_RelateAppr(viewAppr)와 [전표수정] 아이콘이 여는 Act02_Lookup_CreateJournal(modiJournal)은
- *   다른 도메인(act)의 큰 창(U10과 공유)이라 다음 단계 — 지금은 안내만 한다
+ * 그리드 [연관문서] 아이콘은 Act80_Lookup_RelateAppr(viewAppr), [전표수정] 아이콘은 Act02_Lookup_CreateJournal "MODI"(modiJournal)를 연다(2026-11-05 연결, 13-누락대장 3번)
  * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
@@ -24,6 +23,8 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Act02_Grid_CreateJournal } from '@/pages/act/Act02_Grid_CreateJournal';
+import { Act02_Lookup_CreateJournal, CreateJournalTarget } from '@/pages/act/Act02_Lookup_CreateJournal';
+import { Act80_Lookup_RelateAppr, ActRelateApprTarget } from '@/pages/act/Act80_Lookup_RelateAppr';
 import { Pay50_Lookup_ExpenseUnJournal } from './Pay50_Lookup_ExpenseUnJournal';
 
 const gb = gbFor<PayExpenseJournal>();
@@ -46,6 +47,8 @@ export const Pay50_Tab_ExpenseJournal: React.FC = () => {
   const [unJournalOpen, setUnJournalOpen] = useState(false);
   const [journalId, setJournalId] = useState<number | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [relateTarget, setRelateTarget] = useState<ActRelateApprTarget | null>(null);   // Act80_Lookup_RelateAppr
+  const [editTarget, setEditTarget] = useState<CreateJournalTarget | null>(null);       // Act02_Lookup_CreateJournal
   const gridRef = useRef<AgGridReact<PayExpenseJournal>>(null);
 
   /** retrieve()가 읽는 조건 — 콤보를 바꾸자마자 조회해도 새 값으로 간다 */
@@ -116,11 +119,17 @@ export const Pay50_Tab_ExpenseJournal: React.FC = () => {
     gb.long('settleAmt', 120, '합계'),  // L243
     gb.textCenter('payMethodName', 100, '지급구분'),  // L244
     gb.textCenter('fileCountStr', 60, '연관문서'),  // L245
-    // viewAppr() L299-312: Act80_Lookup_RelateAppr.open(지출내역, "journalId", journalId) — 다음 단계
-    iconCell<PayExpenseJournal>('view', 'viewAction', 40, '', () => message.info('연관문서 창(Act80_Lookup_RelateAppr)은 다음 단계에서 연결합니다.')),  // L246
+    // viewAppr() L299-312: Act80_Lookup_RelateAppr.open(지출내역, "journalId", journalId, callback 비어 있음)
+    iconCell<PayExpenseJournal>('view', 'viewAction', 40, '', row => {
+      if (row.journalId == null) return;
+      setRelateTarget({ title: row.desc ?? '', code: 'journalId', relateId: row.journalId });
+    }),  // L246
     gb.textCenter('journalNo', 100, '전표번호'),  // L247
-    // modiJournal() L314-333: act.Act02_Journal.selectById(journalId) → Act02_Lookup_CreateJournal.open(전표, "MODI", 닫으면 retrieve()) — 다음 단계
-    iconCell<PayExpenseJournal>('edit', 'editAction', 60, '전표수정', () => message.info('전표 수정 창(Act02_Lookup_CreateJournal)은 다음 단계에서 연결합니다.')),  // L248
+    // modiJournal() L314-333: act.Act02_Journal.selectById(journalId) → Act02_Lookup_CreateJournal.open(전표, "MODI", callback → retrieve()). 전표 읽기는 창이 journalId로 한다
+    iconCell<PayExpenseJournal>('edit', 'editAction', 60, '전표수정', row => {
+      if (row.journalId == null) return;
+      setEditTarget({ mode: 'MODI', journalId: row.journalId });
+    }),  // L248
     gb.booleanYn2('journalFixYn', 70, '전표승인'),  // L249
   ], []);
 
@@ -180,6 +189,8 @@ export const Pay50_Tab_ExpenseJournal: React.FC = () => {
       </Splitter>
       {/* callback.execute(): 전표를 만든 뒤 retrieve() */}
       <Pay50_Lookup_ExpenseUnJournal open={unJournalOpen} onCreated={() => void retrieve()} onClose={() => setUnJournalOpen(false)} />
+      <Act80_Lookup_RelateAppr target={relateTarget} onClose={() => setRelateTarget(null)} />
+      <Act02_Lookup_CreateJournal target={editTarget} onSaved={() => void retrieve()} onClose={() => setEditTarget(null)} />
     </div>
   );
 };

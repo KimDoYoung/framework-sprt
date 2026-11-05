@@ -37,6 +37,15 @@ public class BizPersonController {
         return ApiResponse.ok(service.addEmps(principal, req.promoId(), req.empIds()));
     }
 
+    /** AS-IS biz.Biz02_Person.modelUpdate(거래처 등록, Biz02_Grid_ExternalList) → 추가한 건수 */
+    @PostMapping("/external")
+    public ApiResponse<Integer> addTargets(@AuthenticationPrincipal UserPrincipal principal, @RequestBody TargetsReq req) {
+        return ApiResponse.ok(service.addTargets(principal, req.promoId(), req.targets()));
+    }
+
+    public record TargetsReq(Long promoId, List<kr.co.kfs.asseterp.biz.biz.service.BizPersonService.TargetReq> targets) {
+    }
+
     /** AS-IS biz.Biz02_Person.insertEmpId → 새로 넣은 건수 */
     @PostMapping("/auto-register")
     public ApiResponse<Integer> autoRegister(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> promoIds) {

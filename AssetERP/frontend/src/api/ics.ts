@@ -898,6 +898,18 @@ export const icsApi = {
     return res.data.data;
   },
 
+  /** AS-IS ics.Ics40_DcrPreconfirm.selectByApprId — 상신 문서의 사전확인 */
+  searchDcrPreconfirmsByAppr: async (apprId: number): Promise<IcsDcrPreconfirm[]> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrPreconfirm[]>>('v1/ics/dcr-preconfirms/by-appr', { params: { apprId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (Ics40_Edit_Msg.editRegEmpMsg — 신청인 의견) → 저장된 행 */
+  updateDcrPreconfirmRegEmpMsg: async (dcrPreconfirmId: number, regEmpMsg: string | null): Promise<IcsDcrPreconfirm> => {
+    const res = await apiClient.put<ApiResponse<IcsDcrPreconfirm>>(`v1/ics/dcr-preconfirms/${dcrPreconfirmId}/reg-emp-msg`, { regEmpMsg });
+    return res.data.data;
+  },
+
   /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (Ics40_Edit_Msg) → 저장된 행 */
   updateDcrPreconfirmConfirmMsg: async (dcrPreconfirmId: number, confirmMsg: string | null): Promise<IcsDcrPreconfirm> => {
     const res = await apiClient.put<ApiResponse<IcsDcrPreconfirm>>(`v1/ics/dcr-preconfirms/${dcrPreconfirmId}/confirm-msg`, { confirmMsg });

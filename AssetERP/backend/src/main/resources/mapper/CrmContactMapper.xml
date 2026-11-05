@@ -16,6 +16,36 @@
          GROUP BY biz01_provide_company
     </select>
 
+    <!-- AS-IS crm09_contact.selectBiz02Emp L174 (IDMS-IC) — open("emp"): Biz01_TabPage_List 상대방 성명. 원문 그대로(LIKE 대소문자 구분, 바깥 정렬 없음) -->
+    <select id="selectBiz02Emp" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmContactEmpRes">
+        SELECT ROW_NUMBER() OVER (ORDER BY seq, crm09_contact_nm collate "ko_KR.utf8" asc)    AS contact_id
+             , crm09_contact_nm                                                                AS contact_name
+             , crm09_contact_emp_nm                                                            AS contact_emp_name
+          FROM ( SELECT 1 seq
+                      , biz02_target_company_nm as crm09_contact_nm
+                      , biz02_target_emp_nm     as crm09_contact_emp_nm
+                   FROM biz01_promo
+                      , biz02_person
+                  WHERE biz01_promo_id   = biz02_promo_id
+                    AND biz01_company_id = #{companyId}
+                  GROUP BY biz02_target_company_nm, biz02_target_emp_nm
+                  UNION
+                 SELECT 2 seq
+                      , (SELECT sys01_company_nm
+                           FROM sys01_company
+                          WHERE sys01_company_id = #{companyId})    as crm09_contact_nm
+                      , f_emp_kor_nm(biz02_emp_id)                  as crm09_contact_emp_nm
+                   FROM biz01_promo
+                      , biz02_person
+                  WHERE biz01_promo_id   = biz02_promo_id
+                    AND biz01_company_id = #{companyId}
+                    AND biz01_provide_rcv_type = '2'
+                    AND biz02_emp_yn     = 'true'
+                  GROUP BY biz02_emp_id
+               ) a
+         WHERE crm09_contact_nm LIKE #{searchText}
+    </select>
+
     <!-- AS-IS crm09_contact.selectById (+ selectShareInfo include). 회사 조건은 TOBE에서 더했다 -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmContactDetailRes">
         SELECT crm09_contact_id             AS contact_id

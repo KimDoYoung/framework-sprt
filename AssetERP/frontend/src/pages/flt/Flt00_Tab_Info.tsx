@@ -25,12 +25,6 @@ const MENU_NO: Record<string, string | null> = {
   link10: '1143',
 };
 
-const POPUP_NAME: Record<string, string> = {
-  link01: '임직원매매 설정(Flt02_Lookup_Emp)',
-  link02: '임직원매매 설정(Flt02_Lookup_Emp)',
-  link09: '최초원장등록(Flt13_Lookup_BookInit)',
-};
-
 const sp = (n: number) => SP.repeat(n);
 
 export const Flt00_Tab_Info: React.FC = () => {
@@ -48,11 +42,7 @@ export const Flt00_Tab_Info: React.FC = () => {
       setBookInitOpen(true);  // Flt13_Lookup_BookInit.open(오늘, null)
       return;
     }
-    if (menuNo == null) {
-      // [E1 다음 단계] Flt02_Lookup_Emp / Flt13_Lookup_BookInit 조회창은 아직 없다
-      message.info(`${POPUP_NAME[id]} 조회창은 다음 단계에서 연결합니다.`);
-      return;
-    }
+    if (menuNo == null) return;   // 팝업 링크는 위에서 처리했다 (2026-11-05: 남아 있던 안내 분기 정리, 13-누락대장 3번)
     if (!openMenuByNo(menuNo)) message.warning('화면을 열 수 없습니다. 메뉴 권한을 확인해주세요.');
   };
 

@@ -16,6 +16,8 @@ import { Code } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { Crm09_Lookup_SelectSingle } from '@/components/lookup/Crm09_Lookup_SelectSingle';
+import { CrmContact } from '@/types/crm';
 import { openMenuByNo } from '@/utils/tempData';
 
 const gb = gbFor<BizBuyPromo>();
@@ -38,6 +40,10 @@ interface Props {
 export const Biz01_TabPage_List = forwardRef<Biz01_TabPage_ListHandle, Props>(({ enabled }, ref) => {
   // [E0] 화면 열림 (생성자 L66-83) → setting() L85-116: 버튼 핸들러 연결. 처음엔 비활성 — 상위 화면이 상신상태 "완료"인 구매내역에만 `enabled`를 켠다
   const [purposes, setPurposes] = useState<Code[]>([]);
+  const [crmRow, setCrmRow] = useState<BizBuyPromo | null>(null);
+  const onCrmResult = (c: CrmContact) => {
+    if (crmRow) crud.updateRow(crmRow.promoId, { targetCompanyName: c.contactName, targetEmpName: c.contactEmpName ?? null });
+  };   // openLookupTargetInfo(selectModel) — Crm09_Lookup_SelectSingle("emp")
   const buyRef = useRef<BmtBuy | null>(null);
   const callbackRef = useRef<(() => void) | null>(null);
 
@@ -109,13 +115,13 @@ export const Biz01_TabPage_List = forwardRef<Biz01_TabPage_ListHandle, Props>(({
       },
     }),
     gb.textCenter('targetCompanyName', 200, '상대방 회사명'),  // L146
-    // [E6 생략] lookuptargetInfo.TriggerClick (L137) → openLookupTargetInfo() L207-220: Crm09_Lookup_SelectSingle은 crm 도메인이라 아직 없다 (다음 단계)
+    // [E6] lookuptargetInfo.TriggerClick (L137) → openLookupTargetInfo() L207-220: Crm09_Lookup_SelectSingle.open("emp") → 한 건이면 상대방 회사명·성명을 바꾼다(addChange)
     gb.textCenter('targetEmpName', 150, '상대방 성명', {  // L147 (LookupTriggerField)
       cellStyle: { color: '#1677ff' },
       cellRenderer: (p: { data?: BizBuyPromo; value?: string }) => (
         <>
           <AntButton type="text" size="small" icon={<SearchOutlined />}
-            onClick={e => { e.stopPropagation(); message.info('상대처 조회창(Crm09_Lookup_SelectSingle)은 아직 변환 전입니다'); }} />
+            onClick={e => { e.stopPropagation(); if (p.data) setCrmRow(p.data); }} />
           {p.value}
         </>
       ),
@@ -138,6 +144,7 @@ export const Biz01_TabPage_List = forwardRef<Biz01_TabPage_ListHandle, Props>(({
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<BizBuyPromo> crud={crud} columnDefs={columnDefs} rowSelection={MULTI_SELECTION} />
       </div>
+      <Crm09_Lookup_SelectSingle open={crmRow != null} code="emp" onResult={onCrmResult} onClose={() => setCrmRow(null)} />
     </div>
   );
 });

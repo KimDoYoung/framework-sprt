@@ -2,6 +2,8 @@
 export interface CrmContact {
   contactId: number;
   contactName: string;
+  /** open("emp")에서만 — 담당자명 */
+  contactEmpName?: string | null;
 }
 
 /** 영업거래처 한 건 (AS-IS Crm09_ContactModel 중 Crm09_Lookup_ContactPoint가 다루는 값, EE84). shareInfo = 공유기본 요약 */

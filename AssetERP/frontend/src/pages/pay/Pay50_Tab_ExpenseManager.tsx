@@ -5,7 +5,7 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L108-168: Center(여백 20·20·0·20) = 테두리 박스(툴바 두 줄 50 + 지출결의서 그리드) / South(350, 분할, 여백 20) = 편집 폼(Pay50_Edit_Expense)
  * 열 때 한 번 조회한다(구분 콤보 생성 콜백 → retrieve). 조회가 끝나면 첫 행을 고른다(select(0))
- * 1단계: 바로등록(Pay50_Lookup_ExpenseRequestInsert)·반려건 일괄 알림발송(SMS·톡·메일)는 다음 단계(증빙자료 Com01_Lookup_RelateAppr는 EE34에서 연결 — Pay50_Edit_Expense의 [증빙자료]) — 안내만 띄운다
+ * [바로등록]은 Pay50_Lookup_ExpenseRequestInsert.insertPass(관리자)를 연다(2026-11-05 연결, 13-누락대장 3번). 1단계: 반려건 일괄 알림발송(SMS·톡·메일)는 다음 단계(증빙자료 Com01_Lookup_RelateAppr는 EE34에서 연결 — Pay50_Edit_Expense의 [증빙자료]) — 안내만 띄운다
  * 상신/문서보기(Apr01_Edit_ApprDoc — apprSelect·insertLinkApproval "A63"·updateExpenseApprId·retrieveApproval)는 V27(2026-10-31)에서 연결했다
  * 스타일: SGEF (견본 — docs/page-style.md. yunhee page-style은 SGVF로 읽으나 아래 폼이 저장이 있는 편집형이라 SGEF를 따른다)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
@@ -27,6 +27,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Pay50_Edit_Expense } from './Pay50_Edit_Expense';
+import { Pay50_Lookup_ExpenseRequestInsert } from './Pay50_Lookup_ExpenseRequestInsert';
 import { Pay50_Lookup_ExpenseRequestList } from './Pay50_Lookup_ExpenseRequestList';
 import { Pay50_Lookup_RejectReason } from './Pay50_Lookup_RejectReason';
 import { Pay51_Lookup_ExpenseForm } from './Pay51_Lookup_ExpenseForm';
@@ -91,6 +92,7 @@ export const Pay50_Tab_ExpenseManager: React.FC = () => {
   const [editRow, setEditRow] = useState<PayExpense | null>(null);
   const [requestCount, setRequestCount] = useState(0);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [passOpen, setPassOpen] = useState(false);   // Pay50_Lookup_ExpenseRequestInsert.insertPass
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectIds, setRejectIds] = useState<number[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -171,8 +173,8 @@ export const Pay50_Tab_ExpenseManager: React.FC = () => {
     });
   };
 
-  // [E10] insertButton[바로등록].Select (L254) → insert() L529-537: Pay50_Lookup_ExpenseRequestInsert.insertPass — 다음 단계
-  const insert = () => message.info('바로등록 창(Pay50_Lookup_ExpenseRequestInsert)은 다음 단계에서 변환합니다.');
+  // [E10] insertButton[바로등록].Select (L254) → insert() L529-537: Pay50_Lookup_ExpenseRequestInsert.insertPass(isManager=true, callback → retrieve())
+  const insert = () => setPassOpen(true);
 
   // [E12] rejectButton[반려].Select (L266) → rejectCheck() L539-591
   const rejectCheck = () => {
@@ -353,6 +355,7 @@ export const Pay50_Tab_ExpenseManager: React.FC = () => {
           </div>
         </Splitter.Panel>
       </Splitter>
+      <Pay50_Lookup_ExpenseRequestInsert open={passOpen} mode="pass" isManager onSaved={() => void retrieve()} onClose={() => setPassOpen(false)} />
       <Pay50_Lookup_ExpenseRequestList open={requestOpen} onResult={list => void lookupRequest(list)} onClose={() => setRequestOpen(false)} />
       <Pay50_Lookup_RejectReason open={rejectOpen} mode="open"
         onResult={reason => {

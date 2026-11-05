@@ -3,14 +3,16 @@
  * AS-IS: myApp/client/vi/pay/Pay03_Lookup_PayAccount.java (219줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L63-116: 툴바 50 = [조회][등록][저장][삭제], 단일 체크 셀 편집 그리드(출금시작일 120(날짜) · 계좌연결 150(조회창 트리거) · 은행명 150(콤보 BankCode)
  *   · 계좌번호 200 · 예금주명 150 · 비고 250) + 아래 [닫기]. 열 때 retrieve() L166-170 (pay.Pay03_Account.selectByCompanyId).
- * 1단계: 계좌연결 칸의 Ast01_Lookup_Info.gridInsert("1")(자산 조회창, 다른 도메인 ast)은 다음 단계 — 누르면 안내만 한다
+ * 계좌연결 칸은 Ast01_Lookup_Info.gridInsert("1")(자산 조회창)를 열고 고른 종목을 그 행에 넣는다(2026-11-05 연결, 13-누락대장 3번)
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button as AntButton, message, Space } from 'antd';
+import { Button as AntButton, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { payApi } from '@/api/pay';
 import { sysApi } from '@/api/sys';
 import { PayAccount } from '@/types/pay';
+import { AstTrCodeTreeNode } from '@/types/ast';
+import { Ast01_Lookup_Info } from '@/pages/ast/Ast01_Lookup_Info';
 import { Code } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
@@ -43,6 +45,14 @@ export const Pay03_Lookup_PayAccount: React.FC<Props> = ({ open, onClose }) => {
     firstEditField: 'startDate',
   });
   const { retrieve } = crud;
+  const [astRow, setAstRow] = useState<PayAccount | null>(null);   // lookupAst()의 선택 행
+  // lookupAst() L151-164: 결과가 있으면 그 행의 astClassTreeId·astClassTreeName을 바꾼다(addChange)
+  const onAstResult = (node: AstTrCodeTreeNode | null) => {
+    const row = astRow;
+    setAstRow(null);
+    if (!node || !row) return;
+    crud.updateRow(row.accountId, { astClassTreeId: node.classTreeId, astClassTreeName: node.classTreeName });
+  };
 
   // [E0] 화면 열림 (생성자 L63-116) → show(), retrieve(). 콤보는 buildGrid()의 ComboBoxField("BankCode")
   useEffect(() => {
@@ -55,16 +65,16 @@ export const Pay03_Lookup_PayAccount: React.FC<Props> = ({ open, onClose }) => {
   // buildGrid(): 출금시작일 120(날짜) · 계좌연결 150 · 은행명 150(콤보, [E7] Collapse → bankCd) · 계좌번호 200 · 예금주명 150 · 비고 250
   const columnDefs = useMemo(() => [
     gb.date('startDate', 120, '출금시작일', { editor: 'date' }),
-    // [E6] lookupAst.TriggerClick (L123) → lookupAst() L151-164: Ast01_Lookup_Info.gridInsert("1") — 다음 단계
+    // [E6] lookupAst.TriggerClick (L123) → lookupAst() L151-164: Ast01_Lookup_Info.gridInsert("1")
     gb.text('astClassTreeName', 150, '계좌연결', {
       cellStyle: { color: '#1677ff' },
-      cellRenderer: (p: { value?: string | null }) => (
+      cellRenderer: (p: { data?: PayAccount; value?: string | null }) => (
         <>
           <AntButton
             type="text"
             size="small"
             icon={<SearchOutlined />}
-            onClick={e => { e.stopPropagation(); message.info('자산 조회창(Ast01_Lookup_Info)은 다음 단계에서 제공됩니다.'); }}
+            onClick={e => { e.stopPropagation(); if (p.data) setAstRow(p.data); }}
           />
           {p.value}
         </>
@@ -116,6 +126,7 @@ export const Pay03_Lookup_PayAccount: React.FC<Props> = ({ open, onClose }) => {
           <CellEditGrid<PayAccount> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />
         </div>
       </div>
+      <Ast01_Lookup_Info open={astRow != null} assetType="1" onResult={onAstResult} onClose={() => setAstRow(null)} />
     </LookupModal>
   );
 };

@@ -27,6 +27,10 @@ public interface BizPersonMapper {
     /** AS-IS biz02_person.insert (직원) */
     int insertEmp(@Param("personId") long personId, @Param("promoId") Long promoId, @Param("empId") Long empId);
 
+    /** AS-IS modelUpdate(Biz02_Grid_ExternalList [등록] — 거래처 한 행: empYn=false·회사명·담당자·부서) */
+    int insertTarget(@Param("personId") long personId, @Param("promoId") Long promoId, @Param("targetCompanyName") String targetCompanyName,
+                     @Param("targetEmpName") String targetEmpName, @Param("targetOrgName") String targetOrgName);
+
     /** AS-IS Biz02_Person.delete → UpdateDataModel.deleteModel — 로그인 회사 내역의 인원만 */
     int deleteById(@Param("companyId") Long companyId, @Param("personId") Long personId);
 

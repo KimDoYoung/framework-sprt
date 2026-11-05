@@ -3,6 +3,7 @@
  * 생성자 L78-91: 모달 550×520 "의견"(닫기 X 없음), [저장][닫기]. getEditor L111-129: 준감인 의견 / 신청인 의견 (각 500×200 텍스트 영역, 라벨 110)
  *   · editConfirmMsg L54-63 (M05): 준감인 의견만 고친다(신청인 의견 비활성) — [저장] → update() L131-145 → 서버 ics.Ics40_DcrPreconfirm.modelUpdate → callback → hide
  *   · show L65-76 (M06): 두 칸 모두 읽기 전용, [저장] 비활성
+ *   · editRegEmpMsg L43-52 (상신내역 조회 #1019의 준감인의견 아이콘, 2026-11-05 추가): 신청인 의견만 고친다(준감인 의견 비활성)
  * 이벤트: [E1] updateButton[저장] (L94) → update() / [E2] closeButton[닫기] (L100) callback != null이면 callback.execute() 뒤 hide()
  */
 import React, { useEffect, useState } from 'react';
@@ -15,8 +16,8 @@ import { IcsDcrPreconfirm } from '@/types/ics';
 
 export interface Ics40_Edit_MsgTarget {
   row: IcsDcrPreconfirm;
-  /** 'edit' = editConfirmMsg(M05, 준감인 의견 수정) / 'view' = show(M06, 읽기 전용) */
-  mode: 'edit' | 'view';
+  /** 'edit' = editConfirmMsg(M05, 준감인 의견 수정) / 'regEmp' = editRegEmpMsg(신청인 의견 수정) / 'view' = show(M06, 읽기 전용) */
+  mode: 'edit' | 'regEmp' | 'view';
 }
 
 interface Props {
@@ -33,6 +34,7 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
   const [confirmMsg, setConfirmMsg] = useState('');
   const [regEmpMsg, setRegEmpMsg] = useState('');
   const edit = target?.mode === 'edit';
+  const regEmp = target?.mode === 'regEmp';
 
   // [E0] 화면 열림 (생성자 L78-91) → settings(), show() — 열 때 두 의견을 채운다
   useEffect(() => {
@@ -46,7 +48,8 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
   const update = async () => {
     if (!target) return;
     try {
-      await icsApi.updateDcrPreconfirmConfirmMsg(target.row.dcrPreconfirmId, confirmMsg === '' ? null : confirmMsg);
+      if (regEmp) await icsApi.updateDcrPreconfirmRegEmpMsg(target.row.dcrPreconfirmId, regEmpMsg === '' ? null : regEmpMsg);
+      else await icsApi.updateDcrPreconfirmConfirmMsg(target.row.dcrPreconfirmId, confirmMsg === '' ? null : confirmMsg);
       onCallback?.();
       onClose();
     } catch (err) {
@@ -56,7 +59,7 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
 
   // [E2] closeButton[닫기].Select [callback != null] (L100) → callback.execute(), hide()
   const close = () => {
-    if (edit) onCallback?.();
+    if (edit || regEmp) onCallback?.();
     onClose();
   };
 
@@ -65,7 +68,7 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
-            <Button type="save" disabled={!edit} onClick={update}>저장</Button>
+            <Button type="save" disabled={!edit && !regEmp} onClick={update}>저장</Button>
             <Button type="close" onClick={close}>닫기</Button>
           </Space>
         </div>
@@ -74,11 +77,11 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '15px 10px' }}>
         <div style={rowStyle}>
           <div style={labelStyle}>준감인 의견</div>
-          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={confirmMsg} readOnly={!edit} onChange={e => setConfirmMsg(e.target.value)} />
+          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={confirmMsg} readOnly={!edit} disabled={regEmp} onChange={e => setConfirmMsg(e.target.value)} />
         </div>
         <div style={rowStyle}>
           <div style={labelStyle}>신청인 의견</div>
-          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={regEmpMsg} readOnly disabled={edit} />
+          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={regEmpMsg} readOnly={!regEmp} disabled={edit} onChange={e => setRegEmpMsg(e.target.value)} />
         </div>
       </div>
     </LookupModal>

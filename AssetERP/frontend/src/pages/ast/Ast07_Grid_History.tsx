@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast07_Grid_History.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L82-109: 위 툴바 50(라디오 "최근입력순(최대 20건)" · "조회조건 적용" · [새로고침] [취소]) + 그리드(행번호, 체크 다중, 7열) + 아래 페이징 툴바(100건)
  * setting() L111-155: expenseOnlyYn이면 거래유형 열(index 3)을 숨기고, 최근입력순(1)은 사업비지출(9100) 거래만(3)으로 바꿔 조회한다
- * [다음 단계] [전표변경] 아이콘이 여는 Act02_Lookup_ModiJournal(L159-169)은 분개 수정 창이라 지금은 안내만 한다
+ * [전표변경] 아이콘은 Act02_Lookup_ModiJournal(L159-169, 분개 수정 창)을 연다 — callback이 비어 있어 저장 뒤 다시 읽지 않는다(2026-11-05 연결, 13-누락대장 3번)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Radio, Space, message } from 'antd';
@@ -15,6 +15,7 @@ import { errorMessage } from '@/api/client';
 import { SettleHistory } from '@/types/ast';
 import { Button } from '@/components/button';
 import { MultiGrid, PagingToolBar, gbFor, iconCell } from '@/components/grid';
+import { Act02_Lookup_ModiJournal } from '@/pages/act/Act02_Lookup_ModiJournal';
 
 const gb = gbFor<SettleHistory>();
 const LIMIT = 100;
@@ -46,6 +47,7 @@ export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, pa
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [modiJournalId, setModiJournalId] = useState<number | null>(null);   // Act02_Lookup_ModiJournal
 
   const cond = useRef({ payCode, trCode, corpId, searchText, mode });
   cond.current = { payCode, trCode, corpId, searchText, mode };
@@ -107,8 +109,8 @@ export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, pa
     gb.text('corpName', 200, '거래처'),  // L176
     gb.text('note', 500, '종목/거래적요'),  // L177
     gb.long('settleAmt', 150, '결제금액'),  // L178
-    // L159-169 actionCell: Act02_Lookup_ModiJournal.open(journalId) — 다음 단계
-    iconCell<SettleHistory>('edit', 'actionCell', 80, '전표변경', () => message.info('분개 수정 창(Act02_Lookup_ModiJournal)은 다음 단계에서 연결합니다.')),  // L179
+    // L159-169 actionCell: Act02_Lookup_ModiJournal.open(journalId, callback 비어 있음)
+    iconCell<SettleHistory>('edit', 'actionCell', 80, '전표변경', row => { if (row.journalId != null) setModiJournalId(row.journalId); }),  // L179
   ], [expenseOnly]);
 
   return (
@@ -130,6 +132,7 @@ export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, pa
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={p => void load(p)} />
       </div>
+      <Act02_Lookup_ModiJournal journalId={modiJournalId} onSaved={() => undefined} onClose={() => setModiJournalId(null)} />
     </div>
   );
 };

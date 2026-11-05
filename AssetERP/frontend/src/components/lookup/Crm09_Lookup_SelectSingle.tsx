@@ -2,7 +2,8 @@
  * 영업 거래처 조회창 (L12) — Biz01_Tab_PriorApprovalSimple의 거래상대방 칸에서 연다 (open("keyInCompany"))
  * AS-IS: myApp/client/vi/crm/Crm09_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L49-120: 모달 450×500 "영업 거래처", 위 = 툴바(검색 200 · [조회]), 아래 = 단일 체크 그리드, 아래 가운데 [확인][취소]
- *   code가 "keyInCompany"(또는 "company")면 회사명 350 한 열만 보인다 (setting() L122-140). 다른 code(emp·그 밖)는 이 화면에서 부르지 않아 만들지 않았다
+ *   code가 "keyInCompany"면 회사명 350 한 열만 보인다 (setting() L122-140). "emp"(Biz01_TabPage_List 상대방 성명, 2026-11-05 추가)는 회사명 250·담당자명 100 (selectBiz02Emp).
+ *   다른 code(company·그 밖)는 부르는 화면이 없어 만들지 않았다
  * UX보강(10): 툴바 = SearchBar(UX-01), 행 클릭 선택(UX-06), 첫 입력칸 포커스(UX-05, LookupModal)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,22 +23,24 @@ const SINGLE_CHECK = { mode: 'singleRow', checkboxes: true, enableClickSelection
 
 interface Props {
   open: boolean;
+  /** open(code, callback)의 code — 기본 "keyInCompany" */
+  code?: 'keyInCompany' | 'emp';
   /** confirm() L199-208: 고른 행 (callback.execute(list)) */
   onResult: (row: CrmContact) => void;
   onClose: () => void;
 }
 
-export const Crm09_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult, onClose }) => {
+export const Crm09_Lookup_SelectSingle: React.FC<Props> = ({ open, code = 'keyInCompany', onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<CrmContact>>(null);
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<CrmContact[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // retrieve() L158-197: 검색어 "%…%" → crm.Crm09_Contact.selectKeyInCompanyName. 읽은 뒤 선택은 바꾸지 않는다(원본에 첫 행 선택 없음)
+  // retrieve() L158-197: 검색어 "%…%" → keyInCompany면 crm.Crm09_Contact.selectKeyInCompanyName, emp면 selectBiz02Emp. 읽은 뒤 선택은 바꾸지 않는다(원본에 첫 행 선택 없음)
   const load = async (text: string) => {
     setBusy(true);
     try {
-      setRows(await crmContactApi.searchKeyInCompanies(text));
+      setRows(await (code === 'emp' ? crmContactApi.searchBiz02Emps(text) : crmContactApi.searchKeyInCompanies(text)));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     } finally {
@@ -65,10 +68,15 @@ export const Crm09_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult, onC
     onClose();
   };
 
-  // buildGrid() L142-156 + setting() L122-140: keyInCompany는 회사명 350 한 열
-  const columnDefs = useMemo(() => [
-    gb.text('contactName', 350, '회사명'),  // L148 (setColumnWidth(2, 350))
-  ], []);
+  // buildGrid() L142-156 + setting() L122-140: keyInCompany는 회사명 350 한 열, emp는 회사명 250·담당자명 100
+  const columnDefs = useMemo(() => (code === 'emp'
+    ? [
+      gb.text('contactName', 250, '회사명'),  // L148 (setColumnWidth(2, 250))
+      gb.text('contactEmpName', 100, '담당자명'),  // L149 (setColumnWidth(3, 100))
+    ]
+    : [
+      gb.text('contactName', 350, '회사명'),  // L148 (setColumnWidth(2, 350))
+    ]), [code]);
 
   return (
     <LookupModal

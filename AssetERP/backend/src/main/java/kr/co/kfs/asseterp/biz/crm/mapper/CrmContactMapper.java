@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.crm.mapper;
 
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactDetailRes;
+import kr.co.kfs.asseterp.biz.crm.dto.CrmContactEmpRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -13,6 +14,9 @@ public interface CrmContactMapper {
 
     /** AS-IS crm09_contact.selectKeyInCompanyName — 이익제공(수령) 내역에 직접 입력한 거래상대방 이름(중복 제거). searchText는 `%…%`로 감싼 값 */
     List<CrmContactRes> selectKeyInCompanyName(@Param("companyId") Long companyId, @Param("searchText") String searchText);
+
+    /** AS-IS crm09_contact.selectBiz02Emp — 이익제공 인원(외부 거래처 + 수령 내역의 직원)의 회사명·담당자명. searchText는 `%…%`로 감싼 값 */
+    List<CrmContactEmpRes> selectBiz02Emp(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 
     /** AS-IS crm09_contact.selectById (EE84 Crm09_Lookup_ContactPoint) — 회사 조건을 더했다 */
     CrmContactDetailRes selectById(@Param("companyId") Long companyId, @Param("contactId") Long contactId);

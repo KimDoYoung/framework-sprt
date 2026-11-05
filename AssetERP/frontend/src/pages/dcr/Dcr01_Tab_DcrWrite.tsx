@@ -3,8 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Tab_DcrWrite.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L99-193: north(140) = 박스 안 툴바 3줄(문서분류 대/중/문서분류 · 세부분류 · [불러오기] / 문서명 + 작성요령 / 비고 + [신규문서 작성] + 북마크),
  *   center = 툴바(등록기간 · 검색 · 수신처 · 조건 포함 체크 · [조회]) + 문서 그리드(체크박스 단일) + 페이징 툴바(100)
- * 1단계(사용자 결정 2026-10-19): [신규문서 작성]·상세보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc과 북마크 아이콘이 여는 Apr50_Lookup_ApprList는
- *   다른 도메인(apr)이라 다음 단계(F01-2)에서 연결한다 — 지금은 안내만 띄운다.
+ * [신규문서 작성]·상세보기 아이콘은 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘은 Apr50_Lookup_ApprList를 연다(2026-11-05 북마크 연결, 13-누락대장 3번)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건이 길어 한 줄을 넘기므로 초기화(UX-02)는 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -23,6 +22,7 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { Dcr08_Lookup_SelectSingle } from './Dcr08_Lookup_SelectSingle';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Apr50_Lookup_ApprList } from '../apr/Apr50_Lookup_ApprList';
 
 const gb = gbFor<AprDcrWrite>();
 const LIMIT = 100;  // gridToolBar.setToolBar(100)
@@ -62,6 +62,7 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [oftenOpen, setOftenOpen] = useState(false);
+  const [bookmarkOpen, setBookmarkOpen] = useState(false);   // Apr50_Lookup_ApprList
   const gridRef = useRef<AgGridReact<AprDcrWrite>>(null);
   /** gridToolBar.addParam(…) — 페이지를 넘길 때는 마지막 조회 조건을 쓴다(GridPagingLoader) */
   const paramRef = useRef<{ startDate: string; closeDate: string; searchText: string; receiveName: string; classTreeId: number | null } | undefined>(undefined);
@@ -236,9 +237,8 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
     insertApproval();
   };
 
-  // [E1] bookmarkAnchor.MouseDown (L125) → Apr50_Lookup_ApprList.open()
-  // [E1 생략] 북마크 문서 조회창은 다음 단계(F01-2)에서 연결한다
-  const openBookmark = () => message.info('북마크 문서 조회창은 다음 단계에서 연결됩니다');
+  // [E1] bookmarkAnchor.MouseDown (L125-131) → Apr50_Lookup_ApprList.open()
+  const openBookmark = () => setBookmarkOpen(true);
 
   // buildGrid() L538-575
   const columnDefs = useMemo(() => [
@@ -323,6 +323,7 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={getPaging} />
       </div>
 
+      <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
       <Apr01_Edit_ApprDoc
         apprId={viewApprId}
         newClassTreeId={newClassTreeId}

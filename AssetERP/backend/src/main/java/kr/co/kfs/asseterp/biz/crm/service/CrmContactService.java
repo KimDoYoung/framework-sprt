@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.crm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactDetailRes;
+import kr.co.kfs.asseterp.biz.crm.dto.CrmContactEmpRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactRes;
 import kr.co.kfs.asseterp.biz.crm.dto.CrmContactSaveReq;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -23,6 +24,11 @@ public class CrmContactService {
     /** AS-IS crm.Crm09_Contact.selectKeyInCompanyName — 검색어는 `%…%`(대소문자 무시) */
     public List<CrmContactRes> searchKeyInCompanies(UserPrincipal user, String searchText) {
         return mapper.selectKeyInCompanyName(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS crm.Crm09_Contact.selectBiz02Emp — open("emp"). 검색어는 `%…%` */
+    public List<CrmContactEmpRes> searchBiz02Emps(UserPrincipal user, String searchText) {
+        return mapper.selectBiz02Emp(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** AS-IS crm09_contact.selectById (Crm09_Lookup_ContactPoint.openEdit) */

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/mkt/Mkt01_Lookup_Select.java (240줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L59-158: 모달 930×510 "업무활동처 및 이익제공처", 위 = 툴바(검색 250 "활동처/담당자" · ☐즐겨찾기만 조회 · [조회][활동처 추가]),
  *   아래 = 체크 그리드(MULTI면 다중, 아니면 단일) + 페이징 툴바(100건), 아래 가운데 [확인][취소]. 그리드 5열: 활동처 250 · 담당자 120 · 직위 120 · 부서 200 · 담당자 추가(아이콘 100)
- * 1단계: [활동처 추가]·[담당자 추가] 아이콘이 여는 `Mkt01_Lookup_TargetCompany`(470줄, 활동처·담당자 등록)는 다음 단계 — 안내만 띄운다
+ * [활동처 추가](openNew)·[담당자 추가] 아이콘(open2(realKeyId = 활동처 ID))은 `Mkt01_Lookup_TargetCompany`를 열고, 저장하면 다시 조회한다(2026-11-05 연결, 13-누락대장 3번)
  * UX보강(10): 툴바 = SearchBar(UX-01), 행 클릭 선택(UX-06), 첫 입력칸 포커스(UX-05, LookupModal)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import { Button } from '@/components/button';
 import { MultiGrid, PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { Mkt01_Lookup_TargetCompany, MktTargetCompanyTarget } from '@/pages/mkt/Mkt01_Lookup_TargetCompany';
 
 const gb = gbFor<MktSelect>();
 /** gridToolBar.setToolBar(100) L138 */
@@ -45,6 +46,7 @@ export const Mkt01_Lookup_Select: React.FC<Props> = ({ type, onResult, onClose }
   const [total, setTotal] = useState(0);
   const [busy, setBusy] = useState(false);
   const [afterLoad, setAfterLoad] = useState(0);
+  const [companyTarget, setCompanyTarget] = useState<MktTargetCompanyTarget | null>(null);   // Mkt01_Lookup_TargetCompany
   /** gridToolBar.addParam(…) — 쪽을 넘길 때는 마지막으로 조회한 조건을 쓴다(GridPagingLoader) */
   const last = useRef({ text: '', fav: false });
 
@@ -95,9 +97,11 @@ export const Mkt01_Lookup_Select: React.FC<Props> = ({ type, onResult, onClose }
     onClose();
   };
 
-  // [E3] insertButton[활동처 추가].Select (L86) → Mkt01_Lookup_TargetCompany.openNew(callback → retrieve()) — 다음 단계
-  // [E9] actionCell (ImageCell).callbackOnCreate (L166) → Mkt01_Lookup_TargetCompany.open2(realKeyId, callback → retrieve()) — 다음 단계(아래 담당자 추가 열)
-  const insertTarget = () => message.info('활동처 추가(Mkt01_Lookup_TargetCompany)는 다음 단계에서 제공됩니다');
+  // [E3] insertButton[활동처 추가].Select (L86-97) → Mkt01_Lookup_TargetCompany.openNew(callback → retrieve())
+  // [E9] actionCell (ImageCell) (L162-173) → Mkt01_Lookup_TargetCompany.open2(realKeyId, callback → retrieve()) — 아래 담당자 추가 열
+  const insertTarget = () => setCompanyTarget({ id: null });
+  // retrieve() L193-217: 지금 칸의 검색어·즐겨찾기로 1쪽부터
+  const retrieve = () => void load(1, searchText, favoriteYn);
 
   // buildGrid(type) L160-191
   const columnDefs = useMemo(() => [
@@ -105,8 +109,8 @@ export const Mkt01_Lookup_Select: React.FC<Props> = ({ type, onResult, onClose }
     gb.text('managerName', 120, '담당자'),  // L185
     gb.text('managerPosName', 120, '직위'),  // L186
     gb.text('managerOrgName', 200, '부서'),  // L187
-    // L188 addCell(ImageCell("Add")) → Mkt01_Lookup_TargetCompany.open2(realKeyId, callback → retrieve()) — 다음 단계
-    iconCell<MktSelect>('add', 'actionCell', 100, '담당자 추가', () => message.info('담당자 추가(Mkt01_Lookup_TargetCompany)는 다음 단계에서 제공됩니다')),
+    // L188 addCell(ImageCell("Add")) → Mkt01_Lookup_TargetCompany.open2(realKeyId, callback → retrieve())
+    iconCell<MktSelect>('add', 'actionCell', 100, '담당자 추가', row => setCompanyTarget({ id: row.targetCompanyId })),
   ], []);
 
   const gridProps = {
@@ -156,6 +160,7 @@ export const Mkt01_Lookup_Select: React.FC<Props> = ({ type, onResult, onClose }
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={busy} onChange={p => void load(p, last.current.text, last.current.fav)} />
       </div>
+      <Mkt01_Lookup_TargetCompany target={companyTarget} onSaved={retrieve} onClose={() => setCompanyTarget(null)} />
     </LookupModal>
   );
 };

@@ -48,6 +48,12 @@ public interface IcsDcrPreconfirmMapper {
     int updateConfirmMsg(@Param("companyId") Long companyId, @Param("dcrPreconfirmId") Long dcrPreconfirmId,
                          @Param("confirmMsg") String confirmMsg);
 
+    /** AS-IS ics40_dcr_preconfirm.selectByApprId */
+    List<IcsDcrPreconfirmRes> selectByApprId(@Param("companyId") Long companyId, @Param("apprId") Long apprId);
+
+    /** AS-IS modelUpdate (Ics40_Edit_Msg.editRegEmpMsg) — 신청인 의견 */
+    int updateRegEmpMsg(@Param("companyId") Long companyId, @Param("dcrPreconfirmId") Long dcrPreconfirmId, @Param("regEmpMsg") String regEmpMsg);
+
     /** AS-IS ics40_dcr_preconfirm.selectById — 저장 결과 한 행 */
     IcsDcrPreconfirmRes selectById(@Param("companyId") Long companyId, @Param("dcrPreconfirmId") Long dcrPreconfirmId);
 

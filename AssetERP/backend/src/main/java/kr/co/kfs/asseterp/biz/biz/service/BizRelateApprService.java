@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprPersonReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizRelateApprMapper;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,17 @@ public class BizRelateApprService {
     /** AS-IS selectFileCount → 'n건' */
     public String getFileCount(Long promoId) {
         return mapper.selectFileCount(promoId);
+    }
+
+    /** AS-IS modelUpdate L102-113 — [불러오기]로 고른 문서를 내역(promo)에 연결한다 → 새 연결 ID. 다른 회사 내역이면 거절(TOBE 보강) */
+    @Transactional
+    public long insertPromo(UserPrincipal user, Long promoId, Long apprId) {
+        if (promoId == null || apprId == null || mapper.countPromoOfCompany(user.getCompanyId(), promoId) == 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        long id = mapper.selectNextId();
+        mapper.insertPromo(id, promoId, apprId);
+        return id;
     }
 
     /** AS-IS delete(연결제거) → 지운 건수 */

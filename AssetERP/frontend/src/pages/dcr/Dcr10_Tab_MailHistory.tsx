@@ -3,12 +3,11 @@
  * AS-IS: myApp/client/vi/dcr/Dcr10_Tab_MailHistory.java (247줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L66-95: center(테두리, 여백 20) — 툴바 [발신일자 시작~끝][메일구분 콤보 100][연관펀드 300][검색 200 빈칸 "제목"][조회] + 그리드(단일 선택, 행번호, 8열:
  *   보낸시간 150 · 발신자 100 · 발신 150 · 수신 300 · 참조 300 · 제목 300 · 내용 60 · 문서 60)
- * 1단계(G01~G06과 같은 사유): ① [문서] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(apr) ② 연관펀드 조회창 Fnd01_Lookup_SelectSingle(fnd, 큰 SQL)은
- *   다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다. 연관펀드 조건을 받는 서버(`fundId`)는 구현해 두었다.
- * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
+ * [문서] 아이콘은 전자결재 편집창 Apr01_Edit_ApprDoc, 연관펀드는 Fnd01_Lookup_SelectSingle.openNone을 연다(2026-11-05 연결, 13-누락대장 1·3번 — Dcr10_Tab_MailHistory_Manager와 같은 방식)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Select, message } from 'antd';
+import { Fnd01_Lookup_SelectSingle } from '@/components/lookup/Fnd01_Lookup_SelectSingle';
 import dayjs, { Dayjs } from 'dayjs';
 import { dcrMailHistoryApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -30,7 +29,9 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('month'));
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs().endOf('month'));
   const [mailGubun, setMailGubun] = useState('전체');
-  const [fundName] = useState('전체');
+  const [fundId, setFundId] = useState<number | null>(null);
+  const [fundName, setFundName] = useState('전체');
+  const [fundOpen, setFundOpen] = useState(false);
   const [titleText, setTitleText] = useState('');
   const [rows, setRows] = useState<DcrMailHistory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,7 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
     setLoading(true);
     try {
       setRows(await dcrMailHistoryApi.searchMailHistories({
-        startDate: startDate.format(DATE_FORMAT), endDate: endDate.format(DATE_FORMAT), titleText, mailGubun,
+        startDate: startDate.format(DATE_FORMAT), endDate: endDate.format(DATE_FORMAT), titleText, fundId, mailGubun,
       }));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
@@ -56,9 +57,13 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // [E2] fundName.TriggerClick (L134) → openLookupOpr() L207-222: Fnd01_Lookup_SelectSingle.openNone(callback)
-  // [E2 생략] 펀드 조회창은 다른 도메인(fnd)이라 다음 단계
-  const openLookupOpr = () => message.info('펀드 조회창은 다음 단계에서 연결됩니다');
+  // [E2] fundName.TriggerClick (L134) → openLookupOpr() L207-222: Fnd01_Lookup_SelectSingle.openNone(callback) — 펀드를 고르면 그 펀드, [전체]면 "전체"·fundId 비움
+  const openLookupOpr = () => setFundOpen(true);
+  const onFundResult = (fund: { fundId: number; fundName?: string | null } | null) => {
+    setFundOpen(false);
+    setFundId(fund?.fundId ?? null);
+    setFundName(fund?.fundName ?? '전체');
+  };
 
   // buildGrid() L150-205
   /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
@@ -124,6 +129,7 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
       </div>
       <Dcr10_Lookup_MailViwer mail={viewing} onClose={() => setViewing(null)} />
       {/* L182 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Fnd01_Lookup_SelectSingle open={fundOpen} none="all" onResult={onFundResult} onClose={() => setFundOpen(false)} />
       <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );

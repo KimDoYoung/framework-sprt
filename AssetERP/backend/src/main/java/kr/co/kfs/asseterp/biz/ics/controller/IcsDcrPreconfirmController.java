@@ -74,6 +74,22 @@ public class IcsDcrPreconfirmController {
         return ApiResponse.ok(service.updateConfirmMsg(principal, dcrPreconfirmId, req.confirmMsg()));
     }
 
+    /** AS-IS ics.Ics40_DcrPreconfirm.selectByApprId */
+    @GetMapping("/by-appr")
+    public ApiResponse<List<IcsDcrPreconfirmRes>> searchByApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long apprId) {
+        return ApiResponse.ok(service.searchByApprId(principal, apprId));
+    }
+
+    /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (Ics40_Edit_Msg.editRegEmpMsg) → 저장된 행 */
+    @PutMapping("/{dcrPreconfirmId}/reg-emp-msg")
+    public ApiResponse<IcsDcrPreconfirmRes> updateRegEmpMsg(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long dcrPreconfirmId,
+                                                            @RequestBody RegEmpMsgReq req) {
+        return ApiResponse.ok(service.updateRegEmpMsg(principal, dcrPreconfirmId, req.regEmpMsg()));
+    }
+
+    public record RegEmpMsgReq(String regEmpMsg) {
+    }
+
     /** AS-IS sys.Sys99_Print.insertRdDcrPreConfirm → 출력 그룹 ID (RD rdGroupId) */
     @PostMapping("/rd-download")
     public ApiResponse<String> rdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsDcrPreconfirmPrintReq req) {

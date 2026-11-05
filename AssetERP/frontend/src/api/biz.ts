@@ -288,6 +288,12 @@ export const crmContactApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS crm.Crm09_Contact.selectBiz02Emp — open("emp"). searchText는 글자 그대로(서버가 `%…%`로 감싼다) */
+  searchBiz02Emps: async (searchText: string): Promise<CrmContact[]> => {
+    const res = await apiClient.get<ApiResponse<CrmContact[]>>('v1/crm/contacts/biz02-emps', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS crm09_contact.selectById (EE84 Crm09_Lookup_ContactPoint.openEdit) */
   get: async (contactId: number): Promise<CrmContactDetail> => {
     const res = await apiClient.get<ApiResponse<CrmContactDetail>>(`v1/crm/contacts/${contactId}`);
@@ -330,6 +336,11 @@ export const bizPersonApi = {
   /** AS-IS biz.Biz02_Person.modelUpdate(직원 등록) → 추가한 건수 */
   addEmps: async (promoId: number, empIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/biz/people/internal', { promoId, empIds });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz02_Person.modelUpdate(거래처 등록, Biz02_Grid_ExternalList) → 추가한 건수 */
+  addTargets: async (promoId: number, targets: { targetCompanyName: string | null; targetEmpName: string | null; targetOrgName: string | null }[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/people/external', { promoId, targets });
     return res.data.data ?? 0;
   },
   /** AS-IS biz.Biz02_Person.insertEmpId — 로그인 사원이 없는 내역에 직원으로 넣는다 */
@@ -387,6 +398,11 @@ export const bizRelateApprApi = {
   /** AS-IS biz.Biz05_RelateAppr.insert — 법인카드 현황(A35)·접대비 현황(A36)의 월 상신 연결을 새 문서로 바꾼다 → 새 연결 ID (V33) */
   insertDataYm: async (req: { dataYm: string; apprId: number; linkCode: string }): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/biz/relate-apprs/data-ym', req);
+    return res.data.data;
+  },
+  /** AS-IS biz.Biz05_RelateAppr.modelUpdate — [불러오기]로 고른 문서를 내역(promo)에 연결 → 새 연결 ID */
+  insertPromo: async (promoId: number, apprId: number): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/relate-apprs/promo', { promoId, apprId });
     return res.data.data;
   },
   /** AS-IS biz.Biz05_RelateAppr.delete → 지운 건수 */

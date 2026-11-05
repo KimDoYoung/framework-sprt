@@ -82,6 +82,12 @@
         VALUES (#{personId}, #{promoId}, 'true', #{empId})
     </insert>
 
+    <!-- AS-IS Biz02_Person.modelUpdate → UpdateDataModel(biz02_person) INSERT (Biz02_Grid_ExternalList.insertRow L140-171) — 모델이 채우는 열만 -->
+    <insert id="insertTarget">
+        INSERT INTO biz02_person (biz02_person_id, biz02_promo_id, biz02_emp_yn, biz02_target_company_nm, biz02_target_emp_nm, biz02_target_org_nm)
+        VALUES (#{personId}, #{promoId}, 'false', #{targetCompanyName}, #{targetEmpName}, #{targetOrgName})
+    </insert>
+
     <!-- AS-IS Biz02_Person.delete → UpdateDataModel.deleteModel — 로그인 회사 내역의 인원만 -->
     <delete id="deleteById">
         DELETE FROM biz02_person

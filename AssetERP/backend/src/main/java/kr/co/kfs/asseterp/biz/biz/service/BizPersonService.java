@@ -37,6 +37,24 @@ public class BizPersonService {
         return empIds.size();
     }
 
+    /**
+     * AS-IS modelUpdate(거래처 한 행) — Mkt01_Lookup_Select("MULTI")로 고른 거래처·담당자마다. 추가한 건수.
+     * AS-IS와 다른 점: 원본은 행마다 따로 부르지만 TOBE는 한 번에(한 트랜잭션) 넣는다
+     */
+    @Transactional
+    public int addTargets(UserPrincipal user, Long promoId, List<TargetReq> targets) {
+        if (mapper.countPromo(user.getCompanyId(), promoId) == 0) {
+            return 0;
+        }
+        for (TargetReq t : targets) {
+            mapper.insertTarget(mapper.selectNextId(), promoId, t.targetCompanyName(), t.targetEmpName(), t.targetOrgName());
+        }
+        return targets.size();
+    }
+
+    public record TargetReq(String targetCompanyName, String targetEmpName, String targetOrgName) {
+    }
+
     /** AS-IS insertEmpId — 고른 내역마다 로그인 사원이 아직 없으면 직원으로 넣는다 */
     @Transactional
     public int autoRegister(UserPrincipal user, List<Long> promoIds) {

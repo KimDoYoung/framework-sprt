@@ -3,8 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr16_Lookup_StampDocReg.java (481줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L97-135·getEditor() L240-287: 모달 700×480 "법인서류 발급 및 사용매수 등록", 라벨 120 — 등록일 · 구분(콤보 250 + 인감/대표명의 칸 330) · 발급매수 · 사용매수 · 제출처 · 목적 · 비고 ·
  *   연관상신문서(조회 칸), 아래 가운데 [저장][닫기]. 연관상신문서 칸을 누르면 연결된 문서가 있을 때 [문서보기][문서연결][연결제거] 작은 창(SettingPopup)
- * 편집창 규격(11 §4a). 1단계: [문서연결](Apr05_Lookup_LoadDoc2)·[문서보기](Apr01_Edit_ApprDoc)는 다른 도메인 컴포넌트라 다음 단계 — 안내만 띄운다
- * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
+ * 편집창 규격(11 §4a). [문서연결]은 Apr05_Lookup_LoadDoc2("SINGLE", 선택안함 있음), [문서보기]는 Apr01_Edit_ApprDoc을 연다(2026-11-05 연결, 13-누락대장 1·3번)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
@@ -14,6 +13,7 @@ import { aprStampDocApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { comRelateApprApi } from '@/api/com';
 import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
+import { Apr05_Lookup_LoadDoc2 } from './Apr05_Lookup_LoadDoc2';
 import { AprStamp, AprStampDoc } from '@/types/apr';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Button } from '@/components/button';
@@ -164,8 +164,10 @@ export const Apr16_Lookup_StampDocReg: React.FC<Props> = ({ target, onSaved, onC
     if (apprId == null) { message.warning('연결된 문서가 없습니다.'); return; }
     void openPermitted(apprId);
   };
-  // lookupApprRelate() L417-434 — [E5] apprRelateButton[문서연결].Select (L207). Apr05_Lookup_LoadDoc2는 다음 단계
-  const lookupApprRelate = () => message.info('문서연결(Apr05_Lookup_LoadDoc2)은 다음 단계에서 제공됩니다');
+  // lookupApprRelate() L417-434 — [E5] apprRelateButton[문서연결].Select (L207): Apr05_Lookup_LoadDoc2("SINGLE", nullButtonYn=true, aprStatusYn=false)
+  //   callback(문서) → 연관상신문서 제목·ID, callback(null)([선택안함]) → 비운다. 원본의 apprStatusName은 화면에 보이지 않는 칸이라 옮기지 않았다
+  const [loadDoc2Open, setLoadDoc2Open] = useState(false);
+  const lookupApprRelate = () => setLoadDoc2Open(true);
   // [E6] apprdeleteButton[연결제거].Select (L213) → 연관문서 비움
   const removeAppr = () => { setApprName(''); setApprId(null); setApprPopup(false); };
 
@@ -261,6 +263,10 @@ export const Apr16_Lookup_StampDocReg: React.FC<Props> = ({ target, onSaved, onC
       </Modal>
       {/* L395-414 ApprCallbackResult → retrieveApproval */}
       <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
+      <Apr05_Lookup_LoadDoc2 open={loadDoc2Open}
+        onSelected={d => { setApprName(d.title ?? ''); setApprId(d.apprId); setLoadDoc2Open(false); }}
+        onNull={() => { setApprName(''); setApprId(null); }}
+        onClose={() => setLoadDoc2Open(false)} />
     </>
   );
 };

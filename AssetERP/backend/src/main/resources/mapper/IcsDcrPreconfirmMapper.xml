@@ -86,6 +86,21 @@
            AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
     </select>
 
+    <!-- AS-IS ics40_dcr_preconfirm.selectByApprId L108 (IDMS-IC) — 상신내역 조회(#1019)의 준감인의견. SELECT * 대신 공통 열, 원본에 없는 회사 조건을 더했다 -->
+    <select id="selectByApprId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.modelUpdate (Ics40_Edit_Msg.editRegEmpMsg — 준감인 의견 칸은 비활성이라 신청인 의견만 바뀐다) -->
+    <update id="updateRegEmpMsg">
+        UPDATE ics40_dcr_preconfirm
+           SET ics40_reg_emp_msg = #{regEmpMsg}
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </update>
+
     <!-- AS-IS ics40_dcr_preconfirm.countByApprNo L392 (IDMS-IC) -->
     <select id="countByApprNo" resultType="int">
         SELECT COUNT(*)

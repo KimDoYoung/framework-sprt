@@ -52,6 +52,15 @@ public class BizRelateApprController {
         return ApiResponse.ok(service.delete(principal, relateApprIds));
     }
 
+    /** AS-IS biz.Biz05_RelateAppr.modelUpdate (Biz05_Lookup_RelateAppr [불러오기]) → 새 연결 ID */
+    @PostMapping("/promo")
+    public ApiResponse<Long> insertPromo(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PromoReq req) {
+        return ApiResponse.ok(service.insertPromo(principal, req.promoId(), req.apprId()));
+    }
+
+    public record PromoReq(Long promoId, Long apprId) {
+    }
+
     /** AS-IS biz.Biz05_RelateAppr.insert (A35·A36 월 단위 상신 연결) → 새 연결 ID */
     @PostMapping("/data-ym")
     public ApiResponse<Long> insertDataYm(@AuthenticationPrincipal UserPrincipal principal, @RequestBody @jakarta.validation.Valid BizRelateApprDataYmReq req) {

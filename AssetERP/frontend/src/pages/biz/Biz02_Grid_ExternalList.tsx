@@ -2,7 +2,8 @@
  * 이익제공(수령) 거래상대방 목록 (L02) — Biz01_Tab_Card 오른쪽 아래 `Biz02_Grid_PersonList`의 아래쪽 칸
  * AS-IS: myApp/client/vi/biz/Biz02_Grid_ExternalList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L56-74: 툴바 "거래상대방" + [등록][삭제] (마감·상신이면 감춤), 그리드(buildGrid: 체크박스 다중, 회사명 170 · 성명 70 · 부서 100)
- * 1단계: [등록]이 여는 거래처 조회창 `Mkt01_Lookup_Select`(다른 도메인 mkt)는 다음 단계 — 마감 확인까지 하고 안내만 띄운다. 서버 등록 API는 아직 없다.
+ * [등록]은 마감 확인 뒤 거래처 조회창 `Mkt01_Lookup_Select`("MULTI")를 열고, 고른 거래처·담당자를 넣는다(2026-11-05 연결, 13-누락대장 3번).
+ * AS-IS와 다른 점: 원본은 고른 행마다 modelUpdate를 따로 부르고 그때마다 callback·다시 조회하지만, TOBE는 한 번에 넣고 한 번만 한다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
@@ -12,6 +13,8 @@ import { errorMessage } from '@/api/client';
 import { BizPerson } from '@/types/biz';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { Mkt01_Lookup_Select } from '@/components/lookup/Mkt01_Lookup_Select';
+import { MktSelect } from '@/types/mkt';
 
 const gb = gbFor<BizPerson>();
 
@@ -26,6 +29,7 @@ export const Biz02_Grid_ExternalList: React.FC<Props> = ({ promo, closed, refres
   const gridRef = useRef<AgGridReact<BizPerson>>(null);
   const [rows, setRows] = useState<BizPerson[]>([]);
   const promoId = promo?.promoId ?? null;
+  const [mktOpen, setMktOpen] = useState(false);   // Mkt01_Lookup_Select("MULTI")
 
   // retrieve(): 서비스 biz.Biz02_Person.selectByExternal(promoId)
   const retrieve = useCallback(async () => {
@@ -54,8 +58,20 @@ export const Biz02_Grid_ExternalList: React.FC<Props> = ({ promo, closed, refres
     }
   };
 
-  // insertRow() L77: Mkt01_Lookup_Select("MULTI") → 고른 거래처마다 biz.Biz02_Person.modelUpdate(empYn=false·회사명·담당자·부서) — 조회창이 다른 도메인이라 다음 단계
-  const insertRow = () => message.info('거래처 조회창은 다음 단계에서 연결됩니다');
+  // insertRow() L140-171: Mkt01_Lookup_Select("MULTI") → 고른 거래처마다 biz.Biz02_Person.modelUpdate(empYn=false·회사명·담당자·부서) → callback.execute(), retrieve()
+  const insertRow = () => setMktOpen(true);
+  const onMktResult = async (list: MktSelect[]) => {
+    setMktOpen(false);
+    if (promoId == null || list.length === 0) return;
+    try {
+      await bizPersonApi.addTargets(promoId, list.map(m => ({ targetCompanyName: m.targetCompanyName, targetEmpName: m.managerName, targetOrgName: m.managerOrgName })));
+    } catch (err) {
+      message.error(errorMessage(err, '저장 실패'));
+      return;
+    }
+    onChanged();
+    await retrieve();
+  };
 
   // deleteRow(): 선택 없으면 "삭제대상을 선택하세요" → "확인"/"해당 정보를 삭제하시겠습니까?"(폭 350) → [E3] msgBox.DialogHide [YES] (L182) → GridDeleteData → biz.Biz02_Person.delete → callback.execute()
   const deleteRow = () => {
@@ -105,6 +121,7 @@ export const Biz02_Grid_ExternalList: React.FC<Props> = ({ promo, closed, refres
       <div style={{ flex: 1, minHeight: 0 }}>
         <MultiGrid<BizPerson> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.personId)} />
       </div>
+      <Mkt01_Lookup_Select type={mktOpen ? 'MULTI' : null} onResult={rows => void onMktResult(rows)} onClose={() => setMktOpen(false)} />
     </div>
   );
 };

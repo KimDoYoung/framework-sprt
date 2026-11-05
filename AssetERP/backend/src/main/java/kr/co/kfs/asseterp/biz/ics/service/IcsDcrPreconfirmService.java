@@ -87,6 +87,20 @@ public class IcsDcrPreconfirmService {
         return mapper.selectById(user.getCompanyId(), dcrPreconfirmId);
     }
 
+    /** AS-IS ics.Ics40_DcrPreconfirm.selectByApprId — 상신 문서의 사전확인 (부르는 쪽은 한 건일 때만 창을 연다) */
+    public List<IcsDcrPreconfirmRes> searchByApprId(UserPrincipal user, Long apprId) {
+        return mapper.selectByApprId(user.getCompanyId(), apprId);
+    }
+
+    /** AS-IS Ics40_Edit_Msg.editRegEmpMsg → modelUpdate — 신청인 의견 저장 → 저장된 행 */
+    @Transactional
+    public IcsDcrPreconfirmRes updateRegEmpMsg(UserPrincipal user, Long dcrPreconfirmId, String regEmpMsg) {
+        if (mapper.updateRegEmpMsg(user.getCompanyId(), dcrPreconfirmId, regEmpMsg) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return mapper.selectById(user.getCompanyId(), dcrPreconfirmId);
+    }
+
     /** AS-IS Sys99_Print.insertRdDcrPreConfirm — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID(RD 리포트의 rdGroupId) */
     @Transactional
     public String insertRd(UserPrincipal user, IcsDcrPreconfirmPrintReq req) {

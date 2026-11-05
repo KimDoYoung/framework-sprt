@@ -98,6 +98,18 @@
         VALUES ( #{relateApprId}, #{apprId}, #{companyId}, #{dataYm}, #{linkCode} )
     </insert>
 
+    <!-- AS-IS biz.Biz05_RelateAppr.modelUpdate L102-113 → UpdateDataModel(biz05_relate_appr) INSERT (IDMS-IC). 모델이 채우는 열만(회사·기준월·링크·사원은 원본도 NULL) -->
+    <insert id="insertPromo">
+        INSERT INTO biz05_relate_appr
+             ( biz05_relate_appr_id, biz05_promo_id, biz05_appr_id )
+        VALUES ( #{relateApprId}, #{promoId}, #{apprId} )
+    </insert>
+
+    <!-- TOBE 보강: 연결할 내역이 로그인 회사 것인지 -->
+    <select id="countPromoOfCompany" resultType="int">
+        SELECT count(*) FROM biz01_promo WHERE biz01_promo_id = #{promoId} AND biz01_company_id = #{companyId}
+    </select>
+
     <select id="selectLocName" resultType="string">
         SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
     </select>
