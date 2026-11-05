@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ics.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmStatusReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmPrintReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeOption;
@@ -101,7 +102,47 @@ public class IcsDcrPreconfirmService {
         return mapper.selectById(user.getCompanyId(), dcrPreconfirmId);
     }
 
-    /** AS-IS Sys99_Print.insertRdDcrPreConfirm — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID(RD 리포트의 rdGroupId) */
+    /**
+     * AS-IS Ics40_Edit_DcrPreconfirm.update(applyYn) L333-381 → modelUpdate L132(+ updateByStatus01 L146) — 사전확인 신청창 [신청]·[신청취소]·[저장] → 저장된 행.
+     * 회사 설정 dcrPreconfirmSkipYn이면 [신청]이 곧바로 80(PASS)이 되고 심사필번호를 부여한다(신청자가 confirmerId).
+     * AS-IS와 다른 점: 원본은 modelUpdate 뒤 화면이 updateByStatus01을 따로 부른다 — TOBE는 한 트랜잭션에서 둘 다 한다.
+     */
+    @Transactional
+    public IcsDcrPreconfirmRes saveDcrPreconfirm(UserPrincipal user, IcsDcrPreconfirmSaveReq req) {
+        if (req.dcrTypeCode() == null || req.dcrTypeCode().isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "대장분류는 필수선택 항목입니다");
+        }
+        if (req.content() == null || req.content().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "내용은 필수입력 항목입니다");
+        }
+        String statusCode = req.statusCode();
+        if (req.applyYn() && statusCode != null && skipYn(user)) {
+            statusCode = "80";  // PASS
+        }
+        Long id = req.dcrPreconfirmId();
+        if (id == null) {
+            id = mapper.selectNextId();
+            mapper.insertDcrPreconfirm(id, user.getCompanyId(), user.getUserId(), req.applyYn() ? statusCode : null, req);
+        } else if (mapper.updateDcrPreconfirm(user.getCompanyId(), statusCode, req) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (req.applyYn() && "80".equals(statusCode)) {
+            mapper.updateByStatus01(user.getCompanyId(), id, req.dcrTypeCode(), statusCode, user.getUserId(), String.valueOf(LocalDate.now().getYear()));
+        }
+        return mapper.selectById(user.getCompanyId(), id);
+    }
+
+    /** AS-IS Ics40_Edit_DcrPreconfirm.delete() L399-420 → ics.Ics40_DcrPreconfirm.delete L168 — 로그인 회사 것만 */
+    @Transactional
+    public int deleteDcrPreconfirm(UserPrincipal user, Long dcrPreconfirmId) {
+        int n = mapper.deleteDcrPreconfirm(user.getCompanyId(), dcrPreconfirmId);
+        if (n == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return n;
+    }
+
+    /** AS-IS Sys99_Print.insertRdDcrPreConfirm — ①내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID(RD 리포트의 rdGroupId) */
     @Transactional
     public String insertRd(UserPrincipal user, IcsDcrPreconfirmPrintReq req) {
         Long companyId = user.getCompanyId();

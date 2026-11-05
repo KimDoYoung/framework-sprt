@@ -4,7 +4,7 @@
  * 레이아웃 L82-120: center=vlc — 툴바 2줄(등록기간 · 문서분류 / 결재상태 · 검색 · 완료/반려건 포함 · [검색] [출력/다운로드]) + 상신 문서 그리드(체크박스 단일 선택)
  * 1단계(F01~F12·G01과 같은 사유): [상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc, [신청]이 여는 Ics40_Edit_DcrPreconfirm,
  *   준감인의견 아이콘이 여는 Ics40_Edit_Msg, [메일보내기]는 Dcr10_Lookup_MailSender.open(apprId)(EE35). 준감인의견 Ics40_Edit_Msg 등은 다음 단계.
- * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc(13-누락대장 1번)·준감인의견 Ics40_Edit_Msg.editRegEmpMsg(3번) 연결 완료. [신청]의 Ics40_Edit_DcrPreconfirm은 미변환(4번).
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc(13-누락대장 1번)·준감인의견 Ics40_Edit_Msg.editRegEmpMsg(3번)·[신청]의 사전확인 신청창 Ics40_Edit_DcrPreconfirm(4-1) 연결 완료.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -24,6 +24,7 @@ import { Dcr01_Lookup_DcrClass } from '@/pages/dcr/Dcr01_Lookup_DcrClass';
 import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 import { icsApi } from '@/api/ics';
 import { Ics40_Edit_Msg, Ics40_Edit_MsgTarget } from '@/pages/ics/Ics40_Edit_Msg';
+import { Ics40_Edit_DcrPreconfirm, Ics40_Edit_DcrPreconfirmTarget } from '@/pages/ics/Ics40_Edit_DcrPreconfirm';
 
 const gb = gbFor<AprMyRequest>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -41,6 +42,7 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(7, 'day'));
   const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [msgTarget, setMsgTarget] = useState<Ics40_Edit_MsgTarget | null>(null);   // Ics40_Edit_Msg.editRegEmpMsg
+  const [preconfirmTarget, setPreconfirmTarget] = useState<Ics40_Edit_DcrPreconfirmTarget | null>(null);   // Ics40_Edit_DcrPreconfirm.edit/insert
   /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
   const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
@@ -111,10 +113,12 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
     }),
     gb.group('준법감시인 사전확인', [
       // actionCell02(Edit) → 완료(30)가 아니면 "결재완료 후 신청할 수 있습니다", 아니면 ics.Ics40_DcrPreconfirm.selectByApprId → Ics40_Edit_DcrPreconfirm.edit/insert
-      // [생략] 준법감시인 사전확인 신청창은 다음 단계
+      //   한 건이면 edit(그 행), 아니면 insert(apprId) L265-290
       iconCell<AprMyRequest>('edit', 'actionCell02', 70, '신청', row => {
-        if (row.statusCode !== '30') message.warning('결재완료 후 신청할 수 있습니다');
-        else message.info('준법감시인 사전확인 신청 창은 다음 단계에서 연결됩니다');
+        if (row.statusCode !== '30') { message.warning('결재완료 후 신청할 수 있습니다'); return; }
+        icsApi.searchDcrPreconfirmsByAppr(row.apprId)
+          .then(list => setPreconfirmTarget(list.length === 1 ? { mode: 'edit', row: list[0] } : { mode: 'insert', apprId: row.apprId }))
+          .catch(err => message.error(errorMessage(err, '조회 실패')));
       }),
       gb.textCenter('preconfirmStatusName', 70, '상태'),  // L354
       gb.textCenter('preconfirmMsgYnStr', 90, '준감인의견'),  // L355
@@ -195,6 +199,8 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
       {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
       <Ics40_Edit_Msg target={msgTarget} onCallback={() => void retrieve()} onClose={() => setMsgTarget(null)} />
+      {/* L276·L284 callback → retrieveOne(apprModel) — 한 행만 다시 읽는 selectByApprId2가 없어 목록 전체를 다시 읽는다(AS-IS와 다른 점, 문서 창과 같음) */}
+      <Ics40_Edit_DcrPreconfirm target={preconfirmTarget} onCallback={() => void retrieve()} onClose={() => setPreconfirmTarget(null)} />
       {/* L246 retrieveApproval(apprModel, false, callback → retrieveOne(apprModel)) — TOBE에는 한 행만 다시 읽는 selectByApprId2가 없어 목록 전체를 다시 읽는다(AS-IS와 다른 점) */}
       <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>

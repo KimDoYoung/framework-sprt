@@ -29,5 +29,8 @@ public record IcsDcrPreconfirmRes(
         LocalDate closeDate,
         String spec,
         String qtyCnt,
-        String preApprNo) {
+        String preApprNo,
+        // 신청창(Ics40_Edit_DcrPreconfirm)의 광고종류·매체종류 콤보 값
+        String adType,
+        String mediaType) {
 }

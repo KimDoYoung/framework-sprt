@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceWriter, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsComplianceConfirmer, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceWriter, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsDcrPreconfirmSaveReq, IcsComplianceConfirmer, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -907,6 +907,18 @@ export const icsApi = {
   /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (Ics40_Edit_Msg.editRegEmpMsg — 신청인 의견) → 저장된 행 */
   updateDcrPreconfirmRegEmpMsg: async (dcrPreconfirmId: number, regEmpMsg: string | null): Promise<IcsDcrPreconfirm> => {
     const res = await apiClient.put<ApiResponse<IcsDcrPreconfirm>>(`v1/ics/dcr-preconfirms/${dcrPreconfirmId}/reg-emp-msg`, { regEmpMsg });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (+ updateByStatus01) — 사전확인 신청창 → 저장된 행 */
+  saveDcrPreconfirm: async (req: IcsDcrPreconfirmSaveReq): Promise<IcsDcrPreconfirm> => {
+    const res = await apiClient.put<ApiResponse<IcsDcrPreconfirm>>('v1/ics/dcr-preconfirms', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.delete — 사전확인 신청창 [삭제] */
+  deleteDcrPreconfirm: async (dcrPreconfirmId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/ics/dcr-preconfirms/${dcrPreconfirmId}`);
     return res.data.data;
   },
 

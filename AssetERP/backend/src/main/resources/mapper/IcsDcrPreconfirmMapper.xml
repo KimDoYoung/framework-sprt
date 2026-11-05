@@ -35,7 +35,9 @@
                ics40_close_date                                                                     AS close_date,
                ics40_spec                                                                           AS spec,
                ics40_qty_cnt                                                                        AS qty_cnt,
-               ics40_pre_appr_no                                                                    AS pre_appr_no
+               ics40_pre_appr_no                                                                    AS pre_appr_no,
+               ics40_ad_type                                                                        AS ad_type,
+               ics40_media_type                                                                     AS media_type
           FROM ics40_dcr_preconfirm
                INNER JOIN ics41_dcr_type ON (ics41_company_id = ics40_company_id AND ics41_dcr_type_cd = ics40_dcr_type_cd)
     </sql>
@@ -100,6 +102,49 @@
          WHERE ics40_company_id = #{companyId}
            AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
     </update>
+
+    <!-- AS-IS UpdateDataModel(ics40_dcr_preconfirm) INSERT — Ics40_Edit_DcrPreconfirm.insert(apprId): 회사·등록일(오늘)·신청자(로그인)·상신 문서 + 신청창 입력칸 (IDMS-IC) -->
+    <insert id="insertDcrPreconfirm">
+        INSERT INTO ics40_dcr_preconfirm (
+               ics40_dcr_preconfirm_id, ics40_company_id, ics40_reg_date, ics40_person_id, ics40_appr_id,
+               ics40_dcr_type_cd, ics40_content, ics40_provide_co, ics40_ad_type, ics40_media_type,
+               ics40_ad_item_nm, ics40_ad_content, ics40_start_date, ics40_close_date, ics40_spec,
+               ics40_qty_cnt, ics40_pre_appr_no, ics40_status_cd)
+        VALUES (
+               #{dcrPreconfirmId}, #{companyId}, f_sysdate()::date, #{personId}, #{req.apprId},
+               #{req.dcrTypeCode}, #{req.content}, #{req.provideCo}, #{req.adType}, #{req.mediaType},
+               #{req.adItemName}, #{req.adContent}, #{req.startDate}, #{req.closeDate}, #{req.spec},
+               #{req.qtyCnt}, #{req.preApprNo}, #{statusCode})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(ics40_dcr_preconfirm) UPDATE — 신청창이 바꾸는 열만. 상태는 [신청]·[신청취소](applyYn)일 때만 (IDMS-IC) -->
+    <update id="updateDcrPreconfirm">
+        UPDATE ics40_dcr_preconfirm
+           SET ics40_dcr_type_cd = #{req.dcrTypeCode},
+               ics40_content     = #{req.content},
+               ics40_provide_co  = #{req.provideCo},
+               ics40_ad_type     = #{req.adType},
+               ics40_media_type  = #{req.mediaType},
+               ics40_ad_item_nm  = #{req.adItemName},
+               ics40_ad_content  = #{req.adContent},
+               ics40_start_date  = #{req.startDate},
+               ics40_close_date  = #{req.closeDate},
+               ics40_spec        = #{req.spec},
+               ics40_qty_cnt     = #{req.qtyCnt},
+               ics40_pre_appr_no = #{req.preApprNo}
+               <if test="req.applyYn">
+             , ics40_status_cd   = #{statusCode}
+               </if>
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{req.dcrPreconfirmId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(ics40_dcr_preconfirm) DELETE — Ics40_Edit_DcrPreconfirm.delete() → ics.Ics40_DcrPreconfirm.delete. 회사 조건을 더했다 (IDMS-IC) -->
+    <delete id="deleteDcrPreconfirm">
+        DELETE FROM ics40_dcr_preconfirm
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </delete>
 
     <!-- AS-IS ics40_dcr_preconfirm.countByApprNo L392 (IDMS-IC) -->
     <select id="countByApprNo" resultType="int">

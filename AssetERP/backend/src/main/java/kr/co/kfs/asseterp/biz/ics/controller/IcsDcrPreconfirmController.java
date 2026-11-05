@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmMsgReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmPrintReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmStatusReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeOption;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeRes;
@@ -88,6 +89,18 @@ public class IcsDcrPreconfirmController {
     }
 
     public record RegEmpMsgReq(String regEmpMsg) {
+    }
+
+    /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (+ updateByStatus01) — 사전확인 신청창 등록·수정·신청·신청취소 → 저장된 행 */
+    @PutMapping
+    public ApiResponse<IcsDcrPreconfirmRes> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsDcrPreconfirmSaveReq req) {
+        return ApiResponse.ok(service.saveDcrPreconfirm(principal, req));
+    }
+
+    /** AS-IS ics.Ics40_DcrPreconfirm.delete — 사전확인 신청창 [삭제] */
+    @DeleteMapping("/{dcrPreconfirmId}")
+    public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long dcrPreconfirmId) {
+        return ApiResponse.ok(service.deleteDcrPreconfirm(principal, dcrPreconfirmId));
     }
 
     /** AS-IS sys.Sys99_Print.insertRdDcrPreConfirm → 출력 그룹 ID (RD rdGroupId) */

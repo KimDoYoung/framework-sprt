@@ -637,6 +637,31 @@ export interface IcsDcrPreconfirm {
   spec: string | null;
   qtyCnt: string | null;
   preApprNo: string | null;
+  /** 광고종류·매체종류 코드 (사전확인 신청창 콤보) */
+  adType: string | null;
+  mediaType: string | null;
+}
+
+/** 사전확인 신청창 저장 (PUT /api/v1/ics/dcr-preconfirms, AS-IS Ics40_Edit_DcrPreconfirm.update → modelUpdate). dcrPreconfirmId null = 새 신청 */
+export interface IcsDcrPreconfirmSaveReq {
+  dcrPreconfirmId: number | null;
+  apprId: number | null;
+  dcrTypeCode: string | null;
+  content: string | null;
+  provideCo: string | null;
+  adType: string | null;
+  mediaType: string | null;
+  adItemName: string | null;
+  adContent: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  spec: string | null;
+  qtyCnt: string | null;
+  preApprNo: string | null;
+  /** [신청]·[신청취소] = true(statusCode를 쓴다), [저장] = false */
+  applyYn: boolean;
+  /** '10' 신청 / null 신청취소 (회사 설정 dcrPreconfirmSkipYn이면 서버가 '10'을 '80'으로 바꾼다) */
+  statusCode: string | null;
 }
 
 /** M05 AS-IS Ics41_DcrTypeModel (대장분류) — dcrTypeId 0 이하는 새 행 */

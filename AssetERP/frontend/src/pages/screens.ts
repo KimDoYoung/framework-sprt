@@ -535,7 +535,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_BizPriorApproval, // L06 1단계 (메뉴 #1134. 승인신청·상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정이 여는 Dcr30_Lookup_Link는 다음 단계)
   Apr01_Tab_ExternalBiz, // A40 (메뉴 #1343 대외활동 신청서 작성. [승인신청]·[상세보기]는 전자결재 편집창 Apr01_Edit_ApprDoc, 문서분류 조회창은 Dcr30_Move_DcrClass)
-  Apr01_Tab_MyRequestList, // G02 1단계 (메뉴 #1019. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·신청의 Ics40_Edit_DcrPreconfirm·준감인의견의 Ics40_Edit_Msg·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
+  Apr01_Tab_MyRequestList, // G02 (메뉴 #1019. 상세보기 Apr01_Edit_ApprDoc·준감인의견 Ics40_Edit_Msg는 13-누락대장 1·3번, 신청 Ics40_Edit_DcrPreconfirm은 4-1(2026-11-05), 메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_MyReferenceList, // G03 1단계 (메뉴 #1093. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_TotalList, // G16 (메뉴 #1010 운영현황표. 건별명세 아이콘이 메뉴 #1011 G17을 TempData로 연다)

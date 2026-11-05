@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ics.mapper;
 
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeOption;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeSaveReq;
@@ -31,6 +32,18 @@ public interface IcsDcrPreconfirmMapper {
 
     /** AS-IS ics40_dcr_preconfirm.selectByCompanyId — 회사의 사전확인대장 전체 */
     List<IcsDcrPreconfirmRes> selectByCompanyId(@Param("companyId") Long companyId);
+
+    /** AS-IS Ics40_DcrPreconfirm.modelUpdate → UpdateDataModel INSERT — 사전확인 신청창 새 신청 */
+    int insertDcrPreconfirm(@Param("dcrPreconfirmId") Long dcrPreconfirmId, @Param("companyId") Long companyId,
+                            @Param("personId") Long personId, @Param("statusCode") String statusCode,
+                            @Param("req") IcsDcrPreconfirmSaveReq req);
+
+    /** AS-IS Ics40_DcrPreconfirm.modelUpdate → UpdateDataModel UPDATE — 사전확인 신청창 수정(applyYn이면 상태도) */
+    int updateDcrPreconfirm(@Param("companyId") Long companyId, @Param("statusCode") String statusCode,
+                            @Param("req") IcsDcrPreconfirmSaveReq req);
+
+    /** AS-IS Ics40_DcrPreconfirm.delete → UpdateDataModel DELETE */
+    int deleteDcrPreconfirm(@Param("companyId") Long companyId, @Param("dcrPreconfirmId") Long dcrPreconfirmId);
 
     /** AS-IS ics40_dcr_preconfirm.countByApprNo — 과거 심사필번호로 쓰인 횟수 */
     int countByApprNo(@Param("companyId") Long companyId, @Param("apprNo") String apprNo);
