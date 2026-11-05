@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 INDEX_DIR="AssetERP/docs/as-is/src"
 DB_INDEX_DIR="AssetERP/docs/as-is/db"
-DBML_FILE=".yunhee/asseterp-dbml.md"
+DBML_FILE="AssetERP/.yunhee/asseterp-dbml.md"
 DB_ENV="YUNHEE_DB"
 MENUS_TSV="AssetERP/docs/as-is/menus.tsv"
 
