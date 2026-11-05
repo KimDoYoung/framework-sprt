@@ -138,4 +138,14 @@
              , #{noteAdmin}
              )
     </insert>
+
+    <!-- Emp02_Lookup_HireDate 저장: AS-IS emp02_others.updateHireDate L59 (IDMS-IC). 보강: 그 사람(로그인 회사)의 행만 -->
+    <update id="updateHireDate">
+        UPDATE emp02_others
+           SET emp02_hire_date_group      = #{hireDateGroup}
+             , emp02_hire_date_leave_calc = #{hireDateLeaveCalc}
+         WHERE emp02_others_id = #{othersId}
+           AND emp02_person_id = #{personId}
+           AND emp02_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
 </mapper>

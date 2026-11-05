@@ -6,6 +6,8 @@ import kr.co.kfs.asseterp.biz.emp.dto.OthersSaveReq;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
+
 /** AS-IS server/emp/Emp02_Others (updateOne) + selectByText의 empOthersModel 컬럼 */
 @Mapper
 public interface EmpOthersMapper {
@@ -23,4 +25,8 @@ public interface EmpOthersMapper {
 
     /** AS-IS modelUpdate: othersId == null → getSeq + INSERT */
     int insertNoteAdmin(@Param("personId") Long personId, @Param("noteAdmin") String noteAdmin);
+
+    /** AS-IS emp02_others.updateHireDate. 보강: 그 사람(로그인 회사)의 행만 — 아니면 0 */
+    int updateHireDate(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("othersId") Long othersId,
+                       @Param("hireDateGroup") LocalDate hireDateGroup, @Param("hireDateLeaveCalc") LocalDate hireDateLeaveCalc);
 }

@@ -255,6 +255,20 @@ export interface License {
   note?: string | null;
 }
 
+/** 특정직위 및 알림설정 창 한 행 (Emp03_Lookup_Grade, GET/PUT /api/v1/emp/trans/grades — AS-IS emp.Emp03_Trans.selectByGrade) */
+export interface TransGrade {
+  transId: number;
+  personId: number;
+  orgFullName?: string | null;
+  titleName?: string | null;
+  empNo?: string | null;
+  empKorName?: string | null;
+  gradeCode?: string | null;
+  gradeName?: string | null;
+  icsYn?: boolean | null;
+  apprYn?: boolean | null;
+}
+
 /** 기타정보 탭 (AS-IS Emp02_OthersModel) — GET 응답 = PUT body */
 export interface Others {
   othersId?: number | null;

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.HireDateSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminRes;
 import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersRes;
@@ -51,5 +52,13 @@ public class EmpOthersController {
                                                      @PathVariable Long personId,
                                                      @RequestBody NoteAdminSaveReq req) {
         return ApiResponse.ok(empOthersService.updateNoteAdmin(principal, personId, req));
+    }
+
+    /** 기타 입사일 정보 창(Emp02_Lookup_HireDate) 저장: AS-IS emp.Emp02_Others.updateHireDate. 조회는 GET /persons/{personId}/others */
+    @PutMapping("/persons/{personId}/hire-dates")
+    public ApiResponse<Integer> updateHireDate(@AuthenticationPrincipal UserPrincipal principal,
+                                               @PathVariable Long personId,
+                                               @RequestBody HireDateSaveReq req) {
+        return ApiResponse.ok(empOthersService.updateHireDate(principal, personId, req));
     }
 }

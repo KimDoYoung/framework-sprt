@@ -1,7 +1,7 @@
 /**
  * 일반발령 탭 (C01) — Emp00_Tab_TransInfo 아래 탭 3번째.
  * AS-IS: myApp/client/vi/emp/Emp03_TabPage_Trans.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 선택한 사원의 발령(emp03_trans)을 셀 편집 그리드(체크 단일)로 조회·등록·삭제·저장한다. 특정직위 조회창(E1)은 2단계.
+ * 선택한 사원의 발령(emp03_trans)을 셀 편집 그리드(체크 단일)로 조회·등록·삭제·저장한다. [특정직위 및 알림설정](E1) → Emp03_Lookup_Grade.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space, Typography, Button as AntButton } from 'antd';
@@ -19,6 +19,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
+import { Emp03_Lookup_Grade } from './Emp03_Lookup_Grade';
 
 const gb = gbFor<Trans>();
 
@@ -71,6 +72,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
   const personId = row?.personId;
   const [codes, setCodes] = useState<Record<string, Code[]>>({});
   const [orgTarget, setOrgTarget] = useState<Trans>();
+  const [gradeOpen, setGradeOpen] = useState(false);
 
   // updateTransInfoGrid() L249-273: 현재 발령(Emp00_Current_TransInfoModel, 발령코드 '%')을 다시 읽어 목록 행을 바꾼다
   const updateTransInfoGrid = useCallback(async () => {
@@ -174,8 +176,8 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
         <Button type="delete" onClick={deleteRow}>삭제</Button>
         {/* [E5] searchBarBuilder[저장].Update (L81) → update() */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        {/* [E1 생략] gradeCodeButton[특정직위 및 알림설정].Select (L68) → Emp03_Lookup_Grade — 2단계 */}
-        <Button type="org" disabled title="2단계">특정직위 및 알림설정</Button>
+        {/* [E1] gradeCodeButton[특정직위 및 알림설정].Select (L68) → lookupGradeCode() L182-190: Emp03_Lookup_Grade.open(저장 뒤 retrieve()) */}
+        <Button type="org" onClick={() => setGradeOpen(true)}>특정직위 및 알림설정</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<Trans>
@@ -190,6 +192,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
         onClose={() => setOrgTarget(undefined)}
         onSelect={org => orgTarget && crud.updateRow(orgTarget.transId, { orgCodeId: org.orgCodeId, orgNm: org.korNm })}
       />
+      <Emp03_Lookup_Grade open={gradeOpen} onSaved={() => void crud.retrieve()} onClose={() => setGradeOpen(false)} />
     </div>
   );
 };

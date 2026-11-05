@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { MenuInfoNotice, SmsNotice, LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget, SmsNoticeKind, Notice } from '../types/emp';
+import { MenuInfoNotice, SmsNotice, LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleLogin, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransGrade, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo, SmsNoticeTarget, SmsNoticeKind, Notice } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -135,6 +135,11 @@ export const empApi = {
     return res.data.data;
   },
 
+  /** 기타 입사일 정보 창(Emp02_Lookup_HireDate): AS-IS emp.Emp02_Others.updateHireDate. 조회는 getOthers */
+  updateHireDate: async (personId: number, othersId: number | null | undefined, hireDateGroup: string | null, hireDateLeaveCalc: string | null): Promise<void> => {
+    await apiClient.put(`v1/emp/persons/${personId}/hire-dates`, { othersId, hireDateGroup, hireDateLeaveCalc });
+  },
+
   /** AS-IS emp.Emp02_Others.updateOne (emp02_others.upsert) → 다시 읽은 값 */
   updateOthers: async (req: Others): Promise<Others> => {
     const res = await apiClient.put<ApiResponse<Others>>('v1/emp/others', req);
@@ -188,6 +193,19 @@ export const empApi = {
       ({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate: expiryDate || null, transReason, orgHeadYn, officerYn, tdmTargetYn, nonStayYn }));
     const res = await apiClient.put<ApiResponse<Trans[]>>('v1/emp/trans', body);
     return (res.data.data ?? []).map(toTrans);
+  },
+
+  /** 특정직위 및 알림설정 창(Emp03_Lookup_Grade): AS-IS emp.Emp03_Trans.selectByGrade(baseDate) */
+  searchTransGrades: async (baseDate: string): Promise<TransGrade[]> => {
+    const res = await apiClient.get<ApiResponse<TransGrade[]>>('v1/emp/trans/grades', { params: { baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** 특정직위 및 알림설정 저장: AS-IS emp.Emp03_Trans.update + emp.Emp25_MypageNotice.updateList → 저장한 행 수 */
+  updateTransGrades: async (rows: TransGrade[]): Promise<number> => {
+    const body = rows.map(({ transId, personId, gradeCode, icsYn, apprYn }) => ({ transId, personId, gradeCode: gradeCode || null, icsYn: !!icsYn, apprYn: !!apprYn }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/trans/grades', body);
+    return res.data.data ?? 0;
   },
 
   /** AS-IS emp.Emp03_Trans.delete → 지운 건수 */

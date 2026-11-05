@@ -1,7 +1,7 @@
 /**
  * 기본정보 탭 (C01) — Emp00_Tab_TransInfo 아래 탭 1번째.
  * AS-IS: myApp/client/vi/emp/Emp01_TabPage_Person.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 선택한 사원의 emp01_person을 폼으로 보여 주고 저장·삭제한다. 사진(E3~E5)·입사일 팝업(E9)은 2단계.
+ * 선택한 사원의 emp01_person을 폼으로 보여 주고 저장·삭제한다. 사진(E3~E5)은 2단계. 입사일 옆 아이콘(E9) → Emp02_Lookup_HireDate.
  */
 import React, { useEffect, useState } from 'react';
 import { Col, DatePicker, Input, message, Modal, Row, Space, Typography } from 'antd';
@@ -14,6 +14,7 @@ import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
+import { Emp02_Lookup_HireDate } from './Emp02_Lookup_HireDate';
 
 interface EditForm {
   empNo: string;
@@ -61,6 +62,7 @@ const Field: React.FC<{ label?: string; children?: React.ReactNode }> = ({ label
 export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowChanged, onRowDeleted }) => {
   const user = useLoginUser();
   const [f, setF] = useState<EditForm>(EMPTY);
+  const [hirePersonId, setHirePersonId] = useState<number | null>(null);
   const set = <K extends keyof EditForm>(k: K, v: EditForm[K]) => setF(prev => ({ ...prev, [k]: v }));
 
   // retrieve(param) L355-360: 선택한 목록 행의 사람 정보를 폼에 / init() L180-182: 비운다
@@ -148,8 +150,8 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
               <Field label="입사일">
                 <Space.Compact block>
                   <DatePicker style={{ width: '100%' }} value={f.hireDate} onChange={d => set('hireDate', d)} format="YYYY-MM-DD" />
-                  {/* [E9 생략] anchorHire.MouseDown (L287) → Emp02_Lookup_HireDate — 2단계 */}
-                  <Button icon={<EditOutlined />} disabled title="그룹입사일·연차기준입사일 (2단계)" />
+                  {/* [E9] anchorHire.MouseDown (L327) → new Emp02_Lookup_HireDate(선택 사원 personId). 원본은 선택이 없으면 오류로 멈춤 → 선택 없으면 비활성 */}
+                  <Button icon={<EditOutlined />} disabled={!row} title="기타 입사일 정보" onClick={() => row && setHirePersonId(row.personId)} />
                 </Space.Compact>
               </Field>
               <Field label="이메일"><Input value={f.emailAddr} onChange={e => set('emailAddr', e.target.value)} /></Field>
@@ -174,6 +176,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
           <Button type="delete" onClick={deleteConfirm} disabled={!row}>삭제</Button>
         </Space>
       </div>
+      <Emp02_Lookup_HireDate personId={hirePersonId} onClose={() => setHirePersonId(null)} />
     </div>
   );
 };

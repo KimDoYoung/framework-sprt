@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
 import kr.co.kfs.asseterp.biz.emp.dto.TransDeleteParam;
+import kr.co.kfs.asseterp.biz.emp.dto.TransGradeRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
@@ -46,4 +47,18 @@ public interface EmpTransMapper {
     int updateTrans(TransRow row);
 
     int deleteTranses(TransDeleteParam param);
+
+    /** Emp03_Lookup_Grade: AS-IS selectByGrade — 기준일 현재 그 회사 재직 사원(겸직 제외)의 특정직위·알림설정 */
+    List<TransGradeRes> searchTransGrades(@Param("companyId") Long companyId, @Param("transDate") LocalDate transDate);
+
+    /** Emp03_Lookup_Grade 저장: 특정직위만. 로그인 회사 사람이 아니면 0 */
+    int updateTransGrade(@Param("companyId") Long companyId, @Param("transId") Long transId, @Param("gradeCode") String gradeCode);
+
+    /** AS-IS emp25_mypage_notice.selectByPersonId의 첫 행 ID. 없으면 null */
+    Long selectMypageNoticeId(@Param("personId") Long personId);
+
+    int insertMypageNotice(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("icsYn") Boolean icsYn, @Param("apprYn") Boolean apprYn);
+
+    int updateMypageNotice(@Param("mypageNoticeId") Long mypageNoticeId, @Param("icsYn") Boolean icsYn, @Param("apprYn") Boolean apprYn);
 }

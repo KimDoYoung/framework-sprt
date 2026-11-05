@@ -240,4 +240,83 @@
                )
         </if>
     </select>
+
+    <!--
+      Emp03_Lookup_Grade (특정직위 및 알림설정): AS-IS emp03_trans.selectByGrade L202 (IDMS-IC).
+      SELECT 목록은 그리드 열만, 행을 바꾸는 JOIN·조건은 그대로(org00 = common.org00_org_info_with, org00CompanyId = companyId)
+    -->
+    <select id="searchTransGrades" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransGradeRes">
+        WITH org00 AS (
+            SELECT org01_code_id    AS org00_org_code_id
+                 , org01_org_cd     AS org00_org_cd
+                 , org02_mod_date   AS org00_mod_date
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{companyId}
+        )
+        SELECT emp03_trans_id                                                              AS trans_id
+             , emp03_person_id                                                             AS person_id
+             , f_org_parent_full_nm(emp03_org_code_id, f_sysdate())                        AS org_full_name
+             , f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')         AS title_name
+             , emp01_emp_no                                                                AS emp_no
+             , emp01_kor_nm                                                                AS emp_kor_name
+             , emp03_grade_cd                                                              AS grade_code
+             , f_cdnm('EmpGradeCode', emp03_grade_cd, emp01_company_id, emp03_trans_date)  AS grade_name
+             , (emp25_ics_yn = 'true')                                                     AS ics_yn
+             , (emp25_appr_yn = 'true')                                                    AS appr_yn
+          FROM emp03_trans trans
+               INNER JOIN emp01_person             ON emp03_person_id      = emp01_person_id
+               INNER JOIN org00                    ON emp03_org_code_id    = org00_org_code_id
+               LEFT OUTER JOIN emp25_mypage_notice ON emp03_person_id      = emp25_person_id
+         WHERE 1=1
+           AND emp01_company_id = #{companyId}
+           AND emp03_trans_cd NOT IN ('900')
+           AND emp03_trans_date IN ( SELECT max(emp03_trans_date)
+                                       FROM emp03_trans
+                                      WHERE emp03_person_id = emp01_person_id
+                                        AND emp03_trans_date  &lt;=  #{transDate}::date
+                                   )
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp03_org_code_id
+                                     AND org00_mod_date  &lt;=  emp03_trans_date
+                                )
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp01_person_id
+                               AND ( emp04_start_date                         &gt;  #{transDate}::date  OR
+                                     COALESCE(emp04_close_date,'9999-12-31')  &lt;  #{transDate}::date ) )
+         ORDER BY org00_org_cd, emp03_title_cd, emp01_emp_no, emp01_order_seq
+    </select>
+
+    <!-- Emp03_Lookup_Grade 저장: AS-IS emp.Emp03_Trans.update(UpdateDataModel UPDATE) 중 이 창이 바꾸는 열(특정직위)만, 로그인 회사 사람의 발령만 -->
+    <update id="updateTransGrade">
+        UPDATE emp03_trans
+           SET emp03_grade_cd = #{gradeCode}
+         WHERE emp03_trans_id = #{transId}
+           AND emp03_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS emp25_mypage_notice.selectByPersonId L21 (IDMS-IC): 그 사람의 알림설정 행 ID(첫 행) -->
+    <select id="selectMypageNoticeId" resultType="long">
+        SELECT emp25_mypage_notice_id
+          FROM emp25_mypage_notice
+         WHERE emp25_person_id = #{personId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS emp.Emp25_MypageNotice.updateList: 행이 없으면 getSeq(f_create_seq) → UpdateDataModel INSERT -->
+    <insert id="insertMypageNotice">
+        INSERT INTO emp25_mypage_notice (emp25_mypage_notice_id, emp25_company_id, emp25_person_id, emp25_ics_yn, emp25_appr_yn)
+        VALUES (f_create_seq(), #{companyId}, #{personId},
+                COALESCE(#{icsYn,jdbcType=BOOLEAN}, false)::text, COALESCE(#{apprYn,jdbcType=BOOLEAN}, false)::text)
+    </insert>
+
+    <!-- AS-IS emp.Emp25_MypageNotice.updateList: 행이 있으면 UpdateDataModel UPDATE — 창이 바꾸는 열(법규·상신문서 알림)만 -->
+    <update id="updateMypageNotice">
+        UPDATE emp25_mypage_notice
+           SET emp25_ics_yn  = COALESCE(#{icsYn,jdbcType=BOOLEAN}, false)::text
+             , emp25_appr_yn = COALESCE(#{apprYn,jdbcType=BOOLEAN}, false)::text
+         WHERE emp25_mypage_notice_id = #{mypageNoticeId}
+    </update>
 </mapper>

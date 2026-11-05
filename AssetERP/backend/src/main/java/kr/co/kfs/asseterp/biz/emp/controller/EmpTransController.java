@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.kfs.asseterp.biz.emp.dto.TransGradeRes;
+import kr.co.kfs.asseterp.biz.emp.dto.TransGradeSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
@@ -83,5 +85,19 @@ public class EmpTransController {
     public ApiResponse<Integer> deleteTranses(@AuthenticationPrincipal UserPrincipal principal,
                                               @RequestBody List<Long> transIds) {
         return ApiResponse.ok(empTransService.deleteTranses(principal, transIds));
+    }
+
+    /** 특정직위 및 알림설정 창(Emp03_Lookup_Grade): AS-IS emp.Emp03_Trans.selectByGrade(baseDate) */
+    @GetMapping("/trans/grades")
+    public ApiResponse<List<TransGradeRes>> searchTransGrades(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+        return ApiResponse.ok(empTransService.searchTransGrades(principal, baseDate));
+    }
+
+    /** 특정직위 및 알림설정 저장: AS-IS emp.Emp03_Trans.update + emp.Emp25_MypageNotice.updateList → 저장한 행 수 */
+    @PutMapping("/trans/grades")
+    public ApiResponse<Integer> updateTransGrades(@AuthenticationPrincipal UserPrincipal principal,
+                                                  @RequestBody List<TransGradeSaveReq> rows) {
+        return ApiResponse.ok(empTransService.updateTransGrades(principal, rows));
     }
 }

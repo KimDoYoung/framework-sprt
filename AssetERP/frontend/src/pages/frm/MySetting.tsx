@@ -5,7 +5,8 @@
  * 관리자(회사관리자·사용자관리자) 370×590 = 링크 8개(위 4개 + 특정화면 문서분류·특정양식·특정직위·특정알림). 푸터 [닫기]
  * 연결: 화면안내 → Emp91_Lookup_List(EE62) · 문자&메일 알림설정 → Emp92_Lookup_SmsNotice(EE63) · 매뉴얼 → 새 창(노션)
  *       특정양식 지정 → Sys00_Lookup_Mapping(EE67) · 특정알림 설정 → Emp93_Lookup_SmsNoticeTargetList(EE65)
- *       나머지(테마설정·특정화면 문서분류·특정직위)는 창이 아직 없어 다음 단계 안내
+ *       특정직위 지정 → Emp03_Lookup_Grade(13-누락대장 4-2)
+ *       나머지(테마설정·특정화면 문서분류)는 창이 아직 없어 다음 단계 안내
  */
 import React, { useState } from 'react';
 import { message } from 'antd';
@@ -15,6 +16,7 @@ import { LookupModal } from '@/components/lookup/LookupModal';
 import { Emp91_Lookup_List } from '../emp/Emp91_Lookup_List';
 import { Emp92_Lookup_SmsNotice } from '../emp/Emp92_Lookup_SmsNotice';
 import { Emp93_Lookup_SmsNoticeTargetList } from '../emp/Emp93_Lookup_SmsNoticeTargetList';
+import { Emp03_Lookup_Grade } from '../emp/Emp03_Lookup_Grade';
 import { Sys00_Lookup_Mapping } from '../sys/Sys00_Lookup_Mapping';
 
 const MANUAL_URL = 'https://dusty-casquette-8e6.notion.site/Asset-ERP-9c12459a8139475589535580128a413e';
@@ -31,6 +33,7 @@ export const MySetting: React.FC<Props> = ({ open, isManager, onClose }) => {
   const [smsOpen, setSmsOpen] = useState(false);
   const [mappingOpen, setMappingOpen] = useState(false);
   const [targetOpen, setTargetOpen] = useState(false);
+  const [gradeOpen, setGradeOpen] = useState(false);
   const next = (name: string) => () => message.info(`${name} 창은 다음 단계에서 제공됩니다.`);
 
   const links: { icon: React.ReactNode; text: string; onClick: () => void; managerOnly?: boolean }[] = [
@@ -40,10 +43,10 @@ export const MySetting: React.FC<Props> = ({ open, isManager, onClose }) => {
     { icon: <BookOutlined />, text: 'Asset-ERP 화면안내', onClick: () => setGuideOpen(true) },
     // [E3] anchor03 (L98) → MyThemePopup — 다음 단계
     { icon: <BgColorsOutlined />, text: 'Asset-ERP 시스템 테마설정', onClick: next('시스템 테마설정') },
-    // [E4~E7] anchor04~07 (L104-141) → Dcr30_Lookup_Link · Sys00_Lookup_Mapping(EE67) · Emp03_Lookup_Grade · Emp93_Lookup_SmsNoticeTargetList(EE65) (관리자만 보인다)
+    // [E4~E7] anchor04~07 (L104-141) → Dcr30_Lookup_Link · Sys00_Lookup_Mapping(EE67) · Emp03_Lookup_Grade(L123-130, callback 없음) · Emp93_Lookup_SmsNoticeTargetList(EE65) (관리자만 보인다)
     { icon: <CheckSquareOutlined />, text: '특정화면 문서분류 지정', onClick: next('특정화면 문서분류 지정'), managerOnly: true },
     { icon: <CheckSquareOutlined />, text: '특정양식 지정 (연봉계약서)', onClick: () => setMappingOpen(true), managerOnly: true },
-    { icon: <CheckSquareOutlined />, text: '특정직위 지정', onClick: next('특정직위 지정'), managerOnly: true },
+    { icon: <CheckSquareOutlined />, text: '특정직위 지정', onClick: () => setGradeOpen(true), managerOnly: true },
     { icon: <CheckSquareOutlined />, text: '특정알림 설정', onClick: () => setTargetOpen(true), managerOnly: true },
     // [E8] anchor08 (L142) → Emp92_Lookup_SmsNotice.open()
     { icon: <MailOutlined />, text: '문자 & 메일 알림설정', onClick: () => setSmsOpen(true) },
@@ -73,6 +76,7 @@ export const MySetting: React.FC<Props> = ({ open, isManager, onClose }) => {
       <Emp92_Lookup_SmsNotice open={smsOpen} onClose={() => setSmsOpen(false)} />
       <Sys00_Lookup_Mapping open={mappingOpen} onClose={() => setMappingOpen(false)} />
       <Emp93_Lookup_SmsNoticeTargetList open={targetOpen} onClose={() => setTargetOpen(false)} />
+      <Emp03_Lookup_Grade open={gradeOpen} onClose={() => setGradeOpen(false)} />
     </>
   );
 };

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.HireDateSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminRes;
 import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersRes;
@@ -63,5 +64,18 @@ public class EmpOthersService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return empOthersMapper.selectNoteAdmin(personId);
+    }
+
+    /**
+     * Emp02_Lookup_HireDate.update L95-113: emp.Emp02_Others.updateHireDate(othersId, 그룹사 입사일, 휴가계산용 입사일).
+     * 원본은 기타정보 행이 없으면(othersId 없음) 화면에서 오류로 멈춘다 → 행이 없거나 그 사람·회사의 행이 아니면 DATA_NOT_FOUND
+     */
+    @Transactional
+    public int updateHireDate(UserPrincipal user, Long personId, HireDateSaveReq req) {
+        if (req.othersId() == null
+                || empOthersMapper.updateHireDate(user.getCompanyId(), personId, req.othersId(), req.hireDateGroup(), req.hireDateLeaveCalc()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return 1;
     }
 }

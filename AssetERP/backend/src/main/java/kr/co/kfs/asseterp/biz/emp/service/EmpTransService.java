@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.TransDeleteParam;
+import kr.co.kfs.asseterp.biz.emp.dto.TransGradeRes;
+import kr.co.kfs.asseterp.biz.emp.dto.TransGradeSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
@@ -100,5 +102,35 @@ public class EmpTransService {
             return 0;
         }
         return empTransMapper.deleteTranses(new TransDeleteParam(user.getCompanyId(), transIds));
+    }
+
+    /** Emp03_Lookup_Grade: AS-IS Emp03_Trans.selectByGrade L68 — 기준일이 없으면 오늘 */
+    public List<TransGradeRes> searchTransGrades(UserPrincipal user, LocalDate baseDate) {
+        return empTransMapper.searchTransGrades(user.getCompanyId(), baseDate == null ? LocalDate.now() : baseDate);
+    }
+
+    /**
+     * Emp03_Lookup_Grade.update L169-245: 바뀐 행마다 emp.Emp03_Trans.update(특정직위) 뒤 emp.Emp25_MypageNotice.updateList
+     * (그 사람의 알림설정 행이 없으면 새 ID로 INSERT, 있으면 UPDATE). 원본은 두 서비스를 차례로 부르지만 TOBE는 한 트랜잭션이다.
+     * "특정직위는 1명만 지정가능합니다" 검사는 원본처럼 화면이 한다.
+     */
+    @Transactional
+    public int updateTransGrades(UserPrincipal user, List<TransGradeSaveReq> rows) {
+        Long companyId = user.getCompanyId();
+        for (TransGradeSaveReq req : rows) {
+            if (req.transId() == null || empTransMapper.countPerson(companyId, req.personId()) == 0
+                    || empTransMapper.updateTransGrade(companyId, req.transId(), req.gradeCode()) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+        }
+        for (TransGradeSaveReq req : rows) {
+            Long noticeId = empTransMapper.selectMypageNoticeId(req.personId());
+            if (noticeId == null) {
+                empTransMapper.insertMypageNotice(companyId, req.personId(), req.icsYn(), req.apprYn());
+            } else {
+                empTransMapper.updateMypageNotice(noticeId, req.icsYn(), req.apprYn());
+            }
+        }
+        return rows.size();
     }
 }
