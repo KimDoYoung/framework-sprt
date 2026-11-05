@@ -1217,8 +1217,25 @@ export const tdmApi = {
   },
 
   /** AS-IS tdm.Tdm52_ChckManl.batchCheckComplete */
-  batchCompleteCheckManls: async (req: { chckManlIds: number[]; checkDate: string; checkResultCode: string; checkResultName: string; checkCmnt: string | null }): Promise<void> => {
+  batchCompleteCheckManls: async (req: { chckManlIds: number[]; checkDate: string; checkResultCode: string; checkResultName: string; checkCmnt: string | null; tmpFileParentId: number | null }): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/tdm/check-manls/batch-complete', req);
+  },
+
+  /** AS-IS getSeq — 일괄점검 창의 임시 증빙 ID (Tdm52_Edit_ChckManlBatch.getTmpFileParentId) */
+  createCheckManlTmpFileParent: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/tdm/check-manls/tmp-file-parents');
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm52_ChckManl.getFileCountStr — 증빙 건수 글자 ("n건"), 점검항목 ID 또는 임시 증빙 ID */
+  getCheckManlFileCountStr: async (chckManlId: number): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>(`v1/tdm/check-manls/${chckManlId}/file-count`);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm52_ChckManl.deleteTmpFile — 임시 증빙 지우기 */
+  deleteCheckManlTmpFileParent: async (tmpFileParentId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/tdm/check-manls/tmp-file-parents/${tmpFileParentId}`);
   },
 
   /** AS-IS tdm.Tdm52_ChckManl.batchCancelComplete */

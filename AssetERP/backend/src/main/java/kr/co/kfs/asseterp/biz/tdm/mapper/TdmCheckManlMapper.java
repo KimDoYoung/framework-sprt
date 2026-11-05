@@ -65,6 +65,18 @@ public interface TdmCheckManlMapper {
     /** AS-IS tdm64_chck_evid_extr.deleteByTargetId */
     int deleteEvidExtrByTargetId(@Param("targetId") Long targetId);
 
+    /** AS-IS dbConfig.getSeq — 일괄점검 창의 임시 증빙 ID */
+    Long selectSeq();
+
+    /** AS-IS tdm52_chck_manl.getFileCountStr — 증빙 건수 글자 ("n건") */
+    String selectFileCountStr(@Param("chckManlId") Long chckManlId);
+
+    /** AS-IS com01_relate_appr.insertCopy — 연결문서 복사 */
+    int insertRelateApprCopy(@Param("parentId") Long parentId, @Param("newParentId") Long newParentId);
+
+    /** AS-IS tdm64_chck_evid_extr.insertCopy — 외부보관 증빙자료 복사 */
+    int insertEvidExtrCopy(@Param("parentId") Long parentId, @Param("newParentId") Long newParentId, @Param("updName") String updName);
+
     /** AS-IS tdm91_company_setup.selectByDate — 설정이 없으면 기본 행(증빙 필수 true, 글자수 제한 없음) */
     CheckCompanySetup selectCompanySetupByDate(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);
 }

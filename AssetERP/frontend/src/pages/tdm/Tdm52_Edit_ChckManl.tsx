@@ -4,7 +4,8 @@
  * 생성자 L83-99: 모달 1260×660(크기 고정), 아래 가운데 [증빙자료(n건)][점검완료][완료취소][저장][닫기]. getEditor() L255-320: 왼쪽 = 점검항목(80)·점검시기·점검방법(162)·증빙자료(80)·규정/양식(Tdm43_Page_Relate, 읽기 전용),
  *   오른쪽 = 점검상태·점검자·점검일자·점검결과(콤보 TdmCheckResult0001 + [조치계획등록] + [AI])·점검의견(310)
  * view(model) L101-114: 읽기 전용(점검완료·완료취소·저장·AI 숨김, 조치계획 단추 문구 "조치계획확인") / edit(model, cb) L116-130: 점검일자·점검결과·점검의견만 편집(점검일자가 비면 오늘)
- * 다음 단계: [증빙자료(n건)] 증빙자료 창(Tdm00_Lookup_RelateAppr — 연결문서·업로드 파일·외부보관 증빙)과 [AI] 점검의견 자동 작성(BotService 외부 AI 서버)은 안내만
+ * [증빙자료(n건)]은 증빙자료 창(Tdm00_Lookup_RelateAppr "tdm52")을 연다(2026-11-05 연결, 13-누락대장 2번 — 창 안 [불러오기]는 보류, Com01_Lookup_RelateAppr 머리 참고).
+ * 다음 단계: [AI] 점검의견 자동 작성(BotService 외부 AI 서버)은 안내만
  * UX보강(10): 해당 없음
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ import { tdmApi } from '@/api/tdm';
 import { TdmCheckManlDetail, TdmManlItem } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
+import { Tdm00_Lookup_RelateAppr } from './Tdm00_Lookup_RelateAppr';
 import { Tdm43_Page_Relate } from './Tdm43_Page_Relate';
 import { Tdm54_Edit_ChckInsuff, ChckInsuffTarget } from './Tdm54_Edit_ChckInsuff';
 
@@ -48,6 +50,7 @@ export const Tdm52_Edit_ChckManl: React.FC<Props> = ({ target, onChanged, onClos
   const [resultName, setResultName] = useState('');
   const [cmnt, setCmnt] = useState('');
   const [insuff, setInsuff] = useState<ChckInsuffTarget | null>(null);
+  const [evid, setEvid] = useState<{ id: number; mode: 'open' | 'view' } | null>(null);   // Tdm00_Lookup_RelateAppr
   const [busy, setBusy] = useState(false);
 
   // [E0] 화면 열림 (생성자 L83-99, open() L132-155): settings() → 모델을 폼에 채운다. edit()는 점검일자가 비면 오늘(L116-130)
@@ -96,8 +99,18 @@ export const Tdm52_Edit_ChckManl: React.FC<Props> = ({ target, onChanged, onClos
     message.info('AI 점검의견 작성(BotService)은 다음 단계에서 연결됩니다');
   };
 
-  // [E4] fileButton[증빙자료(n건)].Select (L212) → lookupFile() L400-424 — 다음 단계(Tdm00_Lookup_RelateAppr)
-  const lookupFile = () => { message.info('증빙자료 창(Tdm00_Lookup_RelateAppr)은 다음 단계에서 연결됩니다'); };
+  // [E4] fileButton[증빙자료(n건)].Select (L212) → lookupFile() L400-424: 읽기 전용이면 view("tdm52", chckManlId, null),
+  //   아니면 open("tdm52", chckManlId, callback → tdm.Tdm52_ChckManl.selectById → 버튼 글자 "증빙자료(" + fileCountStr + ")")
+  const lookupFile = () => {
+    if (!model) return;
+    setEvid({ id: model.chckManlId, mode: isReadOnly ? 'view' : 'open' });
+  };
+  const onEvidChanged = () => {
+    if (!model) return;
+    tdmApi.getCheckManl(model.chckManlId)
+      .then(m => setModel(prev => (prev ? { ...prev, fileCountStr: m.fileCountStr } : prev)))
+      .catch(err => message.error(errorMessage(err, '조회 실패')));
+  };
 
   // [E8] updateButton[저장].Select (L241) → update() L322-343: tdm.Tdm52_ChckManl.modelUpdate
   const update = async () => {
@@ -206,6 +219,8 @@ export const Tdm52_Edit_ChckManl: React.FC<Props> = ({ target, onChanged, onClos
         </div>
       )}
       <Tdm54_Edit_ChckInsuff target={insuff} onClose={() => setInsuff(null)} />
+      <Tdm00_Lookup_RelateAppr open={evid != null} mode={evid?.mode} keyTable="tdm52" keyTableId={evid?.id ?? null}
+        onChanged={evid?.mode === 'open' ? onEvidChanged : undefined} onClose={() => setEvid(null)} />
     </Modal>
   );
 };

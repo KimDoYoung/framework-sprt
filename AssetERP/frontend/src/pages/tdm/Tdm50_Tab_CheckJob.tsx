@@ -2,7 +2,7 @@
  * [1455] 책무 > 04. 책무이행점검 > 이행점검 작업지시 및 보고 (N20, 1단계)
  * AS-IS: myApp/client/vi/tdm/Tdm50_Tab_CheckJob.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L79-117: center = 툴바(점검년월 · [조회][작업정보등록][점검항목생성][알림발송] · [(회사전체 당월)점검마감][마감취소], 높이 50) + 작업 요약 글(높이 50, 테두리) + 보고CEO 직책 탭(Tdm50_TabPage_CheckJob), 여백 20·테두리
- * 1단계: [알림발송]이 여는 문자 발송 창(Sms03_Lookup_SendList, 다른 도메인)은 대상 부서담당자를 읽은 뒤 안내만 한다. 결재요청·문서보기는 TabPage 참고.
+ * [알림발송]은 대상 부서담당자를 읽어 문자 발송 창(Sms03_Lookup_SendList, 다른 도메인)을 연다(2026-11-05 연결, 13-누락대장 2번). 결재요청·문서보기는 TabPage 참고.
  * 스타일: STP (docs/page-style.md) — 조건 줄이 SearchBar가 아니라 직접 만든 줄(점검년월 QuickMoveField + 버튼 7개)
  * UX보강(10): 툴바 = Button(UX-01)
  */
@@ -15,6 +15,7 @@ import { Button } from '@/components/button';
 import { PageTabs } from '@/components/tabs';
 import { QuickMoveField, YearMonth } from '@/components/form/QuickMoveField';
 import { checkYmOf, firstDayOf, ymOfCheckYm } from './Tdm50_Dashboard_Common';
+import { Sms03_Lookup_SendList } from '@/pages/sms/Sms03_Lookup_SendList';
 import { Tdm50_Edit_CheckJob } from './Tdm50_Edit_CheckJob';
 import { Tdm50_TabPage_CheckJob } from './Tdm50_TabPage_CheckJob';
 
@@ -30,6 +31,7 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
   const [activeRole, setActiveRole] = useState<number | null>(null);
   const [editJob, setEditJob] = useState<TdmCheckJob | null>(null);     // Tdm50_Edit_CheckJob
   const [loading, setLoading] = useState(false);
+  const [smsTarget, setSmsTarget] = useState<{ personIds: number[]; message: string } | null>(null);   // Sms03_Lookup_SendList.open(personIdList, msg)
 
   // retrievePanel() L234-276: tdm.Tdm20_Role.getCeoRoleList(companyId, checkYm, baseDate = 그 달 1일) → 직책마다 탭
   // retrieve() L278-299: tdm.Tdm50_ChckJob.selectByCheckYm(companyId, checkYm, defaultYn=true) → 작업 요약 글 → retrievePanel(), setButtonEnable()
@@ -144,18 +146,23 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
     });
   };
 
-  // [E5] sendButton[알림발송].Select (L188) → sendMessage() L430-459: 마감일 점검 → tdm.Tdm51_ChckOrg.getMessageList → Sms03_Lookup_SendList.open(부서담당자 목록, 문구) — 문자 발송 창은 다음 단계
+  // [E5] sendButton[알림발송].Select (L188) → sendMessage() L430-459: 마감일 점검 → tdm.Tdm51_ChckOrg.getMessageList → Sms03_Lookup_SendList.open(부서담당자 목록, getMessage())
   const sendMessage = async () => {
     if (!job) return;
     if (job.endDate == null) return void message.warning('마감일을 설정해주세요');
     try {
       const targets = await tdmApi.searchCheckMessageTargets(job.chckJobId, firstDayOf(ym));
-      const managers = new Set(targets.map(t => t.orgManagerId).filter(id => id != null));
-      message.info(`문자 발송 창(Sms03_Lookup_SendList)은 다음 단계에서 연결됩니다 (대상 부서담당자 ${managers.size}명)`);
+      // 원본은 목록 순서대로 orgManagerId를 모두 넘긴다(중복·null 포함). TS 타입 때문에 null만 뺀다 — 창은 사원 ID로 다시 읽는다
+      const personIds = targets.map(t => t.orgManagerId).filter((id): id is number => id != null);
+      setSmsTarget({ personIds, message: getMessage(job) });
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
   };
+
+  // getMessage(selectModel) L461-465: "yyyy년 MM월 책무이행점검을 진행해 주시기 바랍니다. (마감일:yyyy-MM-dd)" — 월은 MonthsCode 코드(두 자리)
+  const getMessage = (selectModel: TdmCheckJob) =>
+    `${ym.year}년 ${checkYmOf(ym).substring(5)}월 책무이행점검을 진행해 주시기 바랍니다. (마감일:${(selectModel.endDate ?? '').substring(0, 10)})`;
 
   // [E6] endButton[(회사전체 당월)점검마감].Select (L194) → updateEndYnChk(true) / [E7] cancelButton[마감취소].Select (L200) → updateEndYnChk(false) L301-331
   const updateEndYnChk = (endYn: boolean) => {
@@ -234,6 +241,7 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
         </div>
       </div>
       <Tdm50_Edit_CheckJob job={editJob} onSaved={() => { void retrieve(ym); }} onClose={() => setEditJob(null)} />
+      <Sms03_Lookup_SendList target={smsTarget} onClose={() => setSmsTarget(null)} />
     </div>
   );
 };

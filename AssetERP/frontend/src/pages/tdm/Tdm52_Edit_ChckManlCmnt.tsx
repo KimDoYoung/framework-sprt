@@ -13,6 +13,7 @@ import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckApprManl, TdmCheckManlDetail, TdmManlItem } from '@/types/tdm';
 import { Button } from '@/components/button';
+import { Tdm00_Lookup_RelateAppr } from './Tdm00_Lookup_RelateAppr';
 import { Tdm43_Page_Relate } from './Tdm43_Page_Relate';
 import { Tdm54_Edit_ChckInsuff, ChckInsuffTarget } from './Tdm54_Edit_ChckInsuff';
 
@@ -48,6 +49,7 @@ export const Tdm52_Edit_ChckManlCmnt: React.FC<Props> = ({ target, onChanged, on
   const [model, setModel] = useState<TdmCheckApprManl | null>(null);   // manlModel
   const [apprCmnt, setApprCmnt] = useState('');
   const [insuff, setInsuff] = useState<ChckInsuffTarget | null>(null);
+  const [evidOpen, setEvidOpen] = useState(false);   // Tdm00_Lookup_RelateAppr.view
   const [busy, setBusy] = useState(false);
 
   // [E0] 화면 열림 (생성자 L84-102, open() L127-145): 모델을 폼에 채우고 점검항목의 규정/양식 탭을 채운다(Tdm43_Page_Relate가 스스로 읽는다)
@@ -77,8 +79,8 @@ export const Tdm52_Edit_ChckManlCmnt: React.FC<Props> = ({ target, onChanged, on
     }
   };
 
-  // [E2] fileButton[증빙자료(n건)].Select (L175) → Tdm00_Lookup_RelateAppr.view("tdm52", chckManlId, null) — 다음 단계
-  const lookupFile = () => { message.info('증빙자료 창(Tdm00_Lookup_RelateAppr)은 다음 단계에서 연결됩니다'); };
+  // [E2] fileButton[증빙자료(n건)].Select (L175-181) → Tdm00_Lookup_RelateAppr.view("tdm52", chckManlId, null) (2026-11-05 연결)
+  const lookupFile = () => setEvidOpen(true);
 
   // updateApprStatus(actionType) L352-384: tdm.Tdm60_ChckManlAppr.updateApprStatus
   const updateApprStatus = async (actionType: 'A' | 'R' | 'C') => {
@@ -199,6 +201,7 @@ export const Tdm52_Edit_ChckManlCmnt: React.FC<Props> = ({ target, onChanged, on
         </div>
       )}
       <Tdm54_Edit_ChckInsuff target={insuff} onClose={() => setInsuff(null)} />
+      <Tdm00_Lookup_RelateAppr open={evidOpen && !!model} mode="view" keyTable="tdm52" keyTableId={model?.chckManlId ?? null} onClose={() => setEvidOpen(false)} />
     </Modal>
   );
 };

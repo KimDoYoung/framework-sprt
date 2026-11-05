@@ -281,6 +281,45 @@
          WHERE tdm64_target_id = #{targetId}
     </delete>
 
+    <!-- AS-IS dbConfig.getSeq L13 (IDMS-IC) — 일괄점검 창(Tdm52_Edit_ChckManlBatch.getTmpFileParentId)의 임시 증빙 ID -->
+    <select id="selectSeq" resultType="java.lang.Long" flushCache="true">
+        SELECT CAST(to_char(f_today(),'yyyymmdd') as numeric) * 10000000 + CAST(lpad(CAST(nextval('seq') as varchar),7,'0') as numeric)
+    </select>
+
+    <!-- AS-IS tdm52_chck_manl.getFileCountStr L88 (IDMS-IC) -->
+    <select id="selectFileCountStr" resultType="java.lang.String">
+        SELECT f_get_tdmEvidCount(#{chckManlId}) ||'건'
+    </select>
+
+    <!-- AS-IS com01_relate_appr.insertCopy L63 (IDMS-IC) — 열 이름을 적었다(원본은 열 순서 INSERT) -->
+    <insert id="insertRelateApprCopy">
+        INSERT INTO com01_relate_appr (com01_relate_appr_id, com01_key_table, com01_key_table_id, com01_appr_id)
+        SELECT f_create_seq()
+             , com01_key_table
+             , #{newParentId}
+             , com01_appr_id
+          FROM com01_relate_appr
+         WHERE com01_key_table_id = #{parentId}
+    </insert>
+
+    <!-- AS-IS tdm64_chck_evid_extr.insertCopy L34 (IDMS-IC) — 열 이름을 적었다. 등록자는 원본 current_setting('app.current_user') 대신 로그인 사용자 이름(TdmChckEvidExtrMapper 저장과 같음) -->
+    <insert id="insertEvidExtrCopy">
+        INSERT INTO tdm64_chck_evid_extr
+               ( tdm64_chck_evid_extr_id, tdm64_target_id, tdm64_system_nm, tdm64_doc_no, tdm64_doc_nm, tdm64_doc_date, tdm64_doc_url, tdm64_note, tdm64_upd_nm, tdm64_upd_date )
+        SELECT f_create_seq()
+             , #{newParentId}
+             , tdm64_system_nm
+             , tdm64_doc_no
+             , tdm64_doc_nm
+             , tdm64_doc_date
+             , tdm64_doc_url
+             , tdm64_note
+             , #{updName}
+             , f_sysdate()
+          FROM tdm64_chck_evid_extr
+         WHERE tdm64_target_id = #{parentId}
+    </insert>
+
     <!--
       AS-IS(IDMS-IC) tdm91_company_setup.selectByDate — 기준일에 적용되는 설정 한 행. 설정이 없으면 원본의 기본 행
       (일괄승인 false·증빙파일 필수등록 true·일괄점검 false, 글자수 제한 없음). 수정: SELECT * → 점검 처리가 읽는 두 열

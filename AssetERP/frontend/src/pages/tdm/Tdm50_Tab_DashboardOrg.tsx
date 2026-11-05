@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm50_Tab_DashboardOrg.java (541줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L120-204: center = 툴바(점검년월 · 부서 250 · 최종승인/점검완료 · [새로고침] · 마감 문구) + 모니터 3칸
  *   + 가로 2분할 350(왼쪽 미점검 grid01 / 오른쪽 위 반려 grid02 · 아래 당월발생 미흡 grid03) + 미흡 조치현황(grid04)
- * [보기] 아이콘: grid01·grid03 → Tdm52_Edit_ChckManl.view (다음 단계 N22), grid04 → Tdm54_Lookup_ChckInsuffCmnt.view (다음 단계 N24),
+ * [보기] 아이콘: grid01·grid03 → Tdm52_Edit_ChckManl.view, grid04 → Tdm54_Lookup_ChckInsuffCmnt.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail),
  *   grid02 [반려의견] 아이콘은 AS-IS 핸들러가 비어 있어 아무 일도 안 한다
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90)
  */
@@ -19,7 +19,7 @@ import { SingleGrid } from '@/components/grid';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 import {
-  DashboardFrame, DashboardToolbar, NEXT_STEP_MESSAGE, StatusType, TitledGrid, ToolbarField, checkYmOf, firstDayOf, gbInsuff, gbUndone, viewCell, ymOfCheckYm,
+  DashboardFrame, DashboardToolbar, StatusType, TitledGrid, ToolbarField, checkYmOf, firstDayOf, gbInsuff, gbUndone, useDashboardDetail, viewCell, ymOfCheckYm,
 } from './Tdm50_Dashboard_Common';
 import { DashboardTabHandle } from './Tdm50_Tab_Dashboard';
 
@@ -122,13 +122,14 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     void retrieve({ orgId: org.orgCodeId });
   };
 
-  // buildGrid01() L287-304 → [보기] Tdm52_Edit_ChckManl.view (다음 단계 N22)
+  const { viewManl, viewInsuff, detailModals } = useDashboardDetail();
+  // buildGrid01() L287-304 → [보기] Tdm52_Edit_ChckManl.view(선택 행) (L288-294)
   const columns1 = useMemo(() => [
     gbUndone.text('checkItem', 400, '점검항목'),  // L297
     gbUndone.textCenter('checkCycleName', 80, '점검주기'),  // L298
     gbUndone.textCenter('checkStatusName', 80, '진행상태'),  // L299
     gbUndone.text('checkerName', 90, '점검자'),  // L300
-    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', () => message.info(NEXT_STEP_MESSAGE)),  // L301
+    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L301
   ], []);
   // buildGrid02() L306-319 — [반려의견] 아이콘은 핸들러가 비어 있다 (AS-IS 그대로 아무 일도 안 한다)
   const columns2 = useMemo(() => [
@@ -141,9 +142,9 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     gbUndone.text('checkItem', 450, '점검항목'),  // L330
     gbUndone.text('checkerName', 100, '점검자'),  // L331
     { ...gbUndone.text('checkerName', 100, '점검자'), colId: 'checkerName2' },  // L332
-    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', () => message.info(NEXT_STEP_MESSAGE)),  // L333 → Tdm52_Edit_ChckManl.view (다음 단계 N22)
+    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L333 → Tdm52_Edit_ChckManl.view(선택 행) (L322-328)
   ], []);
-  // buildGrid04() L338-357 → [보기] Tdm54_Lookup_ChckInsuffCmnt.view (다음 단계 N24)
+  // buildGrid04() L338-357 → [보기] Tdm54_Lookup_ChckInsuffCmnt.view(chckInsuffId) (L339-345)
   const columns4 = useMemo(() => [
     gbInsuff.textCenter('checkYm', 100, '발생년월'),  // L347
     gbInsuff.date('dueDate', 90, '조치예정일'),  // L348 (UX-08)
@@ -152,7 +153,7 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     gbInsuff.text('orgName', 200, '조치부서'),  // L351
     gbInsuff.text('actionEmpName', 200, '조치(예정)자'),  // L352
     gbInsuff.text('actionName', 650, '조치명'),  // L353
-    viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', () => message.info(NEXT_STEP_MESSAGE)),  // L354
+    viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', row => viewInsuff(row.chckInsuffId)),  // L354
   ], []);
 
   return (
@@ -196,6 +197,7 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
         </TitledGrid>
       </DashboardFrame>
       <Org00_Lookup_SelectSingle baseDate={orgLookupDate} fixDate={false} onSelect={onOrgSelected} onClose={() => setOrgLookupDate(undefined)} />
+      {detailModals}
     </>
   );
 });

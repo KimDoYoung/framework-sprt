@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm50_Tab_Dashboard.java (425줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L106-183: center = 툴바(점검년월 QuickMoveField · 최종승인/점검완료 · [새로고침] · 마감 문구) + 모니터 3칸(진행율·적정비율·점검결과)
  *   + 임원별 진행현황(grid01)·부서별 진행현황(grid02) 가로 2분할 300 + 미흡 조치현황(grid03)
- * [보기] 아이콘(grid03 상세보기)은 Tdm54_Lookup_ChckInsuffCmnt.view — 다음 단계(N24)
+ * [보기] 아이콘(grid03 상세보기)은 Tdm54_Lookup_ChckInsuffCmnt.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail)
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -15,8 +15,8 @@ import { TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashb
 import { YearMonth } from '@/components/form/QuickMoveField';
 import { SingleGrid } from '@/components/grid';
 import {
-  DashboardFrame, DashboardToolbar, NEXT_STEP_MESSAGE, StatusType, TitledGrid, checkYmOf, firstDayOf, gbChck, gbInsuff, progressColumns, progressSumRow,
-  viewCell, ymOfCheckYm,
+  DashboardFrame, DashboardToolbar, StatusType, TitledGrid, checkYmOf, firstDayOf, gbChck, gbInsuff, progressColumns, progressSumRow,
+  useDashboardDetail, viewCell, ymOfCheckYm,
 } from './Tdm50_Dashboard_Common';
 
 export interface DashboardTabHandle {
@@ -105,6 +105,7 @@ export const Tdm50_Tab_Dashboard = forwardRef<DashboardTabHandle>((_props, ref) 
   const columns2 = useMemo(() => progressColumns([
     gbChck.text('orgName', 240, '점검부서'),  // L258
   ], 70, 70), []);
+  const { viewInsuff, detailModals } = useDashboardDetail();
   // buildGrid03() L270-290
   const columns3 = useMemo(() => [
     gbInsuff.textCenter('checkYm', 100, '발생년월'),  // L280
@@ -114,10 +115,11 @@ export const Tdm50_Tab_Dashboard = forwardRef<DashboardTabHandle>((_props, ref) 
     gbInsuff.text('orgName', 200, '조치부서'),  // L284
     gbInsuff.text('actionEmpName', 100, '조치(예정)자'),  // L285
     gbInsuff.text('actionName', 650, '조치명'),  // L286
-    viewCell<TdmDashboardInsuff>('actionCell', 80, '상세보기', () => message.info(NEXT_STEP_MESSAGE)),  // L287 → Tdm54_Lookup_ChckInsuffCmnt.view (다음 단계 N24)
+    viewCell<TdmDashboardInsuff>('actionCell', 80, '상세보기', row => viewInsuff(row.chckInsuffId)),  // L287 → Tdm54_Lookup_ChckInsuffCmnt.view(chckInsuffId) (L271-277)
   ], []);
 
   return (
+    <>
     <DashboardFrame
       progress={progress}
       toolbar={
@@ -146,6 +148,8 @@ export const Tdm50_Tab_Dashboard = forwardRef<DashboardTabHandle>((_props, ref) 
         <SingleGrid<TdmDashboardInsuff> rowData={rows3} columnDefs={columns3} getRowId={p => String(p.data.chckInsuffId)} loading={loading} />
       </TitledGrid>
     </DashboardFrame>
+    {detailModals}
+    </>
   );
 });
 Tdm50_Tab_Dashboard.displayName = 'Tdm50_Tab_Dashboard';

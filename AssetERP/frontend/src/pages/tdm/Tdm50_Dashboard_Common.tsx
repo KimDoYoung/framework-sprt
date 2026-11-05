@@ -3,14 +3,18 @@
  * AS-IS: Tdm50_Tab_Dashboard / Tdm50_Tab_DashboardExct / Tdm50_Tab_DashboardOrg 가 같은 코드를 세 번 복사해 쓴다 (monitorStyle·rateStr·setHtmlGridStyle·buildGrid 들).
  * 함수 이름은 원본 메서드 이름을 따른다 (줄 번호는 Tdm50_Tab_Dashboard.java 기준, 새 원본 IDMS-IC)
  */
-import React from 'react';
-import { Radio } from 'antd';
+import React, { useState } from 'react';
+import { Radio, message } from 'antd';
+import { errorMessage } from '@/api/client';
+import { tdmApi } from '@/api/tdm';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Button } from '@/components/button';
 import { QuickMoveField, YearMonth } from '@/components/form/QuickMoveField';
 import { gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardProgress, TdmDashboardUndone } from '@/types/tdm';
+import { CheckManlEditTarget, Tdm52_Edit_ChckManl } from './Tdm52_Edit_ChckManl';
+import { InsuffCmntTarget, Tdm54_Lookup_ChckInsuffCmnt } from './Tdm54_Lookup_ChckInsuffCmnt';
 
 /** 점검 상태 구분 (1:최종승인 / 2:점검완료) */
 export type StatusType = '1' | '2';
@@ -187,5 +191,26 @@ export { gbChck, gbUndone, gbInsuff };
 export const viewCell = <T,>(colId: string, width: number, header: string, onClick: (row: T) => void): ColDef<T> =>
   iconCell<T>('view', colId, width, header, onClick);
 
-/** 상세 보기 팝업은 다음 단계(N22 점검 편집창·N24 미흡 조치 상세) — 1단계는 안내만 */
-export const NEXT_STEP_MESSAGE = '상세 보기 창은 아직 변환되지 않았습니다 (점검 편집창 N22 · 미흡 조치 상세 N24와 함께 제공됩니다)';
+/**
+ * [보기] 아이콘이 여는 상세 창 두 개 (2026-11-05 연결, 13-누락대장 2번)
+ * - viewManl: new Tdm52_Edit_ChckManl().view(선택 행) — 읽기 전용 점검 상세
+ * - viewInsuff: new Tdm54_Lookup_ChckInsuffCmnt().view(chckInsuffId) — 읽기 전용 조치내역
+ * AS-IS와 다른 점: 원본은 대시보드 그리드 행 모델을 그대로 넘기지만, TOBE 대시보드 행(TdmDashboardUndone)은 그리드 열만 가지므로
+ *   Tdm51_TabPage_CheckOrg 상세와 같이 chckManlId로 점검항목을 다시 읽어 넘긴다(tdmApi.getCheckManl).
+ * 창 두 개는 detailModals를 화면 JSX에 넣어 그린다.
+ */
+export const useDashboardDetail = () => {
+  const [manl, setManl] = useState<CheckManlEditTarget | null>(null);
+  const [insuff, setInsuff] = useState<InsuffCmntTarget | null>(null);
+  const viewManl = (chckManlId: number) => {
+    tdmApi.getCheckManl(chckManlId).then(m => setManl({ manl: m, mode: 'view' })).catch(err => message.error(errorMessage(err, '조회 실패')));
+  };
+  const viewInsuff = (chckInsuffId: number) => setInsuff({ mode: 'view', chckInsuffId });
+  const detailModals = (
+    <>
+      <Tdm52_Edit_ChckManl target={manl} onChanged={() => undefined} onClose={() => setManl(null)} />
+      <Tdm54_Lookup_ChckInsuffCmnt target={insuff} onClose={() => setInsuff(null)} />
+    </>
+  );
+  return { viewManl, viewInsuff, detailModals };
+};

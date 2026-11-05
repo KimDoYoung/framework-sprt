@@ -13,6 +13,7 @@ import kr.co.kfs.asseterp.biz.tdm.service.TdmCheckManlService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -88,6 +89,25 @@ public class TdmCheckManlController {
     @PostMapping("/batch-complete")
     public ApiResponse<Void> batchComplete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CheckBatchCompleteReq req) {
         service.batchComplete(principal, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS getSeq — 일괄점검 창의 임시 증빙 ID */
+    @PostMapping("/tmp-file-parents")
+    public ApiResponse<Long> createTmpFileParentId(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.createTmpFileParentId());
+    }
+
+    /** AS-IS tdm.Tdm52_ChckManl.getFileCountStr — 점검항목 ID 또는 임시 증빙 ID */
+    @GetMapping("/{chckManlId}/file-count")
+    public ApiResponse<String> getFileCountStr(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long chckManlId) {
+        return ApiResponse.ok(service.getFileCountStr(chckManlId));
+    }
+
+    /** AS-IS tdm.Tdm52_ChckManl.deleteTmpFile */
+    @DeleteMapping("/tmp-file-parents/{tmpFileParentId}")
+    public ApiResponse<Void> deleteTmpFile(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long tmpFileParentId) {
+        service.deleteTmpFile(tmpFileParentId);
         return ApiResponse.ok(null);
     }
 

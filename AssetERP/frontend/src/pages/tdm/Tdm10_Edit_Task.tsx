@@ -2,7 +2,7 @@
  * 책무 편집창 (N05) — 책무 등록의 [등록]·[등록(복사)]·수정 아이콘이 연다.
  * AS-IS: myApp/client/vi/tdm/Tdm10_Edit_Task.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 630×380(원본): 책무구분(콤보) · 책무유형(조회창 칸) · 책무(100 높이) · 공통책무 | 사용시작일 · CEO책무 | 사용종료일 + [세부내용(n건)][연결규정(n건)][저장][닫기]
- * 1단계: [연결규정(n건)]이 여는 Tdm11_Lookup_TaskRelateRule(연결법규·내규)은 다음 단계 — 누르면 안내만
+ * [연결규정(n건)]은 Tdm11_Lookup_TaskRelateRule(연결법규·내규, 구분 전체 "%")을 연다(2026-11-05 연결, 13-누락대장 2번)
  * UX보강(10): 조회창(UX-05·06은 Tdm14 안에서)
  */
 import React, { useEffect, useState } from 'react';
@@ -16,6 +16,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { LookupModal } from '@/components/lookup/LookupModal';
+import { Tdm11_Lookup_TaskRelateRule } from './Tdm11_Lookup_TaskRelateRule';
 import { Tdm12_Lookup_TaskRelateDetail } from './Tdm12_Lookup_TaskRelateDetail';
 import { Tdm14_Lookup_TaskType } from './Tdm14_Lookup_TaskType';
 
@@ -51,13 +52,14 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
   const [ruleCnt, setRuleCnt] = useState('0건');
   const [typeLookup, setTypeLookup] = useState(false);
   const [detailLookup, setDetailLookup] = useState(false);
+  const [ruleLookup, setRuleLookup] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
 
   // [E0] 화면 열림 (생성자 L135-150) → setting(), show() / insert() L79-95, copy() L97-121, edit() L123-133: 열 때 값 채우기. 등록·복사는 새 책무 ID를 미리 받는다(DBUtil.setSeq)
   useEffect(() => {
     if (!mode) return;
     setOldTaskId(null);
-    setTypeLookup(false); setDetailLookup(false); setReasonOpen(false);
+    setTypeLookup(false); setDetailLookup(false); setRuleLookup(false); setReasonOpen(false);
     if (mode === 'UPDATE' && task) {
       setTaskId(task.taskId);
       setClassCode(task.taskClassCode ?? undefined);
@@ -110,9 +112,12 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
     setDetailLookup(true);
   };
 
-  // [E6] relateRuleButton[연결규정(n건)].Select (L207) → Tdm11_Lookup_TaskRelateRule: 다음 단계
-  const openRule = () => {
-    message.info('연결규정(연결법규·연결내규) 창은 아직 변환되지 않았습니다 (다음 단계).');
+  // [E6] relateRuleButton[연결규정(n건)].Select (L207-230) → Tdm11_Lookup_TaskRelateRule.open(taskId, "%", callback)
+  //   callback(model) → 버튼 글자 "연결규정(" + taskRelateRulesCntStr + ")" (없으면 0건). TOBE 책무 행은 법규·내규 건수를 따로 가지므로 더해서 쓴다(retrieveRelate와 같음)
+  const openRule = () => setRuleLookup(true);
+  const onRuleClosed = (t: TdmTask) => {
+    const rules = (t.taskRelateLawCnt ?? 0) + (t.taskRelateRuleCnt ?? 0);
+    setRuleCnt(rules === 0 ? '0건' : `${rules}건`);
   };
 
   const req = (): TdmTaskSaveReq => ({
@@ -221,6 +226,7 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
         onClosed={count => setDetailCnt(`${count}건`)}
         onClose={() => setDetailLookup(false)}
       />
+      <Tdm11_Lookup_TaskRelateRule taskId={ruleLookup ? taskId : null} relateType="%" onClosed={onRuleClosed} onClose={() => setRuleLookup(false)} />
       <AreaMessage open={reasonOpen} title="변경사유" required
         onResult={text => { if (text == null) message.warning('저장이 취소되었습니다 (변경사유 미입력)'); else void update(text); }}
         onClose={() => setReasonOpen(false)} />

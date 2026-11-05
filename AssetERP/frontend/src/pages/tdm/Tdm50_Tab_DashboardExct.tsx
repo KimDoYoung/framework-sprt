@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm50_Tab_DashboardExct.java (565줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L122-212: center = 툴바(점검년월 · 임원 150 · 최종승인/점검완료 · [새로고침] · 마감 문구) + 모니터 3칸
  *   + 직책별 진행현황(grid01)·부서별 진행현황(grid02) 가로 2분할 250 + 미흡 조치현황(grid03)·미점검 현황(grid04) 가로 2분할
- * [보기] 아이콘: grid03 → Tdm54_Lookup_ChckInsuffCmnt.view (다음 단계 N24), grid04 → Tdm52_Edit_ChckManl.view (다음 단계 N22)
+ * [보기] 아이콘: grid03 → Tdm54_Lookup_ChckInsuffCmnt.view, grid04 → Tdm52_Edit_ChckManl.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail)
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90 — '조치완료(예정)일'은 제목이 잘려 110 유지)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -17,8 +17,8 @@ import { SingleGrid } from '@/components/grid';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import {
-  DashboardFrame, DashboardToolbar, NEXT_STEP_MESSAGE, StatusType, TitledGrid, ToolbarField, checkYmOf, firstDayOf, gbChck, gbInsuff, gbUndone,
-  progressColumns, progressSumRow, viewCell, ymOfCheckYm,
+  DashboardFrame, DashboardToolbar, StatusType, TitledGrid, ToolbarField, checkYmOf, firstDayOf, gbChck, gbInsuff, gbUndone,
+  progressColumns, progressSumRow, useDashboardDetail, viewCell, ymOfCheckYm,
 } from './Tdm50_Dashboard_Common';
 import { DashboardTabHandle } from './Tdm50_Tab_Dashboard';
 import { Tdm01_Lookup_SelectSingle } from './Tdm01_Lookup_SelectSingle';
@@ -136,7 +136,8 @@ export const Tdm50_Tab_DashboardExct = forwardRef<DashboardTabHandle>((_props, r
   const columns2 = useMemo(() => progressColumns([
     gbChck.text('orgName', 240, '점검부서'),  // L311
   ], 80, 80), []);
-  // buildGrid03() L323-342 → [보기] Tdm54_Lookup_ChckInsuffCmnt.view (다음 단계 N24)
+  const { viewManl, viewInsuff, detailModals } = useDashboardDetail();
+  // buildGrid03() L323-342 → [보기] Tdm54_Lookup_ChckInsuffCmnt.view(chckInsuffId) (L324-330)
   const columns3 = useMemo(() => [
     gbInsuff.textCenter('checkYm', 75, '발생년월'),  // L333
     gbInsuff.date('actionDueDate', 110, '조치완료(예정)일'),  // L334 (제목이 길어 UX-08의 90 대신 원본 110 유지)
@@ -144,16 +145,16 @@ export const Tdm50_Tab_DashboardExct = forwardRef<DashboardTabHandle>((_props, r
     gbInsuff.text('orgName', 130, '조치부서'),  // L336
     gbInsuff.text('actionEmpName', 90, '조치(예정)자'),  // L337
     gbInsuff.text('actionName', 200, '조치명'),  // L338
-    viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', () => message.info(NEXT_STEP_MESSAGE)),  // L339
+    viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', row => viewInsuff(row.chckInsuffId)),  // L339
   ], []);
-  // buildGrid04() L344-362 → [보기] Tdm52_Edit_ChckManl.view (다음 단계 N22)
+  // buildGrid04() L344-362 → [보기] Tdm52_Edit_ChckManl.view(선택 행) (L345-351)
   const columns4 = useMemo(() => [
     gbUndone.text('orgName', 150, '점검부서'),  // L354
     gbUndone.text('checkerName', 80, '점검자'),  // L355
     gbUndone.text('checkItem', 280, '점검항목'),  // L356
     gbUndone.textCenter('checkCycleName', 70, '점검주기'),  // L357
     gbUndone.textCenter('checkStatusName', 80, '진행상태'),  // L358
-    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', () => message.info(NEXT_STEP_MESSAGE)),  // L359
+    viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L359
   ], []);
 
   return (
@@ -197,6 +198,7 @@ export const Tdm50_Tab_DashboardExct = forwardRef<DashboardTabHandle>((_props, r
         </div>
       </DashboardFrame>
       <Tdm01_Lookup_SelectSingle open={lookupOpen} onSelect={onExctSelected} onClose={() => setLookupOpen(false)} />
+      {detailModals}
     </>
   );
 });

@@ -188,7 +188,10 @@ public class TdmCheckManlService {
         return mapper.selectById(chckManlId);
     }
 
-    /** AS-IS tdm.Tdm52_ChckManl.batchCheckComplete — 고른 점검항목을 한 트랜잭션으로 점검완료. 증빙 복사(연결문서·업로드·외부보관)는 증빙자료 창과 같이 다음 단계 */
+    /**
+     * AS-IS tdm.Tdm52_ChckManl.batchCheckComplete — 고른 점검항목을 한 트랜잭션으로 점검완료하고, 임시 증빙(tmpFileParentId)을 항목마다 복사한다(1.연결문서 2.업로드 파일 3.외부보관).
+     * AS-IS와 다른 점: 업로드 파일 복사가 실패하면 원본은 로그만 남기고 넘어가지만 TOBE는 전체를 되돌린다(SysFileService.copyToParent — 지출결의서 복사와 같음)
+     */
     @Transactional
     public void batchComplete(UserPrincipal user, CheckBatchCompleteReq req) {
         List<Long> ids = req.chckManlIds();
@@ -205,6 +208,17 @@ public class TdmCheckManlService {
             List<Long> insuffIds = mapper.selectInsuffIds(chckManlId);
             if (!insuffIds.isEmpty()) {
                 mapper.deleteInsuffById(insuffIds.get(0));
+            }
+            // 증빙자료 Copy
+            if (req.tmpFileParentId() != null) {
+                // - 1.연결문서
+                mapper.insertRelateApprCopy(req.tmpFileParentId(), chckManlId);
+                // - 2.업로드 파일
+                for (Long fileId : mapper.selectOwnedFileIds(req.tmpFileParentId())) {
+                    fileService.copyToParent(user, fileId, chckManlId);
+                }
+                // - 3.외부보관 증빙자료
+                mapper.insertEvidExtrCopy(req.tmpFileParentId(), chckManlId, user.getName());
             }
             // (19:점검완료) SET
             mapper.updateByChckManlId(chckManlId, req.checkDate(), req.checkResultCode(), req.checkCmnt(), "19", user.getName());
@@ -232,6 +246,29 @@ public class TdmCheckManlService {
             // 점검이력 생성(tdm55)
             record(manl.companyId(), stdDate, chckManlId, "TDM52", "점검완료취소", user.getUserId(), manl.checkResultName(), null);
         }
+    }
+
+    /** AS-IS getSeq — 일괄점검 창이 열릴 때 받는 임시 증빙 ID (Tdm52_Edit_ChckManlBatch.getTmpFileParentId L77-87) */
+    @Transactional
+    public Long createTmpFileParentId() {
+        return mapper.selectSeq();
+    }
+
+    /** AS-IS tdm.Tdm52_ChckManl.getFileCountStr — 증빙 건수 글자 ("n건"). 점검항목 ID와 일괄점검 창의 임시 ID 둘 다 받는다 */
+    public String getFileCountStr(Long chckManlId) {
+        return mapper.selectFileCountStr(chckManlId);
+    }
+
+    /**
+     * AS-IS tdm.Tdm52_ChckManl.deleteTmpFile — 일괄점검 창을 닫을 때 임시 증빙을 지운다.
+     * TOBE 보강: 실제 점검항목 ID가 오면 거절한다(그 항목의 증빙이 지워지지 않게)
+     */
+    @Transactional
+    public void deleteTmpFile(Long tmpFileParentId) {
+        if (tmpFileParentId == null || mapper.selectById(tmpFileParentId) != null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "임시파일 삭제중 오류발생");
+        }
+        deleteEvidence(tmpFileParentId);
     }
 
     /** 증빙자료 제거 — 1.연결문서 2.업로드 파일(실제 파일 포함) 3.외부보관 증빙자료 (AS-IS 순서 그대로) */
