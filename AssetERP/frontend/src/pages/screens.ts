@@ -14,6 +14,9 @@ import { Bbs01_Tab_Board } from './bbs/Bbs01_Tab_Board';
 import { Bbs01_Tab_BoardManager } from './bbs/Bbs01_Tab_BoardManager';
 import { Apr17_Tab_CorpDoc } from './apr/Apr17_Tab_CorpDoc';
 import { Apr17_Tab_CorpDocApp } from './apr/Apr17_Tab_CorpDocApp';
+import { Apr19_Tab_StampList } from './apr/Apr19_Tab_StampList';
+import { Apr19_Tab_OrgStampList } from './apr/Apr19_Tab_OrgStampList';
+import { Apr19_Tab_StampFileCheck } from './apr/Apr19_Tab_StampFileCheck';
 import { Bbs11_Tab_Application } from './bbs/Bbs11_Tab_Application';
 import { Bbs11_Tab_ApplicationMng } from './bbs/Bbs11_Tab_ApplicationMng';
 import { Bbs20_Tab_FloralRequestMng } from './bbs/Bbs20_Tab_FloralRequestMng';
@@ -455,6 +458,9 @@ export const SCREENS: Record<string, React.FC> = {
   Bbs01_Tab_BoardManager, // U2-01 (+ Bbs01_Edit_Board) — AS-IS 메뉴 없음
   Apr17_Tab_CorpDoc, // U2-02 [1507] 구)법인서류 매수관리 (+ Apr17_Lookup_CorpDoc·Apr18_Lookup_RelateAppr)
   Apr17_Tab_CorpDocApp, // U2-02 [1510] 구)법인서류 및 날인 신청 (+ Apr19_Grid_RelateStamp·Apr10_Lookup_Stamp·Apr18_Lookup_RelateAppr)
+  Apr19_Tab_StampList, // U2-03 [1508] 구)인감날인대장 (+ Apr19_Edit_StampDate)
+  Apr19_Tab_OrgStampList, // U2-03 AS-IS 메뉴 없음 — 부서 인감날인대장(구) (+ Apr19_Edit_StampDate)
+  Apr19_Tab_StampFileCheck, // U2-03 [1509] 구)인감날인본 업로드확인 (+ Apr19_Lookup_RelateAppr)
   Bbs11_Tab_Application, // Y13 (+ Bbs11_Edit_Application)
   Bbs11_Tab_ApplicationMng, // T22 (+ Bbs12_Lookup_ApplicationMng)
   Bbs20_Tab_FloralRequest, // Y12 (+ Bbs20_Edit_FloralRequest 등록·수정·Bbs20_Lookup_OccasionsOption·Mkt01_Lookup_Select)

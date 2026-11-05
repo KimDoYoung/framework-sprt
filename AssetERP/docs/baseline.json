@@ -15807,5 +15807,66 @@
     "note": "docs/변환/work/U/U2-02-작업기록.md",
     "history": [],
     "id": "U2-02"
+  },
+  "Apr19_Tab_StampList": {
+    "commit": "0ab0d1e40e6027469646dfc08558e5bf0c89f00e",
+    "commit_short": "0ab0d1e",
+    "branch": "ioc",
+    "commit_date": "2026-11-04",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr19_Edit_StampDate.java": "c15a449538a4398f02c85dae3df23a44fb2f9cb4",
+      "application/src/main/java/myApp/client/vi/apr/Apr19_Tab_StampList.java": "296679e9d185b50604a012c76105c8b147fef16a",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModel.java": "2a3f02899eec9f2844882ce79804dbc571d76dbd",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModelProperties.java": "3125eefe75cb9325afb9f24bab2f8946374e3fbb",
+      "application/src/main/java/myApp/server/apr/Apr19_RelateStamp.java": "edde2707bf886ccee1686450cc812bc7804a067d",
+      "application/src/main/java/myApp/server/apr/mapper/apr19_relate_stamp.xml": "4813a75959151beb07f53df37c22e806351ab1fc",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "722656ceec20244c2a6d488821a96545fb1e755e",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr10_Lookup_Stamp"
+    ],
+    "recorded_at": "2026-11-05T10:31:52+09:00",
+    "recorded_by": "kdy987",
+    "note": null,
+    "history": [],
+    "id": "U2-03"
+  },
+  "Apr19_Tab_StampFileCheck": {
+    "commit": "0ab0d1e40e6027469646dfc08558e5bf0c89f00e",
+    "commit_short": "0ab0d1e",
+    "branch": "ioc",
+    "commit_date": "2026-11-04",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr19_Lookup_RelateAppr.java": "e4109b6b8440433a23828c92721bae0f42abe583",
+      "application/src/main/java/myApp/client/vi/apr/Apr19_Tab_StampFileCheck.java": "70b1ab10d44e37ac2bc5af31af04436270790c75",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModel.java": "c5c1e763e640654f93835b493c7c7a5edb0a6867",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr18_RelateCorpDocModelProperties.java": "1a473c65cf123f2046bfb09dac75a533fd6d2b90",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModel.java": "2a3f02899eec9f2844882ce79804dbc571d76dbd",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr19_RelateStampModelProperties.java": "3125eefe75cb9325afb9f24bab2f8946374e3fbb",
+      "application/src/main/java/myApp/server/apr/Apr18_RelateCorpDoc.java": "1f68dd18b3560fa54f9f0e4e65f34262eb45216b",
+      "application/src/main/java/myApp/server/apr/Apr19_RelateStamp.java": "edde2707bf886ccee1686450cc812bc7804a067d",
+      "application/src/main/java/myApp/server/apr/mapper/apr18_relate_corp_doc.xml": "1af53d4144ea52a529a00be06a2bd9be3daf633a",
+      "application/src/main/java/myApp/server/apr/mapper/apr19_relate_stamp.xml": "4813a75959151beb07f53df37c22e806351ab1fc"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr10_Lookup_Stamp"
+    ],
+    "recorded_at": "2026-11-05T10:31:52+09:00",
+    "recorded_by": "kdy987",
+    "note": null,
+    "history": [],
+    "id": "U2-03"
   }
 }

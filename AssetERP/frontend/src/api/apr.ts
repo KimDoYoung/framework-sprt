@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList, AprCorpDoc, AprCorpDocRelate, AprCorpDocRow, AprCorpDocTotal, AprRelateStamp } from '../types/apr';
+import { AprBookmarkList, AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcrOrigin, AprRelateIcsOrigin, AprRelateIcsRow, AprRelateSelect, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList, AprCorpDoc, AprCorpDocRelate, AprCorpDocRow, AprCorpDocTotal, AprRelateStamp, AprRelateStampList, AprRelateStampCheck } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -1128,6 +1128,52 @@ export const aprCorpDocManageApi = {
   /** AS-IS apr.Apr19_RelateStamp.delete */
   deleteStamps: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/apr/corp-docs/stamps', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** U2-03 AS-IS apr.Apr19_RelateStamp — 인감날인대장(구)·부서 인감날인대장(구)·인감날인본 업로드확인(구) */
+export interface AprRelateStampListParams { startDate: string; closeDate: string; stampId?: number; outYn: boolean; searchText?: string }
+export const aprRelateStampApi = {
+  /** selectBySearchText */
+  searchStampList: async (params: AprRelateStampListParams): Promise<AprRelateStampList[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateStampList[]>>('v1/apr/relate-stamps', { params });
+    return res.data.data;
+  },
+
+  /** selectByOrgCodeId */
+  searchOrgStampList: async (params: AprRelateStampListParams): Promise<AprRelateStampList[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateStampList[]>>('v1/apr/relate-stamps/by-org', { params });
+    return res.data.data;
+  },
+
+  /** Sys99_Print.insertRdStampList / insertRdOrgStampList → rdGroupId */
+  rdPrint: async (params: AprRelateStampListParams & { org?: boolean }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/apr/relate-stamps/rd-print', null, { params });
+    return res.data.data;
+  },
+
+  /** selectById — 날인일자 수정 창이 여는 값 */
+  getStampDate: async (relateStampId: number): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>(`v1/apr/relate-stamps/${relateStampId}/stamp-date`);
+    return res.data.data ?? null;
+  },
+
+  /** modelUpdate */
+  updateStampDate: async (relateStampId: number, stampDate: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/relate-stamps/stamp-date', { relateStampId, stampDate });
+    return res.data.data ?? 0;
+  },
+
+  /** selectByStampCheckList */
+  searchStampCheck: async (params: { startDate: string; closeDate: string; stampId?: number; notStampFileYn: boolean }): Promise<AprRelateStampCheck[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateStampCheck[]>>('v1/apr/relate-stamps/stamp-check', { params });
+    return res.data.data;
+  },
+
+  /** update — check=false면 확인취소 */
+  confirm: async (ids: number[], check: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/relate-stamps/confirm', { ids, check });
     return res.data.data ?? 0;
   },
 };

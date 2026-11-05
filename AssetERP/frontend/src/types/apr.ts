@@ -1280,3 +1280,41 @@ export interface AprRelateStamp {
   outYn: boolean | null;
   stampDate: string | null;
 }
+
+/** U2-03 인감날인대장(구)·부서 인감날인대장(구) 그리드 (Apr19_RelateStampModel — selectBySearchText·selectByOrgCodeId). relateStampId는 행 번호 */
+export interface AprRelateStampList {
+  relateStampId: number;
+  callDate?: string | null;
+  callEmpName?: string | null;
+  stampId?: number | null;
+  stampName?: string | null;
+  stampCnt?: number | null;
+  outYn?: boolean | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  note?: string | null;
+  stampSeq?: string | null;
+  stampDate?: string | null;
+  apprId?: number | null;
+  apprCntStr?: string | null;
+  /** 실제 인감날인 ID — 전자결재 대외문서는 null */
+  realRelateStampId?: number | null;
+}
+
+/** U2-03 인감날인본 업로드확인(구) 그리드 (selectByStampCheckList) */
+export interface AprRelateStampCheck {
+  relateStampId: number;
+  corpDocId: number;
+  callDate?: string | null;
+  callEmpName?: string | null;
+  stampName?: string | null;
+  stampCnt?: number | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  apprCntStr?: string | null;
+  stampDate?: string | null;
+  stampFileYnStr?: string | null;
+  confirmDate?: string | null;
+  confirmerId?: number | null;
+  confirmerName?: string | null;
+}

@@ -155,3 +155,23 @@ CREATE TABLE public.att13_overtime_req_hist (
   COMMENT ON COLUMN act08_journal_upload.act08_corp_cd    IS '거래처코드';
   COMMENT ON COLUMN act08_journal_upload.act08_deposit_cd IS '관리계좌코드';
 ```  
+
+---
+
+```sql
+-- public.sys55_menu_guide_company definition
+
+-- Drop table
+
+-- DROP TABLE public.sys55_menu_guide_company;
+
+CREATE TABLE public.sys55_menu_guide_company (
+	sys55_menu_guide_company_id numeric NOT NULL,
+	sys55_company_id numeric NULL,
+	sys55_menu_id numeric NULL,
+	sys55_content text NULL,
+	sys55_note text NULL,
+	CONSTRAINT sys55_menu_guide_company_pkey PRIMARY KEY (sys55_menu_guide_company_id)
+);
+CREATE INDEX sys55_menu_guide_company_idx01 ON public.sys55_menu_guide_company USING btree (sys55_company_id, sys55_menu_id);
+```

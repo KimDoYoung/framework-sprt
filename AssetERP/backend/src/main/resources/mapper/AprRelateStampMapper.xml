@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr19_relate_stamp.xml · server/sys/Sys99_Print.insertRdStampList·insertRdOrgStampList — U2-03 Apr19_Tab_StampList · Apr19_Tab_OrgStampList · Apr19_Tab_StampFileCheck -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprRelateStampMapper">
+
+    <!-- AS-IS apr19_relate_stamp.selectBySearchText L71 · selectByOrgCodeId L177 (IDMS-IC). 두 문장은 폐기 표시('b' 뒤 공백)·연관문서 문구 조건·미연결 판정값만 다르다
+         → ${disposeTag}·${apprCntCond}·${noneCd}로 원본 그대로 나눈다. 모든 갈래가 apr10_all_use_yn을 읽지만 부서 대장만 쓴다 -->
+    <sql id="listSelect">
+        <![CDATA[
+        SELECT ROW_NUMBER() OVER (ORDER BY apr19_call_date DESC, apr19_appr_id DESC)    AS apr19_relate_stamp_id
+             , t.*
+          FROM (
+                SELECT apr17.*
+                     , CASE WHEN ${apprCntCond} THEN '(문서없음)' ELSE '' END           AS apr19_appr_cnt_str
+                  FROM (
+                        SELECT apr17_call_date                       AS apr19_call_date
+                             , apr17_note                            AS apr19_note
+                             , f_emp_kor_nm(apr17_call_emp_id)       AS apr19_call_emp_nm
+                             , apr19_stamp_id                        AS apr19_stamp_id
+                             , apr10_stamp_nm                        AS apr19_stamp_nm
+                             , apr19_stamp_cnt                       AS apr19_stamp_cnt
+                             , apr19_out_yn                          AS apr19_out_yn
+                             , apr17_provide_co                      AS apr19_provide_co
+                             , apr17_purpose                         AS apr19_purpose
+                             , NULL                                  AS apr19_stamp_seq
+                             , apr19_relate_stamp_id                 AS apr19_real_relate_stamp_id
+                             , apr19_stamp_date                      AS apr19_stamp_date
+                             , COALESCE(apr19_appr_id, (
+                                                        SELECT apr18_appr_id
+                                                          FROM apr18_relate_corp_doc
+                                                               INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+                                                         WHERE apr18_corp_doc_id = apr17_corp_doc_id
+                                                         LIMIT 1
+                                                       ))            AS apr19_appr_id
+                             , COALESCE(apr10_all_use_yn, 'false')   AS apr19_all_use_yn
+                          FROM apr19_relate_stamp
+                               INNER JOIN apr17_corp_doc ON apr17_corp_doc_id = apr19_corp_doc_id
+                               INNER JOIN apr10_stamp    ON apr10_stamp_id    = apr19_stamp_id
+                         WHERE apr17_company_id = #{companyId}
+                           AND apr17_call_date BETWEEN #{startDate} AND #{closeDate}
+                       ) apr17
+                       LEFT OUTER JOIN apr01_appr ON apr01_appr_id = apr19_appr_id
+                 WHERE COALESCE(apr01_status_cd, ${noneCd}) IN ('30', ${noneCd})    /* 완료문서와 문서미연결건 */
+                 UNION ALL
+                SELECT apr01_reg_date                                AS apr19_call_date
+                     , NULL                                          AS apr19_note
+                     , f_emp_kor_nm(apr01_reg_emp_id)                AS apr19_call_emp_nm
+                     , apr01_stamp_id                                AS apr19_stamp_id
+                     , apr10_stamp_nm                                AS apr19_stamp_nm
+                     , 1                                             AS apr19_stamp_cnt
+                     , 'false'                                       AS apr19_out_yn
+                     , apr01_receive_nm                              AS apr19_provide_co
+                     , apr01_title                                   AS apr19_purpose
+                     , apr01_stamp_seq                               AS apr19_stamp_seq
+                     , NULL                                          AS apr19_real_relate_stamp_id
+                     , (
+                        SELECT sys10_reg_date
+                          FROM sys10_file
+                         WHERE sys10_parent_id = apr01_appr_id
+                           AND sys10_title_yn = 'true'
+                         ORDER BY sys10_file_id
+                         LIMIT 1
+                       )                                             AS apr19_stamp_date
+                     , apr01_appr_id                                 AS apr19_appr_id
+                     , COALESCE(apr10_all_use_yn, 'false')           AS apr19_all_use_yn
+                     , NULL                                          AS apr19_appr_cnt_str
+                  FROM apr01_appr
+                       INNER JOIN apr10_stamp ON apr10_stamp_id = apr01_stamp_id
+                 WHERE apr01_company_id = #{companyId}
+                   AND apr01_reg_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr01_status_cd = '30'
+                 UNION ALL
+                SELECT apr99_reg_date                                AS apr19_call_date
+                     , NULL                                          AS apr19_note
+                     , f_emp_kor_nm(apr99_reg_emp_id)                AS apr19_call_emp_nm
+                     , apr99_stamp_id                                AS apr19_stamp_id
+                     , apr10_stamp_nm                                AS apr19_stamp_nm
+                     , 1                                             AS apr19_stamp_cnt
+                     , 'false'                                       AS apr19_out_yn
+                     , apr99_receive_nm                              AS apr19_provide_co
+                     , '<'||${disposeTag}||'style=color:#E33E31;'||'>'||'[폐기] '||'<'||'/b'||'>'||apr99_title  AS apr19_purpose
+                     , apr99_stamp_seq                               AS apr19_stamp_seq
+                     , NULL                                          AS apr19_real_relate_stamp_id
+                     , (
+                        SELECT sys10_reg_date
+                          FROM sys10_file
+                         WHERE sys10_parent_id = apr99_appr_id
+                           AND sys10_title_yn = 'true'
+                         ORDER BY sys10_file_id
+                         LIMIT 1
+                       )                                             AS apr19_stamp_date
+                     , apr99_appr_id                                 AS apr19_appr_id
+                     , COALESCE(apr10_all_use_yn, 'false')           AS apr19_all_use_yn
+                     , NULL                                          AS apr19_appr_cnt_str
+                  FROM apr99_appr_del
+                       INNER JOIN apr10_stamp ON apr10_stamp_id = apr99_stamp_id
+                 WHERE apr99_company_id = #{companyId}
+                   AND apr99_reg_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr99_status_cd = '30'
+               ) t
+         WHERE 1=1
+        ]]>
+    </sql>
+
+    <!-- 공통 조건: 인감·반출만·검색어 (원본의 stampId·outYn <choose>와 ILIKE) -->
+    <sql id="listFilter">
+        <if test="stampId != null">
+           AND apr19_stamp_id = #{stampId}
+        </if>
+        <if test="outYn">
+           AND COALESCE(apr19_out_yn, 'false') = 'true'
+        </if>
+           AND CONCAT(apr19_call_emp_nm, apr19_provide_co, apr19_purpose, apr19_stamp_seq) ILIKE #{searchText}
+    </sql>
+
+    <!-- selectBySearchText 본문 -->
+    <sql id="plainBody">
+        <include refid="listSelect">
+            <property name="disposeTag" value="'b'"/>
+            <property name="apprCntCond" value="COALESCE(apr01_status_cd,'') = ''"/>
+            <property name="noneCd" value="''"/>
+        </include>
+        <include refid="listFilter"/>
+    </sql>
+
+    <!-- selectByOrgCodeId 본문 — 로그인 사원의 부서가 쓸 수 있는 인감(org10_role_stamp)이거나 전체 사용 인감 -->
+    <sql id="orgBody">
+        <include refid="listSelect">
+            <property name="disposeTag" value="'b '"/>
+            <property name="apprCntCond" value="apr19_appr_id IS NULL"/>
+            <property name="noneCd" value="'XX'"/>
+        </include>
+           AND (
+                    ( #{orgCodeId} IN ( SELECT org10_org_code_id FROM org10_role_stamp WHERE org10_stamp_id = apr19_stamp_id ) )
+                    OR
+                    apr19_all_use_yn = 'true'
+               )
+        <include refid="listFilter"/>
+    </sql>
+
+    <!-- AS-IS apr19_relate_stamp.selectBySearchText L71 (IDMS-IC) — 본문은 listSelect·plainBody -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateStampListRes">
+        SELECT apr19_relate_stamp_id                          AS relate_stamp_id
+             , CAST(apr19_call_date AS date)                  AS call_date
+             , apr19_call_emp_nm                              AS call_emp_name
+             , apr19_stamp_id                                 AS stamp_id
+             , apr19_stamp_nm                                 AS stamp_name
+             , apr19_stamp_cnt                                AS stamp_cnt
+             , (COALESCE(apr19_out_yn, 'false') = 'true')     AS out_yn
+             , apr19_provide_co                               AS provide_co
+             , apr19_purpose                                  AS purpose
+             , apr19_note                                     AS note
+             , apr19_stamp_seq                                AS stamp_seq
+             , CAST(apr19_stamp_date AS date)                 AS stamp_date
+             , apr19_appr_id                                  AS appr_id
+             , apr19_appr_cnt_str                             AS appr_cnt_str
+             , apr19_real_relate_stamp_id                     AS real_relate_stamp_id
+          FROM ( <include refid="plainBody"/> ) r
+         ORDER BY apr19_relate_stamp_id
+    </select>
+
+    <!-- AS-IS apr19_relate_stamp.selectByOrgCodeId L177 (IDMS-IC) — 본문은 listSelect·orgBody -->
+    <select id="selectByOrgCodeId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateStampListRes">
+        SELECT apr19_relate_stamp_id                          AS relate_stamp_id
+             , CAST(apr19_call_date AS date)                  AS call_date
+             , apr19_call_emp_nm                              AS call_emp_name
+             , apr19_stamp_id                                 AS stamp_id
+             , apr19_stamp_nm                                 AS stamp_name
+             , apr19_stamp_cnt                                AS stamp_cnt
+             , (COALESCE(apr19_out_yn, 'false') = 'true')     AS out_yn
+             , apr19_provide_co                               AS provide_co
+             , apr19_purpose                                  AS purpose
+             , apr19_note                                     AS note
+             , apr19_stamp_seq                                AS stamp_seq
+             , CAST(apr19_stamp_date AS date)                 AS stamp_date
+             , apr19_appr_id                                  AS appr_id
+             , apr19_appr_cnt_str                             AS appr_cnt_str
+             , apr19_real_relate_stamp_id                     AS real_relate_stamp_id
+          FROM ( <include refid="orgBody"/> ) r
+         ORDER BY apr19_relate_stamp_id
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdStampList L3190 · insertRdOrgStampList L3295: 목록을 한 건씩 sys99_print에 넣는다
+         (date01 신청일자·string01 신청자·02 날인인감·03 대장번호·04 반출 ✓·long01 부수·text01 제출처·text02 내용) -->
+    <sql id="printColumns">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04
+               , sys99_long01, sys99_text01, sys99_text02 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , CAST(apr19_call_date AS date)
+             , COALESCE(apr19_call_emp_nm, ''), COALESCE(apr19_stamp_nm, ''), COALESCE(apr19_stamp_seq, '')
+             , CASE WHEN COALESCE(apr19_out_yn, 'false') = 'true' THEN '✓' ELSE '' END
+             , COALESCE(apr19_stamp_cnt, 0), COALESCE(apr19_provide_co, ''), COALESCE(apr19_purpose, '')
+    </sql>
+
+    <insert id="insertStampListPrint">
+        <include refid="printColumns"/>
+          FROM ( <include refid="plainBody"/> ) r
+         ORDER BY apr19_relate_stamp_id
+    </insert>
+
+    <insert id="insertOrgStampListPrint">
+        <include refid="printColumns"/>
+          FROM ( <include refid="orgBody"/> ) r
+         ORDER BY apr19_relate_stamp_id
+    </insert>
+
+    <select id="selectNextPrintId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS apr19_relate_stamp.selectByStampCheckList L298 (IDMS-IC). 계산 열은 그대로, apr19_relate_stamp.*는 쓰는 열만 -->
+    <select id="selectByStampCheckList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateStampCheckRes">
+        SELECT apr19_relate_stamp_id                       AS relate_stamp_id
+             , apr19_corp_doc_id                           AS corp_doc_id
+             , apr19_call_date                             AS call_date
+             , apr19_call_emp_nm                           AS call_emp_name
+             , apr19_stamp_nm                              AS stamp_name
+             , apr19_stamp_cnt                             AS stamp_cnt
+             , apr19_provide_co                            AS provide_co
+             , apr19_purpose                               AS purpose
+             , apr19_appr_cnt_str                          AS appr_cnt_str
+             , apr19_stamp_date                            AS stamp_date
+             , CASE WHEN COALESCE(apr19_stamp_file_cnt, 0) > 0 THEN 'O' ELSE 'X' END AS stamp_file_yn_str
+             , apr19_confirm_date                          AS confirm_date
+             , apr19_confirmer_id                          AS confirmer_id
+             , apr19_confirmer_nm                          AS confirmer_name
+          FROM (
+                SELECT apr19_relate_stamp.apr19_relate_stamp_id
+                     , apr19_relate_stamp.apr19_corp_doc_id
+                     , apr19_relate_stamp.apr19_stamp_cnt
+                     , apr19_relate_stamp.apr19_stamp_date
+                     , apr19_relate_stamp.apr19_confirmer_id
+                     , apr19_relate_stamp.apr19_confirm_date
+                     , apr17_call_date                                                     AS apr19_call_date
+                     , f_emp_kor_nm(apr17_call_emp_id)                                     AS apr19_call_emp_nm
+                     , apr10_stamp_nm                                                      AS apr19_stamp_nm
+                     , apr17_provide_co                                                    AS apr19_provide_co
+                     , apr17_purpose                                                       AS apr19_purpose
+                     , (
+                        SELECT count(*)
+                          FROM apr18_relate_corp_doc
+                               INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+                         WHERE apr18_corp_doc_id = apr17_corp_doc_id
+                       )||' 건'                                                            AS apr19_appr_cnt_str
+                     , (
+                        SELECT count(*)
+                          FROM apr18_relate_corp_doc
+                               INNER JOIN sys10_file ON sys10_parent_id = apr18_appr_id
+                         WHERE apr18_corp_doc_id = apr19_corp_doc_id
+                           AND sys10_stamp_yn = 'true'
+                       )                                                                   AS apr19_stamp_file_cnt
+                     , f_emp_kor_nm(apr19_confirmer_id)                                    AS apr19_confirmer_nm
+                  FROM apr19_relate_stamp
+                       INNER JOIN apr17_corp_doc  ON apr17_corp_doc_id = apr19_corp_doc_id
+                       INNER JOIN apr10_stamp     ON apr10_stamp_id    = apr19_stamp_id
+                       LEFT OUTER JOIN apr01_appr ON apr01_appr_id     = apr19_appr_id
+                 WHERE apr17_company_id = #{companyId}
+                   AND apr17_call_date BETWEEN #{startDate} AND #{closeDate}
+                <if test="stampId != null">
+                   AND apr19_stamp_id = #{stampId}
+                </if>
+                   AND ( ( apr19_appr_id IS NULL AND ( SELECT COUNT(*)
+                                                         FROM apr18_relate_corp_doc
+                                                        WHERE apr18_corp_doc_id = apr19_corp_doc_id
+                                                          AND apr18_appr_id IS NOT NULL ) = 0 )      /* 문서연결이 안되어 있거나, */
+                         OR
+                         ( SELECT COUNT(*)
+                             FROM apr18_relate_corp_doc
+                                  INNER JOIN apr01_appr ON apr01_appr_id = apr18_appr_id
+                            WHERE apr18_corp_doc_id = apr19_corp_doc_id
+                              AND apr01_status_cd   = '30' ) != 0                                    /* 결재완료문서 */
+                         OR
+                         apr01_status_cd = '30' )
+               ) t
+         WHERE 1=1
+        <if test="notStampFileYn">
+           AND apr19_stamp_file_cnt = 0
+        </if>
+         ORDER BY apr19_call_date DESC, apr19_corp_doc_id DESC, apr19_relate_stamp_id DESC
+    </select>
+
+    <!-- AS-IS apr19_relate_stamp.selectById L31 (IDMS-IC) — [수정] 창은 날인일자만 쓰므로 그 열만. 로그인 회사의 법인서류 것만(TOBE에서 더함) -->
+    <select id="selectStampDate" resultType="java.time.LocalDate">
+        SELECT s.apr19_stamp_date
+          FROM apr19_relate_stamp s
+               INNER JOIN apr17_corp_doc a ON a.apr17_corp_doc_id = s.apr19_corp_doc_id
+         WHERE s.apr19_relate_stamp_id = #{relateStampId}
+           AND a.apr17_company_id      = #{companyId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM apr19_relate_stamp s
+               INNER JOIN apr17_corp_doc a ON a.apr17_corp_doc_id = s.apr19_corp_doc_id
+         WHERE s.apr19_relate_stamp_id = #{relateStampId}
+           AND a.apr17_company_id      = #{companyId}
+    </select>
+
+    <!-- AS-IS Apr19_RelateStamp.modelUpdate(UpdateDataModel) — 화면이 바꾸는 열: 날인일자 -->
+    <update id="updateStampDate">
+        UPDATE apr19_relate_stamp
+           SET apr19_stamp_date = #{stampDate,jdbcType=DATE}
+         WHERE apr19_relate_stamp_id = #{relateStampId}
+           AND apr19_corp_doc_id IN ( SELECT apr17_corp_doc_id FROM apr17_corp_doc WHERE apr17_company_id = #{companyId} )
+    </update>
+
+    <!-- AS-IS Apr19_RelateStamp.update(UpdateDataModel) — 화면이 바꾸는 열: 확인자·확인일자 -->
+    <update id="updateConfirm">
+        UPDATE apr19_relate_stamp
+           SET apr19_confirmer_id = #{confirmerId,jdbcType=NUMERIC}
+             , apr19_confirm_date = #{confirmDate,jdbcType=DATE}
+         WHERE apr19_relate_stamp_id = #{relateStampId}
+           AND apr19_corp_doc_id IN ( SELECT apr17_corp_doc_id FROM apr17_corp_doc WHERE apr17_company_id = #{companyId} )
+    </update>
+</mapper>
