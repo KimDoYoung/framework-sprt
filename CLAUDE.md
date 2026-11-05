@@ -15,15 +15,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 작업은 아래 다섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
 
-**작업을 시작하기 전에 그 작업 폴더의 `README.md`를 반드시 먼저 읽는다**(예: 변환 → `AssetERP/docs/변환/README.md`). 요청이 어느 작업인지 애매하면 가장 가까운 작업의 README를 읽고, 여러 작업에 걸치면 해당 README를 모두 읽는다.
+(폴더 앞 숫자는 작업 ID이지 순서가 아니다.) **작업을 시작하기 전에 그 작업 폴더의 `README.md`를 반드시 먼저 읽는다**(예: 변환 → `AssetERP/docs/1-변환/README.md`). 요청이 어느 작업인지 애매하면 가장 가까운 작업의 README를 읽고, 여러 작업에 걸치면 해당 README를 모두 읽는다.
 
 | 작업 | 뜻 | docs 폴더 | 핵심 명령 |
 |:---|:---|:---|:---|
-| 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/변환/` (규칙: `변환-가이드.md`) | `yunhee analysis`·`port-sql`·`run` |
-| 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | `AssetERP/docs/업무분석/` (참고: `변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
-| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/변경반영/` | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
-| 재설계 | AS-IS의 UI·로직(업무흐름)을 TOBE에서 다르게 바꾸고 새 기능을 더함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/재설계/` | |
-| 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/테스트/` | `yunhee run "gradle test"` |
+| 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/1-변환/` (규칙: `변환-가이드.md`) | `yunhee analysis`·`port-sql`·`run` |
+| 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | `AssetERP/docs/2-업무분석/` (참고: `1-변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
+| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/3-변경반영/` | `./check-git.sh`, `yunhee drift` (05 §7 "원본 변경 점검") |
+| 재설계 | AS-IS의 UI·로직(업무흐름)을 TOBE에서 다르게 바꾸고 새 기능을 더함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/4-재설계/` | |
+| 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/5-테스트/` | `yunhee run "gradle test"` |
 
 * 기술스택이 바뀌면서 달라지는 것
    - 보안: 세션 → JWT (`docs/security-설계.md`)
@@ -107,7 +107,7 @@ cd AssetERP
 
 `AssetERP/frontend/src`: React + TypeScript + Ant Design(일반 폼·목록) + AG Grid(그리드). 화면은 `pages/{도메인}/`, 공통 부품은 `components/`·`hooks/`, API는 `api/`, 화면 등록은 `pages/screens.ts`.
 
-- 공통 부품 사용법은 `AssetERP/docs/변환/11-프론트부품.md`, 배치·간격 규칙은 `변환-가이드.md`, 화면 유형은 `AssetERP/docs/page-style.md`를 본다. 부품 소스를 통째로 읽지 않는다.
+- 공통 부품 사용법은 `AssetERP/docs/1-변환/11-프론트부품.md`, 배치·간격 규칙은 `변환-가이드.md`, 화면 유형은 `AssetERP/docs/page-style.md`를 본다. 부품 소스를 통째로 읽지 않는다.
 - `docs/TOBE-Framework.md`의 frontend 규칙: 대시보드는 "MyPage" 용어 사용, 아이콘은 Ant Design 아이콘만 사용, Tailwind 사용 자제, StatusBar를 TopBar와 콘텐츠 사이에 배치, 뷰포트 피팅(no-scroll body + 내부 가상 스크롤 격리) 레이아웃 유지.
 
 ## yunhee의 이용 (local qwen2.5를 이용하는 agent)

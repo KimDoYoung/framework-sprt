@@ -2,7 +2,7 @@
  * [1502] 기초자료 > 10. 책무 > 책무매뉴얼 재생성 (E13, 1단계)
  * AS-IS: myApp/client/vi/tdm/Tdm42_Tab_ManlManagerAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L88-125: 가운데 = 툴바(고객사 200 · 부서 270 · 조회기간(적용시작일) [시작 ~ 종료] · 전체보기 · 검색 200 · [조회][재생성]) + 책무매뉴얼 그리드(행번호, 체크박스 다중, 건수 묶음 헤더, 합계 행)
- * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(ManlOrgPdfMaker 기본 구현, docs/변환/work/E/E13-작업방법.md "다음 단계")
+ * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(ManlOrgPdfMaker 기본 구현, docs/1-변환/work/E/E13-작업방법.md "다음 단계")
  * 점검항목 조회창 Tdm43_Lookup_ManlItem까지 1단계 — 등록·수정창 Tdm43_Edit_Manl 등은 E13-2
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */

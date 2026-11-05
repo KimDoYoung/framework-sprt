@@ -3,7 +3,7 @@ import { Input, Space, Typography, type InputProps } from 'antd';
 import { Button, usePromiseLoading } from '../button';
 
 /**
- * 검색 영역 — UX보강(docs/변환/10-UX보강.md) UX-01·02·04를 부품 안에서만 넣는다.
+ * 검색 영역 — UX보강(docs/1-변환/10-UX보강.md) UX-01·02·04를 부품 안에서만 넣는다.
  *   필드들 → [조회] → [초기화] → extra(저장 등 원본 툴바의 나머지 버튼)
  * - UX-01 조회 버튼과 SearchBar.Input의 Enter가 같은 loading을 쓴다: onSearch가 Promise를 돌려주면 끝날 때까지 스피너·중복 조회 무시
  * - UX-02 onReset을 주고 검색 조건(children — 라벨 묶음·입력·콤보 하나가 1개)이 3개 이상이면 조회 다음에 초기화(2개 이하면 그리지 않는다).
