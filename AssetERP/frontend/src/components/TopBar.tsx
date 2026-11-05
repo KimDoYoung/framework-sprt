@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { fileApi } from '../api/file';
 import { useLoginUser } from '../hooks/useLoginUser';
 import { Input, Avatar, Dropdown, MenuProps, Tooltip, AutoComplete, Modal, Popconfirm, message, Tag } from 'antd';
@@ -140,16 +140,23 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, [searchValue, allScreens]);
 
   // ── 검색어 입력 후 Enter 또는 선택 시 화면 열기 ──
+  // 후보가 떠 있을 때 Enter 한 번에 onSelect와 onPressEnter가 함께 불린다 → 직후 두 번째 호출은 무시
+  const lastOpenRef = useRef(0);
+  const openFound = (found: ScreenSearchItem) => {
+    const now = Date.now();
+    if (now - lastOpenRef.current < 300) return;
+    lastOpenRef.current = now;
+    onOpenScreen?.(found.item, found.parentLevel1);
+    setSearchValue('');
+  };
+
   const handleSelectScreen = (code: string) => {
     const found = allScreens.find((s) => s.code === code);
-    if (found && onOpenScreen) {
-      onOpenScreen(found.item, found.parentLevel1);
-      message.success(`[${found.code}] ${found.title} 화면을 열었습니다.`);
-      setSearchValue('');
-    }
+    if (found && onOpenScreen) openFound(found);
   };
 
   const handleSearchEnter = () => {
+    if (Date.now() - lastOpenRef.current < 300) return;
     const term = searchValue.trim().toLowerCase();
     if (!term) return;
 
@@ -167,9 +174,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
 
     if (found && onOpenScreen) {
-      onOpenScreen(found.item, found.parentLevel1);
-      message.success(`[${found.code}] ${found.title} 화면을 열었습니다.`);
-      setSearchValue('');
+      openFound(found);
     } else {
       message.warning(`화면번호 또는 메뉴 '${searchValue}'을(를) 찾을 수 없습니다.`);
     }
