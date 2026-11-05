@@ -4,7 +4,7 @@ import { BookmarkCell, CheckCell, HtmlCell, LockCell, LongSecondCell, PinCell, S
 
 /**
  * 컬럼 헬퍼 — AS-IS GridBuilder `addXxx(valueProvider, width, header)`와 이름·인자 순서를 1:1로 맞춘다.
- * yunhee 변환 명세의 `gb.textCenter('field', 80, 'ICAM<br>운용사코드')`를 그대로 붙여 쓴다. 목록: docs/grid-types.md
+ * yunhee 변환 명세의 `gb.textCenter('field', 80, 'ICAM<br>운용사코드')`를 그대로 붙여 쓴다. 목록: docs/grid-style.md
  *
  *   const gb = gbFor<CompanyDetail>();
  *   const cols = [gb.text('companyNm', 200, '고객명'), gb.booleanYn2('useYn', 80, '사용여부')];

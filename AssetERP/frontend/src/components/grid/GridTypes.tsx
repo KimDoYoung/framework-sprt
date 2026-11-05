@@ -5,7 +5,7 @@ import { BaseGrid, type BaseGridProps } from './BaseGrid';
 import { ActionCell } from './renderers';
 
 /**
- * GridType 4종 — 이름이 곧 ID다. yunhee 변환 명세가 "GridType: SingleGrid"처럼 지정하면 그 컴포넌트를 쓴다 (docs/grid-types.md).
+ * GridType 4종 — 이름이 곧 ID다. yunhee 변환 명세가 "GridType: SingleGrid"처럼 지정하면 그 컴포넌트를 쓴다 (docs/grid-style.md).
  *
  * | GridType      | AS-IS 신호                                   |
  * | SingleGrid    | 편집기 없음, setChecked 없음                  |

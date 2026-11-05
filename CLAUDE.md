@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 저장소 루트 아래의 다른 폴더(`antdesign/`, `security-test/`, `OMS/` 등)는 테스트용 프로젝트다. 사용자가 따로 지시하지 않으면 변환 작업의 대상이나 참고 기준으로 삼지 않는다. 거기서 코드를 가져오면 패키지를 `kr.co.kfs.asseterp`로 바꾼다(`com.asseterp`는 쓰지 않는다).
 - `docs/TOBE-Framework.md` — backend/frontend 네이밍 및 레이어 규칙(신규 코드 작성 시 반드시 준수).
 - `tools/dbml-index.py`, `tools/src-index.py`, `tools/sql-check.py` — AS-IS 색인·SQL 정합성 생성기의 원본. 지금은 같은 기능의 `yunhee index-db` / `index-src` / `sql-check`를 쓴다. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
-- `docs/grid-types.md` — 공통 그리드 이름표(GridType·`gb.*`·옵션). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
+- `AssetERP/docs/grid-style.md` — 그리드 이름표 문서 하나: 공통 부품(GridType·`gb.*`·옵션)과 그리드 형식(GID). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
 - `AssetERP/docs/button-types.md` — 공통 버튼 이름표(`<Button type="search">` 등 type 약 30개, AS-IS `ColorButtonBar` 제목 → type). 컴포넌트는 아직 없음.
 - `AssetERP/docs/page-style.md` — 페이지(`*_Tab_*`) 화면 배치 이름표. 스타일 ID(SID: SG·SGVF·SGEF·TG·GG·CG)로 화면 구성을 부른다. 견본 코드는 `AssetERP/docs/page-style/{SID}/`(참조용 복사본). 초안(전체 `_Tab_` 조사 후 확정).
 

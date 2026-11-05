@@ -1,4 +1,4 @@
-/** 공통 그리드 — 이름 목록과 AS-IS 대응은 docs/grid-types.md */
+/** 공통 그리드 — 이름 목록과 AS-IS 대응은 docs/grid-style.md */
 export { SingleGrid, MultiGrid, CellEditGrid, ModalEditGrid } from './GridTypes';
 export type { SingleGridProps, MultiGridProps, CellEditGridProps, ModalEditGridProps } from './GridTypes';
 export type { SumRow } from './BaseGrid';

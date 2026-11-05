@@ -1,13 +1,99 @@
-# grid-style — 그리드 형식 이름표
+# grid-style — 그리드 이름표 (부품 · 형식)
 
-화면 안의 **그리드 한 개가 어떻게 보이는지**(열 폭·합계·선·색)를 이름(GID)으로 부른다. 화면 전체 배치는 `page-style.md`(SID), 이 문서는 그리드 하나의 모양이다.
+그리드 관련 이름표는 이 문서 하나다. 두 층으로 나뉜다.
+
+1. **공통 부품 이름표** — GridType·`gb.*` 컬럼·옵션. 그리드를 **무엇으로 만드는지**. yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
+2. **그리드 형식(GID)** — 그리드 한 개가 **어떻게 보이는지**(열 폭·합계·선·색). 화면 전체 배치는 `page-style.md`(SID).
+
+## 1. 공통 부품 이름표 (GridType · gb 컬럼)
+
+
+AS-IS GXT `Grid` + `GridBuilder` → TOBE `OMS/frontend/src/components/grid`. 여기 이름이 **ID**다.
+yunhee 변환 명세는 이 표의 이름만 쓰고, Claude는 명세가 지정한 GridType·`gb.*` 코드를 그대로 붙인다.
+여기 없는 AS-IS 메서드는 추측하지 않고 `⚠ 대응 없음 (GridBuilder L###)`으로 표시한 뒤 화면에서 직접 ColDef를 쓴다.
+
+```tsx
+import { SingleGrid, gbFor } from '@/components/grid';
+const gb = gbFor<CompanyDetail>();
+const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompanyCd', 80, 'ICAM<br>운용사코드')];
+<SingleGrid<CompanyDetail> gridRef={gridRef} rowData={rows} columnDefs={cols}
+  getRowId={p => String(p.data.companyId)} onSelect={row => …} />
+```
+레퍼런스: `OMS/frontend/src/pages/sys/Sys01_Tab_Company.tsx` (SingleGrid).
+
+### GridType
+
+| GridType | AS-IS 판정 신호 | 동작 · 주요 prop |
+|:---|:---|:---|
+| `SingleGrid` | 편집기 인자 없음, `setChecked` 없음 | 1개 선택(클릭·방향키), 읽기 전용. `onSelect(row)` = AS-IS `SelectionChanged` |
+| `MultiGrid` | `setChecked(SelectionMode.MULTI/SIMPLE)`, 편집기 없음 | 체크박스 + 헤더 체크박스. `onCheckedChange(rows)` |
+| `CellEditGrid` | `addXxx(…, IsField)` 편집기 인자 있음 | 셀 편집 + 체크박스(삭제용) + Enter↓/Tab→. `crud={useGridCrud(...)}` |
+| `ModalEditGrid` | 편집기 없음 + 행/셀 더블클릭 또는 수정 버튼 셀에서 `*_Edit_*` 팝업 | 1개 선택 + 더블클릭 → `onEdit(row)`. `editButton`(true/'라벨')이면 맨 뒤 버튼 컬럼 |
+
+### 공통 옵션 (모든 GridType)
+
+| 옵션 | AS-IS | 기본 |
+|:---|:---|:---|
+| `rowNumber` | `RowNumberer` 40px (`setRowNumHidden(true)` → `false`) | `true` |
+| `density` | `setRowPadding` / `setContentFontSize` | `'normal'`(헤더 36·행 32), `'compact'`(28·24) |
+| `sortable` | `setSortable(false)` → `false` | `true` |
+| `headerColor` | `setHtmlGridStyle(header, color)` (그리드 단위로) | 없음 — 공통 연회색 `#f5f5f5`(`theme.ts`). 그 그리드만 다른 색 |
+| `sumRow={{ labelField, label, sum, avg }}` | `getSumGrid` / `setSumGrid(i)` / `setAvgGrid(i)` | 없음. 맨 아래 고정 합계 행(`.summary-row`) |
+| `gb.group(header, children)` | `addHeaderGroupMap` | — |
+| 트리 | `getTreeGrid` | `hooks/useTreeGrid.tsx`를 SingleGrid/CellEditGrid에 `{...tree.gridProps}`로 |
+| CSV | (엑셀 다운로드) | `gridRef.current.api.exportDataAsCsv()` |
+
+모두 기본으로 들어간다: 굵은 헤더, 줄무늬, 컬럼선, 헤더 메뉴 없음, 정렬·폭 조절 허용, px 고정 폭, 부모 채우기.
+모양 값(높이·색)은 `components/grid/theme.ts` 한 곳에 있다 (hover `#f1f5f9`, 선택 `#dbeafe`, 합계행 `#f8fafc`).
+
+### gb 컬럼 — `gb.xxx(field, width, header, opts?)`
+
+`header`의 `<br>`은 두 줄 헤더가 된다. `opts.editor`(`'text'|'largeText'|'number'|'date'|'select'` + `values`)가 있으면 편집 컬럼(파란 글씨).
+그 밖의 `opts`는 AG Grid `ColDef`에 그대로 덮어쓴다.
+
+| AS-IS GridBuilder | gb | 정렬 · 표시 |
+|:---|:---|:---|
+| `addText` | `gb.text` | 왼쪽 |
+| `addTextCenter` | `gb.textCenter` | 가운데 |
+| `addTextRight` | `gb.textRight` | 오른쪽 |
+| `addTextArea` | `gb.textArea` | 왼쪽, 줄바꿈 유지·행 높이 자동 |
+| `addTextStatus` | `gb.textStatus` | 완료/점검진행 파랑, 반려/승인반려 빨강, 미흡/개선 주황 (굵게) |
+| `addLong` | `gb.long` | 오른쪽, 천단위 콤마 |
+| `addLongCenter` | `gb.longCenter` | 가운데, 천단위 콤마 |
+| `addLongColor` | `gb.longColor` | 오른쪽, **음수 빨강·양수 파랑** (원본 그대로) |
+| `addLongSecond(…, color)` | `gb.longSecond(f, w, h, color)` | 오른쪽, 굵은 정수(콤마 없음), 0·빈 값은 회색 0, 그 밖은 color |
+| `addDouble` | `gb.double` | 오른쪽, `#,###.######` |
+| `addDoubleCenter` | `gb.doubleCenter` | 가운데 |
+| `addDoubleColor` | `gb.doubleColor` | 오른쪽, **양수 빨강·음수 파랑** (원본 그대로) |
+| `addDate` | `gb.date` | 가운데, `yyyy-MM-dd` |
+| `addDateMonth` | `gb.dateMonth` | 가운데, `yyyy-MM` |
+| `addDateTime` | `gb.dateTime` | 가운데, `yyyy-MM-dd HH:mm:ss` |
+| `addBoolean` | `gb.boolean` | 네모 체크박스, 가운데, 두 상태, 정렬 안 함 (`{ editable: true }`면 클릭으로 바꿈) |
+| `addBooleanYn` | `gb.booleanYn` | `O` / `X` |
+| `addBooleanIcon` | `gb.booleanIcon` | 잠금 아이콘(`LockOutlined`)만 — true면 아이콘, null·false는 빈칸. 가운데, 읽기 전용 (AS-IS `lock.png`. A19) |
+| `addTextHtml` | `gb.textHtml` | 왼쪽, 값의 HTML(굵은 색 글씨 등)을 보여 줌 — 위험한 태그는 글자로 (`sanitizeHtml`, F01) |
+| `addBookMarkYn` | `gb.bookmarkYn` | 가운데, true면 노란 별 (F01) |
+| `addBooleanYn2` | `gb.booleanYn2` | 네모 체크박스, 가운데, 선택·해제 두 상태(null은 해제). 읽기 전용, `{ editable: true }`면 클릭으로 바꿈 (AS-IS는 ✓/빈칸 글자) |
+| `addHeaderGroupMap` | `gb.group` | 헤더 묶음 |
+
+렌더러(직접 쓸 때): `StatusCell`, `SignColorCell`, `ValueWithRateCell`(값 + 작은 비율), `ActionCell`(행 안 버튼, 클릭 전파 막음).
+
+### 아직 대응 없음
+
+`addCell`/`addCellFix`/`addCellNotSort`(사용자 정의 Cell: LookupTriggerCell 등), `addLongHtml`류, `addLongCnt`, `addTextLink`,
+`addApprStep`/`addStopLoss`/`addIcamUserState` 등 업무 전용 렌더러, `getAggregationGrid`/`getTotalGrid`, `GridGroupBuilder`/`GridExpandBuilder`.
+나오면 원본 줄을 보고 화면에서 ColDef로 쓰고, 여러 화면에서 반복되면 여기에 gb를 추가한다.
+
+
+## 2. 그리드 형식 (GID)
+
 견본 코드는 `docs/grid-style/{GID}/`(참조용 복사본). 새 그리드는 해당 GID의 견본을 뼈대로 만들고, 견본에 없는 모양이면 사용자에게 알린 뒤 새 GID로 먼저 등록한다. 기존 화면은 일괄 수정하지 않고 다시 건드릴 때 맞춘다(page-style과 같은 규칙).
 
 | GID | 이름 | 한 줄 설명 | 견본 |
 |:---|:---|:---|:---|
 | grid-SUM | 합계 행이 이어지는 표 | 열 폭이 화면에 맞게 줄고 숫자는 잘리지 않으며, 합계 행이 마지막 내역 바로 다음에 붙는다 | `Biz01_TabPage_MonthEntertmExpense` (U18 월별 제공금액 누계, 2026-10-30) |
 
-## grid-SUM — 합계 행이 이어지는 표 (초안, 2026-10-30 U18에서 사용자 확정)
+### grid-SUM — 합계 행이 이어지는 표 (초안, 2026-10-30 U18에서 사용자 확정)
 
 견본: `docs/grid-style/grid-SUM/` (`Biz01_TabPage_MonthEntertmExpense.tsx` + 도우미 `bizEntertmTab.ts`의 `fitCols`·`withTotalRow`·`totalRowClass`·`gridSumCss`)
 
@@ -19,7 +105,7 @@
 - 스타일은 그리드를 감싼 `div` 클래스(`entertm-month`)로 범위를 좁혀 인라인 `<style>`로 둔다 — 공통 `grid.css`는 건드리지 않는다. 세 번째 화면에서 쓰게 되면 공통 부품으로 뽑을 후보(03 원칙 15, 사용자 승인 뒤).
 - 값·열 순서는 AS-IS와 같게 두되 사용자 요청으로 바꾼 부분(합 계 열 위치, 합계 행 위치)은 화면 머리 주석에 날짜와 함께 적는다.
 
-### grid-SUM 특징 점검표 (새 화면을 만들거나 다시 건드릴 때 하나씩 본다)
+#### grid-SUM 특징 점검표 (새 화면을 만들거나 다시 건드릴 때 하나씩 본다)
 
 | # | 특징 | 값 | 이유·결정 |
 |---:|:---|:---|:---|

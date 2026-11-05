@@ -1,7 +1,7 @@
 import { themeAlpine } from 'ag-grid-community';
 
 /**
- * 공통 그리드 모양 — 값은 여기서만 바꾼다 (docs/grid-types.md).
+ * 공통 그리드 모양 — 값은 여기서만 바꾼다 (docs/grid-style.md).
  * Theming API로 주입한다. 옛 CSS 테마 파일(ag-grid.css / ag-theme-*.css)을 import하면 여기 값을 덮어쓰니 쓰지 않는다.
  */
 export const GRID_COLORS = {

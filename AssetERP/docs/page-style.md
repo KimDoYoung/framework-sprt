@@ -1,7 +1,7 @@
 # 페이지 스타일 (Page Style)
 
 `*_Tab_*` 화면의 배치(화면 구성)에 붙이는 공통 이름표. 대화·변환 명세·코드 주석에서 이 이름(또는 SID)만 쓴다.
-`docs/grid-types.md`(그리드), `docs/button-types.md`(버튼)와 같은 방식이다.
+`docs/grid-style.md`(그리드), `docs/button-types.md`(버튼)와 같은 방식이다.
 
 - **SID** = 화면스타일-ID(Style ID). 이름 대신 짧게 부르는 약어다. 예: "이 화면은 SGVF".
 - 스타일은 **Tab 파일(화면 껍데기)** 에 붙인다. `*_Edit_*` 파일은 Tab 안에 붙는 폼 부품이며, 위치는 스타일이 정하고 폼 종류(읽기 전용/편집)는 SGVF·SGEF가 구분한다.
