@@ -3,13 +3,15 @@
  * AS-IS: myApp/client/vi/apr/Apr90_Tab_DisposalList.java (166줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 getEditor() L1-166: vlc = 툴바(50: 조회기간 [시작] ~ [끝] · [조회]) / 폐기문서 그리드(체크박스 단일, 행번호 표시)
  * 1단계(F01~F03과 같은 사유): 상세보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import { aprApi } from '@/api/apr';
+import { aprApi, aprDetailApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprDisposalList } from '@/types/apr';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -51,12 +53,25 @@ export const Apr90_Tab_DisposalList: React.FC = () => {
   }, []);
 
   // buildGrid() L87-136
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 0건이면 "해당 문서는 폐기된 문서입니다." (TOBE: 문서 상세 조회가 DATA_NOT_FOUND)
+  const openDetail = async (apprId?: number | null) => {
+    if (apprId == null) { message.info('해당 문서는 폐기된 문서입니다.'); return; }
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.info('해당 문서는 폐기된 문서입니다.');
+      else message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.date('regDate', 100, '신청일'),  // L121
     gb.text('title', 400, '문서명'),  // L123
     // L124 actionCell(Detail): apr.Apr01_Appr.selectById → 0건이면 "해당 문서는 폐기된 문서입니다." / 있으면 Apr01_Edit_ApprDoc.retrieveApproval(model, false)
-    // [L124 생략] 문서 조회·편집창은 다음 단계
-    iconCell<AprDisposalList>('view', 'actionCell', 45, ' ', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprDisposalList>('view', 'actionCell', 45, ' ', row => void openDetail(row.apprId)),
     gb.textCenter('statusName', 100, '문서상태'),  // L125
     gb.textArea('reason', 400, '사유'),  // L126
     gb.booleanYn('confirmYn', 100, '승인여부'),  // L127
@@ -82,6 +97,8 @@ export const Apr90_Tab_DisposalList: React.FC = () => {
           rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
         />
       </div>
+      {/* L124 selectById → retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

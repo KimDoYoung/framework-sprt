@@ -5,6 +5,7 @@
  * N18 Tdm42_Tab_ManlOrgAppr와 같은 서버 클래스·같은 저장/잠금 흐름이고, 이 화면은 부서를 직접 고르고(로그인 부서 고정이 아님) 점검부서·점검항목 사용/미사용 건수 열이 더 있다.
  * 1단계: 결재요청(Apr01_Edit_ApprDoc.insertLinkApproval)·문서보기(Apr01_Edit_ApprDoc.retrieveApproval)는 다른 도메인(apr) 전자결재 편집창이라 점검만 하고 안내한다.
  *        잠금의 파일 생성(RD 리포트 PDF)은 E13처럼 서버 ManlOrgPdfMaker 기본 구현이 거절한다 — 연동이 서면 같은 흐름이 그대로 동작한다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = count(UX-03)
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -13,6 +14,8 @@ import dayjs from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
 import { tdmApi } from '@/api/tdm';
+import { dcrApi } from '@/api/dcr';
+import { comRelateApprApi } from '@/api/com';
 import { FileInfo } from '@/types/sys';
 import { TdmManlOrgManager } from '@/types/tdm';
 import { Button } from '@/components/button';
@@ -23,6 +26,8 @@ import { OrgTdm } from '@/types/emp';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { dynamicIconCell, dynamicViewCell } from './tdmGridCells';
 import { Tdm43_Lookup_ManlItem } from './Tdm43_Lookup_ManlItem';
 
@@ -30,6 +35,7 @@ type Row = TdmManlOrgManager;
 
 const gb = gbFor<Row>();
 const APPR_SENT = ['10', '20', '30'];                                 // 상신(결재 진행·완료) 상태 코드
+const LINK_CODE = 'A93';                                              // 책무매뉴얼 보고 문서분류 링크코드
 const END_OF_TIME = '2999-01-01';                                     // 종료일이 없을 때 쓰는 값 (AS-IS L333)
 
 export const Tdm42_Tab_ManlManager: React.FC = () => {
@@ -42,6 +48,10 @@ export const Tdm42_Tab_ManlManager: React.FC = () => {
   const [useYn, setUseYn] = useState(false);                          // useYn.setBoxLabel("사용 & 작성중인 매뉴얼만 조회"), setValue(false)
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const [progress, setProgress] = useState<{ text: React.ReactNode; done: boolean } | null>(null);   // messageBox "파일 생성 및 잠금"
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ row: Row; classTreeId: number } | null>(null);  // insertLinkApproval(A93) 중인 행
+  const [classPickRow, setClassPickRow] = useState<Row | null>(null); // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
 
   // retrieve() L331-345: 서비스 tdm.Tdm42_ManlOrg.selectByText(companyId(서버가 로그인 회사), orgId(고른 부서), "%검색어%", useYn)
   const crud = useGridCrud<Row>({
@@ -210,13 +220,47 @@ export const Tdm42_Tab_ManlManager: React.FC = () => {
     if (!row.lockYn) return void message.warning('잠금설정된 매뉴얼만 결재요청이 가능합니다');
     const code = row.apprStatusCode;
     if (code && !['00', '40', '99'].includes(code)) return void message.warning('결재 중인 문서가 존재합니다');
-    message.info('전자결재 상신 창은 다음 단계에서 연결됩니다');       // Apr01_Edit_ApprDoc.insertLinkApproval → updateApprId() L409-423
+    void dcrChk(row);
   };
 
-  // buildGrid() apprCell(ImageCell "View", 문서보기 열) → ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
+  // dcrChk() L359-391: 상신·결재중·완료면 막고, dcr.Dcr30_Link.selectByLinkCode(A93) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로 insertLinkApproval()
+  const dcrChk = async (row: Row) => {
+    if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) return void message.warning('이미 상신중이거나 완료된 문서가 존재합니다');
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickRow(row);
+      else setLinkDoc({ row, classTreeId: list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // updateApprId() L409-423: tdm.Tdm42_ManlOrg.updateApprId(apprId, manlOrgId) → retrieve() → "상신 완료되었습니다"
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await tdmApi.updateManlOrgApprId(linkDoc.row.manlOrgId, apprId);
+      await crud.retrieve();
+      message.info('상신 완료되었습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // buildGrid() apprCell(ImageCell "View", 문서보기 열) L261-289 → ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieve())
   const onViewAppr = (row: Row) => {
     if (row.apprId == null) return void message.warning('문서가 존재하지않습니다');
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    void openPermitted(row.apprId);
   };
 
   // [E7 생략] rdFileDownloadForm.SubmitComplete (L199) → insertLinkApproval(): 툴바에 붙은 숨은 폼이라 화면에서 제출하는 곳이 없다(결재요청은 그리드 아이콘 → dcrChk). 전자결재 상신은 다음 단계
@@ -308,6 +352,20 @@ export const Tdm42_Tab_ManlManager: React.FC = () => {
       >
         {progress?.text}
       </Modal>
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) setLinkDoc({ row: classPickRow, classTreeId: r.classTreeId }); setClassPickRow(null); }}
+        onClose={() => setClassPickRow(null)}
+      />
+      {/* insertLinkApproval() L393-407: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A93", 행, false, callback → updateApprId / 취소면 retrieve()) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.manlOrgId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

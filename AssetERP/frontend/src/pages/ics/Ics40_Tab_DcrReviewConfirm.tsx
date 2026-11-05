@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics40_Tab_DcrReviewConfirm.java (241줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃: 툴바(조회기간 ~ · 대장분류 콤보 · 검색 · [조회]) + 그리드(행번호, 체크박스 다중). M05(Ics40_Tab_DcrPreConfirm)와 같은 열, 읽기 전용 — 의견 아이콘은 Ics40_Edit_Msg.show(읽기 전용)
  * 1단계(M05와 같은 방침): [문서확인]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 안내만(다음 단계). [알림설정] noticeButton은 원본도 툴바에 안 붙인 도달 불가 버튼이라 만들지 않는다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -10,6 +11,8 @@ import { DatePicker, message, Select } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { IcsDcrPreconfirm, IcsDcrTypeOption } from '@/types/ics';
 import { MultiGrid } from '@/components/grid';
 import { SearchBar } from '@/components/search';
@@ -55,11 +58,22 @@ export const Ics40_Tab_DcrReviewConfirm: React.FC = () => {
   }, []);
 
   // [E4 생략] noticeButton[알림설정].Select (L133) → Emp93_Lookup_SmsNoticeTarget.open("B01") — 원본도 툴바에 안 붙인 도달 불가 버튼
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // viewAppr() L213-236: ApprCallbackResult(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(model, false), 없으면 "해당문서의 열람권한이 없습니다"
   const viewAppr = (row: IcsDcrPreconfirm) => {
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 다음 단계
-    void row;
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    if (row.apprId == null) message.info('해당문서의 열람권한이 없습니다');  // ApprCallbackResult가 null을 돌려주는 경우
+    else void openPermitted(row.apprId);
   };
 
   const columnDefs = useMemo(() => ics40Columns({
@@ -106,6 +120,8 @@ export const Ics40_Tab_DcrReviewConfirm: React.FC = () => {
         )}
       </div>
       <Ics40_Edit_Msg target={msgTarget} onClose={() => setMsgTarget(null)} />
+      {/* viewAppr() L213-236 — callback → grid.unmask() */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

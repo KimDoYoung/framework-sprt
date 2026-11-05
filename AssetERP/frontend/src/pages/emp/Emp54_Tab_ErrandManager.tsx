@@ -3,12 +3,15 @@
  * AS-IS: myApp/client/vi/emp/Emp54_Tab_ErrandManager.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L53-79, SG): 툴바(조회기간 · 검색 250 · [조회]) + 체크 다중 보기 그리드(MultiGrid).
  * 1단계(사용자 묶음 요청 2026-10-28): 이익수령 제외신청 아이콘의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval)는 다음 단계 — 문서 유무 검사까지만 한다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { empErrandApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Errand } from '@/types/emp';
 import { SearchBar } from '@/components/search';
 import { MultiGrid, gbFor } from '@/components/grid';
@@ -37,11 +40,23 @@ export const Emp54_Tab_ErrandManager: React.FC = () => {
 
   useEffect(() => { void retrieve(); }, [retrieve]);
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 있으면 retrieveApproval (없으면 원본도 아무것도 하지 않는다)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // [E3] actionCell01 (ImageCell).callbackOnCreate (L134) → 상신 ID 없으면 "상신문서가 존재하지 않습니다",
-  //   있으면 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, 닫으면 retrieve()) — 편집창은 다음 단계
+  //   있으면 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, 닫으면 retrieve())
   const viewAppr = useCallback((row: Errand) => {
     if (row.apprId == null) { message.warning('상신문서가 존재하지 않습니다'); return; }
-    message.info('전자결재 문서 보기는 아직 변환 전입니다(다음 단계).');
+    void openDetail(row.apprId);
   }, []);
 
   // AS-IS buildGrid() L110-175 (setChecked MULTI)
@@ -78,6 +93,8 @@ export const Emp54_Tab_ErrandManager: React.FC = () => {
           <MultiGrid<Errand> rowData={rows} columnDefs={columnDefs} />
         </div>
       </div>
+      {/* [E3] retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

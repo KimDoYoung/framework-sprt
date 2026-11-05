@@ -94,14 +94,16 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
   };
 
   // buildGrid() L130-154
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     gb.date('regDate', 100, '등록일'),  // L147
     gb.date('effectDate', 100, '시행일'),  // L148
     gb.text('regEmpName', 100, '등록자'),  // L149
     gb.text('title', 700, '상신제목'),  // L150
     // L151 actionCell(Detail): Apr01_Edit_ApprDoc.retrieveApproval(model, isAdmin=false, callback: 없음)
-    // [L151 생략] 편집창은 다음 단계
-    iconCell<AprIcsDocRow>('view', 'actionCell', 70, '상세보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprIcsDocRow>('view', 'actionCell', 70, '상세보기', row => setViewApprId(row.apprId)),
   ], []);
 
   return (
@@ -135,6 +137,8 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
       <Dcr01_Lookup_Class open={classOpen} classTreeId={null} onResult={c => { setClassOpen(false); setNewDocTreeId(c.classTreeId); }} onClose={() => setClassOpen(false)} />
       <Apr01_Edit_ApprDoc apprId={null} newClassTreeId={newDocTreeId} icsClassTreeId={node?.classTreeId ?? null}
         onClose={() => { setNewDocTreeId(null); void retrieve(); }} />
+      {/* L151 retrieveApproval(model, false) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

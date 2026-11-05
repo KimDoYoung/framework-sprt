@@ -4,12 +4,14 @@
  * 생성자 L42-64: 툴바 45([조회] 하나) + 본인 연봉 보기 그리드(2단 헤더 "기본정보"·"월급여 구성"). 열 때 곧바로 조회한다.
  * 조회 대상은 로그인 사용자 본인의 결재완료 연봉이다(서버가 로그인 사용자로 정한다).
  * 1단계: 상신상태 아이콘의 결재문서 보기(Apr01_Edit_ApprDoc, 다른 도메인 apr)는 다음 단계.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01), UX-08(읽기 전용 날짜 90)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { PayAnnual } from '@/types/pay';
 import { SearchBar } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -37,6 +39,9 @@ export const Pay01_Tab_AnnualPerson: React.FC = () => {
   useEffect(() => { void retrieve(); }, [retrieve]);
 
   // buildGrid() L66-128: SingleGrid(Pay01_AnnualModel), 2단 헤더 2개(기본정보 7열 · 월급여 구성 7열)
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     gb.group('기본정보', [
       gb.textCenter('personNo', 50, '사번'),
@@ -62,10 +67,10 @@ export const Pay01_Tab_AnnualPerson: React.FC = () => {
     ]),
     gb.long('monthPay', 100, '합계'),
     gb.textCenter('apprStatusName', 100, '상신상태'),
-    // [E2] actionCell (ImageCell).callbackOnCreate (L89) → 인라인 L89-94: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval (다음 단계)
+    // [E2] actionCell (ImageCell).callbackOnCreate (L89) → 인라인 L89-94: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
     iconCell<PayAnnual>('view', 'actionCell', 60, '', row => {
       if (row.apprId == null) { message.warning('상신문서가 없습니다'); return; }
-      message.info('결재문서 보기는 다음 단계에서 제공됩니다.');
+      setViewApprId(row.apprId);
     }),
   ], []);
 
@@ -78,6 +83,8 @@ export const Pay01_Tab_AnnualPerson: React.FC = () => {
           <SingleGrid<PayAnnual> rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.annualId)} />
         </div>
       </div>
+      {/* [E2] L89-94 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

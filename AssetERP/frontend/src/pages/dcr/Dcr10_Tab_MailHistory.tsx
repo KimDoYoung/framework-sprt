@@ -5,12 +5,15 @@
  *   보낸시간 150 · 발신자 100 · 발신 150 · 수신 300 · 참조 300 · 제목 300 · 내용 60 · 문서 60)
  * 1단계(G01~G06과 같은 사유): ① [문서] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(apr) ② 연관펀드 조회창 Fnd01_Lookup_SelectSingle(fnd, 큰 SQL)은
  *   다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다. 연관펀드 조건을 받는 서버(`fundId`)는 구현해 두었다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Select, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { dcrMailHistoryApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { DcrMailHistory } from '@/types/dcr';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -58,6 +61,18 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
   const openLookupOpr = () => message.info('펀드 조회창은 다음 단계에서 연결됩니다');
 
   // buildGrid() L150-205
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 있으면 retrieveApproval (없으면 원본도 아무것도 하지 않는다)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.text('sendTimeString', 150, '보낸시간'),  // L194
     gb.textCenter('personName', 100, '발신자'),  // L195
@@ -68,13 +83,12 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
     // L151-158 actionCell1(Detail) → Dcr10_Lookup_MailViwer.open(선택한 행)
     iconCell<DcrMailHistory>('view', 'contentCell', 60, '내용', row => setViewing(row)),
     // L159-192 actionCell2(Detail): aprId가 없으면 "해당 메일의 연관된 문서가 존재하지않습니다", 있으면 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …)
-    // [L184 생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계
     iconCell<DcrMailHistory>('view', 'docCell', 60, '문서', row => {
       if (row.aprId == null) {
         message.warning('해당 메일의 연관된 문서가 존재하지않습니다');
         return;
       }
-      message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+      void openDetail(row.aprId);
     }),
   ], []);
 
@@ -109,6 +123,8 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
         </div>
       </div>
       <Dcr10_Lookup_MailViwer mail={viewing} onClose={() => setViewing(null)} />
+      {/* L182 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr16_Tab_StampList.java (334줄) + Apr16_Lookup_UpdateStampDate (112줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L68-101: center 여백 20, 테두리 박스 = 툴바 50(조회기간 시작 ~ 끝 · 인감선택 칸 250 · 검색 250 · "반출만 조회" · [조회][출력/다운로드]) + 단일 선택 그리드(행번호, 12열)
  * 1단계: [문서보기] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(ApprCallbackResult·retrieveApproval)은 다른 도메인 컴포넌트라 다음 단계 — 사전 검사 메시지까지만 하고 안내를 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 스타일: SG (견본 Tdm01_Tab_Hr — docs/page-style.md). AS-IS 판별기는 GG로 읽지만(연결된 Apr01_Edit_ApprDoc의 그리드까지 5개로 센다) 실제 구조는 SearchBar + 그리드 하나다.
  *   원본이 vlc.setBorders(true)라 SG 견본과 달리 바깥에 테두리를 둔다(03 원칙 12)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
@@ -12,6 +13,8 @@ import { Checkbox, DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprStampDocApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { rdApi } from '@/api/rd';
 import { AprStamp, AprStampList } from '@/types/apr';
 import { Button } from '@/components/button';
@@ -114,11 +117,22 @@ export const Apr16_Tab_StampList: React.FC = () => {
   };
 
   // [E5] actionCell (ImageCell "View").callbackOnCreate (L219) → 인라인 L219-224: 연결문서가 없으면 안내, 폐기 문서면 열람 불가 안내,
-  //   아니면 ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …) — 다른 도메인 컴포넌트라 다음 단계
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+  //   아니면 ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …)
   const viewAppr = (row: AprStampList) => {
     if (row.apprId == null) message.warning('연결문서가 없습니다.');
     else if ((row.purpose ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
-    else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    else void openPermitted(row.apprId);
   };
 
   // [E6] actionCell2 (ImageCell "Edit").callbackOnCreate (L255) → 대외문서(realStampDocId 없음)는 안내, 아니면 selectById로 읽어 Apr16_Lookup_UpdateStampDate.open(callback → retrieve())
@@ -173,6 +187,8 @@ export const Apr16_Tab_StampList: React.FC = () => {
       <Apr10_Lookup_Stamp open={stampOpen} checkflag onResult={pickStamp} onDelete={clearStamp} onClose={() => setStampOpen(false)} />
       <Apr16_Lookup_UpdateStampDate stampDocId={editStampDocId} onDone={() => void retrieve()} onClose={() => setEditStampDocId(null)} />
       <RdViewer url={rd?.url ?? null} title={rd?.title ?? ''} onClose={() => setRd(null)} />
+      {/* [E5] ApprCallbackResult → retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

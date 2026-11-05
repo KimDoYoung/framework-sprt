@@ -5,6 +5,7 @@
  * 함께 쓰는 창: Ics41_Lookup_DcrType(대장분류설정) · Ics40_Edit_Msg(의견)
  * 1단계(F·I·M01과 같은 방침): [문서확인]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 안내만 띄운다(다음 단계).
  *   [알림설정] noticeButton(Emp93_Lookup_SmsNoticeTarget)은 원본도 툴바에 붙이지 않은 도달 불가 버튼이라 만들지 않는다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,6 +13,8 @@ import { DatePicker, message, Modal, Select } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { rdApi } from '@/api/rd';
 import { rdDownload } from '@/utils/rdDownload';
 import { IcsDcrPreconfirm, IcsDcrTypeOption } from '@/types/ics';
@@ -63,11 +66,22 @@ export const Ics40_Tab_DcrPreConfirm: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // viewAppr() L372-395: ApprCallbackResult(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(model, false), 없으면 "해당문서의 열람권한이 없습니다"
   const viewAppr = (row: IcsDcrPreconfirm) => {
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 다음 단계
-    void row;
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    if (row.apprId == null) message.info('해당문서의 열람권한이 없습니다');  // ApprCallbackResult가 null을 돌려주는 경우
+    else void openPermitted(row.apprId);
   };
 
   const columnDefs = useMemo(() => ics40Columns({
@@ -197,6 +211,8 @@ export const Ics40_Tab_DcrPreConfirm: React.FC = () => {
       </div>
       <Ics41_Lookup_DcrType open={typeOpen} onClose={() => setTypeOpen(false)} />
       <Ics40_Edit_Msg target={msgTarget} onCallback={() => void retrieve()} onClose={() => setMsgTarget(null)} />
+      {/* viewAppr() L372-395 — callback → grid.unmask() */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

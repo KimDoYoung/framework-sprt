@@ -4,12 +4,14 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L53-66: 위 툴바(SearchBarBuilder — 제목 "펀드별 일정목록"만, 버튼 없음) + 그리드(체크박스 단일)
  * 1단계: [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(서버 fnd.Fnd20_Plan.insertAppr 포함)은 다음 단계
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Typography } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Plan } from '@/types/fnd';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -49,6 +51,17 @@ export const Fnd20_TabPage_PlanEmp: React.FC<Props> = ({ target }) => {
   useEffect(() => { void retrieve(); }, [target, retrieve]);
 
   // buildGrid() L68-120
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // aprLookup(planId) L122-134: fnd.Fnd20_Plan.insertAppr(상신 문서가 없으면 서버가 임시저장 문서를 만든다) → getServiceResult L218-228 retrieveApproval
+  const aprLookup = async (planId: number) => {
+    try {
+      setViewApprId(await fndApi.requestPlanAppr(planId));
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.text('classTreeFullName', 300, '문서분류'),  // L73
     gb.text('approvalTypeName', 100, '최종결재'),  // L74
@@ -59,7 +72,6 @@ export const Fnd20_TabPage_PlanEmp: React.FC<Props> = ({ target }) => {
     gb.text('closeYn', 100, '진행상태'),  // L79
     // aprButton(ImageCell "Edit") L81-103: 담당자 미지정이면 "담당자 미지정 문서입니다", 담당자가 내가 아닌데 완료가 아니면 "완료된 문서만 조회됩니다",
     //   그 밖에는 aprLookup(planId) L122-134 → fnd.Fnd20_Plan.insertAppr → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieve(fundId))
-    // [생략] insertAppr는 결재 문서를 만들므로 편집창과 함께 다음 단계 — 검사까지만 한다
     iconCell<Plan>('edit', 'actionCell', 60, '결재요청', row => {
       if (row.personId == null) {
         message.warning('담당자 미지정 문서입니다');
@@ -69,7 +81,7 @@ export const Fnd20_TabPage_PlanEmp: React.FC<Props> = ({ target }) => {
         message.warning('완료된 문서만 조회됩니다');
         return;
       }
-      message.info('전자결재 문서 창은 다음 단계에서 연결됩니다');
+      void aprLookup(row.planId);
     }),
     // [E1 생략] gridBuilder.BeforeStartEdit (L107) — 업무내용 편집기는 있으나 툴바에 [저장]이 없어(addUpdateButton 주석 처리) 저장할 수 없다. 읽기 전용으로 둔다
     gb.text('note', 400, '업무내용'),  // L105
@@ -91,6 +103,8 @@ export const Fnd20_TabPage_PlanEmp: React.FC<Props> = ({ target }) => {
           rowSelection={SINGLE_CHECK}
         />
       </div>
+      {/* L222 retrieveApproval(aprModel, false, callback → retrieve(fundId)) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

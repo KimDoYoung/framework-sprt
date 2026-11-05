@@ -2,7 +2,8 @@
  * 증명서 발급 창의 공통 폼 (S05) — Emp15_Lookup_Cert(직접 발급)와 Emp15_Lookup_StampDocCert(신청내역 가져오기)가 같이 쓴다
  * AS-IS: myApp/client/vi/emp/Emp15_Lookup_Cert.java L95-381, Emp15_Lookup_StampDocCert.java L98-502 — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 Emp15_Lookup_Cert 기준)
  * getEditor() L127-202: 라벨 폭 110, 증명서종류 · 사원 · 용도(+직접입력 칸) · 문서분류(600), 아래 가운데 [상신][닫기]
- * 1단계: [상신]은 증명서 저장(modelUpdate)까지. createMapping() + Apr01_Edit_ApprDoc.insertLinkApproval(결재 문서 작성) + updateApprId()는 다음 단계
+ * [상신]: 증명서 저장(modelUpdate) → Apr01_Edit_ApprDoc.insertLinkApproval(B01~B04, refId = 증명서 ID) → 문서를 저장하면 updateApprId() → callBack·hide.
+ *   createMapping()(TempData에 증명서 값)은 TOBE에서 서버가 링크 본문을 채우므로(CertLinkSeedProvider) 따로 하지 않는다.
  */
 import React, { useState } from 'react';
 import { Input, message, Modal, Space, Typography } from 'antd';
@@ -15,6 +16,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 /** 처음 채워 넣는 값 (StampDocCert.insert L98-149: 신청 구분으로 정한 증명서종류·신청 사원) */
 export interface CertPreset {
@@ -54,6 +56,8 @@ export const Emp15_CertEdit: React.FC<Props> = ({ width, preset, side, onSaved, 
   const [empOpen, setEmpOpen] = useState(false);
   const [docOpen, setDocOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  /** 저장한 증명서로 여는 링크 문서 (insertLinkApproval) */
+  const [linkDoc, setLinkDoc] = useState<{ certId: number; classTreeId: number; linkCode: string } | null>(null);
 
   // [E0] 화면 열림 (생성자 L95-125, insert() L81-93) → show(): 발급일 = 오늘, 나머지는 빈 값
   // searchDcr() L274-297: 서비스 dcr.Dcr30_Link.selectByLinkCode(companyId, linkCode) — 없으면 문서분류를 비우고, 있으면 (마지막) 문서분류로 채운다
@@ -85,17 +89,27 @@ export const Emp15_CertEdit: React.FC<Props> = ({ width, preset, side, onSaved, 
     setSaving(true);
     try {
       // 서비스 emp.Emp15_Cert.modelUpdate(updateModel) — 발급일 = 오늘(insert L81-93)
-      await empCertApi.createCert({
+      const certId = await empCertApi.createCert({
         issueDate: dayjs().format('YYYY-MM-DD'), linkCode, personId, certUseCode, certUse: certUse === '' ? null : certUse, dcrClassTreeId: classTree.id,
       });
-      // createMapping(resultModel) + Apr01_Edit_ApprDoc.insertLinkApproval(…) → updateApprId(apprId, certId): 결재 문서 작성은 다음 단계
-      message.info('증명서를 저장했습니다. 전자결재 상신(Apr01_Edit_ApprDoc)은 아직 변환 전입니다.');
-      onSaved();
-      onClose();
+      // L236-245 Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, linkCode, resultModel, false, callbackResult → updateApprId(apprId, certId))
+      setLinkDoc({ certId, classTreeId: classTree.id, linkCode });
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  // updateApprId() L299-312: emp.Emp15_Cert.updateApprId(apprId, certId) → callBack.execute() → hide()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await empCertApi.updateApprId(linkDoc.certId, apprId);
+      onSaved();
+      onClose();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
     }
   };
 
@@ -155,6 +169,12 @@ export const Emp15_CertEdit: React.FC<Props> = ({ width, preset, side, onSaved, 
       <Dcr30_Move_DcrClass open={docOpen} authCheck defaultClassTreeId={defaultTreeId}
         onResult={r => { if (r.classTreeId != null) setClassTree({ id: r.classTreeId, name: r.classTreeFullName ?? '' }); setDocOpen(false); }}
         onClose={() => setDocOpen(false)} />
+      <Apr01_Edit_ApprDoc
+        apprId={null}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: linkDoc.linkCode, refId: linkDoc.certId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClose={() => setLinkDoc(null)}
+      />
     </Modal>
   );
 };

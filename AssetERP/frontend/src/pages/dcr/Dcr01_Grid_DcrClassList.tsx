@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Grid_DcrClassList.java (246줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 init() L70-86: vlc = 툴바(49: 등록기간 · 검색 · [검색] · [변경]) / 문서 그리드(체크박스 다중)
  * 1단계: 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { AgGridReact } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { AprDoc } from '@/types/apr';
 import { DcrClassTree } from '@/types/dcr';
 import { MultiGrid, gbFor } from '@/components/grid';
@@ -92,14 +94,16 @@ export const Dcr01_Grid_DcrClassList: React.FC<Props> = ({ node }) => {
   };
 
   // buildGrid() L121-152
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     gb.bookmarkYn('bookmarkYn', 30, ' '),  // L141
     gb.text('title', 280, '상신제목'),  // L143
     gb.textCenter('relateDisplayName', 80, '펀드/일임'),  // L144
     gb.textHtml('statusName', 65, '상태'),  // L145
-    // [E4] detailCell (ImageCell).callbackOnCreate (L129) → Apr01_Edit_ApprDoc.retrieveApproval(model, true, callback: retrieve()) — L146 actionCell
-    // [E4 생략] 문서 조회·편집창은 다음 단계
-    iconCell<AprDoc>('view', 'actionCell', 50, '보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    // [E4] detailCell (ImageCell).callbackOnCreate (L129) → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback: retrieve()) — L146 actionCell (isAdmin 인자는 원본에서 주석 L130)
+    iconCell<AprDoc>('view', 'actionCell', 50, '보기', row => setViewApprId(row.apprId)),
     gb.date('regDate', 100, '등록일'),  // L147
     gb.date('effectDate', 100, '시행일'),  // L148
     gb.textCenter('regEmpName', 100, '등록자'),  // L149
@@ -129,6 +133,8 @@ export const Dcr01_Grid_DcrClassList: React.FC<Props> = ({ node }) => {
         />
       </div>
       <Dcr01_Move_DcrClass apprList={moveRows} onMoved={() => void retrieve()} onClose={() => setMoveRows(null)} />
+      {/* [E4] retrieveApproval(selectModel, false, callback → retrieve()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

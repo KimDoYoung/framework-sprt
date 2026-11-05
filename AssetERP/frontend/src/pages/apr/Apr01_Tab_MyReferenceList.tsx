@@ -4,6 +4,7 @@
  * 레이아웃 L79-117: center=vlc — 툴바 2줄(등록기간 · 문서분류 / 결재상태 · 검색 · 완료/반려건 포함 · [검색] [출력/다운로드]) + 참조 문서 그리드(체크박스 단일 선택)
  * 1단계(F01~F12·G01·G02와 같은 사유): [상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc, [메일보내기]가 여는 Dcr10_Lookup_MailSender는 다른 도메인이라
  *   다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -11,6 +12,8 @@ import { Checkbox, DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprMyReference } from '@/types/apr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -36,6 +39,8 @@ export const Apr01_Tab_MyReferenceList: React.FC = () => {
   // settings(): 등록기간 = 오늘 -7일 ~ 오늘, 결재상태 "전체", 문서분류 "전체", [완료/반려건 포함] 체크
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(7, 'day'));
   const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [classTreeName, setClassTreeName] = useState(ALL_TEXT);
@@ -90,6 +95,16 @@ export const Apr01_Tab_MyReferenceList: React.FC = () => {
   };
 
   // buildGrid() L231-296 (체크박스 단일 선택)
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const viewAppr = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.date('regDate', 100, '상신일'),  // L281
     gb.date('effectDate', 100, '시행일'),  // L282
@@ -98,10 +113,9 @@ export const Apr01_Tab_MyReferenceList: React.FC = () => {
     gb.textCenter('inOutTypeName', 70, '문서구분'),  // L285
     gb.textHtml('title', 400, '문서명'),  // L286 addTextHtml
     // editDocCell(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 ApprCallbackResult(열람권한 없으면 "해당문서의 열람권한이 없습니다") → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieveOne L319-336)
-    // [생략] 편집창은 다음 단계
     iconCell<AprMyReference>('view', 'actionCell', 80, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
-      else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+      else void viewAppr(row.apprId);
     }),
     // sendMailCell(Send) → 폐기 문서면 "해당문서는 폐기되어 메일발송이 불가능합니다", 아니면 sendMail()
     iconCell<AprMyReference>('send', 'actionCell02', 80, '메일보내기', row => {
@@ -171,6 +185,8 @@ export const Apr01_Tab_MyReferenceList: React.FC = () => {
       />
       {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
+      {/* L243-259 ApprCallbackResult → retrieveApproval(apprModel, false, callback → retrieveOne(apprModel)) — TOBE에는 한 행만 다시 읽는 selectByApprId2가 없어 목록 전체를 다시 읽는다(AS-IS와 다른 점) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

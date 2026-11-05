@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt10_Grid_EmpAppr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 그리드(체크 단일 선택): 상신일 · 상신상태 · 상신제목 · 상세보기(아이콘) · 삭제(아이콘). 부모가 고른 사원(emp)과 기준일(stdDate)이 바뀌면 다시 읽는다.
  * 상세보기가 여는 전자결재 편집창(Apr01_Edit_ApprDoc, 다른 도메인)은 다음 단계 — 안내만 한다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
@@ -10,6 +11,8 @@ import type { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { fltApi } from '@/api/flt';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { FltEmpAppr, FltEmpApprDoc } from '@/types/flt';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -66,12 +69,24 @@ export const Flt10_Grid_EmpAppr: React.FC<Props> = ({ emp, stdDate }) => {
   };
 
   // buildGrid() L50-110
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 있으면 retrieveApproval (없으면 원본도 아무것도 하지 않는다)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.date('apprRegDate', 100, '상신일'),
     gb.text('apprStatusName', 100, '상신상태'),
     gb.text('apprTitle', 400, '상신제목'),
-    // 상세보기: apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval (다음 단계)
-    iconCell<FltEmpApprDoc>('view', 'detailCell', 55, '상세보기', () => message.info('전자결재 문서 창은 다음 단계에서 연결합니다.')),
+    // 상세보기 L55-72: apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
+    iconCell<FltEmpApprDoc>('view', 'detailCell', 55, '상세보기', row => void openDetail(row.apprId)),
     // 삭제: [E1] msgBox.DialogHide [YES] (L84) → deleteAppr()
     iconCell<FltEmpApprDoc>('delete', 'deleteCell', 55, '삭제', row => {
       Modal.confirm({
@@ -86,6 +101,7 @@ export const Flt10_Grid_EmpAppr: React.FC<Props> = ({ emp, stdDate }) => {
   ], [retrieve]);
 
   return (
+    <>
     <SingleGrid<FltEmpApprDoc>
       gridRef={gridRef}
       rowData={rows}
@@ -93,6 +109,9 @@ export const Flt10_Grid_EmpAppr: React.FC<Props> = ({ emp, stdDate }) => {
       getRowId={p => String(p.data.trId)}
       rowSelection={ROW_SELECTION}
     />
+      {/* 상세보기 L67 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
+    </>
   );
 };
 

@@ -4,6 +4,7 @@
  * 레이아웃 L82-120: center=vlc — 툴바 2줄(등록기간 · 문서분류 / 결재상태 · 검색 · 완료/반려건 포함 · [검색] [출력/다운로드]) + 상신 문서 그리드(체크박스 단일 선택)
  * 1단계(F01~F12·G01과 같은 사유): [상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc, [신청]이 여는 Ics40_Edit_DcrPreconfirm,
  *   준감인의견 아이콘이 여는 Ics40_Edit_Msg, [메일보내기]는 Dcr10_Lookup_MailSender.open(apprId)(EE35). 준감인의견 Ics40_Edit_Msg 등은 다음 단계.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { Checkbox, DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprMyRequest } from '@/types/apr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -36,6 +38,8 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
   // settings(): 등록기간 = 오늘 -7일 ~ 오늘, 결재상태 "전체", 문서분류 "전체", [완료/반려건 포함] 체크
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(7, 'day'));
   const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [classTreeName, setClassTreeName] = useState(ALL_TEXT);
@@ -98,10 +102,9 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
     gb.textCenter('inOutTypeName', 70, '문서구분'),  // L350
     gb.textHtml('title', 360, '문서명'),  // L351 addTextHtml
     // actionCell01(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieveOne)
-    // [생략] 편집창은 다음 단계
     iconCell<AprMyRequest>('view', 'actionCell', 80, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
-      else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+      else setViewApprId(row.apprId);
     }),
     gb.group('준법감시인 사전확인', [
       // actionCell02(Edit) → 완료(30)가 아니면 "결재완료 후 신청할 수 있습니다", 아니면 ics.Ics40_DcrPreconfirm.selectByApprId → Ics40_Edit_DcrPreconfirm.edit/insert
@@ -186,6 +189,8 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
       />
       {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
+      {/* L246 retrieveApproval(apprModel, false, callback → retrieveOne(apprModel)) — TOBE에는 한 행만 다시 읽는 selectByApprId2가 없어 목록 전체를 다시 읽는다(AS-IS와 다른 점) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

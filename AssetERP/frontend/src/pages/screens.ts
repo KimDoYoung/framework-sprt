@@ -496,11 +496,11 @@ export const SCREENS: Record<string, React.FC> = {
   Flt11_Tab_BookListAdmin, // J04 (1단계=전체: 본 화면 하나, 사원찾기 Emp00 기존 부품, 엑셀은 RD 대신 서버 xlsx)
   Flt10_Tab_ViolateUser, // I10 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 사원찾기 Emp00 기존 부품. 본 화면 Flt10_Tab_Violate는 J05가 fixedUser 없이 같이 쓴다)
   Flt10_Tab_Violate, // J05 (I10과 같은 컴포넌트를 fixedUser 없이 등록: 사원 선택·열릴 때 조회 안 함)
-  Flt10_Tab_EmpAppr, // J06 (1단계=본 화면 + Flt10_Grid_EmpAppr. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Flt10_Tab_EmpAppr, // J06 (1단계=본 화면 + Flt10_Grid_EmpAppr. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Flt02_Tab_EmpInfo, // J07 (1단계=전체: 본 화면 + 메모 Flt15_Lookup_Note + 조회창 3개(가족동의서·계좌정보·위반내역). 파일보기 Sys10_Lookup_FileViewer 재사용)
   Flt10_Tab_CeoReport, // J08 (1단계: 본 화면 + 탭 3개(Flt03_TabPage_Account·Flt10_TabPage_ReportPerson·Flt10_TabPage_TrList). 엑셀은 RD 대신 서버 xlsx. 결재요청·문서보기가 여는 전자결재 Apr01_Edit_ApprDoc·Apr01_Lookup_ApprLink·Dcr01_Lookup_Class와 RD 첨부파일 생성은 다음 단계)
   Flt01_Tab_CompanyStd, // J09 (본 화면 + 조회창 4개: Flt01_Lookup_LockUpCheckType·Flt05_Lookup_ItemType·Flt08_Lookup_LockupItem·Flt16_Lookup_ExceptPerson)
-  Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Flt10_Tab_SellReport, // I04 (1단계: 본 화면 + 보유내역 조회창 Flt11_Lookup_BookList(I09 공유). 보고주기·서약서 창 Flt02_Lookup_Emp는 다음 단계)
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd08_Tab_OrgAuthTempFund, // P02 (+ Fnd08_Page_OrgAuth·Fnd08_Lookup_OrgCode)
@@ -517,7 +517,7 @@ export const SCREENS: Record<string, React.FC> = {
   Adv05_Tab_OrgAuth, // Q02 (+ Adv05_Page_OrgAuth·components/lookup/Adv05_Lookup_OrgAuth·Adv02_Lookup_SelectMulti, 일임계좌 권한설정)
   Adv11_Tab_BookExtr, // Q03 (+ components/lookup/Com50_Lookup_StkItem VIEW, 템플릿·엑셀업로드, 일임보유주식등록(타사무))
   Fnd01_Tab_FundCode, // P05 (+ Fnd01_Edit_FundCode·components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank, 펀드 등록 및 변경)
-  Fnd20_Tab_PlanEmp, // P04 (1단계: 본 화면 + Fnd20_TabPage_PlanEmp. [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·서버 insertAppr는 다음 단계)
+  Fnd20_Tab_PlanEmp, // P04 (1단계: 본 화면 + Fnd20_TabPage_PlanEmp. [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·서버 insertAppr는 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Fnd01_Tab_FundPlan, // P01 (+ Fnd00_Lookup_FundCode, 신규기획펀드 등록 — 아래 편집 폼 Fnd01_Edit_FundPlan 포함)
   Fnd03_Tab_Consignment, // R10 (#1051 수탁사정보 관리)
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
@@ -525,13 +525,13 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd09_Tab_TrustBank, // R12 (#1100 수탁은행정보 관리)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
-  Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. [신규문서 작성]은 EE68에서 연결 — Dcr01_Lookup_Class → Apr20_Lookup_SelectIcs → Apr01_Edit_ApprDoc. 상세보기의 편집창은 다음 단계)
-  Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계)
-  Dcr00_Tab_ApprList, // F09 1단계 (메뉴 #1326 문서 다운로드 + Apr40_Lookup_DownloadHistory·Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·PDF 만들기 createInPDF7은 다음 단계)
-  Dcr00_Tab_FileList, // F08 1단계 (메뉴 #1224 문서별 첨부파일 검색 + Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. [신규문서 작성]은 EE68에서 연결 — Dcr01_Lookup_Class → Apr20_Lookup_SelectIcs → Apr01_Edit_ApprDoc. 상세보기의 편집창은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Dcr00_Tab_ApprList, // F09 1단계 (메뉴 #1326 문서 다운로드 + Apr40_Lookup_DownloadHistory·Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·PDF 만들기 createInPDF7은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Dcr00_Tab_FileList, // F08 1단계 (메뉴 #1224 문서별 첨부파일 검색 + Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr01_Tab_ItemDocument, // F07 1단계 (메뉴 #1137 (X)종목별 문서검색 + Apr01_Grid_ItemDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
-  Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
-  Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_BizPriorApproval, // L06 1단계 (메뉴 #1134. 승인신청·상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정이 여는 Dcr30_Lookup_Link는 다음 단계)
   Apr01_Tab_ExternalBiz, // A40 (메뉴 #1343 대외활동 신청서 작성. [승인신청]·[상세보기]는 전자결재 편집창 Apr01_Edit_ApprDoc, 문서분류 조회창은 Dcr30_Move_DcrClass)
@@ -539,7 +539,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr01_Tab_MyReferenceList, // G03 1단계 (메뉴 #1093. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_TotalList, // G16 (메뉴 #1010 운영현황표. 건별명세 아이콘이 메뉴 #1011 G17을 TempData로 연다)
-  Apr01_Tab_SubList, // G17 1단계 (메뉴 #1011 건별명세. 문서조회가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr01_Tab_SubList, // G17 1단계 (메뉴 #1011 건별명세. 문서조회가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr01_Tab_StampSeq, // G06 1단계 (메뉴 #1020 (X)인감대장. 문서확인이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr10_Tab_Stamp, // G07 (메뉴 #1026. 조회창 Apr10_Move_OrgCode·Org10_Lookup_RoleStamp·Dcr40_Lookup_StampAuth·Org00_Lookup_SelectMulti를 함께 변환)
   Emp60_Tab_Sign, // G09 (메뉴 #1501)
@@ -558,8 +558,8 @@ export const SCREENS: Record<string, React.FC> = {
   Apr07_Tab_AltApprMgr, // EE02 (메뉴 #1022. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr30_Tab_ApprStepGroup, // EE03 (메뉴 #1282. 멤버 Apr31_Page_ApprStepGroupMember, 사원찾기 Emp00_Lookup_SelectMulti 재사용)
   Apr01_Tab_Restore, // EE01 1단계 (메뉴 #1098. 상세보기가 여는 폐기문서 보기 Apr01_Edit_ApprDoc.getApprDelModel은 다음 단계)
-  Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
-  Apr90_Tab_DisposalListAdmin, // EE04 1단계 (메뉴 #1253. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Apr90_Tab_DisposalListAdmin, // EE04 1단계 (메뉴 #1253. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Ics01_Tab_IcsFileUpload, // E02
   Ics20_Tab_RevisionHistoryAdmin, // E03
@@ -652,13 +652,13 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr01_Tab_ClassTree, // E16 (메뉴 #1110·#1001 — 같은 클래스. + Dcr01_Grid_DocType·Dcr01_Edit_ClassTree·Dcr01_Move_*·Dcr01_Lookup_UseYn·DcrCopyAdmin·Dcr05~07·Dcr20·Dcr21, apr 조회창 둘)
   Dcr05_Tab_DocType, // E18 (메뉴 #1482·#1007 — 같은 클래스. + Dcr05_Edit_DocType·Dcr05_Edit_Update(E16)·Sys09_Lookup_Code(구분추가)·Sys01_Lookup_Company)
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
-  Dcr01_Tab_DcrClassModify, // EE05 1단계 (메뉴 #1004 + Dcr01_Grid_DcrClassList·Dcr01_Move_DcrClass. 보기 아이콘이 여는 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Dcr01_Tab_DcrClassModify, // EE05 1단계 (메뉴 #1004 + Dcr01_Grid_DcrClassList·Dcr01_Move_DcrClass. 보기 아이콘이 여는 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Dcr03_Tab_DcrAuth, // EE06 (메뉴 #1073 + Dcr03_TabPage_DcrAuth·Dcr03_LinkNote. 문서분류지정 창 Dcr30_Lookup_Link 연결)
   Dcr03_Tab_OrgAuth, // EE07 (메뉴 #1074 + Dcr03_TabPage_OrgAuth·Dcr03_LinkNote. 권한복사 조직찾기 Org00_Lookup_SelectMulti·문서분류지정 창 Dcr30_Lookup_Link 연결)
   Dcr04_Tab_EmpAuth, // EE08 (메뉴 #1491 + Dcr04_TabPage_EmpAuth·Dcr04_Lookup_DocList·Dcr04_TabPage_DocList. 사원찾기 Emp00_Lookup_SelectMulti·조직찾기 Org00_Lookup_SelectSingle 재사용)
   Dcr10_Tab_MailHistory_Manager, // EE09 (메뉴 #1024 + 메일 상세 Dcr10_Lookup_MailViwer(manager)·연관펀드 Fnd01_Lookup_SelectSingle·문서 Apr01_Edit_ApprDoc 재사용)
   Dcr01_Tab_DcrManager, // EE36 (메뉴 #1003 업무별 문서작성(관리자) — 본체 DcrManagerView·Apr01_Grid_DocList는 F02와 공통)
-  Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 다음 단계, 메일 Dcr10_Lookup_MailSender는 EE35에서 연결)
+  Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 다음 단계, 메일 Dcr10_Lookup_MailSender는 EE35에서 연결) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt01_Tab_DailyConfirm, // Z09 (+ Rpt01_Edit_DailyConfirm, RD Rpt01_Rd_Daily)
   Rpt03_Tab_WeekWrite, // Z11 (+ Rpt03_Page_WeekWrite, Rpt03_Lookup_WeekWrite, Rpt05_Lookup_WeekBizClass, RD Rpt03_Rd_WeekWrite)
@@ -709,8 +709,8 @@ export const SCREENS: Record<string, React.FC> = {
   Pay32_Tab_InsurePay, // S27 (4대보험 정산내역 — Pay32_Lookup_Detail은 S16 부품, 정산 행에서 열 때 구분·기준년도를 행에서)
   Pay31_Tab_InsureApply, // S26 (4대보험신고(EDI) — 탭 4개 Pay31_TabPage_InsureApply1~4 + Pay31_Lookup_Insert1~3)
   Pay40_Tab_TaxWithholding, // S23 1단계 (결재요청 아이콘의 결재문서 작성·상세보기 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
-  Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
-  Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer)
+  Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
+  Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Pay01_Tab_Annual, // S13 1단계 (상신의 결재문서 작성·상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. + Pay06_Lookup_ActList·Pay06_Lookup_ActMapping)
   Pay20_Tab_Deduct, // S29 (E22 Pay20_Tab_DeductAdmin 껍데기 재사용 — 원본이 클래스명만 다름, 탭 9개·25 클래스 모두 E22)
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)

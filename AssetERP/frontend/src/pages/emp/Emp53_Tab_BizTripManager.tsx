@@ -2,18 +2,21 @@
  * 출장관리 (S11) — 경영관리 > 02. 휴가/출장 관리 > 출장관리 #1381
  * AS-IS: myApp/client/vi/emp/Emp53_Tab_BizTripManager.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L65-81, SG): 툴바(조회기간 · 검색 230 · 완료건 제외 · [조회][저장]) + 체크 다중 셀 편집 그리드(2단 헤더 출장기간·출장품의·결과보고·결과보고서 면제).
- * 1단계(사용자 묶음 요청 2026-10-28): 상세보기 아이콘의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval)는 다음 단계 — 원본의 문서 유무·상태 검사까지만 한다.
+ * 상세보기 아이콘: 원본의 문서 유무·상태 검사 뒤 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval, 닫으면 retrieve()).
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { empBizTripApi } from '@/api/emp';
+import { aprDetailApi } from '@/api/apr';
+import { errorMessage } from '@/api/client';
 import { BizTrip } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { useGridCrud, editableCol } from '@/hooks/useGridCrud';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<BizTrip>();
 const BLUE = { color: '#456EA6' };
@@ -42,19 +45,29 @@ export const Emp53_Tab_BizTripManager: React.FC = () => {
   // [E1] searchText.KeyPress [Enter] (L113) / [E2] retrieveButton[조회].Select (L121) → retrieve()
   const retrieve = () => crud.retrieve();
 
-  // apprView() L211-231: 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, 닫으면 retrieve()) — 편집창은 다음 단계
-  const apprView = () => message.info('전자결재 문서 보기는 아직 변환 전입니다(다음 단계).');
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apprView(apprId) L211-231: 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, 닫으면 retrieve())
+  const apprView = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
 
   // 출장품의 상세보기 (buildGrid L135-187 viewCell): 결재상태가 없으면 "해당 관련문서가 없습니다"
   const viewAppr = (row: BizTrip) => {
     if (row.apprStatusCode == null || row.apprStatusCode === '') { message.warning('해당 관련문서가 없습니다'); return; }
-    apprView();
+    if (row.apprId != null) void apprView(row.apprId);  // L145 apprView(selectModel.getApprId())
   };
   // 결과보고 상세보기 (resultViewCell): 결과보고 결재상태가 없으면 "해당 관련문서가 없습니다", 출장신청서가 완료(30)가 아니면 "출장신청서가 완료된 후에 문서작성이 가능합니다."
   const viewResultAppr = (row: BizTrip) => {
     if (row.resultApprStatusCode == null || row.resultApprStatusCode === '') { message.warning('해당 관련문서가 없습니다'); return; }
     if (row.apprStatusCode == null || row.apprStatusCode !== '30') { message.warning('출장신청서가 완료된 후에 문서작성이 가능합니다.'); return; }
-    apprView();
+    if (row.resultApprId != null) void apprView(row.resultApprId);  // L161 apprView(selectModel.getResultApprId())
   };
 
   // AS-IS buildGrid() L135-187 (setChecked MULTI, 헤더 묶음 4개)
@@ -105,6 +118,8 @@ export const Emp53_Tab_BizTripManager: React.FC = () => {
           <CellEditGrid<BizTrip> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
+      {/* apprView() L211-231 */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

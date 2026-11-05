@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr00_Tab_ApprList.java (343줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L94-107: 위 툴바(등록기간 · 문서분류(300) · 검색(330) · [조회] [다운로드] [기록보기]) + 문서 그리드(체크박스 다중)
  * 1단계(F01~F08과 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 다음 단계: makePDF() L263-293(utils.pdf.PDFCreate.createInPDF7 = Apr10_StampPDF7.getInDocument: 본문 파일이 없는 사내문서의 PDF 만들기)는
  *   전자결재 PDF 생성기(apr 도메인)라 옮기지 않았다 — 지금은 이미 있는 본문·첨부파일만 묶어 내려준다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 원본에 초기화가 없어 UX-02는 넣지 않는다
@@ -13,6 +14,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { fileApi } from '@/api/file';
 import { DcrDocAppr } from '@/types/dcr';
 import { Button } from '@/components/button';
@@ -93,10 +95,12 @@ export const Dcr00_Tab_ApprList: React.FC = () => {
   };
 
   // buildGrid() L170-216 (체크박스 다중 선택)
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     // L171-187 actionCell(View) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback)
-    // [L171 생략] 편집창은 다음 단계
-    iconCell<DcrDocAppr>('view', 'actionCell', 40, ' ', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<DcrDocAppr>('view', 'actionCell', 40, ' ', row => setViewApprId(row.apprId)),
     gb.text('classTreeName', 500, '문서분류'),
     gb.date('regDate', 100, '등록일'),
     gb.textCenter('inoutName', 70, '문서구분'),
@@ -156,6 +160,8 @@ export const Dcr00_Tab_ApprList: React.FC = () => {
         onClose={() => setClassOpen(false)}
       />
       <Apr40_Lookup_DownloadHistory open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      {/* L171 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

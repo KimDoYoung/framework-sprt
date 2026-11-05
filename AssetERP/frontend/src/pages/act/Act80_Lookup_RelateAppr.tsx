@@ -23,7 +23,6 @@ import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 
 const gb = gbFor<ActRelateAppr>();
-const NEXT_STEP = '전자결재 문서 창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.';
 
 /** 열 때 받는 값 (AS-IS open(title, code, relateId, dcrClassTreeId, callback)) */
 export interface ActRelateApprTarget {
@@ -48,6 +47,8 @@ export const Act80_Lookup_RelateAppr: React.FC<Props> = ({ target, onClosed, onC
   const [loading, setLoading] = useState(false);
   const [loadDocOpen, setLoadDocOpen] = useState(false);
   const [classOpen, setClassOpen] = useState(false);
+  /** createAppr(): 고른 문서분류로 새 문서 (Apr01_Edit_ApprDoc.insertApproval) */
+  const [newClassTreeId, setNewClassTreeId] = useState<number | null>(null);
   const [detailApprId, setDetailApprId] = useState<number | null>(null);
 
   // retrieve() L194-206: code가 trId면 act.Act80_RelateAppr.selectByTrId, journalId면 selectByJournalId
@@ -71,6 +72,17 @@ export const Act80_Lookup_RelateAppr: React.FC<Props> = ({ target, onClosed, onC
   }, [target]);
 
   // [E2] insertButton[불러오기].Select (L97) → insert() L208-238: Apr05_Lookup_LoadDoc → 고른 문서로 Act80_RelateApprModel(apprId, trId|journalId, regDate, title) → act.Act80_RelateAppr.modelUpdate → retrieve()
+  // createAppr() L285-323: insertApproval(dcrModel, false, callbackResult → 저장된 문서를 act.Act80_RelateAppr.modelUpdate로 연결 → retrieve())
+  const onNewDocSaved = async (apprId: number) => {
+    if (!target) return;
+    try {
+      await actApi.addRelateAppr({ apprId, trId: target.code === 'trId' ? target.relateId : null, journalId: target.code === 'journalId' ? target.relateId : null });
+      await retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '저장 실패'));
+    }
+  };
+
   const insert = async (appr: AprLoadDoc) => {
     if (!target) return;
     try {
@@ -136,7 +148,7 @@ export const Act80_Lookup_RelateAppr: React.FC<Props> = ({ target, onClosed, onC
           {/* [E1] retrieveButton[조회].Select (L91) → retrieve() */}
           <Button type="search" onClick={retrieve} loading={loading}>조회</Button>
           <Button type="register" onClick={() => setLoadDocOpen(true)}>불러오기</Button>
-          {/* [E4] apprButton[신규문서 작성].Select (L109) → selectDcrClass() L274-283: Dcr01_Lookup_Class.open(dcrClassTreeId, null, cb) → createAppr() L285-323 (Apr01_Edit_ApprDoc.insertApproval) — ⓓ 다음 단계(안내만) */}
+          {/* [E4] apprButton[신규문서 작성].Select (L109) → selectDcrClass() L274-283: Dcr01_Lookup_Class.open(dcrClassTreeId, null, cb) → createAppr() L285-323 (Apr01_Edit_ApprDoc.insertApproval) */}
           <Button type="register" onClick={() => setClassOpen(true)}>신규문서 작성</Button>
           <Button type="delete" onClick={preDelete}>연결제거</Button>
         </div>
@@ -149,7 +161,8 @@ export const Act80_Lookup_RelateAppr: React.FC<Props> = ({ target, onClosed, onC
       </div>
       <Apr01_Edit_ApprDoc apprId={detailApprId} onClosed={() => void retrieve()} onClose={() => setDetailApprId(null)} />
       <Apr05_Lookup_LoadDoc open={loadDocOpen} onResult={doc => void insert(doc)} onClose={() => setLoadDocOpen(false)} />
-      <Dcr01_Lookup_Class open={classOpen} classTreeId={target?.dcrClassTreeId} onResult={() => message.info(NEXT_STEP)} onClose={() => setClassOpen(false)} />
+      <Dcr01_Lookup_Class open={classOpen} classTreeId={target?.dcrClassTreeId} onResult={r => setNewClassTreeId(r.classTreeId)} onClose={() => setClassOpen(false)} />
+      <Apr01_Edit_ApprDoc apprId={null} newClassTreeId={newClassTreeId} onLinkSaved={id => void onNewDocSaved(id)} onClose={() => setNewClassTreeId(null)} />
     </LookupModal>
   );
 };

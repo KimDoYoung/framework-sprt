@@ -4,6 +4,7 @@
  * 레이아웃 L92-157: 바깥 여백 20, 박스 안 툴바 2줄(조회기간 · 문서분류 / 결재상태 · 문서구분 · 검색 · 수신처 · [조회] [엑셀다운로드] · 북마크) + 문서 그리드(1) | 회색 칸(10) | Apr03_TabPage_Relate(300)
  * 1단계(F01~F04와 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 댓글 아이콘이 여는
  *   Apr42_Lookup_CommentView는 EE39, Apr50_Lookup_ApprList(북마크 별 아이콘)는 EE40에서 연결했다(나머지 둘은 다른 도메인(apr)이라 다음 단계 — 지금은 안내만 띄운다).
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건이 길어 한 줄을 넘기므로 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -12,6 +13,7 @@ import { StarFilled } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { AprDocSearch } from '@/types/apr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -90,10 +92,12 @@ export const Dcr00_Tab_DocList: React.FC = () => {
   const openBookmark = () => setBookmarkOpen(true);
 
   // buildGrid() L246-287 (체크박스 단일 선택)
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     // L271 actionCell(View) → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback)
-    // [L271 생략] 편집창은 다음 단계
-    iconCell<AprDocSearch>('view', 'actionCell', 40, ' ', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprDocSearch>('view', 'actionCell', 40, ' ', row => setViewApprId(row.apprId)),
     gb.bookmarkYn('bookmarkYn', 30, ' '),  // L272
     gb.date('regDate', 90, '등록일'),  // L273
     gb.textCenter('regEmpName', 80, '등록자'),  // L274
@@ -178,6 +182,8 @@ export const Dcr00_Tab_DocList: React.FC = () => {
       />
       <Apr42_Lookup_CommentView apprId={commentApprId} onClose={() => setCommentApprId(null)} />
       <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
+      {/* L271 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

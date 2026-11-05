@@ -4,6 +4,7 @@
  * 레이아웃: 툴바(조회기간 ~ · 「조회기간 없이 결과보고 누락건만 조회」 체크 · 조회) + 그리드(행번호, 선택 없음). 그리드 L105-134: 신청일자 100 · 신청자 100 · 사번 80 · 부서명 150 · 활동처 200 · 활동대상 200 · 활동기간 280 ·
  *   [활동신청] 결재상태 100 · 문서보기 80 / [결과보고] 결재상태 100 · 문서보기 80. 짝: Ics35_Tab_ExtrActivity(M01)
  * 1단계(F·I와 같은 방침): 전자결재 편집창 Apr01_Edit_ApprDoc을 여는 [문서보기]는 안내만 띄운다 — 다음 단계
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -11,6 +12,8 @@ import { Checkbox, DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { IcsExtrActivity } from '@/types/ics';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
@@ -41,11 +44,22 @@ export const Ics35_Tab_ExtrActivityList: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { void retrieve(); }, []);
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // viewAppr(apprId) L152-174: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(model, false), 없으면 "해당문서의 열람권한이 없습니다"
   const viewAppr = (apprId: number | null) => {
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 다음 단계
-    void apprId;
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    if (apprId == null) message.info('해당문서의 열람권한이 없습니다');  // ApprCallbackResult가 null을 돌려주는 경우
+    else void openPermitted(apprId);
   };
 
   // buildGrid() L105-134
@@ -89,6 +103,8 @@ export const Ics35_Tab_ExtrActivityList: React.FC = () => {
           getRowId={p => String(p.data.extrActivityId)}
         />
       </div>
+      {/* viewAppr() L152-174 — callback → grid.unmask() */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

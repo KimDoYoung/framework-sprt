@@ -4,6 +4,7 @@
  * 레이아웃 L86-133: center=vlc — 툴바 2줄(조회기간 상신일/시행일 · 문서분류 / 결재상태 · 검색 · 완료/반려건 포함 · [검색] [출력/다운로드]) + 결재 문서 그리드(체크박스 단일 선택)
  * 1단계(F01~F12와 같은 사유): [상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc, [메일보내기]가 여는 Dcr10_Lookup_MailSender는 다른 도메인이라
  *   다음 단계에서 연결한다 — 지금은 원본의 사전 검사(폐기·완료 여부) 메시지까지만 하고 안내를 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { Checkbox, DatePicker, message, Radio } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprMyApprove } from '@/types/apr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -44,6 +46,8 @@ export const Apr01_Tab_MyApproveList: React.FC = () => {
   // settings(): 조회기간 = 오늘 -3개월 ~ 오늘(상신일 기준), 결재상태 "전체", 문서분류 "전체", [완료/반려건 포함] 체크
   const [dateType, setDateType] = useState<'reg' | 'effect'>('reg');
   const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(3, 'month'));
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
@@ -109,10 +113,9 @@ export const Apr01_Tab_MyApproveList: React.FC = () => {
     gb.date('effectDate', 100, '시행일'),  // L303
     gb.text('classTreeName', 170, '문서분류'),  // L304
     // L305 actionCell01(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieve())
-    // [L305 생략] 편집창은 다음 단계
     iconCell<AprMyApprove>('view', 'actionCell', 80, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
-      else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+      else setViewApprId(row.apprId);
     }),
     // L306 actionCell02(Send) → 폐기 문서면 "해당문서는 폐기되어 메일발송이 불가능합니다", 아니면 sendMail()
     iconCell<AprMyApprove>('send', 'actionCell02', 80, '메일보내기', row => {
@@ -186,6 +189,8 @@ export const Apr01_Tab_MyApproveList: React.FC = () => {
       />
       {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
+      {/* L272 retrieveApproval(apprModel, false, callback → retrieve()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

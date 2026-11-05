@@ -5,6 +5,7 @@
  *   그리드는 단일 선택 읽기 전용, 아이콘 열 2(상세보기·결재 문서 보기)
  * 연결: Sch01_Lookup_InfoView(업무일정 보기) · Sch10_Lookup_Ipo(공모주)
  * 1단계(O05와 같은 방침): 결재 문서 보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc(다른 도메인)은 상신 문서 유무 검사까지 하고 안내만 띄운다 — 다음 단계
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 많아 줄바꿈 위험이라 넣지 않는다
  */
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
@@ -12,6 +13,8 @@ import { DatePicker, Select, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Sch04CheckStatus, Sch08ClassCombo, Sch10Ipo } from '@/types/sch';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
@@ -77,15 +80,27 @@ export const Sch04_Tab_DailyCheckListStatus: React.FC = () => {
     }
   };
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 0건이면 "관련 상신문서가 존재하지 않습니다" (TOBE: 문서 상세 조회가 DATA_NOT_FOUND)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.warning('관련 상신문서가 존재하지 않습니다');
+      else message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // apprView() L207-238: 상신 문서가 없으면 "상신문서가 존재하지 않습니다". 그 뒤 apr.Apr01_Appr.selectById가 비면 "관련 상신문서가 존재하지 않습니다" —
-  //   그 조회 API는 전자결재(apr) 변환 때 함께 만든다(다음 단계). 결재상태 열(apprStatusName)은 원본 SQL이 종류 이름에 공백을 붙여(`'AprStatusCode     '`) 항상 비어 있으므로 판단에 쓰지 않는다
+  //   있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieve()). 결재상태 열(apprStatusName)은 원본 SQL이 종류 이름에 공백을 붙여(`'AprStatusCode     '`) 항상 비어 있으므로 판단에 쓰지 않는다
   const apprView = (row: Sch04CheckStatus) => {
     if (row.apprId == null) {
       message.warning('상신문서가 존재하지 않습니다');
       return;
     }
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc.retrieveApproval은 다른 도메인 — 다음 단계
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    void openDetail(row.apprId);
   };
 
   // buildGrid() L150-179 (단일 선택, 읽기 전용)
@@ -146,6 +161,8 @@ export const Sch04_Tab_DailyCheckListStatus: React.FC = () => {
       </div>
       <Sch01_Lookup_InfoView target={viewTarget} onClose={() => setViewTarget(null)} />
       <Sch10_Lookup_Ipo ipo={ipo} onClose={() => setIpo(null)} />
+      {/* apprView() L228 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

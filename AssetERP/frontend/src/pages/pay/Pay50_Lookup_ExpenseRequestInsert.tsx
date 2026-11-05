@@ -6,6 +6,7 @@
  *   증빙문서([조회][불러오기][신규문서 작성][연결제거] + 그리드 110) / 증빙파일([파일업로드] + 그리드 110), 아래 가운데 ([불러오기]) [저장][닫기]
  * 번호(expenseId)는 열 때 먼저 받아(insert L200-253 dbUtil.setSeq) 첨부파일·증빙문서를 그 번호에 붙이고, [저장]에서 행을 만든다. view()는 칸을 모두 읽기 전용으로 하고 [저장]을 숨긴다(disabled L1236-1260).
  * 다음 단계: [신규문서 작성]의 전자결재 편집창(Apr01_Edit_ApprDoc.insertApproval) — 문서분류만 정하고 안내한다(Act80_Lookup_RelateAppr와 같음)
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 편집창 규격(11 §4a — 머리말 아래 선·푸터 위 선·라벨 오른쪽 정렬)
  */
 import type { GetRef } from 'antd';
@@ -43,7 +44,6 @@ import { Pay52_Lookup_AccountCode } from './Pay52_Lookup_AccountCode';
 const FORMAT = 'YYYY-MM-DD';
 const LABEL_BLUE = '#0069B4';
 const SINGLE_SELECTION = { mode: 'singleRow', checkboxes: true, enableClickSelection: true } as const;
-const NEXT_STEP = '전자결재 문서 창(Apr01_Edit_ApprDoc 새 문서)은 다음 단계에서 연결합니다.';
 const fmt = (v: number | string | undefined) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 const parse = (v: string | undefined) => (v ? v.replace(/,/g, '') : '');
 /** 빈 글자는 null (GWT TextField.getCurrentValue()) */
@@ -132,6 +132,8 @@ export const Pay50_Lookup_ExpenseRequestInsert: React.FC<Props> = ({ open, mode,
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const [detailApprId, setDetailApprId] = useState<number | null>(null);
+  /** createAppr(): 고른 문서분류로 새 문서 (Apr01_Edit_ApprDoc.insertApproval) */
+  const [newClassTreeId, setNewClassTreeId] = useState<number | null>(null);
   const [loadDocOpen, setLoadDocOpen] = useState(false);
   const [classOpen, setClassOpen] = useState(false);
   const [confirmerOpen, setConfirmerOpen] = useState(false);
@@ -350,9 +352,13 @@ export const Pay50_Lookup_ExpenseRequestInsert: React.FC<Props> = ({ open, mode,
   // [E22] insertButton[불러오기].Select (L797) → relateInsert() L974-983: Apr05_Lookup_LoadDoc2(결재완료 문서만) → insert(apprId) L985-1001: com.Com01_RelateAppr.modelUpdate(keyTable pay50)
   const relateInsert = async (doc: AprLoadDoc2) => {
     setLoadDocOpen(false);
+    await insert(doc.apprId);
+  };
+  // insert(apprId): 증빙문서 연결 — 불러오기(relateInsert)와 새 문서 작성(createAppr) 둘 다 쓴다
+  const insert = async (apprId: number) => {
     if (expenseId == null) return;
     try {
-      await payApi.addExpenseRelateAppr(expenseId, doc.apprId);
+      await payApi.addExpenseRelateAppr(expenseId, apprId);
       await relateRetrieve();
     } catch (err) {
       message.error(errorMessage(err, '연결 실패'));
@@ -644,7 +650,9 @@ export const Pay50_Lookup_ExpenseRequestInsert: React.FC<Props> = ({ open, mode,
         onClose={() => setContentOpen(false)} />
       <Pay50_Lookup_ExpenseCopy open={copyOpen} isManager={isManager} onResult={row => void expenseCopy(row)} onClose={() => setCopyOpen(false)} />
       <Apr05_Lookup_LoadDoc2 open={loadDocOpen} aprStatusYn onResult={() => undefined} onSelected={doc => void relateInsert(doc)} onClose={() => setLoadDocOpen(false)} />
-      <Dcr01_Lookup_Class open={classOpen} onResult={() => { setClassOpen(false); message.info(NEXT_STEP); }} onClose={() => setClassOpen(false)} />
+      {/* selectDcrClass() L1025-1033 → createAppr() L1035-1051: insertApproval(dcrModel, false, callbackResult → insert(apprId) = 증빙문서 연결) */}
+      <Dcr01_Lookup_Class open={classOpen} onResult={r => { setClassOpen(false); setNewClassTreeId(r.classTreeId); }} onClose={() => setClassOpen(false)} />
+      <Apr01_Edit_ApprDoc apprId={null} newClassTreeId={newClassTreeId} onLinkSaved={id => void insert(id)} onClose={() => setNewClassTreeId(null)} />
       <Apr01_Edit_ApprDoc apprId={detailApprId} onClose={() => setDetailApprId(null)} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
     </Modal>

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay01_Tab_AnnualList.java (388줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 getEditor(): 툴바 45(사원명 · 기간 라디오(최근등록내역/년도별 [년도]/전체) · 퇴사자 포함 · [조회][출력/다운로드]) + 연봉계약 보기 그리드(2단 헤더, 앞 3열 고정).
  * 조회는 결재완료(apprCheckYn)만. 1단계: 상신상태 아이콘의 결재문서 보기(Apr01_Edit_ApprDoc, 다른 도메인 apr)는 다음 단계.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 출력 창 Pay01_Lookup_Rd_AnnualList(1300×880 "연봉계약현황" + [닫기])는 공통 RdViewer가 맡는다(AS-IS도 사원을 안 골랐을 때는 RDViewer.viewer를 쓴다).
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
@@ -13,6 +14,7 @@ import { payApi } from '@/api/pay';
 import { empApi } from '@/api/emp';
 import { rdApi } from '@/api/rd';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { PayAnnual } from '@/types/pay';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
@@ -105,6 +107,9 @@ export const Pay01_Tab_AnnualList: React.FC = () => {
   };
 
   // buildGrid(): SingleGrid(Pay01_AnnualModel), 2단 헤더 2개(기본정보 8열 · 월급여 구성 7열), 직급·사번·성명 고정
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     gb.group('기본정보', [
       gb.textCenter('posName', 80, '직급', { pinned: 'left' }),
@@ -131,10 +136,10 @@ export const Pay01_Tab_AnnualList: React.FC = () => {
     ]),
     gb.long('monthPay', 100, '합계'),
     gb.text('apprStatusName', 100, '상신상태'),
-    // [E6] actionCell (ImageCell).callbackOnCreate (L290) → 인라인 L290-295: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval (다음 단계)
+    // [E6] actionCell (ImageCell).callbackOnCreate (L290) → 인라인 L290-295: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
     iconCell<PayAnnual>('view', 'actionCell', 60, '', row => {
       if (row.apprId == null) { message.warning('상신문서가 없습니다'); return; }
-      message.info('결재문서 보기는 다음 단계에서 제공됩니다.');
+      setViewApprId(row.apprId);
     }),
   ], []);
 
@@ -176,6 +181,8 @@ export const Pay01_Tab_AnnualList: React.FC = () => {
       {/* Pay01_Lookup_Rd_AnnualList(1300×880 "연봉계약현황" + [닫기]) — RdViewer가 같은 모양의 창.
           [E0] 화면 열림 (생성자 L31-51, open(rdGroupId) L53-80) → 보고서 iframe · [E1] closeButton[닫기].Select (L40) → hide() */}
       <RdViewer url={rdUrl} title="연봉계약현황" onClose={() => setRdUrl(null)} />
+      {/* [E6] L290-295 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

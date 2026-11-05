@@ -4,6 +4,7 @@
  * 레이아웃 L97-135·getEditor() L240-287: 모달 700×480 "법인서류 발급 및 사용매수 등록", 라벨 120 — 등록일 · 구분(콤보 250 + 인감/대표명의 칸 330) · 발급매수 · 사용매수 · 제출처 · 목적 · 비고 ·
  *   연관상신문서(조회 칸), 아래 가운데 [저장][닫기]. 연관상신문서 칸을 누르면 연결된 문서가 있을 때 [문서보기][문서연결][연결제거] 작은 창(SettingPopup)
  * 편집창 규격(11 §4a). 1단계: [문서연결](Apr05_Lookup_LoadDoc2)·[문서보기](Apr01_Edit_ApprDoc)는 다른 도메인 컴포넌트라 다음 단계 — 안내만 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
@@ -11,6 +12,8 @@ import { SearchOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprStampDocApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprStamp, AprStampDoc } from '@/types/apr';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Button } from '@/components/button';
@@ -145,10 +148,21 @@ export const Apr16_Lookup_StampDocReg: React.FC<Props> = ({ target, onSaved, onC
   const clickAppr = () => {
     if (apprId == null) lookupApprRelate(); else setApprPopup(true);
   };
-  // lookupApprView() L387-415 — [E4] apprViewButton[문서보기].Select (L201). Apr01_Edit_ApprDoc은 다음 단계
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+  // lookupApprView() L387-415 — [E4] apprViewButton[문서보기].Select (L201) → ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …)
   const lookupApprView = () => {
     if (apprId == null) { message.warning('연결된 문서가 없습니다.'); return; }
-    message.info('문서보기(Apr01_Edit_ApprDoc)는 다음 단계에서 제공됩니다');
+    void openPermitted(apprId);
   };
   // lookupApprRelate() L417-434 — [E5] apprRelateButton[문서연결].Select (L207). Apr05_Lookup_LoadDoc2는 다음 단계
   const lookupApprRelate = () => message.info('문서연결(Apr05_Lookup_LoadDoc2)은 다음 단계에서 제공됩니다');
@@ -245,6 +259,8 @@ export const Apr16_Lookup_StampDocReg: React.FC<Props> = ({ target, onSaved, onC
           </Space>
         </div>
       </Modal>
+      {/* L395-414 ApprCallbackResult → retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </>
   );
 };

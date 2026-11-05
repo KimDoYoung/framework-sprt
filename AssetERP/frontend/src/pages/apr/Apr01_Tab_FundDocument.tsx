@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_FundDocument.java (212줄) + Apr01_Grid_FundDocList.java (72줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L49-98: 위(250, 분할 가능, 여백 20·20·0·20) = 박스(툴바 50 + 펀드 그리드) / 아래 = 문서 그리드(Apr01_Grid_FundDocList, 여백 20)
  * 1단계(F01~F05와 같은 사유): 상세보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -10,6 +11,7 @@ import { Checkbox, message, Splitter } from 'antd';
 import { aprApi } from '@/api/apr';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprFundDoc } from '@/types/apr';
 import { FundCode } from '@/types/fnd';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -33,6 +35,8 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
   const [classFundExceptYn, setClassFundExceptYn] = useState(true);
   const [funds, setFunds] = useState<FundCode[]>([]);
   const [docs, setDocs] = useState<AprFundDoc[]>([]);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [fundLoading, setFundLoading] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
   const selectedFundId = useRef<number | null>(null);
@@ -98,8 +102,7 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
     gbDoc.text('title', 500, '상신제목'),
     gbDoc.text('receiveName', 150, '수신처'),
     // actionCell(Detail) → Apr01_Edit_ApprDoc.retrieveApproval(...)
-    // [생략] 편집창은 다음 단계
-    iconCell<AprFundDoc>('view', 'actionCell', 60, '상세보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprFundDoc>('view', 'actionCell', 60, '상세보기', row => setViewApprId(row.apprId)),
     gbDoc.text('fileName', 500, '첨부파일'),
   ], []);
 
@@ -155,6 +158,8 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
           </div>
         </Splitter.Panel>
       </Splitter>
+      {/* Apr01_Grid_FundDocList L32-44 detailCell → retrieveApproval(apprModel, false, callback 비어 있음) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

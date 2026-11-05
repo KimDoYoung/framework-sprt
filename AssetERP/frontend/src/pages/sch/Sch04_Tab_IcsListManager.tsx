@@ -8,6 +8,7 @@
  *   아이콘 열 3(처리결과 확인처리 · 법규 보기 · 원인문서 보기)
  * 연결: Sch04_Lookup_IcsMsg(확인자, actionType "2") · Ics01_Lookup_ClassTreeDetail · Icr01_Lookup_ClassTreeDetail · Org00_Lookup_SelectMulti(담당부서, [전체]·한 조직)
  *   · Apr01_Edit_ApprDoc(원인문서 보기)는 다른 도메인이라 1단계에서는 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 출력/다운로드는 RD 리포트(Sch04_Rd_IcsList) 대신 조회 결과를 그리드 열 순서로 xlsx에 쓴다(H06과 같은 방식).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건이 길어 줄바꿈 위험이라 넣지 않는다
  */
@@ -16,6 +17,8 @@ import { Checkbox, Input, message } from 'antd';
 import dayjs from 'dayjs';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Sch04List, Sch04ListManagerSearch } from '@/types/sch';
 import { OrgInfo } from '@/types/emp';
 import { Button } from '@/components/button';
@@ -115,14 +118,25 @@ export const Sch04_Tab_IcsListManager: React.FC = () => {
   // viewLaw() L354-365: 발생구분 2·3 → Ics01_Lookup_ClassTreeDetail.open(icsClassTreeId), 6·7 → Icr01_Lookup_ClassTreeDetail.open(icsClassTreeId)
   const viewLaw = (row: Sch04List) => setLawRow(row);
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // viewAppr() L367-395: 원인문서가 없으면 "원인문서가 존재하지 않습니다", 있으면 ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(model, false, …)
-  // [생략] 전자결재 편집창(Apr01_Edit_ApprDoc)은 다른 도메인이라 다음 단계에서 연결한다 — 열람권한 검사("해당문서의 열람권한이 없습니다")도 그때
   const viewAppr = (row: Sch04List) => {
     if (row.issApprId == null) {
       message.warning('원인문서가 존재하지 않습니다');
       return;
     }
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    void openPermitted(row.issApprId);
   };
 
   // editResult() L397-422: 처리구분이 1·2·5가 아니면 "미처리내역 입니다." — 아니면 Sch04_Lookup_IcsMsg.open("2", row, callback → 확인자·확인일·확인여부만 행에 반영)
@@ -239,6 +253,8 @@ export const Sch04_Tab_IcsListManager: React.FC = () => {
       />
       <Ics01_Lookup_ClassTreeDetail classTreeId={lawIcs} onClose={() => setLawRow(null)} />
       <Icr01_Lookup_ClassTreeDetail classTreeId={lawIcr} onClose={() => setLawRow(null)} />
+      {/* viewAppr() L367-395 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

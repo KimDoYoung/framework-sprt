@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr16_Tab_StampFileCheck.java (315줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L68-98: center 여백 20, 테두리 박스 = 툴바 50(신청일자 시작 ~ 끝 · 인감선택 칸 250 · "날인본 미첨부 내역만 조회" · [조회][확인][확인취소]) + 체크박스 다중 선택 그리드(행번호, 11열)
  * 1단계: 연관문서 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(ApprCallbackResult·retrieveApproval)은 다른 도메인 컴포넌트라 다음 단계 — 안내만 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 스타일: SG (견본 Tdm01_Tab_Hr — docs/page-style.md). 원본이 vlc.setBorders(true)라 SG 견본과 달리 바깥에 테두리를 둔다(03 원칙 12)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
@@ -11,6 +12,8 @@ import { Checkbox, DatePicker, message, Modal } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprStampDocApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprStamp, AprStampCheck } from '@/types/apr';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
@@ -126,8 +129,19 @@ export const Apr16_Tab_StampFileCheck: React.FC = () => {
     });
   };
 
-  // lookupAppr() L284-306: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …) — 다른 도메인 컴포넌트라 다음 단계
-  const lookupAppr = () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+  // lookupAppr() L284-306: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
+  const lookupAppr = (row: AprStampCheck) => { if (row.apprId != null) void openPermitted(row.apprId); };
 
   // buildGrid() L141-164 (setChecked(MULTI))
   const columnDefs = useMemo(() => [
@@ -174,6 +188,8 @@ export const Apr16_Tab_StampFileCheck: React.FC = () => {
         </div>
       </div>
       <Apr10_Lookup_Stamp open={stampOpen} checkflag onResult={pickStamp} onDelete={clearStamp} onClose={() => setStampOpen(false)} />
+      {/* lookupAppr() L284-306 */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

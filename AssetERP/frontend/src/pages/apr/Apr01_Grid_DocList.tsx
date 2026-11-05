@@ -2,7 +2,7 @@
  * 문서작성 > 01. 문서작성 > 업무별 문서작성 > 오른쪽 문서 목록 (F02, 1단계)
  * AS-IS: myApp/client/vi/apr/Apr01_Grid_DocList.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 init() L77-139: vlc = 툴바(49: 등록기간 · 검색 · [검색] · [신규문서 작성] · 작성도움말 · 북마크) / 문서 그리드(1) | 회색 칸(10) | Apr03_TabPage_Relate(300)
- * 1단계(F01과 같은 사유): 보기·[신규문서 작성]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 
+ * 보기·[신규문서 작성]은 전자결재 문서 창 Apr01_Edit_ApprDoc을 연다(retrieveApproval·insertApproval, 닫으면 retrieve()). AS-IS의 isAdmin 인자는 TOBE 문서 창에 없다.
  *   북마크 아이콘은 Apr50_Lookup_ApprList를 연다(EE40). 메일 아이콘은 Dcr10_Lookup_MailSender.open(apprId)을 연다(EE35).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
@@ -21,6 +21,7 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { Apr03_TabPage_Relate } from './Apr03_TabPage_Relate';
 import { Apr50_Lookup_ApprList } from './Apr50_Lookup_ApprList';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprDoc>();
@@ -50,6 +51,9 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
   const [linkModel, setLinkModel] = useState<DcrClassLink | null>(null);
   const [apprId, setApprId] = useState<number | null>(null);
   const [bookmarkOpen, setBookmarkOpen] = useState(false);
+  /** 문서 창: 보기(apprId) / 새 문서(분류 ID) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [newClassTreeId, setNewClassTreeId] = useState<number | null>(null);
   const seq = useRef(0);
 
   // private retrieve() L248-277: apr.Apr01_Appr.selectByClassTreeId2 (검색어는 서버가 %…%로)
@@ -110,7 +114,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
   const openBookmark = () => setBookmarkOpen(true);
 
   // [E3] insertButton[신규문서 작성].Select (L120) → insertApproval() L279-306
-  // [E3 일부 생략] Apr01_Edit_ApprDoc.insertApproval(classTreeModel, isAdmin, callback: retrieve())는 다음 단계
+  //   → Apr01_Edit_ApprDoc.insertApproval(classTreeModel, isAdmin, callback: retrieve())
   const insertApproval = () => {
     if (node == null) {
       message.warning('문서분류를 선택해주세요');
@@ -124,7 +128,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
       message.warning('해당문서분류에 작성권한이 없습니다');
       return;
     }
-    message.info('전자결재 문서 작성 창은 다음 단계에서 연결됩니다');
+    setNewClassTreeId(node.classTreeId);
   };
 
   // buildGrid() L178-216
@@ -134,8 +138,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
     gb.textCenter('relateDisplayName', 80, '펀드/일임'),  // L207
     gb.textHtml('statusName', 65, '상태'),  // L208
     // L209 actionCell(Detail): Apr01_Edit_ApprDoc.retrieveApproval(model, isAdmin, callback: retrieve())
-    // [L209 생략] 편집창은 다음 단계
-    iconCell<AprDoc>('view', 'actionCell', 50, '보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprDoc>('view', 'actionCell', 50, '보기', row => setViewApprId(row.apprId)),
     // L210 actionCell(Send) → sendMail() L308-316: 완료(30)가 아니면 "완료되지 않은 문서입니다", 맞으면 Dcr10_Lookup_MailSender.open(apprId)
     iconCell<AprDoc>('send', 'actionCell02', 50, '메일', row => {
       if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
@@ -187,6 +190,14 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
       <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
       {/* [E2] bookmarkAnchor.MouseDown (L96) → Apr50_Lookup_ApprList.open() (EE40) */}
       <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
+      {/* L209 retrieveApproval · L300 insertApproval — callback: retrieve() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        newClassTreeId={newClassTreeId}
+        statusCode={rows.find(r => r.apprId === viewApprId)?.statusCode}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setNewClassTreeId(null); }}
+      />
     </div>
   );
 };

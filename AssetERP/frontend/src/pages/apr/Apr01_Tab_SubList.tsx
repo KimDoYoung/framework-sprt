@@ -5,6 +5,7 @@
  * 운영현황표(G16)의 건별명세 아이콘이 이 화면을 열면서 조회기간·담당자·담당부서를 넘긴다 — retrieveCall() L192-203 (TempData, utils/tempData.ts)
  * 1단계(F01~F12·G01~G04와 같은 사유): [문서조회]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
  *   lookupAppr() L256-300은 권한 검사를 주석 처리했고("모든 문서를 보기위한 화면") 안내 메시지는 없다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -12,6 +13,7 @@ import { DatePicker, Select, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprSubList } from '@/types/apr';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -112,9 +114,10 @@ export const Apr01_Tab_SubList: React.FC = () => {
   // 고른 값이 상태에 반영된 다음 렌더에서 읽도록 한 틱 미룬다
   const retrieveOnCollapse = (open: boolean) => { if (!open) setTimeout(() => void retrieve(), 0); };
 
-  // lookupAppr() L256-300 — [문서조회] 아이콘. 전자결재 편집창은 다음 단계
-  // [생략] Apr01_Edit_ApprDoc.retrieveApproval(model, false, …)
-  const lookupAppr = () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // lookupAppr() L256-300 — [문서조회] 아이콘 → Apr01_Edit_ApprDoc.retrieveApproval(selectModel, false, callback → grid.unmask()). 권한 검사는 원본에서 주석 처리
+  const lookupAppr = (row: AprSubList) => setViewApprId(row.apprId);
 
   // buildGrid() L149-178 (단일 선택, 맨 아래 건수 행 getAggregationGrid("건수", 2, 3))
   const columnDefs = useMemo(() => [
@@ -166,6 +169,8 @@ export const Apr01_Tab_SubList: React.FC = () => {
           />
         </div>
       </div>
+      {/* L292-298 retrieveApproval(selectModel, false, …) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

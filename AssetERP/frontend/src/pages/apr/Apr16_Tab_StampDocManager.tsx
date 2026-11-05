@@ -5,6 +5,7 @@
  * 레이아웃 L92-138: north 170 = 툴바 50(등록일 ~ · 구분 · 인감 및 대표명의 칸 · [조회][등록][저장][삭제] · [출력/다운로드]) + 합계 그리드 800×120(구분·인감 및 대표명의·발급·사용·잔여매수)
  *   + 오른쪽 "신청내역이 존재합니다" 링크, center = 셀 편집 그리드(행번호, 체크박스 다중, 합계 행)
  * 1단계: [문서연결](Apr05_Lookup_LoadDoc2)·[문서보기](Apr01_Edit_ApprDoc, 연관문서 아이콘 포함)는 다른 도메인 컴포넌트라 다음 단계 — 안내만 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 스타일: GG 근사 — 위 합계 그리드 + 아래 그리드(page-style 비교는 결과확인 13)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화는 원본 버튼이 많아 넣지 않음), 저장 = 저장(n)(UX-03)
  */
@@ -14,6 +15,8 @@ import { SearchOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprStampDocApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { rdApi } from '@/api/rd';
 import { AprStampDoc, AprStampDocLookup, AprStampDocSum } from '@/types/apr';
 import { Button } from '@/components/button';
@@ -197,8 +200,19 @@ export const Apr16_Tab_StampDocManager: React.FC = () => {
     }
   };
 
-  // lookupAppr() L490-512: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval — 다른 도메인 컴포넌트라 다음 단계
-  const lookupAppr = () => message.info('연관문서 보기(Apr01_Edit_ApprDoc)는 다음 단계에서 제공됩니다');
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+  // lookupAppr() L490-512: 고른 행의 apprId → ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
+  const lookupAppr = (row: AprStampDoc) => { if (row.apprId != null) void openPermitted(row.apprId); };
 
   // buildTotalGrid() L291-302 (setRowNumHidden)
   const totalColumnDefs = useMemo(() => [
@@ -227,7 +241,7 @@ export const Apr16_Tab_StampDocManager: React.FC = () => {
     gb.group('연관문서', [  // L322 addHeaderGroupMap(HeaderGroupConfig "연관문서", 1, 3)
       gb.text('apprName', 250, '문서명'),  // L338
       gb.textStatus('apprStatusName', 70, '상태'),  // L339
-      dynamicIconCell<AprStampDoc>('view', 'apprCell', 35, ' ', () => lookupAppr(), row => row.apprStatusName != null),  // L340 addDynamicCell(…, true)
+      dynamicIconCell<AprStampDoc>('view', 'apprCell', 35, ' ', lookupAppr, row => row.apprStatusName != null),  // L340 addDynamicCell(…, true)
     ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
@@ -286,6 +300,8 @@ export const Apr16_Tab_StampDocManager: React.FC = () => {
       <Apr16_Lookup_StampReprCorp target={lookupTarget} onResult={onStampReprCorpResult} onClose={() => setLookupTarget(null)} />
       <Apr16_Lookup_GetDocAppl open={getApplOpen} onDone={() => { setGetApplOpen(false); void retrieve(); }} />
       <RdViewer url={rd?.url ?? null} title={rd?.title ?? ''} onClose={() => setRd(null)} />
+      {/* lookupAppr() L490-512 */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

@@ -4,12 +4,15 @@
  * 레이아웃 L97-120: 모달 880×550(크기 조절), 툴바 [조회][불러오기][연결제거] + 연결된 상신문서 그리드(buildGrid L122-162: 체크박스 다중,
  *   제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70) + 아래 200 = `Biz05_Lookup_RelateFile`, 창 아래 가운데 [닫기]
  * 1단계: [불러오기](Apr05_Lookup_LoadDoc)·상세보기(Apr01_Edit_ApprDoc)는 다른 도메인 컴포넌트라 다음 단계 — 안내만 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { bizRelateApprApi } from '@/api/biz';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { BizRelateAppr } from '@/types/biz';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
@@ -61,14 +64,26 @@ export const Biz05_Lookup_RelateAppr: React.FC<Props> = ({ open, title, promoId,
   };
 
   // buildGrid() L122-162
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 있으면 retrieveApproval (없으면 원본도 아무것도 하지 않는다)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   const columnDefs = useMemo(() => [
     gb.text('title', 370, '제목'),  // L154
     gb.date('regDate', 90, '등록일'),  // L155
     gb.date('effectDate', 90, '시행일'),  // L156
     gb.textCenter('regEmpName', 80, '등록자'),  // L157
     gb.textCenter('statusName', 80, '상신상태'),  // L158
-    // L159 상세보기 ImageCell("Detail") → apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval — 전자결재는 다음 단계
-    iconCell<BizRelateAppr>('view', 'detailCell', 70, '상세보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    // L159 상세보기 ImageCell("Detail") L124-147 → apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → grid.unmask())
+    iconCell<BizRelateAppr>('view', 'detailCell', 70, '상세보기', row => { if (row.apprId != null) void openDetail(row.apprId); }),
   ], []);
 
   return (
@@ -104,6 +119,8 @@ export const Biz05_Lookup_RelateAppr: React.FC<Props> = ({ open, title, promoId,
           <Biz05_Lookup_RelateFile promoId={promoId} />
         </div>
       </div>
+      {/* L139 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </LookupModal>
   );
 };

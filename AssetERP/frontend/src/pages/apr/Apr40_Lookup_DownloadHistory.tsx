@@ -3,12 +3,14 @@
  * AS-IS: myApp/client/vi/apr/Apr40_Lookup_DownloadHistory.java (180줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L56-91: 1000×500 모달 "다운로드 기록", 툴바(기간 · 검색 300 · [조회]) + 그리드(체크박스 단일) + 페이징 툴바(50) + [닫기]
  * 1단계(F01~F08과 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Space, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprDownloadHistory } from '@/types/apr';
 import { Button } from '@/components/button';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
@@ -67,11 +69,13 @@ export const Apr40_Lookup_DownloadHistory: React.FC<Props> = ({ open, onClose })
   }, [open]);
 
   // buildGrid() L127-150 (체크박스 단일 선택)
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     gb.textCenter('regDateString', 200, '다운일시'),  // L142
     // L130-141 actionCell(View) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback)
-    // [L130 생략] 편집창은 다음 단계
-    iconCell<AprDownloadHistory>('view', 'actionCell', 30, ' ', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprDownloadHistory>('view', 'actionCell', 30, ' ', row => setViewApprId(row.apprId)),
     gb.text('title', 550, '문서명'),  // L144
     gb.textCenter('personName', 100, '사원명'),  // L145
   ], []);
@@ -115,6 +119,8 @@ export const Apr40_Lookup_DownloadHistory: React.FC<Props> = ({ open, onClose })
         />
       </div>
       <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={getPaging} />
+      {/* L130-141 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </LookupModal>
   );
 };

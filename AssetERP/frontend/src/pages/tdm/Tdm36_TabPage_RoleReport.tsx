@@ -4,10 +4,13 @@
  * 생성자 L55-69: center = 툴바([조회]) + 첨부 목록 SingleGrid(첨부의 종류·내용·보기·문서)
  * [E2 생략] updateButton[상신].Select (L78-83): 본문이 비어 있고 컬럼·툴바에 연결되지 않은 버튼이라 만들지 않는다(도달 불가)
  * 다음 단계: 보기(viewRd·downloadRd — RD 연동 없음, 안내)·문서(ApprCallbackResult·Apr01_Edit_ApprDoc — 전자결재, 안내). 문서 열은 결재상태 30(완료)에만 보이므로 viewFile만 쓰인다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';
 import { errorMessage } from '@/api/client';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { fileApi } from '@/api/file';
 import { tdmApi } from '@/api/tdm';
 import { FileInfo } from '@/types/sys';
@@ -76,11 +79,24 @@ export const Tdm36_TabPage_RoleReport: React.FC<Props> = ({ roleReport, nonce })
     }
   };
 
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // 문서 (actionCell02 L106-137): 결재상태 10·20·30이면 viewFile(), 아니면 ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval (결재 ID 없으면 "해당문서의 열람권한이 없습니다")
   const viewAppr = (row: TdmRoleReportAttach) => {
     if (row.relateApprStatusCode && APPR_SENT.includes(row.relateApprStatusCode)) { void openViewFile(row); return; }
-    // [E생략] ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval: 전자결재는 다른 도메인 — 다음 단계 (문서 열은 결재상태 30에만 보여 이 길은 닿지 않는다)
-    message.info('전자결재 문서 보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다');
+    // ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval (문서 열은 결재상태 30에만 보여 이 길은 닿지 않는다)
+    if (row.relateApprId == null) message.info('해당문서의 열람권한이 없습니다');
+    else void openPermitted(row.relateApprId);
   };
 
   // buildGrid() L86-148
@@ -106,6 +122,8 @@ export const Tdm36_TabPage_RoleReport: React.FC<Props> = ({ roleReport, nonce })
         />
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* actionCell02 L106-137 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

@@ -5,6 +5,7 @@
  *   West(680, 분할·최대 1000, 여백 -2·0·20·20) = 집행결의서 그리드 / Center(여백 -2·20·20·-2) = 지출내역 그리드. 열 때 retrieve()
  * 조회가 끝나면 첫 행을 고르고 아래(오른쪽) 상세를 읽는다. 행을 누르면 그 행의 settleApprId로 상세를 다시 읽는다
  * 1단계: 그리드 [집행결의서]·[지출결의서] 문서보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(lookupAppr)은 다른 도메인(apr)이라 다음 단계 — 상신문서 유무 안내까지 하고 편집창 자리에 안내만 띄운다
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 스타일: GGH (제안 2026-10-30 — 원본이 좌우 분할이라 GG(상하 분할)와 다르다. docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 3개지만 원본에 없어 넣지 않는다
  */
@@ -14,6 +15,8 @@ import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { PayExpenseSettleAppr, PayExpenseSettleApprRow } from '@/types/pay';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -24,20 +27,21 @@ const gbMaster = gbFor<PayExpenseSettleAppr>();
 const gbDetail = gbFor<PayExpenseSettleApprRow>();
 const FORMAT = 'YYYY-MM-DD';
 
-// lookupAppr() L233-262: 상신문서가 없으면 "상신문서가 존재하지 않습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval — 다른 도메인 컴포넌트라 다음 단계
-const viewAppr = (apprId: number | null) => {
+// lookupAppr(apprId) L233-262: apr.Apr01_Appr.selectById가 0건이면 "상신문서가 존재하지 않습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → unmask())
+//   open은 화면이 넘기는 문서 창 열기(목록 상신 ID가 없을 때도 원본은 selectById가 0건이라 같은 문구)
+const viewAppr = (apprId: number | null, open: (apprId: number) => void) => {
   if (apprId == null) { message.warning('상신문서가 존재하지 않습니다'); return; }
-  message.info('전자결재 문서창(Apr01_Edit_ApprDoc)은 다음 단계에서 변환합니다.');
+  open(apprId);
 };
 
 /** buildGrid() L152-171: 단일 선택, 집행결의서 문서보기 아이콘(actionCell) */
-const buildGrid = () => [
+const buildGrid = (open: (apprId: number) => void) => [
   gbMaster.date('settleDate', 90, '지급일자'),  // L163
   gbMaster.text('settleApprTitle', 200, '상신제목'),
   gbMaster.textCenter('count', 70, '지급건수'),
   gbMaster.long('settleAmt', 100, '지급총액'),
   gbMaster.textCenter('settleApprStatusName', 80, '결재상태'),
-  iconCell<PayExpenseSettleAppr>('view', 'actionCell', 80, '집행결의서', row => viewAppr(row.settleApprId)),  // L168 addCell
+  iconCell<PayExpenseSettleAppr>('view', 'actionCell', 80, '집행결의서', row => viewAppr(row.settleApprId, open)),  // L168 addCell
 ];
 
 export const Pay50_Tab_ExpensePay: React.FC = () => {
@@ -88,7 +92,20 @@ export const Pay50_Tab_ExpensePay: React.FC = () => {
 
   useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const columnDefs = useMemo(buildGrid, []);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // apr.Apr01_Appr.selectById → 0건이면 "상신문서가 존재하지 않습니다" (TOBE: 문서 상세 조회가 DATA_NOT_FOUND)
+  const openDetail = async (apprId: number) => {
+    try {
+      await aprDetailApi.getDetail(apprId);
+      setViewApprId(apprId);
+    } catch (err: any) {
+      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.warning('상신문서가 존재하지 않습니다');
+      else message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  const columnDefs = useMemo(() => buildGrid(id => void openDetail(id)), []);
   // buildDetailGrid() L173-193: 지출결의서 문서보기 아이콘(actionCell)
   const detailColumnDefs = useMemo(() => [
     gbDetail.date('occDate', 90, '발생일자'),  // L184
@@ -97,7 +114,7 @@ export const Pay50_Tab_ExpensePay: React.FC = () => {
     gbDetail.text('corpName', 130, '지출처'),  // [E4] detailGrid.CellDoubleClick [cellIndex 4] (L140) → Sys15_Lookup_TelInfo.view
     gbDetail.long('settleAmt', 100, '지급금액'),
     gbDetail.textCenter('payMethodName', 80, '지급방법'),
-    iconCell<PayExpenseSettleApprRow>('view', 'actionCell', 80, '지출결의서', row => viewAppr(row.expenseApprId)),  // L190 addCell
+    iconCell<PayExpenseSettleApprRow>('view', 'actionCell', 80, '지출결의서', row => viewAppr(row.expenseApprId, id => void openDetail(id))),  // L190 addCell
   ], []);
 
   return (
@@ -142,6 +159,8 @@ export const Pay50_Tab_ExpensePay: React.FC = () => {
         </Splitter.Panel>
       </Splitter>
       <Sys15_Lookup_TelInfo open={telRow != null} tel={telRow?.tel ?? null} addr={telRow?.addr ?? null} onClose={() => setTelRow(null)} />
+      {/* lookupAppr() L251-257 retrieveApproval */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

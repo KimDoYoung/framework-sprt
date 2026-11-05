@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr00_Tab_FileList.java (278줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L89-102: 위 툴바(등록기간 · 문서분류(300) · 검색(330) · [조회] [다운로드]) + 문서 첨부파일 그리드(체크박스 다중)
  * 1단계(F01~F07과 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 원본에 초기화가 없어 UX-02는 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -10,6 +11,7 @@ import { DatePicker, Modal, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { fileApi } from '@/api/file';
 import { DcrDocFile } from '@/types/dcr';
 import { Button } from '@/components/button';
@@ -83,10 +85,12 @@ export const Dcr00_Tab_FileList: React.FC = () => {
   };
 
   // buildGrid() L173-200 (체크박스 다중 선택)
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
   const columnDefs = useMemo(() => [
     // L174-190 actionCell(View) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback)
-    // [L174 생략] 편집창은 다음 단계
-    iconCell<DcrDocFile>('view', 'actionCell', 40, ' ', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<DcrDocFile>('view', 'actionCell', 40, ' ', row => setViewApprId(row.apprId)),
     gb.text('classTreeName', 350, '문서분류'),  // L191
     gb.date('regDate', 100, '등록일'),  // L192
     gb.textCenter('inoutName', 70, '문서구분'),  // L193
@@ -140,6 +144,8 @@ export const Dcr00_Tab_FileList: React.FC = () => {
         onAll={() => { setClassTreeId(null); setClassTreeName(ALL_TEXT); }}
         onClose={() => setClassOpen(false)}
       />
+      {/* L174 retrieveApproval(apprModel, false, callback → grid.unmask()) */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };
