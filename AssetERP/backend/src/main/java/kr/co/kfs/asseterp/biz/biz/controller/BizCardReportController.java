@@ -7,7 +7,10 @@ import kr.co.kfs.asseterp.biz.biz.service.BizCardReportService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /** 법인카드 현황 (AS-IS Biz01_Tab_CardReport → server/sys/Sys99_Print.insertCardReport·2·3) */
 @RestController

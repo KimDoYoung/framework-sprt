@@ -5,7 +5,6 @@ import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.time.LocalDate;
 
 /** AS-IS sys99_print.xml(deleteByPersonId·insert·updateDepositOutData) — 일일자금관리 RD 출력 자료(U01) */
 @Mapper

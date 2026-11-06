@@ -66,10 +66,10 @@ public interface FndOprMapper {
     int deleteAppr(@Param("apprId") Long apprId);
 
     /** AS-IS fnd30_opr.updateApprId — 결재문서 ID 기록 (V38 A26·A38) */
-    int updateApprId(@org.apache.ibatis.annotations.Param("companyId") Long companyId, @org.apache.ibatis.annotations.Param("oprId") Long oprId,
-                     @org.apache.ibatis.annotations.Param("apprId") Long apprId);
+    int updateApprId(@Param("companyId") Long companyId, @Param("oprId") Long oprId,
+                     @Param("apprId") Long apprId);
 
     /** AS-IS apr01_appr.insertApprDel — 반려 문서를 폐기문서(apr99)로 보관. 이 회사 문서만 */
-    int insertApprDel(@org.apache.ibatis.annotations.Param("companyId") Long companyId, @org.apache.ibatis.annotations.Param("apprId") Long apprId,
-                      @org.apache.ibatis.annotations.Param("empId") Long empId);
+    int insertApprDel(@Param("companyId") Long companyId, @Param("apprId") Long apprId,
+                      @Param("empId") Long empId);
 }

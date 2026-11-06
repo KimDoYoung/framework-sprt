@@ -2,7 +2,6 @@ package kr.co.kfs.asseterp.biz.apr.mapper;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupSaveReq;
-import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

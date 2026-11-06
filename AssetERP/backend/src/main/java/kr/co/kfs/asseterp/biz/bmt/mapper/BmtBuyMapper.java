@@ -33,6 +33,6 @@ public interface BmtBuyMapper {
     int deleteByIds(@Param("companyId") Long companyId, @Param("buyIds") List<Long> buyIds);
 
     /** AS-IS Bmt01_Tab_Buy.updateApprId → bmt.Bmt01_Buy.update(apprId만 바뀐 행) — 결재문서 ID 기록 (V38 A04) */
-    int updateApprId(@org.apache.ibatis.annotations.Param("companyId") Long companyId, @org.apache.ibatis.annotations.Param("buyId") Long buyId,
-                     @org.apache.ibatis.annotations.Param("apprId") Long apprId);
+    int updateApprId(@Param("companyId") Long companyId, @Param("buyId") Long buyId,
+                     @Param("apprId") Long apprId);
 }

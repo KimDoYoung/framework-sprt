@@ -29,9 +29,9 @@ public interface ScmDevProgramMapper {
     int updateRegDate(@Param("programId") Long programId, @Param("regDate") java.time.LocalDateTime regDate);
 
     /** scm13_dev_program 저장 (UpdateDataModel) */
-    int updateUseYn(@org.apache.ibatis.annotations.Param("programId") Long programId, @org.apache.ibatis.annotations.Param("useYn") String useYn);
+    int updateUseYn(@Param("programId") Long programId, @Param("useYn") String useYn);
 
-    int deleteDevProgram(@org.apache.ibatis.annotations.Param("devProgramId") Long devProgramId);
+    int deleteDevProgram(@Param("devProgramId") Long devProgramId);
 
     int upsertDevProgram(@Param("devProgramId") long devProgramId, @Param("devId") Long devId, @Param("programId") Long programId,
                          @Param("deployTgtYn") String deployTgtYn, @Param("deploySeq") Long deploySeq);

@@ -1,6 +1,20 @@
 package kr.co.kfs.asseterp.biz.biz.mapper;
 
-import kr.co.kfs.asseterp.biz.biz.dto.*;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContCorpRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContDualFundReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContDualFundRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContEachAddrRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContEachReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContEachRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContFeeInfoRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContHoldFeeRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContRelateApprReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContRelateApprRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContSaveReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContShareReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContShareRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContWithCorpReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizContWithCorpRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

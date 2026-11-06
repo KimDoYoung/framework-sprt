@@ -7,7 +7,13 @@ import kr.co.kfs.asseterp.biz.biz.service.BizPersonService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -43,7 +49,7 @@ public class BizPersonController {
         return ApiResponse.ok(service.addTargets(principal, req.promoId(), req.targets()));
     }
 
-    public record TargetsReq(Long promoId, List<kr.co.kfs.asseterp.biz.biz.service.BizPersonService.TargetReq> targets) {
+    public record TargetsReq(Long promoId, List<BizPersonService.TargetReq> targets) {
     }
 
     /** AS-IS biz.Biz02_Person.insertEmpId → 새로 넣은 건수 */

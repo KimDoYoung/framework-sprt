@@ -1,6 +1,16 @@
 package kr.co.kfs.asseterp.biz.biz.mapper;
 
-import kr.co.kfs.asseterp.biz.biz.dto.*;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeApprRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeCalc;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDetailRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDtlRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRow;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeSaveReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeContCorpRow;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeHistoryRow;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeInfoRow;
+import kr.co.kfs.asseterp.biz.biz.dto.BizFeeWithCorpRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

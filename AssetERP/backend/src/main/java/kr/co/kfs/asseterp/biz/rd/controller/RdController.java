@@ -7,7 +7,10 @@ import kr.co.kfs.asseterp.biz.rd.service.RdService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /** RD 호출 주소 발급 (AS-IS RDUtil → 서버). 브라우저는 받은 주소로 RD 서버에 직접 접속한다 */
 @RestController

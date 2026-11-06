@@ -140,10 +140,8 @@ public class TdmCheckManlService {
             if ("1".equals(req.checkResultCode())) { // (1:적정)인 경우
                 // 증빙파일 필수등록 체크여부가 'true'이면 증빙자료 필수
                 CheckCompanySetup setup = mapper.selectCompanySetupByDate(manl.companyId(), stdDate);
-                if (setup == null || Boolean.TRUE.equals(setup.evidFileCheckYn())) {
-                    if (mapper.countEvidFile(chckManlId) == 0) {
-                        throw fail("증빙자료가 존재하지 않습니다");
-                    }
+                if ((setup == null || Boolean.TRUE.equals(setup.evidFileCheckYn())) && mapper.countEvidFile(chckManlId) == 0) {
+                    throw fail("증빙자료가 존재하지 않습니다");
                 }
                 // 체크의견 글자수 체크
                 checkCmntLimit(manl.companyId(), req.checkDate(), req.checkCmnt());

@@ -8,7 +8,12 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /** 내규-관리그룹 연결 (AS-IS Icr01_Lookup_Share → server/icr/Icr05_RelateManager) — H09. 관리그룹 목록·공유는 `ics/managers` */
 @RestController

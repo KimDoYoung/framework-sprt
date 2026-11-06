@@ -3,7 +3,6 @@ package kr.co.kfs.asseterp.biz.frm.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmCalendarEventRes;
-import kr.co.kfs.asseterp.biz.frm.dto.FrmCalendarRes;
 import kr.co.kfs.asseterp.biz.frm.mapper.FrmListMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

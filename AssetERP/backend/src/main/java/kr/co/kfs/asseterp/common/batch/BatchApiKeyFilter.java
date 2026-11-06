@@ -94,10 +94,7 @@ public class BatchApiKeyFilter extends OncePerRequestFilter {
 
     /** 타이밍 공격을 피하려고 고정 시간 비교를 쓴다 */
     private boolean keyMatches(String given) {
-        if (isBlank(given)) {
-            return false;
-        }
-        return MessageDigest.isEqual(
+        return !isBlank(given) && MessageDigest.isEqual(
                 given.getBytes(StandardCharsets.UTF_8),
                 properties.apiKey().getBytes(StandardCharsets.UTF_8));
     }

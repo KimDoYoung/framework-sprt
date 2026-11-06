@@ -246,11 +246,9 @@ public class CrdDataUploadService {
         if (cell.getCellType() == CellType.NUMERIC) {
             return (long) cell.getNumericCellValue();
         }
-        if (cell.getCellType() == CellType.STRING) {
-            if (cell.getStringCellValue().length() > 0) {
-                String s = cell.getStringCellValue().replaceAll("[,원]", "").trim();
-                return isNumber(s) ? Long.parseLong(s) : null;
-            }
+        if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().length() > 0) {
+            String s = cell.getStringCellValue().replaceAll("[,원]", "").trim();
+            return isNumber(s) ? Long.parseLong(s) : null;
         }
         return null;
     }

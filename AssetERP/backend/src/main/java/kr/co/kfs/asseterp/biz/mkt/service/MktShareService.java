@@ -36,10 +36,8 @@ public class MktShareService {
         }
         if (req.rows() != null) {
             for (MktShareRes row : req.rows()) {
-                if (row.shareId() != null && row.shareId() > 0) {
-                    if (mapper.updateOne(user.getCompanyId(), row) > 0) {
-                        continue;
-                    }
+                if (row.shareId() != null && row.shareId() > 0 && mapper.updateOne(user.getCompanyId(), row) > 0) {
+                    continue;
                 }
                 Long id = row.shareId() != null && row.shareId() > 0 ? row.shareId() : mapper.selectNextId();
                 MktShareRes r = new MktShareRes(id, req.parentId(), row.shareCode(), row.personId(), row.orgId(), null, null, null);
