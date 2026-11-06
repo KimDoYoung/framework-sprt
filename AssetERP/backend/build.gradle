@@ -74,6 +74,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // 기본 512MB 에서는 DB 시험의 Spring 컨텍스트(매퍼 수백 개)가 캐시에 쌓여 Full GC 로 멈춘다(2026-11-06)
+    maxHeapSize = '2g'
 }
 
 bootWar {
