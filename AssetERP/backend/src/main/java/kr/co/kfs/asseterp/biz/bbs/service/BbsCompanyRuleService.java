@@ -12,6 +12,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysCompanyMapper;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper;
 import kr.co.kfs.asseterp.common.config.properties.UploadProperties;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,6 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
@@ -266,32 +265,15 @@ public class BbsCompanyRuleService {
         if (user.getRoles() == null || !user.getRoles().contains("ROLE_ADMIN")) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
         DataFormatter formatter = new DataFormatter();
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-            Sheet sheet = wb.getSheetAt(0);
-            int count = 0;
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
-                }
-                if (row.getCell(0) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
-                }
-                mapper.excelInsert(new CompanyRuleParam(null, user.getCompanyId(), formatter.formatCellValue(row.getCell(0)).trim(),
-                        formatter.formatCellValue(row.getCell(4)).trim(), null, null, null, cellDate(row.getCell(2), formatter),
-                        cellLong(row.getCell(3), formatter), true, formatter.formatCellValue(row.getCell(1)).trim(), null, user.getName()));
-                count++;
+        return ExcelCells.forEachRow(file, (wb, row, i) -> {
+            if (row.getCell(0) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
             }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
+            mapper.excelInsert(new CompanyRuleParam(null, user.getCompanyId(), formatter.formatCellValue(row.getCell(0)).trim(),
+                    formatter.formatCellValue(row.getCell(4)).trim(), null, null, null, cellDate(row.getCell(2), formatter),
+                    cellLong(row.getCell(3), formatter), true, formatter.formatCellValue(row.getCell(1)).trim(), null, user.getName()));
+        });
     }
 
     /** ExcelUpload.getCellDate — 날짜 서식 셀 또는 yyyy-MM-dd·yyyy.MM.dd·yyyyMMdd 글자 */

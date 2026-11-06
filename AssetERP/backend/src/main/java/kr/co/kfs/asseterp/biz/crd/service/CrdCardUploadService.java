@@ -7,15 +7,10 @@ import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -43,39 +38,22 @@ public class CrdCardUploadService {
      */
     @Transactional
     public int upload(UserPrincipal user, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
         Long companyId = user.getCompanyId();
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-            Sheet sheet = wb.getSheetAt(0);
-            int count = 0;
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
-                }
-                if (row.getCell(0) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 시작일자는 필수입력입니다.");
-                }
-                LocalDate startDate = cellDate(row.getCell(0));
-                String cardName = row.getCell(1) == null ? "" : cellString(row.getCell(1));
-                if (row.getCell(2) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 카드번호는 필수입력입니다.");
-                }
-                String cardNoSlip = cellString(row.getCell(2));
-                String cardNo = row.getCell(3) == null ? cellString(row.getCell(2)) : cellString(row.getCell(3));
-                String bankCode = row.getCell(4) == null ? "" : cellString(row.getCell(4));
-                String note = row.getCell(5) == null ? "" : cellString(row.getCell(5));
-                mapper.excelInsertCard(mapper.selectNextId(), companyId, bankCode, cardName, cardNoSlip, cardNo, startDate, note);
-                count++;
+        return ExcelCells.forEachRow(file, (wb, row, i) -> {
+            if (row.getCell(0) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 시작일자는 필수입력입니다.");
             }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
+            LocalDate startDate = cellDate(row.getCell(0));
+            String cardName = row.getCell(1) == null ? "" : cellString(row.getCell(1));
+            if (row.getCell(2) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 카드번호는 필수입력입니다.");
+            }
+            String cardNoSlip = cellString(row.getCell(2));
+            String cardNo = row.getCell(3) == null ? cellString(row.getCell(2)) : cellString(row.getCell(3));
+            String bankCode = row.getCell(4) == null ? "" : cellString(row.getCell(4));
+            String note = row.getCell(5) == null ? "" : cellString(row.getCell(5));
+            mapper.excelInsertCard(mapper.selectNextId(), companyId, bankCode, cardName, cardNoSlip, cardNo, startDate, note);
+        });
     }
 
     /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */

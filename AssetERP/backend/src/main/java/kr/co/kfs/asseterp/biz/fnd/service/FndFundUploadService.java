@@ -6,15 +6,10 @@ import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundUploadMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.time.LocalDate;
 import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
@@ -40,58 +35,41 @@ public class FndFundUploadService {
      */
     @Transactional
     public int upload(UserPrincipal user, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
         Long companyId = user.getCompanyId();
         LocalDate toDay = LocalDate.now();
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-            Sheet sheet = wb.getSheetAt(0);
-            int count = 0;
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
-                }
-                if (row.getCell(0) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
-                }
-                String fundCode = ExcelCells.string(row.getCell(0));
-                String closeCell = ExcelCells.string(row.getCell(14));
-                String closeYn = "Y".equalsIgnoreCase(closeCell) ? "true" : "false";
-
-                String officeWorkCode = ExcelCells.string(row.getCell(18));
-                if (officeWorkCode != null) {
-                    String found = mapper.selectOfficeWorkCodeByKofia(companyId, officeWorkCode);
-                    if (found == null) {
-                        throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 사무수탁사 협회코드(" + officeWorkCode + ")를 찾을 수 없습니다.");
-                    }
-                    officeWorkCode = found;
-                }
-                String consignmentCode = mapper.selectCorpCode("1", ExcelCells.string(row.getCell(19)), "1", officeWorkCode);
-
-                Long fundCodeId = mapper.selectFundCodeId(companyId, fundCode);
-                LocalDate startDate = ExcelCells.date(row.getCell(9));
-                LocalDate endDate = ExcelCells.date(row.getCell(13));
-                if (fundCodeId == null) {
-                    fundCodeId = mapper.selectNextId();
-                    mapper.excelInsertFund(new FundExcelRow(fundCodeId, null, companyId, fundCode, startDate, endDate, closeYn,
-                            null, null, null, null, null, null, null, null, null, null, null, null, null, null));
-                }
-                FundExcelRow info = new FundExcelRow(fundCodeId, mapper.selectNextId(), companyId, fundCode, startDate, endDate, closeYn,
-                        toDay, ExcelCells.string(row.getCell(5)), ExcelCells.string(row.getCell(4)), ExcelCells.string(row.getCell(1)),
-                        ExcelCells.string(row.getCell(21)), ExcelCells.string(row.getCell(20)), ExcelCells.string(row.getCell(22)), consignmentCode,
-                        officeWorkCode, ExcelCells.string(row.getCell(15)), ExcelCells.string(row.getCell(16)), ExcelCells.string(row.getCell(17)),
-                        ExcelCells.string(row.getCell(2)), ExcelCells.string(row.getCell(3)));
-                mapper.excelDeleteInfo(fundCodeId, toDay);
-                mapper.excelInsertInfo(info);
-                count++;
+        return ExcelCells.forEachRow(file, (wb, row, i) -> {
+            if (row.getCell(0) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
             }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
+            String fundCode = ExcelCells.string(row.getCell(0));
+            String closeCell = ExcelCells.string(row.getCell(14));
+            String closeYn = "Y".equalsIgnoreCase(closeCell) ? "true" : "false";
+
+            String officeWorkCode = ExcelCells.string(row.getCell(18));
+            if (officeWorkCode != null) {
+                String found = mapper.selectOfficeWorkCodeByKofia(companyId, officeWorkCode);
+                if (found == null) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 사무수탁사 협회코드(" + officeWorkCode + ")를 찾을 수 없습니다.");
+                }
+                officeWorkCode = found;
+            }
+            String consignmentCode = mapper.selectCorpCode("1", ExcelCells.string(row.getCell(19)), "1", officeWorkCode);
+
+            Long fundCodeId = mapper.selectFundCodeId(companyId, fundCode);
+            LocalDate startDate = ExcelCells.date(row.getCell(9));
+            LocalDate endDate = ExcelCells.date(row.getCell(13));
+            if (fundCodeId == null) {
+                fundCodeId = mapper.selectNextId();
+                mapper.excelInsertFund(new FundExcelRow(fundCodeId, null, companyId, fundCode, startDate, endDate, closeYn,
+                        null, null, null, null, null, null, null, null, null, null, null, null, null, null));
+            }
+            FundExcelRow info = new FundExcelRow(fundCodeId, mapper.selectNextId(), companyId, fundCode, startDate, endDate, closeYn,
+                    toDay, ExcelCells.string(row.getCell(5)), ExcelCells.string(row.getCell(4)), ExcelCells.string(row.getCell(1)),
+                    ExcelCells.string(row.getCell(21)), ExcelCells.string(row.getCell(20)), ExcelCells.string(row.getCell(22)), consignmentCode,
+                    officeWorkCode, ExcelCells.string(row.getCell(15)), ExcelCells.string(row.getCell(16)), ExcelCells.string(row.getCell(17)),
+                    ExcelCells.string(row.getCell(2)), ExcelCells.string(row.getCell(3)));
+            mapper.excelDeleteInfo(fundCodeId, toDay);
+            mapper.excelInsertInfo(info);
+        });
     }
 }

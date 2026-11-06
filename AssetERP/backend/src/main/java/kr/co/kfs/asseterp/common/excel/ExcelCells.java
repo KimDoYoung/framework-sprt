@@ -10,7 +10,12 @@ import java.util.Date;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.web.multipart.MultipartFile;
 
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -32,6 +37,41 @@ public final class ExcelCells {
             return in.readAllBytes();
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
+        }
+    }
+
+    /** forEachRow 가 한 행마다 부르는 처리. index 는 0부터 센 행 번호(첫 데이터 행 = 1) */
+    @FunctionalInterface
+    public interface RowHandler {
+        void accept(Workbook wb, Row row, int index) throws Exception;
+    }
+
+    /**
+     * 업로드 엑셀의 첫 시트를 2번째 행(index 1)부터 한 행씩 처리하고 처리한 행 수를 돌려준다(2026-11-06 정적분석 C).
+     * 파일이 없거나 비면 "등록할 파일이 전달되지 않았습니다.", 행을 못 읽으면 "{i}행의 자료을 읽을 수 없습니다. ",
+     * 처리 중 BusinessException 은 그대로, 그 밖의 예외는 INVALID_INPUT 으로 바꿔 던진다(옛 화면별 복사본과 같은 문구).
+     * 첫 칸이 비었을 때의 문구는 화면마다 달라 처리(handler)가 직접 검사한다.
+     */
+    public static int forEachRow(MultipartFile file, RowHandler handler) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
+        }
+        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
+            Sheet sheet = wb.getSheetAt(0);
+            int count = 0;
+            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
+                }
+                handler.accept(wb, row, i);
+                count++;
+            }
+            return count;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 

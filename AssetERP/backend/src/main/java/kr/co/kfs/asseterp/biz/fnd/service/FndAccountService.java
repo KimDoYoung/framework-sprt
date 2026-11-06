@@ -10,15 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
@@ -87,64 +82,47 @@ public class FndAccountService {
      */
     @Transactional
     public int upload(UserPrincipal user, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
         Long companyId = user.getCompanyId();
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-            Sheet sheet = wb.getSheetAt(0);
-            int count = 0;
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
-                }
-                if (row.getCell(0) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
-                }
-                LocalDate setupDate = cellDate(row.getCell(0), i + 1);
-                String corpName = ExcelCells.string(row.getCell(1));
-                String branch = ExcelCells.string(row.getCell(2));
-                String accountName1 = ExcelCells.string(row.getCell(3));
-                String accountName2 = ExcelCells.string(row.getCell(4));
-                String accountName = ExcelCells.string(row.getCell(5));
-                String accountNo = ExcelCells.string(row.getCell(6));
-                String bankCorpName = ExcelCells.string(row.getCell(7));
-                String bankLinkNo = ExcelCells.string(row.getCell(8));
-                String accountStateName = ExcelCells.string(row.getCell(9));
-                String ipoOutName = ExcelCells.string(row.getCell(10));
-                String managerTel = ExcelCells.string(row.getCell(11));
-                String note = ExcelCells.string(row.getCell(12));
-
-                Long corpId = null;
-                if (corpName != null) {
-                    corpId = mapper.selectCorpIdByName(companyId, corpName);
-                    if (corpId == null) {
-                        throw new BusinessException(ErrorCode.INVALID_INPUT, "[" + corpName + "] 해당하는 증권사가 존재하지 않습니다.");
-                    }
-                }
-                Long bankCorpId = null;
-                if (bankCorpName != null) {
-                    bankCorpId = mapper.selectCorpIdByName(companyId, bankCorpName);
-                    if (bankCorpId == null) {
-                        throw new BusinessException(ErrorCode.INVALID_INPUT, "[" + bankCorpName + "] 해당하는 연계은행이 존재하지 않습니다.");
-                    }
-                }
-                String accountCode1 = codeByName(companyId, "Fnd32Code1", accountName1, setupDate, "[%s] 해당하는 운용대상이 존재하지 않습니다.");
-                String accountCode2 = codeByName(companyId, "Fnd32Code2", accountName2, setupDate, "[%s]해당하는 구분이 존재하지 않습니다.");
-                String accountStateCode = codeByName(companyId, "AccountStateCode", accountStateName, setupDate, "[%s]해당하는 상태가 존재하지 않습니다.");
-                String ipoOutCode = codeByName(companyId, "IpoOutCode", ipoOutName, setupDate, "[%s]해당하는 상장일출고가 존재하지 않습니다.");
-
-                mapper.insertAccount(mapper.selectNextId(), companyId, new IpoAccountSaveReq(null, setupDate, corpId, branch, accountCode1,
-                        accountCode2, accountName, accountNo, bankCorpId, bankLinkNo, accountStateCode, ipoOutCode, managerTel, note));
-                count++;
+        return ExcelCells.forEachRow(file, (wb, row, i) -> {
+            if (row.getCell(0) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
             }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
+            LocalDate setupDate = cellDate(row.getCell(0), i + 1);
+            String corpName = ExcelCells.string(row.getCell(1));
+            String branch = ExcelCells.string(row.getCell(2));
+            String accountName1 = ExcelCells.string(row.getCell(3));
+            String accountName2 = ExcelCells.string(row.getCell(4));
+            String accountName = ExcelCells.string(row.getCell(5));
+            String accountNo = ExcelCells.string(row.getCell(6));
+            String bankCorpName = ExcelCells.string(row.getCell(7));
+            String bankLinkNo = ExcelCells.string(row.getCell(8));
+            String accountStateName = ExcelCells.string(row.getCell(9));
+            String ipoOutName = ExcelCells.string(row.getCell(10));
+            String managerTel = ExcelCells.string(row.getCell(11));
+            String note = ExcelCells.string(row.getCell(12));
+
+            Long corpId = null;
+            if (corpName != null) {
+                corpId = mapper.selectCorpIdByName(companyId, corpName);
+                if (corpId == null) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, "[" + corpName + "] 해당하는 증권사가 존재하지 않습니다.");
+                }
+            }
+            Long bankCorpId = null;
+            if (bankCorpName != null) {
+                bankCorpId = mapper.selectCorpIdByName(companyId, bankCorpName);
+                if (bankCorpId == null) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, "[" + bankCorpName + "] 해당하는 연계은행이 존재하지 않습니다.");
+                }
+            }
+            String accountCode1 = codeByName(companyId, "Fnd32Code1", accountName1, setupDate, "[%s] 해당하는 운용대상이 존재하지 않습니다.");
+            String accountCode2 = codeByName(companyId, "Fnd32Code2", accountName2, setupDate, "[%s]해당하는 구분이 존재하지 않습니다.");
+            String accountStateCode = codeByName(companyId, "AccountStateCode", accountStateName, setupDate, "[%s]해당하는 상태가 존재하지 않습니다.");
+            String ipoOutCode = codeByName(companyId, "IpoOutCode", ipoOutName, setupDate, "[%s]해당하는 상장일출고가 존재하지 않습니다.");
+
+            mapper.insertAccount(mapper.selectNextId(), companyId, new IpoAccountSaveReq(null, setupDate, corpId, branch, accountCode1,
+                    accountCode2, accountName, accountNo, bankCorpId, bankLinkNo, accountStateCode, ipoOutCode, managerTel, note));
+        });
     }
 
     private String codeByName(Long companyId, String kindCode, String name, LocalDate applyDate, String notFoundFormat) {

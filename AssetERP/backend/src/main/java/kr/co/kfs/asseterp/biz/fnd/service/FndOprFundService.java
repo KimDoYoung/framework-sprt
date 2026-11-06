@@ -14,10 +14,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,54 +111,37 @@ public class FndOprFundService {
         if (!subscription) {
             FndOprService.checkNotInAppr(opr);
         }
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
         Long companyId = user.getCompanyId();
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-            Sheet sheet = wb.getSheetAt(0);
-            int count = 0;
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, i + "행의 자료을 읽을 수 없습니다. ");
-                }
-                if (row.getCell(0) == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
-                }
-                String fundCode = ExcelCells.string(row.getCell(0));
-                Long qty = cellLong(wb, row.getCell(2));
-                // 공모주청약 펀드배분: 코드·펀드명·배정수량·단가·배정금액·수수료·납입금액·구분 / 수요예측 신청: 코드·펀드명·신청수량·신청금액·구분
-                Long price = subscription ? cellLong(wb, row.getCell(3)) : null;
-                Long contAmt = subscription ? cellLong(wb, row.getCell(4)) : null;
-                Long fee = subscription ? cellLong(wb, row.getCell(5)) : null;
-                Long settleAmt = cellLong(wb, row.getCell(subscription ? 6 : 3));
-                String fundAdviceType = ExcelCells.string(row.getCell(subscription ? 7 : 4));
-                if (fundAdviceType == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 운용펀드/일임(자문) 구분이 없습니다.");
-                }
-                Long fundId = null;
-                if (qty != null || (subscription ? price : settleAmt) != null) {
-                    fundId = "1".equals(fundAdviceType)
-                            ? mapper.selectFundIdByCode(companyId, fundCode)
-                            : mapper.selectAccountIdByManageCode(companyId, fundCode);
-                    if (fundId == null) {
-                        throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 펀드코드 [" + fundCode + "]를 찾을 수 없습니다.");
-                    }
-                }
-                if (subscription) {
-                    mapper.excelInsertSub(mapper.selectNextId(), oprId, fundId, price, qty, contAmt, fee, settleAmt, fundAdviceType);
-                } else {
-                    mapper.excelInsert(mapper.selectNextId(), oprId, fundId, qty, settleAmt, fundAdviceType);
-                }
-                count++;
+        return ExcelCells.forEachRow(file, (wb, row, i) -> {
+            if (row.getCell(0) == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
             }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
+            String fundCode = ExcelCells.string(row.getCell(0));
+            Long qty = cellLong(wb, row.getCell(2));
+            // 공모주청약 펀드배분: 코드·펀드명·배정수량·단가·배정금액·수수료·납입금액·구분 / 수요예측 신청: 코드·펀드명·신청수량·신청금액·구분
+            Long price = subscription ? cellLong(wb, row.getCell(3)) : null;
+            Long contAmt = subscription ? cellLong(wb, row.getCell(4)) : null;
+            Long fee = subscription ? cellLong(wb, row.getCell(5)) : null;
+            Long settleAmt = cellLong(wb, row.getCell(subscription ? 6 : 3));
+            String fundAdviceType = ExcelCells.string(row.getCell(subscription ? 7 : 4));
+            if (fundAdviceType == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 운용펀드/일임(자문) 구분이 없습니다.");
+            }
+            Long fundId = null;
+            if (qty != null || (subscription ? price : settleAmt) != null) {
+                fundId = "1".equals(fundAdviceType)
+                        ? mapper.selectFundIdByCode(companyId, fundCode)
+                        : mapper.selectAccountIdByManageCode(companyId, fundCode);
+                if (fundId == null) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 펀드코드 [" + fundCode + "]를 찾을 수 없습니다.");
+                }
+            }
+            if (subscription) {
+                mapper.excelInsertSub(mapper.selectNextId(), oprId, fundId, price, qty, contAmt, fee, settleAmt, fundAdviceType);
+            } else {
+                mapper.excelInsert(mapper.selectNextId(), oprId, fundId, qty, settleAmt, fundAdviceType);
+            }
+        });
     }
 
     private void checkEditable(UserPrincipal user, Long oprId) {
