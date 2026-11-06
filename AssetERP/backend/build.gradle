@@ -76,6 +76,10 @@ tasks.named('test') {
     useJUnitPlatform()
     // 기본 512MB 에서는 DB 시험의 Spring 컨텍스트(매퍼 수백 개)가 캐시에 쌓여 Full GC 로 멈춘다(2026-11-06)
     maxHeapSize = '2g'
+    // 캐시된 @MybatisTest 컨텍스트마다 Hikari 풀이 생겨 Postgres max_connections 를 넘긴다
+    // ("too many clients already", 2026-11-06). 시험은 연결 1~2개면 충분하다.
+    systemProperty 'spring.datasource.hikari.maximum-pool-size', '2'
+    systemProperty 'spring.datasource.hikari.minimum-idle', '0'
 }
 
 bootWar {

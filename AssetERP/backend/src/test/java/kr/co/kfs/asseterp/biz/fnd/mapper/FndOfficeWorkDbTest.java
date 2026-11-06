@@ -76,12 +76,14 @@ class FndOfficeWorkDbTest {
     @Test
     void R11_회사별_사무수탁사_조회_등록_중복검사_수정_삭제가_동작한다() {
         List<OfficeWorkCompanyRes> initial = service.searchCompany(company, "", true);
-        assertThat(initial).hasSize(11);
+        // 행 수는 DB 데이터에 따라 변하므로 고정값 대신 시작 행 수를 기준으로 증감만 본다
+        int before = initial.size();
 
         List<OfficeWorkCompanyRes> inserted = service.saveCompany(company, List.of(
                 new OfficeWorkCompanySaveReq(-1L, "ZR11", "R11사무수탁사", "KF11", "SH11", "true", "비고R11")
         ));
         OfficeWorkCompanyRes row = inserted.get(0);
+        assertThat(service.searchCompany(company, "", true)).hasSize(before + 1);
         assertThat(row.officeWorkId()).isPositive();
         assertThat(row.kofiaCode()).isEqualTo("KF11");
         assertThat(row.etcOfficeWorkCode01()).isEqualTo("SH11");
@@ -101,5 +103,6 @@ class FndOfficeWorkDbTest {
         // 삭제
         service.deleteCompany(company, List.of(row.officeWorkId()));
         assertThat(service.searchCompany(company, "ZR11", false)).isEmpty();
+        assertThat(service.searchCompany(company, "", true)).hasSize(before);
     }
 }

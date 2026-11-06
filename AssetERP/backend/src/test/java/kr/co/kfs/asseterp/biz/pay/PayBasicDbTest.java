@@ -111,8 +111,20 @@ class PayBasicDbTest {
         assertThat(formulas.deleteDate(sysAdmin, newDate)).isEqualTo(copied.size());
         assertThat(formulas.searchByDate(sysAdmin, null, newDate)).isEmpty();
 
-        assertThatThrownBy(() -> formulas.createDate(other, newDate)).isInstanceOf(BusinessException.class);
+        // S16(2026-10-28): 생성·삭제는 로그인 회사 행만 다루므로 고객사 관리자도 허용 — 자기 회사(1)에만 만들어진다
+        // 회사 1에는 위 기초데이터생성이 newDate 행을 남겼으므로 다른 적용일로 본다
+        LocalDate otherDate = LocalDate.of(2099, 12, 30);
+        int otherDates = formulas.searchDates(other, null).size();
+        formulas.createDate(other, otherDate);
+        assertThat(formulas.searchDates(other, null)).hasSize(otherDates + 1);
+        assertThat(formulas.searchByDate(other, null, otherDate)).isNotEmpty();
+        assertThat(formulas.searchByDate(sysAdmin, null, otherDate)).isEmpty();  // 관리자 회사에는 생기지 않는다
+        assertThat(formulas.deleteDate(other, otherDate)).isPositive();
+        assertThat(formulas.searchByDate(other, null, otherDate)).isEmpty();
+
+        // 다른 회사 조회와 고객사 지정 기초데이터생성은 KFS 관리자만
         assertThatThrownBy(() -> formulas.searchDates(other, 0L)).isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> formulas.basicDataCreate(other, 1L, newDate)).isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> formulas.basicDataCreate(sysAdmin, null, newDate)).isInstanceOf(BusinessException.class);
     }
 }

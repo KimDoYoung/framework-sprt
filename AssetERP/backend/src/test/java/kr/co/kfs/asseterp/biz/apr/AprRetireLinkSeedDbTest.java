@@ -11,11 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprLinkSeedRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprLinkSeedService;
 import kr.co.kfs.asseterp.biz.apr.service.link.RetireLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.service.PayMonthPdfService;
 import kr.co.kfs.asseterp.biz.pay.service.PayRelateApprService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 
@@ -24,6 +26,9 @@ import kr.co.kfs.asseterp.common.error.BusinessException;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({AprLinkSeedService.class, RetireLinkSeedProvider.class, PayRelateApprService.class})
 class AprRetireLinkSeedDbTest {
+
+    /** PayRelateApprService 생성자가 요구하지만 퇴직정산 시험은 PDF를 쓰지 않는다 */
+    @MockitoBean PayMonthPdfService pdfService;
 
     /** 퇴직정산(03) 급여 — 상신 행·문서가 이미 있는 것 / 상신 행이 없는 것 */
     private static final long WITH_RELATE = 202308231570344L;

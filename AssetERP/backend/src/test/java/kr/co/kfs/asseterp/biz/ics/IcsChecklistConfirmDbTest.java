@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsChecklistConfirmService;
 import kr.co.kfs.asseterp.common.dto.PageRes;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,12 @@ class IcsChecklistConfirmDbTest {
     private static final UserPrincipal CONFIRMER = UserPrincipal.builder().userId(29033L).companyId(28000L).build();
     private static final LocalDate STD_DATE = LocalDate.of(2026, 9, 30);
 
+    /** 확인자 지정은 DB 데이터라 바뀔 수 있다 — 시험 안에서 직접 지정하고(롤백) 건수는 그때 읽은 값을 기준으로 본다 */
+    @BeforeEach
+    void 작성그룹_확인자를_지정한다() {
+        jdbc.update("update sch22_write_group set sch22_confirmer_id = ? where sch22_company_id = 28000", CONFIRMER.getUserId());
+    }
+
     private PageRes<IcsChecklistConfirmRes> search(boolean unCheckYn, boolean unConfirmYn, int offset, int limit) {
         return service.search(CONFIRMER, STD_DATE, "M", null, null, "", unCheckYn, unConfirmYn, offset, limit);
     }
@@ -38,17 +45,18 @@ class IcsChecklistConfirmDbTest {
     @Test
     void 확인자의_확인_대상을_페이지로_읽는다() {
         PageRes<IcsChecklistConfirmRes> all = search(false, false, 0, 100);
-        assertThat(all.total()).isEqualTo(9);
-        assertThat(all.rows()).hasSize(9);
+        long total = all.total();
+        assertThat(total).isGreaterThan(5);  // 페이지 시험이 성립하려면 6건 이상
+        assertThat(all.rows()).hasSize((int) total);
 
         PageRes<IcsChecklistConfirmRes> page2 = search(false, false, 5, 5);
-        assertThat(page2.total()).isEqualTo(9);
-        assertThat(page2.rows()).hasSize(4).first().isEqualTo(all.rows().get(5));
+        assertThat(page2.total()).isEqualTo(total);
+        assertThat(page2.rows()).hasSize((int) Math.min(5, total - 5)).first().isEqualTo(all.rows().get(5));
 
         // 대분류 조건·검색어
         Long lClassId = all.rows().get(0).checkLClassId();
-        assertThat(service.search(CONFIRMER, STD_DATE, "M", lClassId, null, "", false, false, 0, 100).total()).isBetween(1L, 9L);
-        assertThat(service.search(CONFIRMER, STD_DATE, "M", null, null, all.rows().get(0).personName(), false, false, 0, 100).total()).isBetween(1L, 9L);
+        assertThat(service.search(CONFIRMER, STD_DATE, "M", lClassId, null, "", false, false, 0, 100).total()).isBetween(1L, total);
+        assertThat(service.search(CONFIRMER, STD_DATE, "M", null, null, all.rows().get(0).personName(), false, false, 0, 100).total()).isBetween(1L, total);
         // 다른 사람은 이 대상의 확인자가 아니다
         UserPrincipal other = UserPrincipal.builder().userId(-28656L).companyId(28000L).build();
         assertThat(service.search(other, STD_DATE, "M", null, null, "", false, false, 0, 100).total()).isZero();
@@ -77,7 +85,7 @@ class IcsChecklistConfirmDbTest {
     void 상신_조회창은_대분류별_건수를_준다() {
         List<IcsChecklistRelateApprRes> list = service.relateApprs(CONFIRMER, STD_DATE, "M");
         assertThat(list).isNotEmpty();
-        assertThat(list.stream().mapToLong(IcsChecklistRelateApprRes::totalCount).sum()).isEqualTo(9);
+        assertThat(list.stream().mapToLong(IcsChecklistRelateApprRes::totalCount).sum()).isEqualTo(search(false, false, 0, 100).total());
         assertThat(list).allMatch(r -> r.confirmCount() <= r.totalCount());
     }
 

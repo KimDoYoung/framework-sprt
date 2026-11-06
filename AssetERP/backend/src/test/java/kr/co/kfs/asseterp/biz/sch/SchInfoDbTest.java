@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.sch;
 
+import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoCopyReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoManagerRes;
@@ -44,6 +45,7 @@ class SchInfoDbTest {
     @Autowired JdbcTemplate jdbc;
     /** 담당자 변경이 첨부파일을 새 일정에 연결할 때 파일 목록만 읽는다 */
     @MockitoBean SysFileService fileService;
+    @MockitoBean EmpTransInfoService transInfoService;
 
     /** kfstest 사용자 — 일정 24건의 담당자 */
     private static final long COMPANY = 28000L;

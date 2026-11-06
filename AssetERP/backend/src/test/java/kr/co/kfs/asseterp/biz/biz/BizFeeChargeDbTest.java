@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import kr.co.kfs.asseterp.biz.sys.service.SysFileService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeConfirmReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDetailRes;
@@ -29,6 +31,9 @@ import kr.co.kfs.asseterp.biz.biz.service.BizFeeChargeService;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({BizFeeChargeService.class, BizFeeAccountService.class, FeeChargeLinkSeedProvider.class})
 class BizFeeChargeDbTest {
+
+    /** 서비스 생성자가 요구하지만 이 시험은 쓰지 않는 빈 */
+    @MockitoBean SysFileService fileService;
 
     private static final LocalDate Q = LocalDate.of(2024, 6, 30);
     /** 2024-06-30 분기에 청구 2건이 있는 계약사 */

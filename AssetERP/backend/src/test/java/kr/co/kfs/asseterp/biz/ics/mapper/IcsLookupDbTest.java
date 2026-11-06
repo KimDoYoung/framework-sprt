@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ics.mapper;
 
+import kr.co.kfs.asseterp.biz.ics.service.IcsRevisionHistoryAdminService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsFormFileRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
@@ -22,6 +23,7 @@ import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
@@ -33,6 +35,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({IcsClassTreeService.class, IcsLawService.class, IcsRevisionHistoryService.class, IcsRelateFileService.class, TdmManlRelateIcsService.class})
 class IcsLookupDbTest {
+
+    /** 서비스 생성자가 요구하지만 이 시험은 쓰지 않는 빈 */
+    @MockitoBean IcsRevisionHistoryAdminService revisionAdminService;
 
     @Autowired IcsClassTreeService treeService;
     @Autowired IcsLawService lawService;

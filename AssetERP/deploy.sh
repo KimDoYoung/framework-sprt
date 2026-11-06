@@ -39,10 +39,8 @@ fi
 
 header "Step 1: 프론트엔드 빌드 (Ant Design UI)"
 cd "$FRONTEND_DIR"
-if [ ! -d "node_modules" ]; then
-    info "node_modules가 없어 패키지를 먼저 설치합니다..."
-    npm install
-fi
+info "package.json 기준으로 패키지를 설치합니다 (npm install)..."
+npm install
 npm run build
 
 header "Step 2: 정적 리소스 Spring Boot 내부로 복사"

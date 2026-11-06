@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.push.service.PresenceService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoCreateReq;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +30,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({EmpTransInfoService.class, EmpPersonService.class, EmpTransService.class})
 class TransInfoDbTest {
+
+    /** 서비스 생성자가 요구하지만 이 시험은 쓰지 않는 빈 */
+    @MockitoBean PresenceService presenceService;
 
     @Autowired EmpTransInfoService transInfoService;
     @Autowired EmpPersonService personService;

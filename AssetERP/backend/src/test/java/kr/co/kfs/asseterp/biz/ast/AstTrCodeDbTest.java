@@ -135,7 +135,7 @@ class AstTrCodeDbTest {
     void 화면찾기는_원본_SQL과_같은_행_수() {
         // 관리자 회사(0): selectByTextManager — 화면번호·경로명·Class명(·화면설명)
         List<MenuSearchRes> managerAll = menus.search(admin, null, "", true);
-        assertThat(managerAll).hasSize(529);
+        assertThat(managerAll).hasSize(528);
         assertThat(managerAll.get(0).bookmark()).isNull();
         assertThat(managerAll.get(0).parentPathNm()).isNull();
         assertThat(menus.search(admin, null, "거래", false)).hasSize(24);

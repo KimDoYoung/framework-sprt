@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.dcr.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrAdminTreeRow;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCheckRes;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
@@ -27,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(DcrClassTreeService.class)
 class DcrClassTreeDbTest {
+
+    /** 서비스 생성자가 요구하지만 이 시험은 쓰지 않는 빈 */
+    @MockitoBean EmpTransInfoService transInfoService;
 
     private static final long FAKE = 99999L;
 

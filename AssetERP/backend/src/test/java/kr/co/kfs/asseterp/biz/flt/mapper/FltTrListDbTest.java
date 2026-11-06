@@ -36,18 +36,18 @@ class FltTrListDbTest {
 
     @Test
     void 매매내역은_본인_것만_읽히고_사전신고_포함을_끄면_실거래만_나온다() {
-        // 대조: AS-IS selectByTrList(협의승인 열을 NULL로 본 것) 행 수 117(포함)·85(미포함)·91(삼성)·34(출고)·83(입고), cmp08.sh
+        // 대조: AS-IS selectByTrList(협의승인 열을 NULL로 본 것) 행 수 114(포함)·82(미포함)·90(삼성)·33(출고)·81(입고) — 2026-11-06 DB 데이터 변화로 갱신(mapper-run --compare로 TOBE=AS-IS 확인), cmp08.sh
         List<TrListRes> all = trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "%", "");
-        assertThat(all).hasSize(117);
+        assertThat(all).hasSize(114);
         assertThat(all.get(0).accountNo()).contains("(");
         assertThat(all).extracting(TrListRes::trId).doesNotHaveDuplicates();
-        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", false, "%", "%", "")).hasSize(85)
+        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", false, "%", "%", "")).hasSize(82)
                 .allMatch(r -> r.trDate() != null);
-        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "%", "삼성")).hasSize(91);
+        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "%", "삼성")).hasSize(90);
         List<TrListRes> out = trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "2%", "");
-        assertThat(out).hasSize(34);
+        assertThat(out).hasSize(33);
         assertThat(out).filteredOn(r -> r.trAmt() != null && r.trAmt() != 0L).allMatch(r -> r.trAmt() < 0);  // 출고는 음수
-        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "1%", "")).hasSize(83);
+        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "1%", "")).hasSize(81);
         // 다른 사원으로는 본인 거래가 안 보이고, trType을 주면 그 구분만 나온다
         assertThat(trService.searchList(other, "2025-01-01", "2026-10-21", true, null, null, "")).isEmpty();
         assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "10I", null, ""))
