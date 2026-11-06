@@ -53,12 +53,13 @@ export const Flt16_Lookup_ExceptPerson: React.FC<Props> = ({ open, onClose }) =>
     newRow: useCallback(() => ({ companyId: user.companyId }), [user.companyId]),
     validate,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // 화면 열림 (open() L56-84) → show(), retrieve() — 원본 이벤트 목록에는 없다
   React.useEffect(() => {
-    if (open) void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (open) void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   // buildGrid() L139-149
   const columnDefs = useMemo(() => [

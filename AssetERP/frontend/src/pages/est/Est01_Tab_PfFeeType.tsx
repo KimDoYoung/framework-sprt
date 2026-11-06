@@ -42,6 +42,8 @@ export const Est01_Tab_PfFeeType: React.FC = () => {
     newRow: useCallback(() => ({ seq: null, feeCode: null, feeName: null, feeDesc: null, startDate: today(), closeDate: null, note: null }), []),
     firstEditField: 'seq',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L65-86) → settings(), retrieve(). 수수료 콤보(EstPfFeeCode)를 읽는다
   useEffect(() => {
@@ -51,9 +53,9 @@ export const Est01_Tab_PfFeeType: React.FC = () => {
       } catch (err) {
         message.error(errorMessage(err, '코드 조회 실패'));
       }
-      void crud.retrieve();
+      void crudRetrieve();
     })();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crudRetrieve]);
 
   // [E3] updateButton[저장].Select (L101) → updateChk() L209-269
   const updateChk = async () => {

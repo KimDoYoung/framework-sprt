@@ -53,13 +53,14 @@ export const Sch02_Page_Share: React.FC<Props> = ({ writeGroupId }) => {
     newRow: () => ({}),
     deleteConfirm: false,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L63-88) → settings(), retrieve(null). 부르는 쪽 SelectionChanged → retrieve(writeGroupId)
   useEffect(() => {
     deleteList.current = [];
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [writeGroupId]);
+    void crudRetrieve();
+  }, [writeGroupId, crudRetrieve]);
 
   const enabled = writeGroupId != null;
 

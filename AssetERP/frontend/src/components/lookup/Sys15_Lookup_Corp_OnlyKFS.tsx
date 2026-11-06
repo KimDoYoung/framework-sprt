@@ -66,6 +66,8 @@ export const Sys15_Lookup_Corp_OnlyKFS: React.FC<Props> = ({ open, onClose }) =>
     newRow: useCallback(() => ({ corpType: '5', corpTypeName: '운용사', useYn: 'true' }), []),
     firstEditField: 'corpName',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // open() L64-98 → setting(), show() · [E1] corpTypeComboBox.callbackOnCreate (L106) → retrieve() — 구분 콤보를 읽은 뒤 "전체"로 조회한다
   useEffect(() => {
@@ -74,9 +76,8 @@ export const Sys15_Lookup_Corp_OnlyKFS: React.FC<Props> = ({ open, onClose }) =>
     setSearchText('');
     setUseOnly(false);
     cond.current = { corpType: '%', searchText: '', useOnly: false };
-    void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   // [E7] deleteButton[삭제].Select (L153) → deleteRow() L237-275: 선택이 없으면 "삭제할 정보를 선택하세요"
   const deleteRow = () => {

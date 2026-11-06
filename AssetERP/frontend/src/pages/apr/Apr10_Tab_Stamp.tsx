@@ -79,14 +79,15 @@ export const Apr10_Tab_Stamp: React.FC = () => {
     // [E4] updateButton[저장].Select (L125) → update()
     validate,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
   crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L75-96) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
+    void crudRetrieve();
     aprApi.getMyOrgCodeId().then(setMyOrgCodeId).catch(() => setMyOrgCodeId(0));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [crudRetrieve]);
 
   // buildGrid() 안 아이콘: 변경사항이 있으면 "변경사항을 먼저 저장 후 진행가능합니다" (actionCell02·03 L172-196)
   const checkSaved = useCallback((): boolean => {

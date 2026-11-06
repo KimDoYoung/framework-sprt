@@ -65,6 +65,8 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
     // deleteRow() L252-270: "n건의 정보를 삭제하시겠습니까?" → E11 delete()
     deleteConfirm: (n: number) => `${n}건의 정보를 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
   const crudRef = useRef(crud);
   crudRef.current = crud;
 
@@ -74,8 +76,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
   }, []);
 
   // [E0] 화면 열림 (생성자 L56-133) → retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { crud.retrieve(); }, []);
+  useEffect(() => { crudRetrieve(); }, [crudRetrieve]);
 
   // buildGrid() L135-194
   const columnDefs = useMemo(() => [

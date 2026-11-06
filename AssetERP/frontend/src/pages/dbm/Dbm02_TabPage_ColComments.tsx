@@ -40,10 +40,12 @@ export const Dbm02_TabPage_ColComments = forwardRef<Dbm02_TabPage_ColCommentsHan
     remove: async () => 0,
     newRow: useCallback(() => NEW_ROW, []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   useImperativeHandle(ref, () => ({
-    retrieve: name => { tableName.current = name; crud.retrieve(); },
-  }), [crud.retrieve]);  // eslint-disable-line react-hooks/exhaustive-deps
+    retrieve: name => { tableName.current = name; crudRetrieve(); },
+  }), [crudRetrieve]);
 
   // buildGrid() L122-134
   const columnDefs = useMemo(() => [

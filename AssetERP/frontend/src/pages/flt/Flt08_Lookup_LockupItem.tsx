@@ -57,6 +57,8 @@ export const Flt08_Lookup_LockupItem: React.FC<Props> = ({ open, onClose }) => {
     validate,
     deleteConfirm: (n: number) => `${n}건의 종목을 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear } = crud;
 
   useEffect(() => {
     sysApi.searchCodes('BuyLockupType').then(setTypeCodes).catch(() => undefined);
@@ -67,9 +69,8 @@ export const Flt08_Lookup_LockupItem: React.FC<Props> = ({ open, onClose }) => {
     if (!open) return;
     setLockupType('%');
     setSearchText('');
-    crud.clear();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    crudClear();
+  }, [open, crudClear]);
 
   // buildGrid() L179-209
   const columnDefs = useMemo(() => [

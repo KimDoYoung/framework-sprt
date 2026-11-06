@@ -57,15 +57,16 @@ export const Ics21_Lookup_CheckList: React.FC<Props> = ({ open, onClosed, onClos
       return msg;
     },
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { gridRef: crudGridRef, retrieve: crudRetrieve } = crud;
 
   // 열림 open() L81-114 (원본 이벤트 아님) → setting(), show(), retrieve()
   React.useEffect(() => {
     if (!open) return;
-    crud.gridRef.current?.api?.deselectAll();  // 원본은 창을 매번 새로 만든다 — 이전에 고른 대분류 선택을 남기지 않는다
+    crudGridRef.current?.api?.deselectAll();  // 원본은 창을 매번 새로 만든다 — 이전에 고른 대분류 선택을 남기지 않는다
     setParent(null);
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    void crudRetrieve();
+  }, [open, crudGridRef, crudRetrieve]);
 
   // 공통(회사 0) 분류는 관리자 회사만 이름·순서·비고를 고친다 — 고객사는 사용여부·사용종료일만(서버가 ics22에 저장)
   const locked = (p: { data?: IcsChecklistLClass }) => user.companyId !== 0 && p.data?.companyId === 0;

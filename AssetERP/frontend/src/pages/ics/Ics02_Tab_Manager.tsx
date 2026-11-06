@@ -44,10 +44,11 @@ export const Ics02_Tab_Manager: React.FC = () => {
     // deleteChedk() L268-312: "n건의 관리그룹 코드를 삭제하시겠습니까?"
     deleteConfirm: n => `${n}건의 관리그룹 코드를 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L66-115) → settings(), retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRetrieve(); }, [crudRetrieve]);
 
   // [E6 생략] lookupEmp.TriggerClick (L162) — lookupEmp 컬럼·툴바 미연결(도달 불가)
   // [E7 생략] msgBox.DialogHide [YES] (L214) → Ics02_Manager.insert 전체적용 — selectCheck() 호출처 없음(도달 불가)

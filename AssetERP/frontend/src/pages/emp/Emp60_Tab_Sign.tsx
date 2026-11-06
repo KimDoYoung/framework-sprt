@@ -44,12 +44,13 @@ export const Emp60_Tab_Sign: React.FC = () => {
     newRow: useCallback(() => ({ useYn: 'true' }), []),
     validate,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L70-91) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void crudRetrieve();
+  }, [crudRetrieve]);
 
   // [E3] insertButton[등록].Select (L114) → insertRow() L229-242: GridInsertRow, 비고 = "yyyy년 MM월 dd일 - 신규서명 추가", 사용 true (둘 다 변경으로 표시)
   const insertRow = () => {

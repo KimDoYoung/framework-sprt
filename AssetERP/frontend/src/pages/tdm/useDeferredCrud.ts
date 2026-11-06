@@ -24,6 +24,8 @@ export function useDeferredCrud<T extends object>({ idField, search, newRow }: O
     remove: useCallback(async () => 0, []),
     newRow: newRow ?? (() => ({})),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear } = crud;
   const { retrieve: retrieveRows } = crud;
 
   const idOf = (r: T) => Number((r as Record<string, unknown>)[idField]);
@@ -40,10 +42,10 @@ export function useDeferredCrud<T extends object>({ idField, search, newRow }: O
   }, [retrieveRows]);
 
   const reset = useCallback(() => {
-    crud.clear();
+    crudClear();
     deleteList.current = [];
     setDeleteCount(0);
-  }, [crud.clear]);   // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crudClear]);
 
   /** deleteRow(): 미선택 "삭제할 내역을 선택하세요", 아니면 deleteList에 담고 화면에서 뺀다 */
   const deleteRow = () => {

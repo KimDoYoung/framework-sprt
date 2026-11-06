@@ -46,13 +46,14 @@ export const Apr15_Tab_ReprCorp: React.FC = () => {
     firstEditField: 'corpTypeName',
     validate,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L53-73) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
+    void crudRetrieve();
     sysApi.searchCodes('ReprCorpType').then(setCorpTypes).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [crudRetrieve]);
 
   const columnDefs = useMemo(() => [
     // [E5] corpTypeCombo[ReprCorpType].Collapse (L105) → 고른 이름에 맞춰 코드(corpType)도 바꾼다

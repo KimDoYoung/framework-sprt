@@ -51,15 +51,16 @@ export const Sch22_Lookup_WriteGroup: React.FC<Props> = ({ open, mode, onResult,
     firstEditField: 'writeGroupName',
     deleteConfirm: false,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { gridRef: crudGridRef, retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L81-110) → settings(), show(), retrieve()
   useEffect(() => {
     if (!open) return;
     setShareGroupId(null);
-    crud.gridRef.current?.api?.deselectAll();
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    crudGridRef.current?.api?.deselectAll();
+    void crudRetrieve();
+  }, [open, crudGridRef, crudRetrieve]);
 
   // buildGrid() L173-204
   const columnDefs = useMemo(() => [

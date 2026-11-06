@@ -67,6 +67,8 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
     deleteConfirm: '선택한 계정과목을 제거하시겠습니까?',
     reloadAfterSave: true,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear } = crud;
 
   // [E2][E3][E4][E5] 계정속성 콤보 Collapse·검색 Enter·[조회] → retrieve()
   const retrieve = () => crud.retrieve();
@@ -80,10 +82,9 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
     setSearchText('');
     setAllAccountYn(false);
     setLoadedAll(false);
-    crud.clear();
+    crudClear();
     setOpenSeq(n => n + 1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, crudClear]);
   useEffect(() => {
     if (openSeq > 0) void crud.retrieve();
   // eslint-disable-next-line react-hooks/exhaustive-deps

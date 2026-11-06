@@ -92,8 +92,14 @@ export const Pay13_TabPage_RetireTax = forwardRef<RetireTabHandle>((_props, ref)
     remove: async () => 0,
   });
   const crud1 = useGridCrud<PayRetireTaxItem>(itemCrud('incomes', '1'));
+  // crud1 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crud1Clear } = crud1;
   const crud4 = useGridCrud<PayRetireTaxItem>(itemCrud('deducts', '3'));
+  // crud4 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crud4Clear } = crud4;
   const crud7 = useGridCrud<PayRetireTaxItem>(itemCrud('credits', '4'));
+  // crud7 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crud7Clear } = crud7;
   const crud9 = useGridCrud<PayRetireTaxOffice>({
     idField: 'retireTaxId',
     search: () => Promise.resolve(detail.current?.offices ?? []),
@@ -101,15 +107,16 @@ export const Pay13_TabPage_RetireTax = forwardRef<RetireTabHandle>((_props, ref)
     save: async rows => rows,
     remove: async () => 0,
   });
+  // crud9 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crud9Clear } = crud9;
 
   const clear = useCallback(() => {
     ctx.current.monthId = null;
     detail.current = null;
     setAmounts(EMPTY_AMOUNTS);
     setDeleteIds({ '1': [], '3': [], '4': [] });
-    crud1.clear(); crud4.clear(); crud7.clear(); crud9.clear();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    crud1Clear(); crud4Clear(); crud7Clear(); crud9Clear();
+  }, [crud1Clear, crud4Clear, crud7Clear, crud9Clear]);
 
   // retrieve() L933-1008
   const retrieveAll = useCallback(async () => {

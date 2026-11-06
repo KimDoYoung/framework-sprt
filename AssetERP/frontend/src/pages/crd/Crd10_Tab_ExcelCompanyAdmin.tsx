@@ -65,14 +65,15 @@ export const Crd10_Tab_ExcelCompanyAdmin: React.FC = () => {
       return undefined;
     },
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   useEffect(() => {
     sysApi.searchCodes('CreditCardCompany').then(setBanks).catch(() => {});
   }, []);
 
   // [E0] 화면 열림 (생성자 L52-102): 열 때 조회
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { crud.retrieve(); }, []);
+  useEffect(() => { crudRetrieve(); }, [crudRetrieve]);
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1000 }}>

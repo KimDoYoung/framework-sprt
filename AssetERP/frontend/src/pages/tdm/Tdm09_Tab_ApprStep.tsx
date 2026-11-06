@@ -84,6 +84,8 @@ export const Tdm09_Tab_ApprStep: React.FC = () => {
     deleteConfirm: n => `${n}건의 정보를 삭제하시겠습니까?`,
     onChanged: () => { void retrieve(); },
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
   const crudRows = useRef<TdmApprStep[]>([]);
   crudRows.current = crud.rows;
   const mainApi = () => crud.gridRef.current?.api;
@@ -93,12 +95,11 @@ export const Tdm09_Tab_ApprStep: React.FC = () => {
     selectFirst.current = true;
     setSelectedId(null);
     try {
-      await crud.retrieve();
+      await crudRetrieve();
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [crud.retrieve]);
+  }, [crudRetrieve]);
 
   // [E0] 화면 열림 (생성자 L79-128) → settings(), retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps

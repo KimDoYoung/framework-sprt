@@ -37,12 +37,13 @@ export const Apr30_Tab_ApprStepGroup: React.FC = () => {
     newRow: useCallback(() => ({}), []),
     firstEditField: 'apprStepGroupName',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L49-97) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void crudRetrieve();
+  }, [crudRetrieve]);
 
   // [E5] grid.RowClick (L124) → retrievePage() L140-150: 한 건만 골랐으면 멤버 페이지를 켜고 그 그룹으로 조회, 아니면 끄고 retrieve(null)
   //   (저장 전 새 행은 ID가 임시 음수라 멤버를 달 수 없어 끈다)

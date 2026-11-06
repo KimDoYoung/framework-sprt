@@ -108,6 +108,8 @@ export const Act11_Grid_TrJournalMap: React.FC<Props> = ({ journalGroup, nonce }
     // deleteRow() L250-276: "확인"/"n건의 분개맵핑 정보를 삭제하시겠습니까?" → [E7] msgBox.DialogHide [YES] (L258)
     deleteConfirm: (n: number) => `${n}건의 분개맵핑 정보를 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L62-79) → settings(): 차대구분 콤보 코드
   useEffect(() => {
@@ -118,9 +120,8 @@ export const Act11_Grid_TrJournalMap: React.FC<Props> = ({ journalGroup, nonce }
   useEffect(() => {
     if (journalGroup == null && nonce === 0) return;
     selectFirst.current = true;
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [journalGroup, nonce]);
+    void crudRetrieve();
+  }, [journalGroup, nonce, crudRetrieve]);
 
   /** 대표계정을 그 행에 반영한다 — setReprAccount() L177-181 (변경으로 친다) */
   const setReprAccount = (row: JournalMap, code: string | null, name: string | null) =>

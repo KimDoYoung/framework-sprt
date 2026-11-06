@@ -56,6 +56,8 @@ export const Fnd32_Tab_Account: React.FC = () => {
     newRow: useCallback(() => ({ accountStateCode: STATE_ACTIVE, accountStateName: '활성' }), []),
     firstEditField: 'setupDate',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L84-119) → settings(): 계좌상태 콤보를 읽어 "활성"으로 두고 retrieve()
   useEffect(() => {
@@ -66,9 +68,9 @@ export const Fnd32_Tab_Account: React.FC = () => {
       } catch (err) {
         message.error(errorMessage(err, '코드 조회 실패'));
       }
-      void crud.retrieve();
+      void crudRetrieve();
     })();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crudRetrieve]);
 
   // [E4] copyButton[등록(복사)].Select (L153) → copyInsertRow() L353-391: 고른 행(첫 번째)의 값을 가진 새 행을 넣고 곧바로 fnd.Fnd32_Account.copyUpdate로 저장한다
   const copyInsertRow = async () => {

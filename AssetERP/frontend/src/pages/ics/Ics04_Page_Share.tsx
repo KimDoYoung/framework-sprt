@@ -45,10 +45,11 @@ export const Ics04_Page_Share: React.FC<Props> = ({ managerId }) => {
     newRow: () => ({}),
     deleteConfirm: false,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L48-91) · 부르는 쪽 SelectionChanged(retrieveShare) → retrieve(managerId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, [managerId]);
+  useEffect(() => { void crudRetrieve(); }, [managerId, crudRetrieve]);
 
   const enabled = managerId != null;
 

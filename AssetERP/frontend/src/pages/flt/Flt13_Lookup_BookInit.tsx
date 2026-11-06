@@ -56,6 +56,8 @@ export const Flt13_Lookup_BookInit: React.FC<Props> = ({ open, onClose }) => {
     newRow: () => ({}),
     firstEditField: 'itemTypeName',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L99-107, open L109-144) → settings() → setStdDate() L267-283: flt.Flt13_BookInit.getInitDate → 있으면 잔고기준일로 하고 retrieve()
   useEffect(() => {
@@ -70,11 +72,10 @@ export const Flt13_Lookup_BookInit: React.FC<Props> = ({ open, onClose }) => {
       if (d) {
         setStdDate(dayjs(d));
         orgDate.current = d;
-        void crud.retrieve();
+        void crudRetrieve();
       }
     }).catch(err => message.error(errorMessage(err, '조회 실패')));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, crudRetrieve]);
 
   const stdText = () => stdDate?.format(DATE) ?? null;
 

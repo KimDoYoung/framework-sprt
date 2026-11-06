@@ -52,21 +52,22 @@ export const Biz03_Lookup_AccountMap: React.FC<Props> = ({ open, onClose }) => {
     // insert() L215-239: GridInsertRow, companyId ← 로그인 회사(서버), useItemCode ← 고른 항목 코드
     newRow: useCallback(() => ({ useItemCode: selected.current?.code ?? '', accountCodeId: null, accountCode: null, accountName: null }), []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear } = crud;
 
   // [E0] 화면 열림 (생성자 L67-150, open() L62-65) → retrieve() L187-201: 서비스 sys.Sys09_Code.selectByCodeKind(BizCardUseItemCode, 오늘) → 첫 행을 고른다
   useEffect(() => {
     if (!open) return;
     selected.current = undefined;
     setItems([]);
-    crud.clear();
+    crudClear();
     bizAccountMapApi.searchUseItems()
       .then(list => {
         setItems(list);
         if (list.length > 0) setTimeout(() => codeGridRef.current?.api?.getDisplayedRowAtIndex(0)?.setSelected(true), 0);
       })
       .catch(err => message.error(errorMessage(err, '조회 실패')));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, crudClear]);
 
   // [E1] codeGrid.SelectionChanged [선택>0] (L74) → retrieveMap(codeModel) L203-213
   const onCodeSelect = (row: BizCardUseItem | undefined) => {

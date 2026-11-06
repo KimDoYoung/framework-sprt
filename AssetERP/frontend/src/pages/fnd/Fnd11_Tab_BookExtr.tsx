@@ -57,6 +57,8 @@ export const Fnd11_Tab_BookExtr: React.FC = () => {
     newRow: useCallback(() => ({ stdDate: stdDateRef.current.format(FORMAT), itemType: ITEM_TYPE_STOCK }), []),
     firstEditField: 'fundCode',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // setStdDate() L314-330: fnd.Fnd11_BookExtr.selectRecentStdDate(오늘 이전 가장 최근 기준일) → 기준일을 바꾸고 retrieve()
   useEffect(() => {
@@ -71,10 +73,10 @@ export const Fnd11_Tab_BookExtr: React.FC = () => {
       } catch (err) {
         message.error(errorMessage(err, '기준일 조회 실패'));
       }
-      if (alive) void crud.retrieve();
+      if (alive) void crudRetrieve();
     })();
     return () => { alive = false; };
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crudRetrieve]);
 
   // [E7] tempDownloadButton[템플릿].Select (L168) → downloadForm.submit(): ./excelTemplete/Template_펀드보유주식등록(타사무).xlsx
   const downloadTemplate = async () => {

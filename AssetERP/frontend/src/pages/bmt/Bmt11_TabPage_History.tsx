@@ -45,10 +45,11 @@ export const Bmt11_TabPage_History: React.FC<Props> = ({ infoId }) => {
     newRow: useCallback(() => ({ infoId: infoIdRef.current ?? 0, startDate: dayjs().format('YYYY-MM-DD') }), []),
     firstEditField: 'startDate',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L51-68) → settings() / Bmt10_Lookup_History.open()이 tabPage.retrieve(infoId)를 부른다
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, [infoId]);
+  useEffect(() => { void crudRetrieve(); }, [infoId, crudRetrieve]);
 
   // [E5] lookupEmp.TriggerClick [result != null] (L101) → Emp00_Lookup_SelectSingle.open(true, 오늘, true, cb): 고른 사원의 이름·ID를 선택 행에 넣는다(고르지 않으면 비운다)
   const onPickEmp = (emp: TransInfo | null) => {

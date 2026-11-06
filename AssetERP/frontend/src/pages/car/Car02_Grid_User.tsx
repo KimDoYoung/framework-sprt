@@ -51,9 +51,11 @@ export const Car02_Grid_User: React.FC<Props> = ({ infoId, enabled }) => {
       return undefined;
     }, []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // 차량정보를 고르면 그 사용자 목록을 읽는다(Tab의 userGrid.retrieve(infoId))
-  useEffect(() => { void crud.retrieve(); }, [infoId]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRetrieve(); }, [infoId, crudRetrieve]);
 
   // [E2] insertButton[등록].Select [infoId == null] (L72) → insertRow() L198-202
   const insertRow = () => {

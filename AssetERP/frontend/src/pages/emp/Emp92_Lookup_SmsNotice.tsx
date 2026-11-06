@@ -40,12 +40,13 @@ export const Emp92_Lookup_SmsNotice: React.FC<Props> = ({ open, onClose }) => {
     newRow: () => ({}),
     reloadAfterSave: true,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 열림 (생성자 L65-87) → show(), retrieve()
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (open) void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   return (
     <LookupModal

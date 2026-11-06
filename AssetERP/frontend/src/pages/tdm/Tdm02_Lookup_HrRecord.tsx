@@ -69,6 +69,8 @@ export const Tdm02_Lookup_HrRecord: React.FC<Props> = ({ open, onClose }) => {
     newRow: useCallback(() => ({}), []),   // 등록·삭제 버튼 없음
     reloadAfterSave: true,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // open() L74-113: 열 때 설정값으로 되돌리고 바로 retrieve()
   useEffect(() => {
@@ -78,9 +80,8 @@ export const Tdm02_Lookup_HrRecord: React.FC<Props> = ({ open, onClose }) => {
     setStartDate(cond.current.startDate);
     setCloseDate(cond.current.closeDate);
     setSearchText('');
-    void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   // [E2] toggleGroup.ValueChange (L145) → 미적용건만 보기면 applyCode "0"·기간 비활성, 조회기간이면 "%"·기간 활성 → retrieve()
   const changePeriod = (value: boolean) => {

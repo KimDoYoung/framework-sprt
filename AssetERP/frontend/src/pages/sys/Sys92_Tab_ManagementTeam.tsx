@@ -73,6 +73,8 @@ export const Sys92_Tab_ManagementTeam: React.FC = () => {
     // deleteChk() L186-204
     deleteConfirm: n => `${n}건을 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   const columnDefs = useMemo(() => (editable ? buildEditGrid(setLookupRow) : buildViewGrid()), [editable]);
 
@@ -89,9 +91,8 @@ export const Sys92_Tab_ManagementTeam: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L51-74) → settings(), retrieve()
   useEffect(() => {
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    crudRetrieve();
+  }, [crudRetrieve]);
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>

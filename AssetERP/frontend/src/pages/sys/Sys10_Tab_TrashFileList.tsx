@@ -33,6 +33,8 @@ export const Sys10_Tab_TrashFileList: React.FC = () => {
     remove: async () => 0,
     newRow: useCallback(() => NEW_ROW, []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // checkFileDelete() L172-197: 연결만 지움(1) → 다시 조회 / 사용 중(2) → 안내 / 지워도 됨(3) → FileDelete → [E1] fileDeleteForm.SubmitComplete (L84) → retrieve()
   const checkFileDelete = async (row: FileInfo) => {
@@ -74,9 +76,8 @@ export const Sys10_Tab_TrashFileList: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L48-79) → settings(), retrieve()
   useEffect(() => {
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    crudRetrieve();
+  }, [crudRetrieve]);
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>

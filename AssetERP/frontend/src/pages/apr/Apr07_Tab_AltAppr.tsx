@@ -62,12 +62,13 @@ export const Apr07_Tab_AltAppr: React.FC = () => {
     // [E3] updateButton[저장].Select (L80) → update() L196-275
     validate,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L62-65) → makeLayout(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void crudRetrieve();
+  }, [crudRetrieve]);
 
   // [E5] lookupEmpInfo.TriggerClick (L118) → openLookupEmpInfo() L156-174: 사원찾기(open(오늘, …)) → 선택 행에 대결자 사원 정보를 넣는다
   const onPick = (emp: TransInfo | null) => {

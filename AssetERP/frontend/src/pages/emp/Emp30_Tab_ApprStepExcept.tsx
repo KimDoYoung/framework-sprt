@@ -36,12 +36,13 @@ export const Emp30_Tab_ApprStepExcept: React.FC = () => {
     // [E3] insertButton[등록].Select (L78) → insertRow() L168-176: GridInsertRow, 회사 = 로그인 회사(서버), 등록일 = 오늘, 사용 true
     newRow: useCallback(() => ({ regDate: dayjs().format('YYYY-MM-DD'), useYn: 'true' }), []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L55-112) → retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void crudRetrieve();
+  }, [crudRetrieve]);
 
   // [E6] lookupEmpInfo.TriggerClick (L116) → openLookupEmpInfo() L133-145: 사원찾기(오늘) → 그 행의 사원ID·사원명
   const onPick = (emp: TransInfo | null) => {

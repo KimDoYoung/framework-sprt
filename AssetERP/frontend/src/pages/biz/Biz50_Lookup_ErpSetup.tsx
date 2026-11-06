@@ -70,12 +70,13 @@ export const Biz50_Lookup_ErpSetup: React.FC<Props> = ({ open, onClose }) => {
     validate: useCallback((changed: BizErpSetup[]) => (changed.some(r => r.startDate == null) ? '적용시작일은 필수입력 항목입니다.' : undefined), []),
     deleteConfirm: (count: number) => `${count}건을 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L75-111) → show() · open(callback) L69-73 → retrieve()
   useEffect(() => {
-    if (open) void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (open) void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   const columnDefs = useMemo(() => [
     gb.date('startDate', 120, '적용시작일', { editor: 'date' }),  // L185 (UX-08: 편집 날짜는 120)

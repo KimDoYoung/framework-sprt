@@ -30,11 +30,12 @@ export const Bbs22_Lookup_FloralMessage: React.FC<Props> = ({ open, onClose }) =
     newRow: useCallback(() => ({}), []),
     reloadAfterSave: true,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (open) void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   // buildGrid() L63-68
   const columnDefs = useMemo(() => [

@@ -35,10 +35,11 @@ export const Emp55_Lookup_account: React.FC<Props> = ({ open, onClose }) => {
     newRow: useCallback(() => ({ unUseYn: 'false' }), []),
     reloadAfterSave: true,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] open() L41-63 → retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (open) crud.retrieve(); }, [open]);
+  useEffect(() => { if (open) crudRetrieve(); }, [open, crudRetrieve]);
 
   // buildGrid() L87-115 (GridBuilder.getGrid — 편집은 미사용 체크와 계정코드 돋보기뿐)
   const columnDefs = useMemo(() => [

@@ -60,12 +60,14 @@ export const Sys13_TabPage_Code = forwardRef<Sys13_TabPage_CodeHandle>((_props, 
     // deleteRow() L186-207 — [E6] msgBox.DialogHide [YES] (L189) → sys.Sys13_CodeGroup.delete (useGridCrud 안)
     deleteConfirm: '해당 정보를 삭제하시겠습니까?',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // retrieve() 안 grid.getSelectionModel().select(0, false): 조회가 끝나면 첫 행을 선택(체크)한다
   const retrieve = useCallback(async () => {
     selectFirst.current = true;
-    await crud.retrieve();
-  }, [crud.retrieve]);  // eslint-disable-line react-hooks/exhaustive-deps
+    await crudRetrieve();
+  }, [crudRetrieve]);
   useEffect(() => {
     if (!selectFirst.current || crud.rows.length === 0) return;
     selectFirst.current = false;

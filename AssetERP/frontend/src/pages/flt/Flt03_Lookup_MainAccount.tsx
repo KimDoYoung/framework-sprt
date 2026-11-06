@@ -32,6 +32,8 @@ export const Flt03_Lookup_MainAccount: React.FC<Props> = ({ open, onClose }) => 
     // update() L112-123: 주 계좌가 둘 이상이면 저장하지 않는다
     validate: (_changed, all) => (all.filter(r => r.mainAccountYn).length > 1 ? '주 계좌는 하나만 가능합니다.' : undefined),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // buildGrid() L75-87: setChecked 주석 처리, setRowNumHidden(true)
   const columnDefs = useMemo(() => [
@@ -42,9 +44,8 @@ export const Flt03_Lookup_MainAccount: React.FC<Props> = ({ open, onClose }) => 
   ], []);
 
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (open) void crudRetrieve();
+  }, [open, crudRetrieve]);
 
   return (
     <LookupModal
