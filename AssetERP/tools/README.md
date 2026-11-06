@@ -12,6 +12,7 @@
 |:---|:---|
 | `ui-count.sh` | AS-IS 색인 화면 파일에서 클래스별 버튼·이벤트·그리드 수 (06 항목 10, 03 원칙 12) |
 | `page-style-check.py` | `docs/page-style.md` 규칙을 정규식으로 화면×규칙 표로 점검 (견본은 전부 통과해야 함) |
+| `code-health.sh` + `code-health/` | TOBE 정적분석 일괄(PMD·CPD 중복·Checkstyle·SpotBugs+FindSecBugs) → `docs/5-테스트/정적분석/` 보고서. build.gradle 무수정(init script) |
 
 ## 외부 시스템 시뮬레이터
 

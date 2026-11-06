@@ -1,0 +1,118 @@
+// code-health 정적분석 init script — backend/build.gradle 을 건드리지 않고 분석 플러그인을 붙인다.
+// 직접 쓰지 않는다. tools/code-health.sh 가 다음처럼 부른다:
+//   gradle --init-script tools/code-health/analysis.gradle -PchOut=<raw폴더> [-PchMinTokens=100] [-PchFrontDir=<frontend/src>] <태스크...>
+// 태스크: pmdMain checkstyleMain spotbugsMain cpdJava cpdTs (모두 ignoreFailures — 위반이 있어도 빌드 실패 안 함)
+
+initscript {
+    repositories { gradlePluginPortal() }
+    dependencies { classpath 'com.github.spotbugs.snom:spotbugs-gradle-plugin:6.5.13' }
+}
+
+def PMD_VER        = '7.29.0'
+def CHECKSTYLE_VER = '14.4.0'
+def SPOTBUGS_VER   = '4.10.5'
+def FINDSEC_VER    = '1.14.0'
+
+def chDir = new File(buildscript.sourceFile.parentFile.absolutePath)
+
+rootProject { p ->
+    p.pluginManager.withPlugin('java') {
+        def outDir    = p.file(p.findProperty('chOut') ?: "${p.layout.buildDirectory.get().asFile}/code-health")
+        def minTokens = (p.findProperty('chMinTokens') ?: '100').toString()
+        def frontDir  = p.findProperty('chFrontDir')
+
+        p.apply plugin: 'pmd'
+        p.apply plugin: 'checkstyle'
+        p.apply plugin: com.github.spotbugs.snom.SpotBugsPlugin
+
+        // ── PMD ──
+        p.pmd {
+            toolVersion = PMD_VER
+            ignoreFailures = true
+            consoleOutput = false
+            ruleSets = []
+            ruleSetFiles = p.files(new File(chDir, 'pmd-ruleset.xml'))
+        }
+        p.tasks.named('pmdMain') {
+            reports {
+                xml.required = true
+                html.required = false
+                xml.outputLocation = new File(outDir, 'pmd.xml')
+            }
+        }
+
+        // ── Checkstyle ──
+        p.checkstyle {
+            toolVersion = CHECKSTYLE_VER
+            ignoreFailures = true
+            showViolations = false
+            maxWarnings = Integer.MAX_VALUE
+            configFile = new File(chDir, 'checkstyle.xml')
+        }
+        p.tasks.named('checkstyleMain') {
+            reports {
+                xml.required = true
+                html.required = false
+                xml.outputLocation = new File(outDir, 'checkstyle.xml')
+            }
+        }
+
+        // ── SpotBugs + FindSecBugs ──
+        p.spotbugs {
+            toolVersion = SPOTBUGS_VER
+            ignoreFailures = true
+            showProgress = false
+            effort = com.github.spotbugs.snom.Effort.valueOf('DEFAULT')
+            reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
+            excludeFilter = new File(chDir, 'spotbugs-exclude.xml')
+            maxHeapSize = '3g'
+        }
+        p.dependencies { spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${FINDSEC_VER}" }
+        // Spring Boot dependency-management 가 모든 configuration 의 commons-lang3 를 낮춘다(→ NoClassDefFoundError Strings).
+        // SpotBugs 가 요구하는 버전으로 되돌린다. SpotBugs 를 올리면 그 pom 의 commons-lang3 버전도 확인할 것.
+        // force·substitution 은 그 플러그인이 다시 덮으므로, 그 플러그인의 설정별 관리로 지정한다.
+        p.pluginManager.withPlugin('io.spring.dependency-management') {
+            p.dependencyManagement {
+                configurations(p.configurations.spotbugs, p.configurations.spotbugsPlugins) {
+                    dependencies { dependency 'org.apache.commons:commons-lang3:3.21.0' }
+                }
+            }
+        }
+        p.tasks.named('spotbugsMain') {
+            reports {
+                xml {
+                    required = true
+                    outputLocation = new File(outDir, 'spotbugs.xml')
+                }
+                html {
+                    required = true
+                    outputLocation = new File(outDir, 'spotbugs.html')
+                }
+            }
+        }
+
+        // ── CPD (중복) — Gradle pmd 플러그인에 CPD 태스크가 없어 PMD CLI 를 JavaExec 로 돌린다 ──
+        def cpdCfg = p.configurations.create('codeHealthCpd')
+        p.dependencies {
+            codeHealthCpd "net.sourceforge.pmd:pmd-cli:${PMD_VER}"
+            codeHealthCpd "net.sourceforge.pmd:pmd-java:${PMD_VER}"
+            codeHealthCpd "net.sourceforge.pmd:pmd-javascript:${PMD_VER}"
+        }
+        def cpdTask = { String name, String lang, Object dir, String report ->
+            p.tasks.register(name, JavaExec) {
+                group = 'code-health'
+                classpath = cpdCfg
+                mainClass = 'net.sourceforge.pmd.cli.PmdCli'
+                ignoreExitValue = true
+                args 'cpd', '--minimum-tokens', minTokens, '--language', lang,
+                     '--dir', p.file(dir).absolutePath, '--encoding', 'UTF-8',
+                     '--format', 'xml', '--report-file', new File(outDir, report).absolutePath,
+                     '--no-fail-on-violation', '--skip-lexical-errors'
+                doFirst { outDir.mkdirs(); new File(outDir, report).delete() }
+                doLast { if (!new File(outDir, report).exists()) throw new GradleException("CPD 보고서가 안 생김: ${report}") }
+            }
+        }
+        cpdTask('cpdJava', 'java', 'src/main/java', 'cpd-java.xml')
+        if (frontDir) cpdTask('cpdTs', 'typescript', frontDir, 'cpd-ts.xml')
+    }
+}

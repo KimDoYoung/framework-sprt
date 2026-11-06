@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- code-health PMD 7 규칙. 소음이 큰 규칙(스타일·주석·final 강제 등)은 넣지 않는다.
+     등급(A 기계적 / B 판단 / 참고)은 report.py 의 RULE_GRADE 가 정한다 — 규칙을 더하면 거기도 한 줄. -->
+<ruleset name="code-health"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>AssetERP TOBE code-health</description>
+
+    <!-- 안 쓰는 것 (A) -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryImport"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
+
+    <!-- 예외·로그 -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
+    <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
+    <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+    <rule ref="category/java/bestpractices.xml/SystemPrintln"/>
+    <rule ref="category/java/design.xml/AvoidThrowingRawExceptionTypes"/>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingNPE"/>
+    <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
+
+    <!-- 잘못된 비교·null -->
+    <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
+    <rule ref="category/java/errorprone.xml/UseEqualsToCompareStrings"/>
+    <rule ref="category/java/errorprone.xml/EqualsNull"/>
+    <rule ref="category/java/errorprone.xml/MisplacedNullCheck"/>
+    <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
+    <rule ref="category/java/errorprone.xml/ImplicitSwitchFallThrough"/>
+    <rule ref="category/java/errorprone.xml/CloseResource"/>
+
+    <!-- 단순화 (A) -->
+    <rule ref="category/java/design.xml/SimplifyBooleanReturns"/>
+    <rule ref="category/java/design.xml/CollapsibleIfStatements"/>
+
+    <!-- 복잡도 (참고 — 고칠 의무 없음, 큰 메서드 위치 파악용) -->
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties><property name="reportLevel" value="30"/></properties>
+    </rule>
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties><property name="reportLevel" value="1000"/></properties>
+    </rule>
+
+    <!-- 보안 -->
+    <rule ref="category/java/security.xml/HardCodedCryptoKey"/>
+    <rule ref="category/java/security.xml/InsecureCryptoIv"/>
+</ruleset>

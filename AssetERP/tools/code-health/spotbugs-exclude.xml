@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- code-health SpotBugs 제외. 오탐이 확실한 것만 넣는다(한 줄마다 이유). -->
+<FindBugsFilter>
+    <!-- record·@Getter 가 배열/컬렉션을 그대로 돌려주는 것: DTO 라 의도된 것 -->
+    <Match><Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/></Match>
+    <!-- Spring 주입 필드(생성자 주입)를 직렬화 경고: 빈은 직렬화하지 않음 -->
+    <Match><Bug pattern="SE_BAD_FIELD,SE_TRANSIENT_FIELD_NOT_RESTORED"/></Match>
+    <!-- MyBatis 매퍼 인터페이스·Lombok 생성 코드 -->
+    <Match><Class name="~.*\.mapper\..*Mapper"/></Match>
+    <!-- Spring MVC 컨트롤러 파라미터는 모두 외부 입력 — FindSecBugs 의 일반 경고(경로·로그 주입은 남김) -->
+    <Match><Bug pattern="SPRING_ENDPOINT"/></Match>
+    <!-- 로그 메시지 CRLF 주입: 사내 ERP 로그라 소음이 큼 — 보려면 이 Match 를 지운다 -->
+    <Match><Bug pattern="CRLF_INJECTION_LOGS"/></Match>
+</FindBugsFilter>
