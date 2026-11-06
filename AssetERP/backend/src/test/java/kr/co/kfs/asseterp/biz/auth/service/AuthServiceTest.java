@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.auth.service;
 
+import kr.co.kfs.asseterp.biz.emp.service.EmpAddTitleService;
 import kr.co.kfs.asseterp.biz.audit.dto.AuditEventType;
 import kr.co.kfs.asseterp.biz.audit.dto.AuditResult;
 import kr.co.kfs.asseterp.biz.audit.service.AuditLogService;
@@ -50,6 +51,8 @@ class AuthServiceTest {
     private final LoginLockService loginLockService = mock(LoginLockService.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+    /** 겸직 전환(switchTitle)에서만 쓴다 — 로그인 시험에는 안 쓰인다 */
+    private final EmpAddTitleService empAddTitleService = mock(EmpAddTitleService.class);
     private final AuthProperties authProperties = TestProperties.bind("asseterp.auth", AuthProperties.class);
     private final TenantProperties tenantProperties = TestProperties.bind("asseterp.tenant", TenantProperties.class);
     private final JwtTokenProvider tokenProvider = new JwtTokenProvider(
@@ -62,7 +65,8 @@ class AuthServiceTest {
         @SuppressWarnings("deprecation")
         NoOpPasswordEncoder encoder = (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
         authService = new AuthService(accountMapper, companyMapper, loginHistoryService, encoder, tokenProvider,
-                redisTokenService, authProperties, tenantProperties, loginLockService, auditLogService, eventPublisher);
+                redisTokenService, authProperties, tenantProperties, loginLockService, auditLogService, eventPublisher,
+                empAddTitleService);
     }
 
     private static LoginAccount employee(String lockYn, String transCode, String password, int passwordAgeDays) {
@@ -100,7 +104,7 @@ class AuthServiceTest {
     void 잠긴_사원은_비밀번호가_맞아도_거부되고_실패횟수도_늘지_않는다() {
         givenEmployee(employee(LoginAccount.LOCKED));
 
-        BusinessException e = loginFails(KFS_TENANT, new LoginReq("user1", "1111", null));
+        BusinessException e = loginFails(KFS_TENANT, new LoginReq("user1", "1111", null, null));
 
         assertThat(e.getErrorCode()).isEqualTo(ErrorCode.ACCOUNT_LOCKED);
         verify(loginLockService, never()).recordFailure(any());
@@ -113,7 +117,7 @@ class AuthServiceTest {
     void 퇴사자는_퇴사_안내로_거부한다() {
         givenEmployee(employee(null, LoginAccount.TRANS_RETIRED, "1111", 10));
 
-        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null)).getErrorCode())
+        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null, null)).getErrorCode())
                 .isEqualTo(ErrorCode.RETIRED_EMPLOYEE);
     }
 
@@ -122,7 +126,7 @@ class AuthServiceTest {
         givenEmployee(employee(null));
         when(loginLockService.recordFailure(PERSON_ID)).thenReturn(new LoginLockService.FailureResult(1, 5, false));
 
-        BusinessException e = loginFails(KFS_TENANT, new LoginReq("user1", "wrong", null));
+        BusinessException e = loginFails(KFS_TENANT, new LoginReq("user1", "wrong", null, null));
 
         assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOGIN_FAILED);
         assertThat(e.getMessage()).contains("1/5회");
@@ -134,7 +138,7 @@ class AuthServiceTest {
         givenEmployee(employee("false"));
         when(loginLockService.recordFailure(PERSON_ID)).thenReturn(new LoginLockService.FailureResult(5, 5, true));
 
-        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "wrong", null)).getErrorCode())
+        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "wrong", null, null)).getErrorCode())
                 .isEqualTo(ErrorCode.ACCOUNT_LOCKED);
         verify(auditLogService).record(eq(AuditEventType.ACCOUNT_LOCKED), eq(AuditResult.FAIL), eq("kfstest:user1"), any(), any());
         verify(eventPublisher).publishEvent(new SessionTerminatedEvent(PERSON_ID, null, SessionTerminateReason.ACCOUNT_LOCKED));
@@ -144,19 +148,21 @@ class AuthServiceTest {
     void 회사관리자는_비밀번호가_틀려도_잠그지_않는다() {
         when(accountMapper.findManager("kfstest", "admin")).thenReturn(Optional.of(manager("kfstest")));
 
-        assertThat(loginFails(KFS_TENANT, new LoginReq("admin", "wrong", null)).getErrorCode())
+        assertThat(loginFails(KFS_TENANT, new LoginReq("admin", "wrong", null, null)).getErrorCode())
                 .isEqualTo(ErrorCode.LOGIN_FAILED);
         verify(loginLockService, never()).recordFailure(any());
     }
 
     @Test
-    void 비밀번호가_없거나_만료된_사원은_변경_안내로_거부한다() {
+    void 비밀번호가_없으면_초기화_안내_만료면_변경_안내로_거부한다() {
+        // 미설정과 만료를 나눠 안내한다(2026-11-05 로그인 보강 639c0c7c)
         givenEmployee(employee(null, "100", null, 0));
-        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null)).getErrorCode())
-                .isEqualTo(ErrorCode.PASSWORD_CHANGE_REQUIRED);
+        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null, null)).getErrorCode())
+                .isEqualTo(ErrorCode.PASSWORD_INIT_REQUIRED);
+        verify(loginHistoryService).record(any(), eq(LoginHistoryMapper.STATUS_PASSWORD_NOT_SET), any(), any());
 
         givenEmployee(employee(null, "100", "1111", 90));
-        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null)).getErrorCode())
+        assertThat(loginFails(KFS_TENANT, new LoginReq("user1", "1111", null, null)).getErrorCode())
                 .isEqualTo(ErrorCode.PASSWORD_CHANGE_REQUIRED);
         verify(loginHistoryService).record(any(), eq(LoginHistoryMapper.STATUS_PASSWORD_EXPIRED), any(), any());
     }
@@ -165,7 +171,7 @@ class AuthServiceTest {
     void 로그인_성공_시_실패횟수를_초기화하고_세션을_등록한다() {
         givenEmployee(employee(null));
 
-        var res = authService.login(new LoginReq("user1", "1111", null), KFS_TENANT, "127.0.0.1", "JUnit").loginRes();
+        var res = authService.login(new LoginReq("user1", "1111", null, null), KFS_TENANT, "127.0.0.1", "JUnit").loginRes();
 
         assertThat(res.username()).isEqualTo("kfstest:user1");
         assertThat(res.tenant()).isEqualTo("kfstest");
@@ -180,7 +186,7 @@ class AuthServiceTest {
     void 일반_회사_서브도메인에서는_요청의_회사코드를_무시한다() {
         givenEmployee(employee(null));
 
-        authService.login(new LoginReq("user1", "1111", "tdmtest"), KFS_TENANT, "127.0.0.1", "JUnit");
+        authService.login(new LoginReq("user1", "1111", "tdmtest", null), KFS_TENANT, "127.0.0.1", "JUnit");
 
         verify(accountMapper).findEmployee("kfstest", "user1");
         verify(companyMapper, never()).findByCompanyCode(any());
@@ -191,7 +197,7 @@ class AuthServiceTest {
         when(companyMapper.findByCompanyCode("kfstest")).thenReturn(Optional.of(KFS));
         givenEmployee(employee(null));
 
-        var res = authService.login(new LoginReq("user1", "1111", "kfstest"), ADMIN_TENANT, "127.0.0.1", "JUnit").loginRes();
+        var res = authService.login(new LoginReq("user1", "1111", "kfstest", null), ADMIN_TENANT, "127.0.0.1", "JUnit").loginRes();
 
         assertThat(res.companyCode()).isEqualTo("kfstest");
         assertThat(res.tenant()).isEqualTo("admin");
@@ -201,7 +207,7 @@ class AuthServiceTest {
     void admin_테넌트_관리자는_SYSADMIN_권한을_받고_세션ID는_음수다() {
         when(accountMapper.findManager("admin", "admin")).thenReturn(Optional.of(manager("admin")));
 
-        var res = authService.login(new LoginReq("admin", "1111", null), ADMIN_TENANT, "127.0.0.1", "JUnit").loginRes();
+        var res = authService.login(new LoginReq("admin", "1111", null, null), ADMIN_TENANT, "127.0.0.1", "JUnit").loginRes();
 
         assertThat(res.userId()).isEqualTo(-7L);
         assertThat(res.roles()).containsExactly("ROLE_ADMIN", "ROLE_SYSADMIN");
@@ -211,7 +217,7 @@ class AuthServiceTest {
     void 로그인_성공_시_새_jti를_제외한_이전_세션_종료_이벤트를_발행한다() {
         givenEmployee(employee(null));
 
-        String jti = authService.login(new LoginReq("user1", "1111", null), KFS_TENANT, "127.0.0.1", "JUnit")
+        String jti = authService.login(new LoginReq("user1", "1111", null, null), KFS_TENANT, "127.0.0.1", "JUnit")
                 .loginRes().jti();
 
         ArgumentCaptor<SessionTerminatedEvent> captor = ArgumentCaptor.forClass(SessionTerminatedEvent.class);

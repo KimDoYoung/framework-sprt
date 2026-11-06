@@ -187,7 +187,7 @@ class TdmCheckManlDbTest {
         List<Long> ids = items().stream().map(CheckManlDetailRes::chckManlId).toList();
         long recordBefore = count("SELECT COUNT(*) FROM tdm55_chck_record");
 
-        manlService.batchComplete(USER, new CheckBatchCompleteReq(ids, "2026-11-05", "9", "해당없음", "일괄 의견"));
+        manlService.batchComplete(USER, new CheckBatchCompleteReq(ids, "2026-11-05", "9", "해당없음", "일괄 의견", null));
         assertThat(statuses()).containsExactly("19");
         assertThat(items()).allMatch(r -> "9".equals(r.checkResultCode()) && "일괄 의견".equals(r.checkCmnt()));
         assertThat(count("SELECT COUNT(*) FROM tdm55_chck_record")).isEqualTo(recordBefore + 3);
@@ -197,7 +197,7 @@ class TdmCheckManlDbTest {
         assertThat(items()).allMatch(r -> r.checkResultCode() == null && r.checkDate() == null && r.checkCmnt() == null);
         assertThat(count("SELECT COUNT(*) FROM tdm55_chck_record")).isEqualTo(recordBefore + 6);
         assertThatThrownBy(() -> manlService.batchCancel(OTHER, ids)).isInstanceOf(BusinessException.class);
-        assertThatThrownBy(() -> manlService.batchComplete(USER, new CheckBatchCompleteReq(List.of(), "2026-11-05", "9", "해당없음", null)))
+        assertThatThrownBy(() -> manlService.batchComplete(USER, new CheckBatchCompleteReq(List.of(), "2026-11-05", "9", "해당없음", null, null)))
                 .isInstanceOf(BusinessException.class);
     }
 }
