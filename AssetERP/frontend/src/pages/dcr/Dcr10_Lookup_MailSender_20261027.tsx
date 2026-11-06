@@ -194,7 +194,7 @@ export const Dcr10_Lookup_MailSender_20261027: React.FC<Props> = ({ target, onCl
             <Field label="제 목"><Input value={title} onChange={e => setTitle(e.target.value)} /></Field>
             <Field label="내 용" align="flex-start">
               <div style={{ flex: 1, minWidth: 0 }}>
-                <HtmlEditor key={editorKey} value={initialHtml} onChange={setHtml} height={350} />
+                <HtmlEditor toolbar="mail" key={editorKey} value={initialHtml} onChange={setHtml} height={350} />
               </div>
             </Field>
             <Field label="첨부 파일" align="flex-start">

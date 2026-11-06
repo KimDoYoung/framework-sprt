@@ -69,7 +69,7 @@ export const Scm11_Lookup_Result: React.FC<Props> = ({ open, devStep, editable =
       }
     >
       {editable
-        ? <HtmlEditor key={String(open)} value={initial} onChange={setHtml} height={520} />
+        ? <HtmlEditor toolbar="client" key={String(open)} value={initial} onChange={setHtml} height={520} />
         : <HtmlView html={devStep?.result ?? ''} height={560} />}
     </LookupModal>
   );

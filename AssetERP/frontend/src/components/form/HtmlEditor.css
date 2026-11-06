@@ -1,0 +1,18 @@
+/* HtmlEditor (Jodit) */
+.html-editor { position: relative; display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; }
+.html-editor .jodit-react-container,
+.html-editor .jodit-container { flex: 1; min-height: 0; }
+.html-editor .jodit-container:not(.jodit_inline) { border-color: #d9d9d9; border-radius: 4px; }
+.html-editor .jodit-wysiwyg { font-size: 13px; }
+.html-editor .jodit-wysiwyg table td,
+.html-editor .jodit-wysiwyg table th { min-width: 20px; }
+
+/* 툴바 접기(CKEditor toolbarCanCollapse) — 오른쪽 위 화살표 */
+.html-editor.is-collapsible .jodit-toolbar__box { padding-right: 22px; }
+.html-editor.is-collapsed { padding-top: 20px; border: 1px solid #d9d9d9; border-bottom: 0; border-radius: 4px 4px 0 0; background: #f9f9f9; }
+.html-editor.is-collapsed .jodit-toolbar__box { display: none; }
+.html-editor-collapser {
+  position: absolute; top: 2px; right: 2px; z-index: 2; width: 18px; height: 16px; padding: 0; border: 0;
+  background: transparent; color: #666; cursor: pointer; font-size: 10px; line-height: 16px;
+}
+.html-editor-collapser:hover { color: #1677ff; }

@@ -66,7 +66,7 @@ export const Biz50_Lookup_MailMapping: React.FC<Props> = ({ target, onClose }) =
       {/* [E0] 화면 열림 (생성자 L54-88) → getEditor(), show(). 편집기는 만들 때 한 번만 값을 넣는다 → 메일양식 행이 바뀌면 key 로 새로 */}
       <div style={{ display: 'flex', gap: 16 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <HtmlEditor key={target?.erpSetupId ?? 'none'} value={target?.mailForm ?? undefined} onChange={setHtml} height={560} />
+          <HtmlEditor toolbar="mail" key={target?.erpSetupId ?? 'none'} value={target?.mailForm ?? undefined} onChange={setHtml} height={560} />
         </div>
         <div style={{ width: 150, flex: 'none', paddingTop: 40, lineHeight: '180%', fontWeight: 'bold' }}>
           {getErpMailMappingTags().map(t => <div key={t}>{`#{${t}}`}</div>)}

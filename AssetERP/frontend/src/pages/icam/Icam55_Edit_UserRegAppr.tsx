@@ -95,7 +95,7 @@ export const Icam55_Edit_UserRegAppr: React.FC<Props> = ({ model, onSaved, onCon
             </Tooltip>
           </div>
           <div style={{ flex: 1, minHeight: 0, maxWidth: 700 }}>
-            <HtmlEditor key={contentKey} value={regContent} onChange={setRegContent} height={190} />
+            <HtmlEditor toolbar="client" key={contentKey} value={regContent} onChange={setRegContent} height={190} />
           </div>
         </div>
       </div>

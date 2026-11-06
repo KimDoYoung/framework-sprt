@@ -43,7 +43,7 @@ export const Sys90_Lookup_HappenRemedy: React.FC<Props> = ({ html, onConfirm, on
         </div>
       }
     >
-      {onConfirm ? <HtmlEditor value={html} onChange={setText} height={560} /> : <HtmlView html={html} height={560} />}
+      {onConfirm ? <HtmlEditor toolbar="client" value={html} onChange={setText} height={560} /> : <HtmlView html={html} height={560} />}
     </LookupModal>
   );
 };

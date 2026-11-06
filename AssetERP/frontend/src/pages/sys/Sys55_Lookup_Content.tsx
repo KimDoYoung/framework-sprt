@@ -86,7 +86,7 @@ export const Sys55_Lookup_Content: React.FC<Props> = ({ open, mode, menuGuideCom
     >
       {mode === 'view'
         ? <HtmlView html={content} height={560} />
-        : <HtmlEditor key={editorKey} value={content} onChange={setHtml} height={520} />}
+        : <HtmlEditor toolbar="client" key={editorKey} value={content} onChange={setHtml} height={520} />}
     </LookupModal>
   );
 };

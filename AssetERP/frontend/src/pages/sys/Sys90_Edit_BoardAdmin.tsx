@@ -127,7 +127,7 @@ export const Sys90_Edit_BoardAdmin: React.FC<Props> = ({ model, onSaved }) => {
           {/* [E9] anchor.MouseDown (L278) → Sys90_Lookup_HappenRemedy.open(처리방안, callback → 편집기에 넣기) */}
           <Label onClick={() => setRemedyHtml(remedy)}>처리방안 :</Label>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <HtmlEditor key={remedyKey} value={remedy} onChange={setRemedy} height={135} />
+            <HtmlEditor toolbar="client" key={remedyKey} value={remedy} onChange={setRemedy} height={135} />
           </div>
         </div>
         <div style={{ width: 600, display: 'flex' }}>

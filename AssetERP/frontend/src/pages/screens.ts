@@ -431,6 +431,7 @@ import { Biz20_Tab_FeeCharge } from './biz/Biz20_Tab_FeeCharge';
 import { Biz51_Tab_ErpContCorp } from './biz/Biz51_Tab_ErpContCorp';
 import { Biz55_Tab_ErpFeeCharge } from './biz/Biz55_Tab_ErpFeeCharge';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
+import { Test_Tab_EditorCompare } from './test/Test_Tab_EditorCompare';
 
 /**
  * 화면 등록표 (AS-IS MenuOpener): sys06_menu.sys06_class_nm(메뉴 키) → 화면 컴포넌트.
@@ -870,4 +871,5 @@ export const SCREENS: Record<string, React.FC> = {
   Scm01_Tab_DevMng, // EE16 (메뉴 #1262. + Scm01_Edit_DevMngRO·Scm01_Edit_DevMng·Scm10_Grid_Dev·Scm03_Grid_ExpectProgram·Scm11_Lookup_DevStep·Scm11_Lookup_Result·Scm10_Lookup_Note·Scm12_Lookup_DevStepRule·Scm13_Lookup_DevProgram·Scm13_Edit_DevProgram·Scm30_Lookup_SelectMulti·Scm01_Lookup_ResultContent·Scm01_Lookup_ApprFile + components/lookup/Biz13_Lookup_WithCorp)
   Scm01_Tab_Sr, // EE15 (메뉴 #1261. + Scm01_Edit_Sr·Scm01_Edit_SrRO·Scm01_Lookup_SrContent·Scm01_Grid_ApprFile·Scm02_Grid_ApprStep·Scm02_Edit_ApprStep·Scm02_Edit_NoteMessage)
   Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)
+  Test_Tab_EditorCompare, // HTML 편집기 비교 시험 — Tiptap(보강) vs Jodit (원본 없음, CKEditor 대체 선정용)
 };

@@ -519,7 +519,7 @@ export const Pay50_Lookup_ExpenseRequestInsert: React.FC<Props> = ({ open, mode,
           <div style={{ width: 115, flexShrink: 0 }} />
           <div style={{ width: 740 }}>
             {isView ? <HtmlView html={html} height={200} /> : (
-              ready && <HtmlEditor key={editorKey} value={html} onChange={setHtml} height={200} />
+              ready && <HtmlEditor toolbar="client" key={editorKey} value={html} onChange={setHtml} height={200} />
             )}
           </div>
         </Row>

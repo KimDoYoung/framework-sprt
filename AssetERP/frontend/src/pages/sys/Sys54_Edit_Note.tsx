@@ -56,7 +56,7 @@ export const Sys54_Edit_Note: React.FC<Props> = ({ companyId, history, onClose, 
       }
     >
       {/* key: 다른 행으로 다시 열면 편집기를 새로 만든다 (setHtmlText) */}
-      {history && <HtmlEditor key={history.specificMenuHistoryId} value={history.note} onChange={setNote} height={540} />}
+      {history && <HtmlEditor toolbar="client" key={history.specificMenuHistoryId} value={history.note} onChange={setNote} height={540} />}
     </Modal>
   );
 };

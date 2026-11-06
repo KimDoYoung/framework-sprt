@@ -68,7 +68,7 @@ export const Scm01_Lookup_SrContent: React.FC<Props> = ({ open, srContent, enabl
       }
     >
       {enabledYn
-        ? <HtmlEditor key={String(open)} value={srContent} onChange={setHtml} height={520} />
+        ? <HtmlEditor toolbar="client" key={String(open)} value={srContent} onChange={setHtml} height={520} />
         : <HtmlView html={srContent} height={560} />}
     </LookupModal>
   );

@@ -172,7 +172,7 @@ export const Scm11_Edit_DevStep: React.FC<Props> = ({ devStep, enabled, mine, on
           <a style={{ ...LABEL, width: 120, marginLeft: 40, cursor: 'pointer', textDecoration: 'none', color: 'inherit', paddingTop: 4 }}
              onClick={() => { if (devStep) setResultOpen(true); }}>결과상세 :</a>
           <div style={{ width: 950, flex: 'none' }}>
-            <HtmlEditor key={form.htmlKey} value={form.html} onChange={html => set({ html })} height={170} />
+            <HtmlEditor toolbar="client" key={form.htmlKey} value={form.html} onChange={html => set({ html })} height={170} />
           </div>
         </div>
         <div style={{ ...ROW, alignItems: 'flex-start' }}>

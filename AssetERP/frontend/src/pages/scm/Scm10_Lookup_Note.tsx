@@ -49,7 +49,7 @@ export const Scm10_Lookup_Note: React.FC<Props> = ({ open, note, editable, onRes
       }
     >
       {editable
-        ? <HtmlEditor key={String(open)} value={note} onChange={setHtml} height={520} />
+        ? <HtmlEditor toolbar="client" key={String(open)} value={note} onChange={setHtml} height={520} />
         : <HtmlView html={note} height={560} />}
     </LookupModal>
   );

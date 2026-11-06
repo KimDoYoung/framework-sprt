@@ -126,7 +126,7 @@ export const Sys90_Edit_Board: React.FC<Props> = ({ model, onSaved, onDeleted })
           {/* [E6] anchor.MouseDown (L214) → Sys90_Lookup_HappenReason.open(getHtmlText(), callback → setHtmlText) */}
           <Label onClick={() => setReasonHtml(reason)}>본문내용 :</Label>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <HtmlEditor key={reasonKey} value={reason} onChange={setReason} height={135} />
+            <HtmlEditor toolbar="client" key={reasonKey} value={reason} onChange={setReason} height={135} />
           </div>
         </div>
         <div style={{ width: 600, display: 'flex' }}>

@@ -213,7 +213,7 @@ export const Scm01_Edit_Sr: React.FC<Props> = ({ sr, onSaved }) => {
             {/* [E13] anchor.MouseDown (L294) → Scm01_Lookup_SrContent.open(html, enabledYn, srModel, callback) */}
             <a style={{ ...LABEL, width: 110, paddingTop: 5, textDecoration: 'none', cursor: 'pointer' }} onClick={() => setContentOpen(true)}>요청내용 :</a>
             <div style={{ flex: 1, minWidth: 0, pointerEvents: editable ? 'auto' : 'none', opacity: editable ? 1 : 0.7 }}>
-              <HtmlEditor key={editorKey} value={html} onChange={setHtml} height={150} />
+              <HtmlEditor toolbar="client" key={editorKey} value={html} onChange={setHtml} height={150} />
             </div>
           </div>
         </div>

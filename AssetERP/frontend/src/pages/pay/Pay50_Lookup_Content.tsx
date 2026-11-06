@@ -73,7 +73,7 @@ export const Pay50_Lookup_Content: React.FC<Props> = ({ open, mode, content, exp
     >
       {mode === 'view'
         ? <HtmlView html={content} height={540} />
-        : <HtmlEditor key={nonce} value={content} onChange={setHtml} height={540} />}
+        : <HtmlEditor toolbar="client" key={nonce} value={content} onChange={setHtml} height={540} />}
     </LookupModal>
   );
 };

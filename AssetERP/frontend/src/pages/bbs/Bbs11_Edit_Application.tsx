@@ -159,7 +159,7 @@ const Body: React.FC<Required<Pick<Props, 'userId' | 'onClose' | 'onChanged' | '
         <Field label="내용">
           {/* getEditor() L251-263: HTML 편집기(높이 450). 본인 것이 아니거나 진행된 신청서는 읽기 전용 */}
           <div style={{ pointerEvents: editable ? undefined : 'none', opacity: editable ? 1 : 0.7 }}>
-            <HtmlEditor key={editorKey} value={f.content} onChange={h => { html.current = h; }} height={400} />
+            <HtmlEditor toolbar="client" key={editorKey} value={f.content} onChange={h => { html.current = h; }} height={400} />
           </div>
         </Field>
       </div>
