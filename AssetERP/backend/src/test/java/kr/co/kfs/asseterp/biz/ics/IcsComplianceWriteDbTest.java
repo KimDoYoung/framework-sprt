@@ -32,8 +32,7 @@ class IcsComplianceWriteDbTest {
     private static final UserPrincipal ME = UserPrincipal.builder().userId(999000111L).companyId(28000L).build();
     private static final LocalDate STD_DATE = LocalDate.of(2026, 9, 30);
     private static final String YYYYMM = "2026.09";
-    /** 제출할 때 고르는 확인자(시험용 사원 ID). 확인자가 이미 상신했는지(stdDate·cycleType) 보는 검사는
-     *  ics32_appr_type 열이 필요해 IcsComplianceConfirmV28DbTest 가 맡는다 — 여기서는 null 로 건너뛴다 */
+    /** 제출할 때 고르는 확인자(시험용 사원 ID — 상신한 부서장 준수확인서가 없어 확인자 상신 검사를 통과한다) */
     private static final Long CONFIRMER = 999000333L;
 
     @Test
@@ -66,7 +65,7 @@ class IcsComplianceWriteDbTest {
         assertThat(service.get(ME, blank.complianceWriteId()).reason()).isEqualTo("시험 사유");
 
         // 제출 → 새로작성(삭제)은 막힌다. 제출취소 뒤에는 지워진다
-        service.updateFixYn(ME, new IcsComplianceWriteFixReq(true, List.of(n.complianceWriteId(), blank.complianceWriteId()), CONFIRMER, null, null));
+        service.updateFixYn(ME, new IcsComplianceWriteFixReq(true, List.of(n.complianceWriteId(), blank.complianceWriteId()), CONFIRMER, STD_DATE, "M"));
         assertThat(service.list(ME, STD_DATE, "M", false)).filteredOn(r -> r.complianceWriteId() != null).allMatch(IcsComplianceWriteRes::fixYn);
         assertThatThrownBy(() -> service.deleteByPersonId(ME, STD_DATE, "M")).isInstanceOf(BusinessException.class)
                 .hasMessageContaining("제출취소 후 시도하세요");
@@ -84,7 +83,7 @@ class IcsComplianceWriteDbTest {
 
         assertThatThrownBy(() -> service.get(other, mine.complianceWriteId())).isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> service.updateReason(other, mine.complianceWriteId(), "남의 사유")).isInstanceOf(BusinessException.class);
-        assertThat(service.updateFixYn(other, new IcsComplianceWriteFixReq(true, List.of(mine.complianceWriteId()), CONFIRMER, null, null))).isZero();
+        assertThat(service.updateFixYn(other, new IcsComplianceWriteFixReq(true, List.of(mine.complianceWriteId()), CONFIRMER, STD_DATE, "M"))).isZero();
         assertThat(service.get(ME, mine.complianceWriteId()).fixYn()).isFalse();
     }
 }
