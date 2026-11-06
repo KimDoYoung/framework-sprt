@@ -250,7 +250,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   // UX-07: 다시 그려도 값이 안 바뀐 셀은 갱신되지 않으므로 표시 상태가 바뀔 때 셀 클래스를 다시 계산한다
   useEffect(() => { gridRef.current?.api?.refreshCells({ force: true }); }, [version, rows]);
 
-  const gridProps: GridOptions<T> = {
+  // useMemo: 반환 객체를 안정시키려면 gridProps 도 rows·loading 이 바뀔 때만 새로 만들어야 한다 (나머지는 ref·안정 콜백)
+  const gridProps = useMemo<GridOptions<T>>(() => ({
     rowData: rows,
     loading,
     getRowId: (p: GetRowIdParams<T>) => String(getId(p.data)),
@@ -274,7 +275,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     enterNavigatesVertically: true,
     enterNavigatesVerticallyAfterEdit: true,
     stopEditingWhenCellsLoseFocus: true,
-  };
+  }), [rows, loading, getId, onCellValueChanged]);
 
   /** 저장하지 않은 추가·변경 행이 있는지 (AS-IS grid.getStore().getModifiedRecords().size() > 0) */
   const hasChanges = useCallback(() => dirty.current.size > 0, []);
@@ -293,5 +294,10 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     return { added, modified, editing };
   }, [rows, getId, editing, version]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
+  // 반환 객체를 useMemo 로 안정시킨다 — 렌더마다 새 객체면 `[crud]` 를 useEffect·useCallback 의존성에 둘 수 없다(무한 반복).
+  // rows·loading·changes 가 바뀔 때만 새 객체가 된다. 함수 필드(retrieve·saveRows 등)는 원래 useCallback 이다.
+  return useMemo(
+    () => ({ gridRef, rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps }),
+    [rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps],
+  );
 }
