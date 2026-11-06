@@ -69,7 +69,7 @@ public class DcrLinkService {
     /** AS-IS linkCheck: 모든 회사에 없는 Link 코드를 넣는다(조회가 쓰기) → 새로 넣은 건수. 관리자 회사만 */
     @Transactional
     public int linkCheck(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<String> linkCodes = mapper.selectLinkCodes(LINK_KIND_CODE);
         int count = 0;
         for (Long companyId : mapper.selectCompanyIds()) {
@@ -124,7 +124,7 @@ public class DcrLinkService {
     /** AS-IS updateLink L216: 관리자 회사의 Link(문서분류·비고)를 고른 회사들에 복사 → 처리한 건수 */
     @Transactional
     public int copyLink(UserPrincipal user, DcrLinkCopyReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         int count = 0;
         for (Long companyId : companies(req)) {
             for (DcrLinkRes link : sourceLinks(user, req)) {
@@ -139,7 +139,7 @@ public class DcrLinkService {
     /** AS-IS updateForm L189: 관리자 회사의 데이터연결 양식을 새 양식 행으로 복사하고 고른 회사들의 Link에 연결 → 처리한 건수 */
     @Transactional
     public int copyForm(UserPrincipal user, DcrLinkCopyReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         int count = 0;
         for (Long companyId : companies(req)) {
             for (DcrLinkRes link : sourceLinks(user, req)) {
@@ -168,18 +168,12 @@ public class DcrLinkService {
                 .toList();
     }
 
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
-    }
-
     /** 대상 회사: 없거나 로그인 회사면 로그인 회사, 다른 회사는 관리자 회사만 */
     private Long targetCompany(UserPrincipal user, Long companyId) {
         if (companyId == null || companyId.equals(user.getCompanyId())) {
             return user.getCompanyId();
         }
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return companyId;
     }
 }

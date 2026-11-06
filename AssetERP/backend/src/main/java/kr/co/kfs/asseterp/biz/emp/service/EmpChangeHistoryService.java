@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 사원정보 변경조회 (AS-IS Emp00_Tab_ChangeHistory → emp.Emp03_Trans·Emp08_License·Emp11_Reward.selectByHistory, sys.Sys99_Print.insertRdEmp03/08/11History) */
 @Service
@@ -28,17 +29,17 @@ public class EmpChangeHistoryService {
 
     /** AS-IS emp.Emp03_Trans.selectByHistory — empTransCode 가 비면 전체 */
     public List<ChangeHistoryTransRes> searchTrans(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText, String empTransCode) {
-        return mapper.selectTransHistory(user.getCompanyId(), startDate, closeDate, like(searchText), blankToNull(empTransCode));
+        return mapper.selectTransHistory(user.getCompanyId(), startDate, closeDate, Texts.like(searchText), blankToNull(empTransCode));
     }
 
     /** AS-IS emp.Emp08_License.selectByHistory */
     public List<ChangeHistoryLicenseRes> searchLicenses(UserPrincipal user, LocalDate startDate, String searchText, String transCode) {
-        return mapper.selectLicenseHistory(user.getCompanyId(), startDate, like(searchText), blankToDefault(transCode));
+        return mapper.selectLicenseHistory(user.getCompanyId(), startDate, Texts.like(searchText), blankToDefault(transCode));
     }
 
     /** AS-IS emp.Emp11_Reward.selectByHistory */
     public List<ChangeHistoryRewardRes> searchRewards(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
-        return mapper.selectRewardHistory(user.getCompanyId(), startDate, closeDate, like(searchText));
+        return mapper.selectRewardHistory(user.getCompanyId(), startDate, closeDate, Texts.like(searchText));
     }
 
     /** AS-IS sys.Sys99_Print.insertRdEmp03History L4779: ① 내 출력 자료 정리 ② 같은 조건 조회 결과를 sys99_print 에 삽입 ③ 새 groupId 반환 */
@@ -47,7 +48,7 @@ public class EmpChangeHistoryService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME);
         mapper.insertPrintTrans(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME, groupId,
-                req.startDate(), req.closeDate(), like(req.searchText()), blankToNull(req.empTransCode()));
+                req.startDate(), req.closeDate(), Texts.like(req.searchText()), blankToNull(req.empTransCode()));
         return String.valueOf(groupId);
     }
 
@@ -57,7 +58,7 @@ public class EmpChangeHistoryService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME);
         mapper.insertPrintLicense(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME, groupId,
-                req.startDate(), like(req.searchText()), TRANS_CODE_ALL);
+                req.startDate(), Texts.like(req.searchText()), TRANS_CODE_ALL);
         return String.valueOf(groupId);
     }
 
@@ -67,12 +68,8 @@ public class EmpChangeHistoryService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME);
         mapper.insertPrintReward(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME, groupId,
-                req.startDate(), req.closeDate(), like(req.searchText()));
+                req.startDate(), req.closeDate(), Texts.like(req.searchText()));
         return String.valueOf(groupId);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 
     private static String blankToNull(String s) {

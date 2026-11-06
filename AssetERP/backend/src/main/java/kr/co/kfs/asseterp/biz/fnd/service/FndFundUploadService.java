@@ -6,24 +6,17 @@ import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundUploadMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /** AS-IS server/utils/file/ExcelUpload.fundUpload L1402-1573 (P05 [엑셀업로드]) + ./excelTemplete/Template_펀드정보.xlsx ([템플릿]) */
 @Service
@@ -36,11 +29,7 @@ public class FndFundUploadService {
     private final FndFundUploadMapper mapper;
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -67,11 +56,11 @@ public class FndFundUploadService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String fundCode = cellString(row.getCell(0));
-                String closeCell = cellString(row.getCell(14));
+                String fundCode = ExcelCells.string(row.getCell(0));
+                String closeCell = ExcelCells.string(row.getCell(14));
                 String closeYn = "Y".equalsIgnoreCase(closeCell) ? "true" : "false";
 
-                String officeWorkCode = cellString(row.getCell(18));
+                String officeWorkCode = ExcelCells.string(row.getCell(18));
                 if (officeWorkCode != null) {
                     String found = mapper.selectOfficeWorkCodeByKofia(companyId, officeWorkCode);
                     if (found == null) {
@@ -79,21 +68,21 @@ public class FndFundUploadService {
                     }
                     officeWorkCode = found;
                 }
-                String consignmentCode = mapper.selectCorpCode("1", cellString(row.getCell(19)), "1", officeWorkCode);
+                String consignmentCode = mapper.selectCorpCode("1", ExcelCells.string(row.getCell(19)), "1", officeWorkCode);
 
                 Long fundCodeId = mapper.selectFundCodeId(companyId, fundCode);
-                LocalDate startDate = cellDate(row.getCell(9));
-                LocalDate endDate = cellDate(row.getCell(13));
+                LocalDate startDate = ExcelCells.date(row.getCell(9));
+                LocalDate endDate = ExcelCells.date(row.getCell(13));
                 if (fundCodeId == null) {
                     fundCodeId = mapper.selectNextId();
                     mapper.excelInsertFund(new FundExcelRow(fundCodeId, null, companyId, fundCode, startDate, endDate, closeYn,
                             null, null, null, null, null, null, null, null, null, null, null, null, null, null));
                 }
                 FundExcelRow info = new FundExcelRow(fundCodeId, mapper.selectNextId(), companyId, fundCode, startDate, endDate, closeYn,
-                        toDay, cellString(row.getCell(5)), cellString(row.getCell(4)), cellString(row.getCell(1)),
-                        cellString(row.getCell(21)), cellString(row.getCell(20)), cellString(row.getCell(22)), consignmentCode,
-                        officeWorkCode, cellString(row.getCell(15)), cellString(row.getCell(16)), cellString(row.getCell(17)),
-                        cellString(row.getCell(2)), cellString(row.getCell(3)));
+                        toDay, ExcelCells.string(row.getCell(5)), ExcelCells.string(row.getCell(4)), ExcelCells.string(row.getCell(1)),
+                        ExcelCells.string(row.getCell(21)), ExcelCells.string(row.getCell(20)), ExcelCells.string(row.getCell(22)), consignmentCode,
+                        officeWorkCode, ExcelCells.string(row.getCell(15)), ExcelCells.string(row.getCell(16)), ExcelCells.string(row.getCell(17)),
+                        ExcelCells.string(row.getCell(2)), ExcelCells.string(row.getCell(3)));
                 mapper.excelDeleteInfo(fundCodeId, toDay);
                 mapper.excelInsertInfo(info);
                 count++;
@@ -104,35 +93,5 @@ public class FndFundUploadService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

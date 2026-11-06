@@ -30,7 +30,7 @@ public class SysCodeKindService {
         String like = kindName == null || kindName.isEmpty() ? "%" : "%" + kindName + "%";
         String sys = sysYn == null || sysYn.isEmpty() ? "false" : sysYn;
         if (!"false".equals(sys)) {
-            requireSysAdmin(user);
+            user.requireSysAdmin();
         }
         return sysCodeKindMapper.searchCodeKinds(new CodeKindSearchParam(like, sys));
     }
@@ -46,7 +46,7 @@ public class SysCodeKindService {
      */
     @Transactional
     public List<CodeKindRes> updateCodeKinds(UserPrincipal user, List<CodeKindSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<CodeKindRes> saved = new ArrayList<>();
         for (CodeKindSaveReq req : rows) {
             if (req.kindCd() == null || req.kindCd().isBlank()) {
@@ -72,16 +72,10 @@ public class SysCodeKindService {
     /** AS-IS delete(UpdateDataModel.deleteModel) L65-69: 하위 코드 검사 없음(원본 그대로) → 지운 건수 */
     @Transactional
     public int deleteCodeKinds(UserPrincipal user, List<Long> codeKindIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (codeKindIds == null || codeKindIds.isEmpty()) {
             return 0;
         }
         return sysCodeKindMapper.deleteCodeKinds(codeKindIds);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

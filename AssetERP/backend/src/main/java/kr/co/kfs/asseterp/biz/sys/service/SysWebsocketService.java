@@ -56,7 +56,7 @@ public class SysWebsocketService {
 
     /** AS-IS retrieve() L250-277: 접속 중인 사원 중 고객사·검색어에 맞는 사원(100건 페이지). companyId null = 전체 */
     public PageRes<WebsocketPersonRes> search(UserPrincipal user, Long companyId, String searchText, int offset, int limit) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<Long> loginList = onlineUserIds().stream().filter(id -> id > 0).toList();
         if (loginList.isEmpty()) {
             return new PageRes<>(0, List.of());
@@ -69,7 +69,7 @@ public class SysWebsocketService {
     /** AS-IS SendMessage.sendMessage L119-161: 고른 사원 중 접속 중인 사원에게 알림, 오프라인 사원은 이름을 돌려준다 */
     @Transactional
     public WebsocketResultRes sendAlarm(UserPrincipal user, List<Long> personIds, String message) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireMessage(message);
         Set<Long> online = onlineUserIds();
         List<String> offline = new ArrayList<>();
@@ -88,7 +88,7 @@ public class SysWebsocketService {
     /** AS-IS SendMessage.sendMessageAll L163-180: 접속한 모두에게 알림(공지) */
     @Transactional
     public WebsocketResultRes sendAlarmAll(UserPrincipal user, String message) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireMessage(message);
         pushService.createNotice(new NoticeReq(ALARM_TITLE, message, WsLevel.INFO), user);
         return new WebsocketResultRes(onlineUserIds().size(), List.of());
@@ -97,7 +97,7 @@ public class SysWebsocketService {
     /** AS-IS sendForceLogout() L348-382: 고른 사원 중 접속 중인 사원을 강제 로그아웃, 오프라인 사원은 이름을 돌려준다 */
     @Transactional
     public WebsocketResultRes forceLogout(UserPrincipal user, List<Long> personIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         Set<Long> online = onlineUserIds();
         List<String> offline = new ArrayList<>();
         int done = 0;
@@ -115,7 +115,7 @@ public class SysWebsocketService {
     /** AS-IS sendForceLogoutAll() L384-392: 접속한 모든 사용자(요청한 관리자 자신 포함 — 원본과 같다)를 강제 로그아웃 */
     @Transactional
     public WebsocketResultRes forceLogoutAll(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         Set<Long> online = onlineUserIds();
         for (Long userId : online) {
             authService.forceLogout(userId, user.getUsername());
@@ -133,12 +133,6 @@ public class SysWebsocketService {
     private void requireMessage(String message) {
         if (message == null || message.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "알림내용을 입력해주세요");
-        }
-    }
-
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

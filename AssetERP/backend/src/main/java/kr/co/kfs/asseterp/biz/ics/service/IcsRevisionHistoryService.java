@@ -42,7 +42,7 @@ public class IcsRevisionHistoryService {
     /** AS-IS updateContent: 개정내역 상세내용 저장(관리자 화면만 저장 버튼이 있다) */
     @Transactional
     public void updateContent(UserPrincipal user, Long revisionHistoryId, String content) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         if (mapper.updateContent(revisionHistoryId, content) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }

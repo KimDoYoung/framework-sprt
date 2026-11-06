@@ -29,7 +29,7 @@ public class SysManualService {
     /** AS-IS retrieve() L145-172: manualType 기본 '%', 검색어는 클라이언트가 "%"+값+"%"로 보냈다 → 서버가 만든다. publicCheck=false(A34)는 관리자만 */
     public List<ManualRes> search(UserPrincipal user, String manualType, String searchText, boolean publicCheck) {
         if (!publicCheck) {
-            requireSysAdmin(user);
+            user.requireSysAdmin();
         }
         String type = manualType == null || manualType.isEmpty() ? "%" : manualType;
         String like = searchText == null ? "%%" : "%" + searchText + "%";
@@ -39,7 +39,7 @@ public class SysManualService {
     /** AS-IS FileUpload.uploadSys95 L696-744: 파일마다 매뉴얼 행(공개 false)을 만들고 그 ID를 부모로 첨부를 저장. 한 트랜잭션 */
     @Transactional
     public ManualRes upload(UserPrincipal user, String manualType, MultipartFile file) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (manualType == null || manualType.isBlank() || "%".equals(manualType)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "분류를 선택한 후, 파일을 업로드해 주세요.");
         }
@@ -52,7 +52,7 @@ public class SysManualService {
     /** AS-IS update(UpdateDataModel): 변경 행을 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<ManualRes> update(UserPrincipal user, List<ManualSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<ManualRes> saved = new ArrayList<>();
         for (ManualSaveReq req : rows) {
             if (mapper.updateManual(req) == 0) {
@@ -66,7 +66,7 @@ public class SysManualService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수. 첨부 삭제는 화면이 파일 API로 먼저 한다 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteManuals(ids);
     }
 
@@ -74,12 +74,6 @@ public class SysManualService {
     public void checkManualType(UserPrincipal user, String manualType) {
         if (mapper.checkManualType(user.getCompanyId(), manualType) != 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "사용중인 코드는 삭제 불가합니다");
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

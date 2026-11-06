@@ -9,8 +9,6 @@ import kr.co.kfs.asseterp.biz.pay.mapper.PaySimpleTaxMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -22,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/pay/Pay22_SimpleTaxTable.java + Pay23_SimpleTaxTableOther.java (+ ExcelUpload.simpleTaxTableUpload).
@@ -55,7 +54,7 @@ public class PaySimpleTaxService {
      */
     @Transactional
     public void createDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "적용일은 필수입력 항목입니다");
         }
@@ -73,7 +72,7 @@ public class PaySimpleTaxService {
     /** AS-IS Pay23_SimpleTaxTableOther.deleteByDate: 두 표의 해당 적용일을 모두 지운다 → 지운 건수(초과 표 기준) */
     @Transactional
     public int deleteDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireDate(startDate);
         int count = mapper.deleteOtherByDate(startDate);
         mapper.deleteTableByDate(startDate);
@@ -83,7 +82,7 @@ public class PaySimpleTaxService {
     /** AS-IS Pay22_SimpleTaxTable.deleteByDate: 엑셀업로드 전에 천만원 이하 표를 비운다 → 지운 건수 */
     @Transactional
     public int deleteTable(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireDate(startDate);
         return mapper.deleteTableByDate(startDate);
     }
@@ -94,7 +93,7 @@ public class PaySimpleTaxService {
      */
     @Transactional
     public List<PaySimpleTaxOtherRes> saveOther(UserPrincipal user, List<PaySimpleTaxOtherSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PaySimpleTaxOtherSaveReq req : rows) {
             if (req.startDate() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
@@ -122,7 +121,7 @@ public class PaySimpleTaxService {
     /** AS-IS Pay23_SimpleTaxTableOther.delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int deleteOther(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteOtherByIds(ids);
     }
 
@@ -132,7 +131,7 @@ public class PaySimpleTaxService {
      */
     @Transactional
     public int uploadExcel(UserPrincipal user, LocalDate startDate, MultipartFile file) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireDate(startDate);
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
@@ -148,15 +147,15 @@ public class PaySimpleTaxService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                Long fromAmt = cellLong(row.getCell(0));
-                Long toAmt = cellLong(row.getCell(1));
+                Long fromAmt = ExcelCells.longValue(row.getCell(0));
+                Long toAmt = ExcelCells.longValue(row.getCell(1));
                 if (fromAmt == null || toAmt == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 월급여액(이상·미만)을 읽을 수 없습니다.");
                 }
                 mapper.excelInsert(new PaySimpleTaxRes(mapper.selectNextId(), startDate, fromAmt, toAmt,
-                        cellLong(row.getCell(2)), cellLong(row.getCell(3)), cellLong(row.getCell(4)), cellLong(row.getCell(5)),
-                        cellLong(row.getCell(6)), cellLong(row.getCell(7)), cellLong(row.getCell(8)), cellLong(row.getCell(9)),
-                        cellLong(row.getCell(10)), cellLong(row.getCell(11)), cellLong(row.getCell(12))));
+                        ExcelCells.longValue(row.getCell(2)), ExcelCells.longValue(row.getCell(3)), ExcelCells.longValue(row.getCell(4)), ExcelCells.longValue(row.getCell(5)),
+                        ExcelCells.longValue(row.getCell(6)), ExcelCells.longValue(row.getCell(7)), ExcelCells.longValue(row.getCell(8)), ExcelCells.longValue(row.getCell(9)),
+                        ExcelCells.longValue(row.getCell(10)), ExcelCells.longValue(row.getCell(11)), ExcelCells.longValue(row.getCell(12))));
                 count++;
             }
             return count;
@@ -167,33 +166,9 @@ public class PaySimpleTaxService {
         }
     }
 
-    /** ExcelUpload.getLongCellData — 숫자·수식 숫자는 정수로, 글자는 쉼표를 빼고 숫자면 변환 / 그 밖은 null */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING) {
-            String s = cell.getStringCellValue().replace(",", "");
-            return s.matches("-?\\d+") ? Long.valueOf(s) : null;
-        }
-        return null;
-    }
-
     private static void requireDate(LocalDate startDate) {
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

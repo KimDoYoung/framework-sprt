@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/flt/Flt02_Emp.java (selectByCompanyId L34), Flt01_CompanyStd.selectByDate L36 — J07 임직원매매현황 */
 @Service
@@ -22,7 +23,7 @@ public class FltEmpService {
 
     /** AS-IS Flt02_Emp.selectByCompanyId — 기준일 시점 재직 사원별 현황. 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
     public List<EmpInfoRes> searchInfos(UserPrincipal user, String stdDate, String searchText) {
-        return mapper.selectEmpInfos(user.getCompanyId(), null, stdDate, like(searchText), false);
+        return mapper.selectEmpInfos(user.getCompanyId(), null, stdDate, Texts.like(searchText), false);
     }
 
     /** AS-IS setGridHidden() — 기준관리의 "연간투자한도 숨김". 기준관리가 없으면 false */
@@ -37,7 +38,7 @@ public class FltEmpService {
         if (!hideLimit) headers.add("연간투자한도");
         headers.addAll(List.of("연간투자금액", "누적투자금액", "월매매회전율(%)", "월간 일평균잔고", "위반건수", "준감인의견"));
         List<List<Object>> rows = new ArrayList<>();
-        for (EmpInfoRes r : mapper.selectEmpInfos(user.getCompanyId(), null, stdDate, like(searchText), true)) {
+        for (EmpInfoRes r : mapper.selectEmpInfos(user.getCompanyId(), null, stdDate, Texts.like(searchText), true)) {
             List<Object> row = new ArrayList<>(Arrays.asList(r.orgName(), r.personName(), r.oathYnName(), r.familyYnName(), r.accountCntStr(),
                     r.checkCycleName(), r.rcntReportDate()));
             if (!hideLimit) row.add(r.yearInvestLimit());
@@ -45,9 +46,5 @@ public class FltEmpService {
             rows.add(row);
         }
         return FltExcelWriter.write("임직원매매현황", headers, rows);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

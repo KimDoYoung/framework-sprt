@@ -67,14 +67,14 @@ public class SysSpecificMenuRequestService {
 
     /** AS-IS selectByTextAdmin (관리자 화면): companyId '%' = 전체 고객사 */
     public List<SpecificMenuRequestAdminRes> searchAdmin(UserPrincipal user, String companyId, String stateCd, String specificWorkCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysSpecificMenuRequestMapper.selectByTextAdmin(likeOrAll(companyId), likeOrAll(stateCd), likeOrAll(specificWorkCd));
     }
 
     /** AS-IS 관리자 화면 update(UpdateDataModel): 처리자·처리일·처리상태를 저장하고 다시 읽어 요청 순서대로 */
     @Transactional
     public List<SpecificMenuRequestAdminRes> updateAdmin(UserPrincipal user, List<SpecificMenuRequestAdminSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<SpecificMenuRequestAdminRes> saved = new ArrayList<>();
         for (SpecificMenuRequestAdminSaveReq req : rows) {
             if (sysSpecificMenuRequestMapper.updateSpecificMenuRequestAdmin(req) == 0) {
@@ -96,12 +96,6 @@ public class SysSpecificMenuRequestService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return n;
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     private static String likeOrAll(String value) {

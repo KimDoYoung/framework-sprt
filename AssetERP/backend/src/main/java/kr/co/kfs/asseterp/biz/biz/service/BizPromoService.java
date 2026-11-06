@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS Biz01_Tab_Card·Biz01_Edit_Card·Biz01_Lookup_CardManagement → server/biz/Biz01_Promo.java
@@ -57,7 +58,7 @@ public class BizPromoService {
 
     /** AS-IS selectByCard(companyId, personId = LoginUser) — searchText는 클라이언트가 "%…%"로 감싸 보낸다 */
     public List<BizPromoCardRes> searchByCard(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
-        return mapper.selectByCard(user.getCompanyId(), user.getUserId(), startDate, closeDate, like(searchText));
+        return mapper.selectByCard(user.getCompanyId(), user.getUserId(), startDate, closeDate, Texts.like(searchText));
     }
 
     /** AS-IS closeCheck — 마감된 내역이 하나라도 있으면 true(status -1) */
@@ -82,7 +83,7 @@ public class BizPromoService {
 
     /** AS-IS biz01_promo.selectByProvideCompany — searchText는 "%…%"로 감싸 대소문자 없이 비교 */
     public List<BizProvideCompanyRes> searchProvideCompanies(UserPrincipal user, String searchText) {
-        return mapper.selectProvideCompanies(user.getCompanyId(), like(searchText));
+        return mapper.selectProvideCompanies(user.getCompanyId(), Texts.like(searchText));
     }
 
     /** AS-IS Biz01_Promo.noteUpdate — 마감된 내역은 비고만 */
@@ -125,7 +126,7 @@ public class BizPromoService {
 
         mapper.deletePrint(companyId, personId, PRINT_WINDOW);
 
-        for (BizPromoCardRes row : mapper.selectByCard(companyId, personId, req.startDate(), req.closeDate(), like(req.searchText()))) {
+        for (BizPromoCardRes row : mapper.selectByCard(companyId, personId, req.startDate(), req.closeDate(), Texts.like(req.searchText()))) {
             mapper.insertPrintCard(mapper.selectNextId(), companyId, personId, PRINT_WINDOW, groupId, row);
         }
         return String.valueOf(groupId);
@@ -219,7 +220,7 @@ public class BizPromoService {
                                                           String searchText, long offset, long limit) {
         String manager = all(managerId);
         String purpose = all(providePurCode);
-        String text = like(searchText);
+        String text = Texts.like(searchText);
         return new PageRes<>(mapper.selectCardContentsTotal(user.getCompanyId(), dataYm, manager, purpose, text),
                 mapper.selectCardContentsPaging(user.getCompanyId(), dataYm, manager, purpose, text, offset, limit));
     }
@@ -242,7 +243,7 @@ public class BizPromoService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW);
         mapper.insertPrintCardContents(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW, groupId,
-                req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
+                req.dataYm(), all(req.managerId()), all(req.providePurCode()), Texts.like(req.searchText()));
         return String.valueOf(groupId);
     }
 
@@ -252,7 +253,7 @@ public class BizPromoService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW);
         mapper.insertPrintCardContentsDownload(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW, groupId,
-                req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
+                req.dataYm(), all(req.managerId()), all(req.providePurCode()), Texts.like(req.searchText()));
         return String.valueOf(groupId);
     }
 
@@ -262,7 +263,7 @@ public class BizPromoService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_SIMPLE_WINDOW);
         mapper.insertPrintCardContentsSimple(user.getCompanyId(), user.getUserId(), CONTENTS_SIMPLE_WINDOW, groupId,
-                req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
+                req.dataYm(), all(req.managerId()), all(req.providePurCode()), Texts.like(req.searchText()));
         return String.valueOf(groupId);
     }
 
@@ -301,9 +302,5 @@ public class BizPromoService {
     /** 콤보의 "전체" = `%` (비어 있어도 전체) */
     private static String all(String code) {
         return code == null || code.isBlank() ? "%" : code;
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 }

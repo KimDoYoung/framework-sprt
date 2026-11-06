@@ -41,7 +41,7 @@ public class IcsRelateFileService {
     /** AS-IS sys.Sys11_RelateFile.insert: 이미 연결된 파일은 건너뛰고 새 연결만 만든다 → 새로 연결한 건수 */
     @Transactional
     public int insert(UserPrincipal user, Long relateId, List<Long> fileIds) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         int count = 0;
         for (Long fileId : fileIds) {
             if (mapper.countRelate(fileId, relateId) == 0) {
@@ -55,7 +55,7 @@ public class IcsRelateFileService {
     /** AS-IS sys.Sys11_RelateFile.delete(체크한 연결): 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, Long parentId, List<Long> relateFileIds) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         int count = 0;
         for (Long id : relateFileIds) {
             count += mapper.deleteRelate(id, parentId);

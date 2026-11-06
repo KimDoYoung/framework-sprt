@@ -80,7 +80,7 @@ public class SysRoleService {
 
     /** AS-IS retrieveRole() L177-188 → selectByName(roleName = '%', companyId = 고른 고객사) */
     public List<RoleRes> searchCompanyRoles(UserPrincipal user, Long companyId, String roleNm) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         // A08 Sys07_TabPage_Role.retrieve() L102-114: '%' + 권한명 + '%' (A02는 권한명 없음 → '%%' = '%')
         return sysRoleMapper.searchRoles(new RoleSearchParam(companyId, "%" + (roleNm == null ? "" : roleNm) + "%"));
     }
@@ -88,7 +88,7 @@ public class SysRoleService {
     /** AS-IS update() L191-194 → Sys04_Role.update(UpdateDataModel). 저장 전 검사 없음(원본 그대로) */
     @Transactional
     public List<RoleRes> updateCompanyRoles(UserPrincipal user, Long companyId, List<RoleAdminSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<RoleRes> saved = new ArrayList<>();
         for (RoleAdminSaveReq req : rows) {
             if (req.roleNm() == null || req.roleNm().isBlank()) {
@@ -111,7 +111,7 @@ public class SysRoleService {
     /** AS-IS deleteRow() L238-242 → Sys04_Role.delete(UpdateDataModel): 체크한 행 삭제 → 지운 건수 */
     @Transactional
     public int deleteCompanyRoles(UserPrincipal user, Long companyId, List<Long> roleIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (roleIds == null || roleIds.isEmpty()) {
             return 0;
         }
@@ -155,12 +155,6 @@ public class SysRoleService {
     private void checkPerson(Long companyId, Long userId) {
         if (userId == null || sysUserRoleMapper.countPerson(companyId, userId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

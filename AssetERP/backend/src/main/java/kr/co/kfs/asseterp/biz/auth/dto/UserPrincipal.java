@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.auth.dto;
 
 import kr.co.kfs.asseterp.biz.user.dto.LoginAccount;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,6 +56,13 @@ public class UserPrincipal implements UserDetails {
     /** KFS 관리자 (admin 회사의 회사관리자) — 전 고객사 데이터를 다룰 수 있다 */
     public boolean isSysAdmin() {
         return roles != null && roles.contains("ROLE_SYSADMIN");
+    }
+
+    /** KFS 관리자가 아니면 ACCESS_DENIED (서비스마다 복사돼 있던 requireSysAdmin, 2026-11-06 정적분석 C) */
+    public void requireSysAdmin() {
+        if (!isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
     }
 
     /** 요청한 회사: KFS 관리자만 다른 회사를 고를 수 있고, 그 외에는 로그인 회사 */

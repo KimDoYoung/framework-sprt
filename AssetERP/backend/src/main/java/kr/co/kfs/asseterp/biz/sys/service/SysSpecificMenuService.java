@@ -23,7 +23,7 @@ public class SysSpecificMenuService {
 
     /** AS-IS selectBySpecificWorkCode L31: 특정업무 구분 콤보 '%'(전체) 또는 코드 → LIKE */
     public List<SpecificMenuRes> search(UserPrincipal user, Long companyId, String specificWorkCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         String work = specificWorkCd == null || specificWorkCd.isEmpty() ? "%" : specificWorkCd;
         return sysSpecificMenuMapper.selectBySpecificWorkCode(companyId, work);
     }
@@ -34,7 +34,7 @@ public class SysSpecificMenuService {
      */
     @Transactional
     public List<SpecificMenuRes> update(UserPrincipal user, Long companyId, List<SpecificMenuSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<SpecificMenuRes> saved = new ArrayList<>();
         for (SpecificMenuSaveReq req : rows) {
             if (req.specificWorkCd() == null || req.specificWorkCd().isBlank()) {
@@ -58,16 +58,10 @@ public class SysSpecificMenuService {
     /** AS-IS delete(UpdateDataModel.deleteModel) L45: ID로 지우기(사원권한·문서권한 행은 원본도 남긴다) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, Long companyId, List<Long> specificMenuIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (specificMenuIds == null || specificMenuIds.isEmpty()) {
             return 0;
         }
         return sysSpecificMenuMapper.deleteSpecificMenus(companyId, specificMenuIds);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

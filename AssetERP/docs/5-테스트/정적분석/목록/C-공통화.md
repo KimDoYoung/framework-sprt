@@ -1,93 +1,72 @@
-# C 공통화 후보 (2026-11-06, 126건)
+# C 공통화 후보 (2026-11-06, 103건)
 CPD 중복 블록. 점수 = 줄 수 × (출현-1) × (도메인 간이면 2). 한 후보씩, 사용자 승인 뒤 진행:
 util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영향 API 를 `yunhee api` 로 확인.
 
-## CH-cpd-39c030d6 — 엑셀 · 도메인 간 · 29줄×6곳 (점수 290)
+## CH-cpd-9e96355a — 엑셀 · 도메인 간 · 25줄×6곳 (점수 250)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, crd, fnd, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:40-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:82-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:37-64`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:80-108`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:82-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:135-163`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:32-56`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:81-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:36-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:79-103`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:81-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:128-152`
 
 ```java
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
      * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
      * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
      * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
+     */
+    @Transactional
+    public int upload(UserPrincipal user, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
 ```
 
-## CH-cpd-9b7956e4 — 엑셀 · 도메인 간 · 31줄×4곳 (점수 186)
+## CH-cpd-1a2e48d9 — 엑셀 · 도메인 간 · 27줄×4곳 (점수 162)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:79-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:77-108`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:79-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:132-163`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:78-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:76-103`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:78-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:125-152`
 
 ```java
         mapper.deleteBookExtrs(user.getCompanyId(), bookExtrIds);
     }
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
-```
-
-## CH-cpd-d1235a4e — 엑셀 · 도메인 간 · 27줄×4곳 (점수 162)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltBookInitService.java:218-244`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:214-240`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:390-416`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:269-295`
-
-```java
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
+     * 첫 시트 2번째 행부터 한 행이 한 보유종목: 기준일(0)·관리계좌코드(1)·관리계좌명(2)·종목코드(3, 12자리)·종목명(4, 없으면 "").
+     * 한 행이라도 오류면 전체 롤백(원본 rollback). 등록한 건수를 돌려준다.
+     */
+    @Transactional
 ```
 
 ## CH-cpd-47bf38b7 — 엑셀 · 도메인 간 · 11줄×8곳 (점수 154)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, bbs, crd, fnd, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:58-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:271-281`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:54-64`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:98-108`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:99-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:58-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:119-129`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:153-163`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:46-56`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:272-282`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:49-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:93-103`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:94-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:47-57`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:120-130`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:142-152`
 
 ```java
         Long companyId = user.getCompanyId();
@@ -107,14 +86,15 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, car, crd, fnd, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:58-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:59-69`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:54-64`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:98-108`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:99-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:58-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:119-129`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:153-163`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:46-56`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:54-64`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:49-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:93-103`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:94-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:47-57`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:120-130`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:142-152`
 
 ```java
         Long companyId = user.getCompanyId();
@@ -130,37 +110,13 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
 ```
 
-## CH-cpd-77157f30 — 엑셀 · 도메인 간 · 19줄×5곳 (점수 152)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, flt, fnd, icam, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:102-120`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:375-393`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:119-137`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:146-164`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:299-317`
-
-```java
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-```
-
-## CH-cpd-564adef0 — 엑셀 · 도메인 간 · 71줄×2곳 (점수 142)
+## CH-cpd-f33faefc — 엑셀 · 도메인 간 · 67줄×2곳 (점수 134)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:43-113`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:43-113`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:42-108`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:42-108`
 
 ```java
     private final AdvBookExtrMapper mapper;
@@ -181,10 +137,11 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, car, crd, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:128-149`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:79-100`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:75-96`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:128-149`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:123-144`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:74-95`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:70-91`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:123-144`
 
 ```java
                 mapper.excelInsert(companyId, stdDate, manageCode, manageName, itemCode, itemName, ITEM_TYPE_STOCK);
@@ -201,31 +158,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
     /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
 ```
 
-## CH-cpd-e6edd1da — 엑셀 · 도메인 간 · 21줄×4곳 (점수 126)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:373-393`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:242-262`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:418-438`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:297-317`
-
-```java
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-```
-
-## CH-cpd-b6bb8e64 — 컨트롤러 반복 · 같은 도메인 · 25줄×6곳 (점수 125)
+## CH-cpd-b6bb8e64 **[보류(Pay 컨트롤러 기준일 조회·추가·삭제 — 리소스마다 한 줄 위임, 기반 클래스로 묶으면 URL 이 안 보임)]** — 컨트롤러 반복 · 같은 도메인 · 25줄×6곳 (점수 125)
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: pay
@@ -251,61 +184,16 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         service.createDate(principal, req.startDate());
 ```
 
-## CH-cpd-84d35326 — 엑셀 · 도메인 간 · 24줄×3곳 (점수 96)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, ics, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:79-102`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/service/IcsChecklistService.java:141-165`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:132-156`
-
-```java
-        mapper.deleteBookExtrs(user.getCompanyId(), bookExtrIds);
-    }
-
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
-    }
-
-    /**
-```
-
-## CH-cpd-06eab4c7 — 엑셀 · 도메인 간 · 22줄×3곳 (점수 88)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltBookInitService.java:230-251`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PaySimpleTaxService.java:168-188`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:281-302`
-
-```java
-    }
-
-    /** ExcelUpload.getLongCellData */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-```
-
 ## CH-cpd-cc84329a — 엑셀 · 도메인 간 · 11줄×5곳 (점수 88)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, icam, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:59-69`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:154-164`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-368`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:47-57`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:143-153`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-357`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-238`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -325,11 +213,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:99-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-85`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-368`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:94-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-84`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-357`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-238`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -345,7 +234,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                 }
 ```
 
-## CH-cpd-fa7ff7bb — 기타 로직 · 같은 파일 · 29줄×4곳 (점수 87)
+## CH-cpd-fa7ff7bb **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 29줄×4곳 (점수 87)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -369,60 +258,16 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                             tdEmpty( 1, 1, 0) +
 ```
 
-## CH-cpd-86d8bdd3 — 엑셀 · 도메인 간 · 41줄×2곳 (점수 82)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:81-121`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:98-138`
-
-```java
-                        LocalDateTime.now(), user.getName()));
-                count++;
-            }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-```
-
-## CH-cpd-5650c52f — 엑셀 · 도메인 간 · 20줄×3곳 (점수 80)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:102-121`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:244-263`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:420-439`
-
-```java
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-```
-
 ## CH-cpd-586a900c — 엑셀 · 도메인 간 · 10줄×5곳 (점수 80)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:100-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-116`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-84`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-367`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-248`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:95-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-356`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-237`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -441,11 +286,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: bbs, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:272-281`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-116`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-84`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-367`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-248`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:273-282`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-356`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-237`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -464,11 +310,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: car, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:60-69`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-116`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-84`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-367`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-248`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:55-64`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-356`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-237`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -487,11 +334,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: crd, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:55-64`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-116`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-84`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-367`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-248`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:50-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-356`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-237`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -510,11 +358,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, icam, kfs, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:100-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-116`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-84`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-367`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-248`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:95-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-356`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-237`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -527,29 +376,6 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                 }
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 기준일은 필수입력입니다.");
-```
-
-## CH-cpd-a991ac6c — 엑셀 · 도메인 간 · 19줄×3곳 (점수 76)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, kfs, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:84-102`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:102-120`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:263-281`
-
-```java
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
 ```
 
 ## CH-cpd-b8cd8d98 — 컨트롤러 반복 · 도메인 간 · 36줄×2곳 (점수 72)
@@ -578,8 +404,9 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:128-162`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:128-162`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:123-157`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:123-157`
 
 ```java
                 mapper.excelInsert(companyId, stdDate, manageCode, manageName, itemCode, itemName, ITEM_TYPE_STOCK);
@@ -600,8 +427,9 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, crd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:128-162`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:75-109`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:123-157`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:70-104`
 
 ```java
                 mapper.excelInsert(companyId, stdDate, manageCode, manageName, itemCode, itemName, ITEM_TYPE_STOCK);
@@ -618,58 +446,15 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
     /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
 ```
 
-## CH-cpd-b8c2910d — 엑셀 · 도메인 간 · 35줄×2곳 (점수 70)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:330-364`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:268-302`
-
-```java
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-```
-
-## CH-cpd-305cd054 — 엑셀 · 도메인 간 · 34줄×2곳 (점수 68)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltBookInitService.java:218-251`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:269-302`
-
-```java
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-```
-
 ## CH-cpd-b490f1c4 — 엑셀 · 도메인 간 · 11줄×4곳 (점수 66)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, icam, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:59-69`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-368`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:48-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-357`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-238`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -689,10 +474,11 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, icam, pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:120-130`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:107-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:358-368`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:239-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:121-131`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:347-357`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:228-238`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -708,57 +494,14 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                 }
 ```
 
-## CH-cpd-894c77e8 — 엑셀 · 도메인 간 · 32줄×2곳 (점수 64)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, icam
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:90-121`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:134-165`
-
-```java
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-```
-
-## CH-cpd-950d9541 — 엑셀 · 도메인 간 · 32줄×2곳 (점수 64)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: fnd, icam
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:107-138`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:134-165`
-
-```java
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-```
-
-## CH-cpd-6f9e3f92 — 엑셀 · 도메인 간 · 16줄×3곳 (점수 64)
+## CH-cpd-e19d780d — 엑셀 · 도메인 간 · 16줄×3곳 (점수 64)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:55-70`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:116-131`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:150-165`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:43-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:117-132`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:139-154`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -775,7 +518,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                 }
 ```
 
-## CH-cpd-ddda8b57 — 기타 로직 · 같은 파일 · 21줄×4곳 (점수 63)
+## CH-cpd-ddda8b57 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 21줄×4곳 (점수 63)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -797,118 +540,6 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                             tdEmpty( 1, 1, 0) +
                             tdEmpty( 1, 1, 0) +
             
-```
-
-## CH-cpd-f8d1a9ae — 기타 로직 · 같은 도메인 · 21줄×4곳 (점수 63)
-
-- 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
-- 도메인: pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayOtherSetupService.java:78-98`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayPersonDeductService.java:86-106`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayRateService.java:53-73`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayTaxCalcService.java:87-107`
-
-```java
-                return mapper.selectById(req.otherSetupId());
-            }
-            long newId = mapper.selectNextId();
-            mapper.insert(newId, req);
-            return mapper.selectById(newId);
-        }).toList();
-    }
-
-    /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
-    @Transactional
-    public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
-```
-
-## CH-cpd-b9b676cb — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:40-70`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:135-165`
-
-```java
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
-    }
-
-    /**
-     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
-     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
-     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
-```
-
-## CH-cpd-8d5c40c8 — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, crd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:38-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:35-64`
-
-```java
-    private final AdvAccountMapper mapper;
-
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
-    }
-
-    /**
-     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
-```
-
-## CH-cpd-6e59060b — 엑셀 · 도메인 간 · 30줄×2곳 (점수 60)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:40-69`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:80-109`
-
-```java
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
-    }
-
-    /**
-     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
-     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
-     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
-```
-
-## CH-cpd-08cf3fb1 — 엑셀 · 도메인 간 · 29줄×2곳 (점수 58)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:388-416`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:267-295`
-
-```java
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년도를 입력해주세요", e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
 ```
 
 ## CH-cpd-54d34652 — 기타 로직 · 같은 도메인 · 19줄×4곳 (점수 57)
@@ -935,26 +566,73 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수. 회사 조건을 더했다 */
 ```
 
-## CH-cpd-83ecad36 — 엑셀 · 도메인 간 · 28줄×2곳 (점수 56)
+## CH-cpd-623b48c4 — 엑셀 · 도메인 간 · 27줄×2곳 (점수 54)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:330-357`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:389-416`
+- 도메인: adv, pay
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:32-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:128-154`
 
 ```java
-        }
+    public byte[] template() {
+        return ExcelCells.template(TEMPLATE);
     }
 
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
+    /**
+     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
+     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
+     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
+     */
+    @Transactional
+    public int upload(UserPrincipal user, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+```
+
+## CH-cpd-3db5caf3 — 엑셀 · 도메인 간 · 27줄×2곳 (점수 54)
+
+- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
+- 도메인: adv, crd
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:30-56`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:34-59`
+
+```java
+    private final AdvAccountMapper mapper;
+
+    public byte[] template() {
+        return ExcelCells.template(TEMPLATE);
+    }
+
+    /**
+     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
+     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
+     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
+     */
+    @Transactional
+```
+
+## CH-cpd-080aa981 — 엑셀 · 도메인 간 · 26줄×2곳 (점수 52)
+
+- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
+- 도메인: adv, fnd
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:32-57`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:79-104`
+
+```java
+    public byte[] template() {
+        return ExcelCells.template(TEMPLATE);
+    }
+
+    /**
+     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
+     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
+     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
+     */
+    @Transactional
+    public int upload(UserPrincipal user, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
 ```
 
 ## CH-cpd-6f39d84a — 기타 로직 · 도메인 간 · 25줄×2곳 (점수 50)
@@ -979,57 +657,14 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         Session session = Session.getInstance(properties, new Authenticator() {
 ```
 
-## CH-cpd-c122ad00 — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:81-105`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:260-284`
-
-```java
-                        LocalDateTime.now(), user.getName()));
-                count++;
-            }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-```
-
-## CH-cpd-e402aeb6 — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: fnd, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:98-122`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:260-284`
-
-```java
-                mapper.excelInsertInfo(info);
-                count++;
-            }
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-```
-
-## CH-cpd-e41d515f — 엑셀 · 도메인 간 · 12줄×3곳 (점수 48)
+## CH-cpd-6a5dd552 — 엑셀 · 도메인 간 · 12줄×3곳 (점수 48)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, kfs, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:59-70`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-86`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:154-165`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:47-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-85`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:143-154`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -1043,29 +678,30 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String manageCode = cellString(row.getCell(0));
+                String manageCode = ExcelCells.string(row.getCell(0));
 ```
 
-## CH-cpd-d5613573 — 엑셀 · 같은 도메인 · 45줄×2곳 (점수 45)
+## CH-cpd-e0ecdb74 — 엑셀 · 도메인 간 · 23줄×2곳 (점수 46)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltBookInitService.java:218-262`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:331-375`
+- 도메인: icam, kfs
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:84-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:61-84`
 
 ```java
+        return ExcelCells.template(TEMPLATE);
     }
 
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
+    /**
+     * AS-IS ExcelUpload.icamUserStopUpload L1761-1823 — 첫 시트 2번째 행부터 기준일자(0)·회사명(1)·사용자ID(2)·사용자명(3)·이메일(4).
+     * 행마다 같은 (기준일자·회사명·사용자명·사용자ID)를 지우고 넣는다. 오류가 나면 전체 롤백. 넣은 행 수를 돌려준다.
+     */
+    @Transactional
+    public int upload(UserPrincipal user, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
         }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
 ```
 
 ## CH-cpd-3cc60eee — 파일 통째 복제 · 도메인 간 · 22줄×2곳 (점수 44)
@@ -1090,35 +726,13 @@ public interface AdvBookExtrMapper {
     /** AS-IS dbConfig.getSeq */
 ```
 
-## CH-cpd-ffb2a353 — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: icam, kfs
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:96-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:63-85`
-
-```java
-    }
-
-    /**
-     * AS-IS ExcelUpload.icamUserStopUpload L1761-1823 — 첫 시트 2번째 행부터 기준일자(0)·회사명(1)·사용자ID(2)·사용자명(3)·이메일(4).
-     * 행마다 같은 (기준일자·회사명·사용자명·사용자ID)를 지우고 넣는다. 오류가 나면 전체 롤백. 넣은 행 수를 돌려준다.
-     */
-    @Transactional
-    public int upload(UserPrincipal user, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
-        }
-        try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
-```
-
-## CH-cpd-436d0e6c — 기타 로직 · 같은 도메인 · 22줄×3곳 (점수 44)
+## CH-cpd-436d0e6c **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 22줄×3곳 (점수 44)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:58-79`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:80-98`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:96-113`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:60-81`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:82-100`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:98-115`
 
 ```java
     }
@@ -1135,101 +749,14 @@ public interface AdvBookExtrMapper {
     private static String tdEmpty(int colspan, int rowspan, int border) {
 ```
 
-## CH-cpd-2763ab0a — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: flt, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltRealTrService.java:343-364`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PaySimpleTaxService.java:168-188`
-
-```java
-    }
-
-    /** ExcelUpload.getLongCellData — 숫자·수식 숫자는 정수로, 글자는 쉼표를 빼고 숫자면 변환 / 그 밖은 null */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-```
-
-## CH-cpd-869ae24e — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, ics
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:40-61`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/service/IcsChecklistService.java:145-165`
-
-```java
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
-    }
-
-    /**
-     * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
-     * 증권사명은 사용 중인 증권회사(거래처구분 3)의 이름과 같아야 하고(코드는 그 거래처 것), 같은 관리코드가 이미 있으면 막는다(원본은 갱신 코드를 주석 처리).
-     * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
-```
-
-## CH-cpd-1492aea9 — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayAnnualService.java:241-262`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:296-317`
-
-```java
-            return str.matches("-?\\d+") ? Long.parseLong(str) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-```
-
-## CH-cpd-1f98daf0 — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:417-438`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:296-317`
-
-```java
-            return str.matches("-?\\d+") ? Long.parseLong(str) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-```
-
 ## CH-cpd-ca8862da — 엑셀 · 도메인 간 · 11줄×3곳 (점수 44)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, bbs, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:99-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:271-281`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:58-68`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:94-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:272-282`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:47-57`
 
 ```java
         Long companyId = user.getCompanyId();
@@ -1245,12 +772,12 @@ public interface AdvBookExtrMapper {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 기준일은 필수입력입니다.");
 ```
 
-## CH-cpd-b2cd90c9 — 기타 로직 · 같은 도메인 · 42줄×2곳 (점수 42)
+## CH-cpd-b2cd90c9 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 42줄×2곳 (점수 42)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:80-121`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:55-97`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:82-123`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:57-99`
 
 ```java
     }
@@ -1267,7 +794,7 @@ public interface AdvBookExtrMapper {
     private static String tdNoneSlim(int colspan, int rowspan, String align, int size, String text) {
 ```
 
-## CH-cpd-ddda8b57 — 기타 로직 · 같은 파일 · 21줄×3곳 (점수 42)
+## CH-cpd-ddda8b57 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 21줄×3곳 (점수 42)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1290,13 +817,13 @@ public interface AdvBookExtrMapper {
             
 ```
 
-## CH-cpd-a6252aa6 — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
+## CH-cpd-a6252aa6 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:78-98`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:68-89`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:94-113`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:80-100`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:70-91`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:96-115`
 
 ```java
                 + align + "; height:20px; width:" + colspan + "%;\">"
@@ -1313,13 +840,13 @@ public interface AdvBookExtrMapper {
     private static String tdEmpty(int colspan, int rowspan, int border) {
 ```
 
-## CH-cpd-6a25ad8a — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
+## CH-cpd-6a25ad8a **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:74-94`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:80-98`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:96-113`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:76-96`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:82-100`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:98-115`
 
 ```java
     }
@@ -1336,13 +863,13 @@ public interface AdvBookExtrMapper {
     private static String tdEmpty(int colspan, int rowspan, int border) {
 ```
 
-## CH-cpd-321c5268 — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
+## CH-cpd-321c5268 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 21줄×3곳 (점수 42)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/OprHtml.java:41-61`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:91-114`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:68-90`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/OprHtml.java:43-63`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:93-116`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:70-92`
 
 ```java
     private static String tdNone(int colspan, int rowspan, String align, int size, String text) {
@@ -1359,13 +886,13 @@ public interface AdvBookExtrMapper {
     }
 ```
 
-## CH-cpd-7e5b4e4f — 기타 로직 · 같은 도메인 · 20줄×3곳 (점수 40)
+## CH-cpd-7e5b4e4f **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 20줄×3곳 (점수 40)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ErpFeeChargeLinkSeedProvider.java:53-72`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:70-89`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:86-105`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ErpFeeChargeLinkSeedProvider.java:55-74`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:72-91`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportMngLinkSeedProvider.java:88-107`
 
 ```java
         return new Seed(title, content, c.chargeDate(), false, false, c.corpName(), null);
@@ -1382,29 +909,7 @@ public interface AdvBookExtrMapper {
 
 ```
 
-## CH-cpd-b2a80c97 — 엑셀 · 도메인 간 · 19줄×2곳 (점수 38)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: fnd, kfs
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:101-119`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:102-120`
-
-```java
-            return count;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
-        }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-```
-
-## CH-cpd-bbddbb67 — 기타 로직 · 같은 파일 · 37줄×2곳 (점수 37)
+## CH-cpd-bbddbb67 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 37줄×2곳 (점수 37)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1426,7 +931,7 @@ public interface AdvBookExtrMapper {
                         trClose;
 ```
 
-## CH-cpd-c82c823a — 기타 로직 · 같은 파일 · 31줄×2곳 (점수 31)
+## CH-cpd-c82c823a **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 31줄×2곳 (점수 31)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1448,7 +953,7 @@ public interface AdvBookExtrMapper {
                             tdColor(     3,     1,    1,     "center",     12,     checkNull(unLeaveModel.personName()), "none") +
 ```
 
-## CH-cpd-d8f86158 — 기타 로직 · 같은 파일 · 30줄×2곳 (점수 30)
+## CH-cpd-d8f86158 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 30줄×2곳 (점수 30)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1474,8 +979,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: icam, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:103-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:354-368`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:92-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:343-357`
 
 ```java
     public int upload(UserPrincipal user, MultipartFile file) {
@@ -1496,8 +1002,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: kfs, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:71-85`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:354-368`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:70-84`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:343-357`
 
 ```java
     public int upload(UserPrincipal user, MultipartFile file) {
@@ -1537,7 +1044,7 @@ public interface AdvBookExtrMapper {
         };
 ```
 
-## CH-cpd-fa7ff7bb — 기타 로직 · 같은 파일 · 29줄×2곳 (점수 29)
+## CH-cpd-fa7ff7bb **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 29줄×2곳 (점수 29)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1559,12 +1066,12 @@ public interface AdvBookExtrMapper {
                             tdEmpty( 1, 1, 0) +
 ```
 
-## CH-cpd-9b0e5b18 — 기타 로직 · 같은 도메인 · 29줄×2곳 (점수 29)
+## CH-cpd-9b0e5b18 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 29줄×2곳 (점수 29)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:73-101`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:57-86`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:75-103`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:59-88`
 
 ```java
         return new Seed("예금대사 결과보고 (" + std.format(YM) + ")", html(list, std, fxYn), null, false, false);
@@ -1585,8 +1092,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:96-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:116-129`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:91-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:117-130`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -1607,8 +1115,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: crd, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:51-64`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:116-129`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:46-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:117-130`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -1629,8 +1138,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: icam, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:104-117`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:236-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icam/service/IcamUserStopService.java:93-106`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:225-238`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -1651,8 +1161,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: kfs, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:72-85`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:236-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:71-84`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:225-238`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -1673,8 +1184,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: pay, sch
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:355-368`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:236-249`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayInsureApplyService.java:344-357`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:225-238`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -1713,7 +1225,7 @@ public interface AdvBookExtrMapper {
 
 ```
 
-## CH-cpd-a4b11fdb — 그리드 CUD 저장 · 같은 파일 · 26줄×2곳 (점수 26)
+## CH-cpd-974ab4f8 — 그리드 CUD 저장 · 같은 파일 · 26줄×2곳 (점수 26)
 
 - 권고: AS-IS Grid* 저장 흐름(C/U/D 분기 루프) 공통 헬퍼로
 - 도메인: ast
@@ -1721,7 +1233,7 @@ public interface AdvBookExtrMapper {
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/ast/service/AstDetailService.java:82-107`
 
 ```java
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (AstDetailSaveReq req : rows) {
             if (req.seq() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "조회순번은 필수입력 항목입니다.");
@@ -1735,12 +1247,12 @@ public interface AdvBookExtrMapper {
             if (exists) {
 ```
 
-## CH-cpd-a9263dd4 — 기타 로직 · 같은 도메인 · 26줄×2곳 (점수 26)
+## CH-cpd-a9263dd4 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 26줄×2곳 (점수 26)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EtcLeaveLinkSeedProvider.java:57-82`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:54-81`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EtcLeaveLinkSeedProvider.java:59-84`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/RetireLinkSeedProvider.java:56-83`
 
 ```java
         return d == null ? "" : d.toString();
@@ -1757,12 +1269,12 @@ public interface AdvBookExtrMapper {
 
 ```
 
-## CH-cpd-6674fcc1 — 기타 로직 · 같은 도메인 · 26줄×2곳 (점수 26)
+## CH-cpd-6674fcc1 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 26줄×2곳 (점수 26)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:58-83`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:70-93`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EvalLinkSeedProvider.java:60-85`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:72-95`
 
 ```java
     }
@@ -1783,8 +1295,8 @@ public interface AdvBookExtrMapper {
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr, pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:73-85`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayMonthListHtml.java:24-36`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:75-87`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/service/PayMonthListHtml.java:26-38`
 
 ```java
     private static String tdCreate(int colspan, int rowspan, int border, String align, int size, String text, String backGroundColor) {
@@ -1801,12 +1313,13 @@ public interface AdvBookExtrMapper {
                 + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + backGroundColor + "; text-align:"
 ```
 
-## CH-cpd-adc206fe — 엑셀 · 도메인 간 · 13줄×2곳 (점수 26)
+## CH-cpd-945b050f — 엑셀 · 도메인 간 · 13줄×2곳 (점수 26)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:58-70`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:58-70`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvAccountUploadService.java:46-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:47-59`
 
 ```java
         Long companyId = user.getCompanyId();
@@ -1823,7 +1336,7 @@ public interface AdvBookExtrMapper {
                 }
 ```
 
-## CH-cpd-ab3c76a4 — 기타 로직 · 같은 파일 · 25줄×2곳 (점수 25)
+## CH-cpd-ab3c76a4 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 25줄×2곳 (점수 25)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -1845,12 +1358,12 @@ public interface AdvBookExtrMapper {
                             tdColor(     2,     2,    1,     "center",     12,     checkDoubleNull(unLeaveModel.useDays()),     "none") +
 ```
 
-## CH-cpd-9ca40061 — 기타 로직 · 같은 도메인 · 25줄×2곳 (점수 25)
+## CH-cpd-9ca40061 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 25줄×2곳 (점수 25)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EtcLeaveLinkSeedProvider.java:58-82`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:80-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/EtcLeaveLinkSeedProvider.java:60-84`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:82-106`
 
 ```java
     }
@@ -1867,12 +1380,12 @@ public interface AdvBookExtrMapper {
     private static String tdNoneSlim(int colspan, int rowspan, String align, int size, String text) {
 ```
 
-## CH-cpd-1000c918 — 기타 로직 · 같은 도메인 · 25줄×2곳 (점수 25)
+## CH-cpd-1000c918 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 25줄×2곳 (점수 25)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:74-98`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:70-93`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/DepositBookLinkSeedProvider.java:76-100`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TransportLinkSeedProvider.java:72-95`
 
 ```java
     }
@@ -1911,12 +1424,13 @@ public interface AdvBookExtrMapper {
             Long id = mapper.selectNextId();
 ```
 
-## CH-cpd-be52b1a5 — 엑셀 · 도메인 간 · 12줄×2곳 (점수 24)
+## CH-cpd-76b2ac5a — 엑셀 · 도메인 간 · 12줄×2곳 (점수 24)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, kfs
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:59-70`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-86`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndFundUploadService.java:48-59`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-85`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -1930,15 +1444,16 @@ public interface AdvBookExtrMapper {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String fundCode = cellString(row.getCell(0));
+                String fundCode = ExcelCells.string(row.getCell(0));
 ```
 
-## CH-cpd-e3fa2984 — 엑셀 · 도메인 간 · 12줄×2곳 (점수 24)
+## CH-cpd-69987e4d — 엑셀 · 도메인 간 · 12줄×2곳 (점수 24)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, kfs
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:120-131`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:75-86`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:121-132`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/kfs/service/KfsRemoteViewService.java:74-85`
 
 ```java
         try (InputStream in = file.getInputStream(); Workbook wb = WorkbookFactory.create(in)) {
@@ -1952,15 +1467,15 @@ public interface AdvBookExtrMapper {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String fundCode = cellString(row.getCell(0));
+                String fundCode = ExcelCells.string(row.getCell(0));
 ```
 
-## CH-cpd-526051e7 — 기타 로직 · 같은 도메인 · 23줄×2곳 (점수 23)
+## CH-cpd-526051e7 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 23줄×2곳 (점수 23)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/BenefitLinkSeedProvider.java:83-105`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:143-165`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/BenefitLinkSeedProvider.java:85-107`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:145-167`
 
 ```java
         String numStr = String.valueOf(amt);
@@ -1977,12 +1492,12 @@ public interface AdvBookExtrMapper {
                 result.append(han1[nowInt]).append(han2[han2Pick]);
 ```
 
-## CH-cpd-370129d2 — 기타 로직 · 같은 도메인 · 22줄×2곳 (점수 22)
+## CH-cpd-370129d2 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 22줄×2곳 (점수 22)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FinanceBookLinkSeedProvider.java:58-79`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/OfficeAssetsLinkSeedProvider.java:62-83`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FinanceBookLinkSeedProvider.java:60-81`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/OfficeAssetsLinkSeedProvider.java:64-85`
 
 ```java
         return new Seed("금융상품 보유내역_" + std.format(DATE), html(std, list), LocalDate.now(), false, false);
@@ -1999,7 +1514,7 @@ public interface AdvBookExtrMapper {
         return "<td colspan=\"" + colspan + "\" rowspan=\"1\" style=\"border:1px;border-color:black; border-style:solid; border-width:1px; background-color:none; text-align:"
 ```
 
-## CH-cpd-9df3f873 — 기타 로직 · 같은 파일 · 22줄×2곳 (점수 22)
+## CH-cpd-9df3f873 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 22줄×2곳 (점수 22)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -2025,8 +1540,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, car
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:99-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:59-69`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:94-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:54-64`
 
 ```java
         Long companyId = user.getCompanyId();
@@ -2046,8 +1562,9 @@ public interface AdvBookExtrMapper {
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: bbs, car
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:271-281`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:59-69`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/bbs/service/BbsCompanyRuleService.java:272-282`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/car/service/CarJournalUploadService.java:54-64`
 
 ```java
         DataFormatter formatter = new DataFormatter();
@@ -2063,7 +1580,7 @@ public interface AdvBookExtrMapper {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
 ```
 
-## CH-cpd-ddda8b57 — 기타 로직 · 같은 파일 · 21줄×2곳 (점수 21)
+## CH-cpd-ddda8b57 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 21줄×2곳 (점수 21)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -2195,12 +1712,12 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
         if (!"Y".equals(msg)) {
 ```
 
-## CH-cpd-c4ba3202 — 기타 로직 · 같은 도메인 · 16줄×2곳 (점수 16)
+## CH-cpd-c4ba3202 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 16줄×2곳 (점수 16)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/JointLeaveLinkSeedProvider.java:57-72`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ScheduleLinkSeedProvider.java:79-94`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/JointLeaveLinkSeedProvider.java:59-74`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ScheduleLinkSeedProvider.java:81-96`
 
 ```java
     }
@@ -2239,7 +1756,7 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
         }
 ```
 
-## CH-cpd-a99fc256 — 기타 로직 · 같은 파일 · 16줄×2곳 (점수 16)
+## CH-cpd-a99fc256 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 16줄×2곳 (점수 16)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -2287,8 +1804,9 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:95-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:116-130`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndAccountService.java:90-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:117-131`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -2309,8 +1827,8 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: flt
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltTrService.java:207-221`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltTrService.java:232-243`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltTrService.java:208-222`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/flt/service/FltTrService.java:233-244`
 
 ```java
             List<Object> v = new ArrayList<>(Arrays.asList(r.personOrgName(), r.inOutName(), r.trTypeName()));
@@ -2331,8 +1849,9 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:96-109`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:116-129`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:91-104`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndOprFundService.java:117-130`
 
 ```java
         if (file == null || file.isEmpty()) {
@@ -2371,7 +1890,7 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
             }
 ```
 
-## CH-cpd-4958a52e — 기타 로직 · 같은 파일 · 14줄×2곳 (점수 14)
+## CH-cpd-4958a52e **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 14줄×2곳 (점수 14)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -2393,7 +1912,7 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
                             tdStColor(     2,     1,    1,     "center",     12, "성 명",        "#EAEFF4") +
 ```
 
-## CH-cpd-74f286fa — 기타 로직 · 같은 파일 · 13줄×2곳 (점수 13)
+## CH-cpd-74f286fa **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 13줄×2곳 (점수 13)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
@@ -2522,36 +2041,37 @@ public record FundRes(
     public ApiResponse<Integer> confirm(@AuthenticationPrincipal UserPrincipal principal, @RequestBody AprRelateStampConfirmReq req) {
 ```
 
-## CH-cpd-31e68768 — 엑셀 · 같은 파일 · 9줄×2곳 (점수 9)
+## CH-cpd-5255f449 — 엑셀 · 같은 파일 · 9줄×2곳 (점수 9)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/AprApprService.java:266-274`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/AprApprService.java:310-318`
+- 관련 있을 수 있는 기존 common 부품: ExcelCells
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/AprApprService.java:267-275`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/AprApprService.java:311-319`
 
 ```java
             for (AprMyRequestRes a : rows) {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(a.regDate() == null ? "" : a.regDate().format(fmt));
                 row.createCell(1).setCellValue(a.effectDate() == null ? "" : a.effectDate().format(fmt));
-                row.createCell(2).setCellValue(nvl(a.statusName()));
-                row.createCell(3).setCellValue(nvl(a.classTreeName()));
-                row.createCell(4).setCellValue(nvl(a.inOutTypeName()));
-                row.createCell(5).setCellValue(nvl(a.title()).replaceAll("<[^>]+>", ""));
-                row.createCell(6).setCellValue(nvl(a.preconfirmStatusName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.statusName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.classTreeName()));
+                row.createCell(4).setCellValue(Texts.nvl(a.inOutTypeName()));
+                row.createCell(5).setCellValue(Texts.nvl(a.title()).replaceAll("<[^>]+>", ""));
+                row.createCell(6).setCellValue(Texts.nvl(a.preconfirmStatusName()));
 ```
 
-## CH-cpd-efceb694 — 기타 로직 · 같은 파일 · 9줄×2곳 (점수 9)
+## CH-cpd-db519d9a **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 9줄×2곳 (점수 9)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:151-159`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:171-179`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:153-161`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayMonthLinkSeedProvider.java:173-181`
 
 ```java
         for (PayItemAmtRow m : monthList3) {
             text.append(TR_START).append(tdEmpty(2, 1, 0))
-                    .append(tdColor(5, 1, 1, "center", 14, checkNull(m.itemName()), "none"))
+                    .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(m.itemName())), "none"))
                     .append(tdColor(5, 1, 1, "right", 14, checkLongNull(m.itemAmt()), "none"))
                     .append(tdColor(5, 1, 1, "left", 14, checkNull(" "), "none"))
                     .append(TR_CLOSE);
@@ -2637,12 +2157,12 @@ public record FundRes(
                 mapper.insert(id, user.getCompanyId(), req);
 ```
 
-## CH-cpd-70f49e36 — 기타 로직 · 같은 파일 · 8줄×2곳 (점수 8)
+## CH-cpd-70f49e36 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 8줄×2곳 (점수 8)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PromoHtml.java:78-85`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PromoHtml.java:93-100`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PromoHtml.java:80-87`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PromoHtml.java:95-102`
 
 ```java
                 .append(row(tdHead(8, 1, 1, "center", 14, "카드명(사원)", "#EAEFF4"), tdHead(4, 1, 1, "center", 14, "사용금액(원)", "#EAEFF4"),
@@ -2672,29 +2192,29 @@ public record FundRes(
         if (req.infoId() == null || infoMapper.selectById(companyId, req.infoId()) == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
 ```
 
-## CH-cpd-2cb3f4e4 — 기타 로직 · 같은 파일 · 7줄×2곳 (점수 7)
+## CH-cpd-f2f4cea6 **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 7줄×2곳 (점수 7)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FundPriceModiLinkSeedProvider.java:297-303`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FundPriceModiLinkSeedProvider.java:315-321`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FundPriceModiLinkSeedProvider.java:299-305`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/FundPriceModiLinkSeedProvider.java:317-323`
 
 ```java
-        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 재발 방지 대책<br>" + checkNull(m.prevPlan()))).append(TR_CLOSE);
+        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 재발 방지 대책<br>" + checkNull(Html.esc(m.prevPlan())))).append(TR_CLOSE);
         t.append(TR_START).append(td(22, 1, 1, "left", 14, "- 기준가 변경 공시 유무 ")).append(TR_CLOSE);
         t.append(TR_START)
                 .append(td(3, 1, 1, "center", 14, "예탁원", HEAD))
-                .append(td(3, 1, 1, "center", 14, checkBoolean(m.ksdNoticeYn())))
+                .append(td(3, 1, 1, "center", 14, checkBoolean(Html.esc(m.ksdNoticeYn()))))
                 .append(td(4, 1, 1, "center", 14, "금융투자협회", HEAD))
-                .append(td(4, 1, 1, "center", 14, checkBoolean(m.kofiaNoticeYn())))
+                .append(td(4, 1, 1, "center", 14, checkBoolean(Html.esc(m.kofiaNoticeYn()))))
 ```
 
-## CH-cpd-03a22f3b — 기타 로직 · 같은 도메인 · 7줄×2곳 (점수 7)
+## CH-cpd-03a22f3b **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 도메인 · 7줄×2곳 (점수 7)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ExpenseLinkSeedProvider.java:239-245`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:174-180`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/ExpenseLinkSeedProvider.java:241-247`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/TrTaxLinkSeedProvider.java:176-182`
 
 ```java
         t.append(TABLE_START).append("<tbody>")
@@ -2706,12 +2226,12 @@ public record FundRes(
                 .append(tr(tdStNone(100, 1, "left", 13, "2. 계정과목 : " + accountName)))
 ```
 
-## CH-cpd-26a64a3c — 기타 로직 · 같은 파일 · 6줄×2곳 (점수 6)
+## CH-cpd-26a64a3c **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 6줄×2곳 (점수 6)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
 - 도메인: apr
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayIncomeTaxLinkSeedProvider.java:270-275`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayIncomeTaxLinkSeedProvider.java:282-287`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayIncomeTaxLinkSeedProvider.java:272-277`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/service/link/PayIncomeTaxLinkSeedProvider.java:284-289`
 
 ```java
                 .append(tdBorderColor(32, 1, 1, 1, 0, 0, "left", 12, "발급일 현재 위와 같이 원천징수하였음을 확인하여 주시기 바랍니다."))

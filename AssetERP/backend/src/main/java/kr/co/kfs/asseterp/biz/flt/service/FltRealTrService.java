@@ -13,26 +13,21 @@ import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * 정기보고 (AS-IS Flt10_Tab_RealTransaction → server/flt/Flt10_Tr.java selectByPeriod L149 / update L696 / delete L737 / deleteUpdate L665 /
@@ -52,7 +47,7 @@ public class FltRealTrService {
     public List<RealTrRes> search(UserPrincipal user, Long accountId, String startDate, String closeDate,
                                   String searchText, boolean myAccountYn, boolean preTrYn) {
         return mapper.selectRealTrs(user.getCompanyId(), user.getUserId(), accountId, "%", startDate, closeDate,
-                like(searchText), myAccountYn, preTrYn ? "true" : "false");
+                Texts.like(searchText), myAccountYn, preTrYn ? "true" : "false");
     }
 
     /**
@@ -189,11 +184,7 @@ public class FltRealTrService {
 
     /** 엑셀 템플릿 (AS-IS downloadForm → ./excelTemplete/Template_임직원자기매매.xlsx) */
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -223,17 +214,17 @@ public class FltRealTrService {
                 if (isCellEmpty(row.getCell(0))) {
                     continue;
                 }
-                String accountNo = cellString(row.getCell(0));
+                String accountNo = ExcelCells.string(row.getCell(0));
                 if (accountNo != null && isExponentialFormat(accountNo)) {
                     accountNo = new BigDecimal(accountNo).toPlainString();
                 }
-                LocalDate trDate = cellDate(row.getCell(1));
-                String trType = stripZero(cellString(row.getCell(2)));
-                String trItemType = stripZero(cellString(row.getCell(3)));
-                String trItemName = trim(cellString(row.getCell(4)));
-                String itemCode = trim(cellString(row.getCell(5)));
-                Double trQty = cellDouble(row.getCell(6));
-                Long trAmt = cellLong(row.getCell(7));
+                LocalDate trDate = ExcelCells.date(row.getCell(1));
+                String trType = stripZero(ExcelCells.string(row.getCell(2)));
+                String trItemType = stripZero(ExcelCells.string(row.getCell(3)));
+                String trItemName = trim(ExcelCells.string(row.getCell(4)));
+                String itemCode = trim(ExcelCells.string(row.getCell(5)));
+                Double trQty = ExcelCells.doubleValue(row.getCell(6));
+                Long trAmt = ExcelCells.longValue(row.getCell(7));
 
                 if (accountNo == null || accountNo.isEmpty() || " ".equals(accountNo)) {
                     rowCount++;
@@ -282,10 +273,6 @@ public class FltRealTrService {
         return new ReportCheckRes(false, message);
     }
 
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
-    }
-
     private static String trim(String s) {
         return s == null ? null : s.trim();
     }
@@ -328,68 +315,6 @@ public class FltRealTrService {
             default:
                 return true;
         }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getLongCellData — 숫자·수식 숫자는 정수로, 글자는 쉼표를 빼고 숫자면 변환 / 그 밖은 null */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING) {
-            String s = cell.getStringCellValue().replace(",", "");
-            return s.matches("-?\\d+") ? Long.valueOf(s) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getDoubleCellData */
-    private static Double cellDouble(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().length() > 0) {
-            return Double.parseDouble(cell.getStringCellValue());
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     /**

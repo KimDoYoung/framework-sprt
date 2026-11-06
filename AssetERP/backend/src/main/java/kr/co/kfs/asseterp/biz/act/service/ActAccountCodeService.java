@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/act/Act01_AccountCode.java (selectBySlipYn L40, selectByCompanyId L29, selectTreeByCompanyId L46, insertAdminCopy L53, modelUpdate L117, update L130, delete L135) */
 @Service
@@ -155,18 +156,18 @@ public class ActAccountCodeService {
             int r = 1;
             for (AccountCodeAdminRes a : rows) {
                 Row row = sheet.createRow(r++);
-                row.createCell(0).setCellValue(nvl(a.accountCode()));
-                row.createCell(1).setCellValue(nvl(a.accountName()));
-                row.createCell(2).setCellValue(nvl(a.parentName()));
-                row.createCell(3).setCellValue(nvl(a.attributeName()));
-                row.createCell(4).setCellValue(nvl(a.drcrName()));
+                row.createCell(0).setCellValue(Texts.nvl(a.accountCode()));
+                row.createCell(1).setCellValue(Texts.nvl(a.accountName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.parentName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.attributeName()));
+                row.createCell(4).setCellValue(Texts.nvl(a.drcrName()));
                 row.createCell(5).setCellValue(yn(a.slipYn()));
                 row.createCell(6).setCellValue(yn(a.fssYn()));
                 row.createCell(7).setCellValue(yn(a.fssSlipYn()));
-                row.createCell(8).setCellValue(nvl(a.accountName2()));
-                row.createCell(9).setCellValue(nvl(a.fssAccountName()));
-                row.createCell(10).setCellValue(nvl(a.accountEName()));
-                row.createCell(11).setCellValue(nvl(a.content()));
+                row.createCell(8).setCellValue(Texts.nvl(a.accountName2()));
+                row.createCell(9).setCellValue(Texts.nvl(a.fssAccountName()));
+                row.createCell(10).setCellValue(Texts.nvl(a.accountEName()));
+                row.createCell(11).setCellValue(Texts.nvl(a.content()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -191,10 +192,6 @@ public class ActAccountCodeService {
 
     private boolean isBlank(String s) {
         return s == null || s.isEmpty();
-    }
-
-    private String nvl(String s) {
-        return s == null ? "" : s;
     }
 
     /** checkBooleanNull(...) == true 이면 Y, 아니면 N */

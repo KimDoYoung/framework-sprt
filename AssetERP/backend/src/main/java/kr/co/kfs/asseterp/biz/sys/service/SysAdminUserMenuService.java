@@ -27,7 +27,7 @@ public class SysAdminUserMenuService {
      * 회사는 AS-IS처럼 로그인 회사(LoginUser.getCompanyId — KFS 관리자면 0)의 메뉴다. 전위 순서 평평한 목록으로 돌려준다.
      */
     public List<AdminUserMenuRes> searchMenus(UserPrincipal user, Long userId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<AdminUserMenuRes> out = new ArrayList<>();
         addChildren(out, user.getCompanyId(), userId, ROOT, 0);
         return out;
@@ -43,7 +43,7 @@ public class SysAdminUserMenuService {
     /** AS-IS updateMenu L19-50: 바뀐 행마다 sys82 행이 없으면 채번해 INSERT, 있으면 UPDATE → 저장된 행 */
     @Transactional
     public List<AdminUserMenuRes> updateMenus(UserPrincipal user, Long userId, List<AdminUserMenuReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (mapper.countUser(userId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
@@ -58,11 +58,5 @@ public class SysAdminUserMenuService {
             saved.add(mapper.selectSaved(userId, r.menuId()));
         }
         return saved;
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

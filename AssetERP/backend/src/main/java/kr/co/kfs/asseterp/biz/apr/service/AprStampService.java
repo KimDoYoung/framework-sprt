@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/apr/Apr10_Stamp.java selectBySearchText2 L36 (Apr10_Lookup_DocStamp, flag=true), selectBySearchText (Apr10_Lookup_Stamp, flag=true) */
 @Service
@@ -28,17 +29,17 @@ public class AprStampService {
      * 사용자 조직(AS-IS LoginUser.getOrgCodeId)은 회사관리자(userId &lt; 0)면 0, 직원이면 가장 최근 발령(겸직 제외)의 조직
      */
     public List<AprStampRes> searchDocStamp(UserPrincipal user, Long classTreeId, String searchText) {
-        return mapper.selectBySearchText2(user.getCompanyId(), classTreeId, orgCodeId(user), like(searchText));
+        return mapper.selectBySearchText2(user.getCompanyId(), classTreeId, orgCodeId(user), Texts.like(searchText));
     }
 
     /** AS-IS Apr10_Stamp.selectBySearchText (G06 Apr10_Lookup_Stamp, flag=true): 모두 사용 가능하거나 사용자 조직에 역할로 준 인감, 사용기간 안의 것 */
     public List<AprStampRes> searchStamp(UserPrincipal user, String searchText) {
-        return mapper.selectBySearchText(user.getCompanyId(), orgCodeId(user), like(searchText));
+        return mapper.selectBySearchText(user.getCompanyId(), orgCodeId(user), Texts.like(searchText));
     }
 
     /** AS-IS Apr10_Stamp.selectByOrgId (T25 Apr10_Lookup_Stamp, flag=false): 내 부서 소유 인감까지 포함, 사용기간 조건 없음 */
     public List<AprStampRes> searchStampByOrg(UserPrincipal user, String searchText) {
-        return mapper.selectByOrgId(user.getCompanyId(), orgCodeId(user), like(searchText));
+        return mapper.selectByOrgId(user.getCompanyId(), orgCodeId(user), Texts.like(searchText));
     }
 
     /** AS-IS Apr10_Stamp.selectByCodeName (G07 Apr10_Tab_Stamp): 로그인 회사의 모든 인감 */
@@ -96,10 +97,6 @@ public class AprStampService {
             orgId = org == null ? Long.valueOf(0L) : org;
         }
         return orgId;
-    }
-
-    private String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     /** AS-IS Apr10_Stamp.selectCorpStampYn L137 — 법인인감이 하나 이상이면 첫 번째(등록 창의 기본 인감), 없으면 null */

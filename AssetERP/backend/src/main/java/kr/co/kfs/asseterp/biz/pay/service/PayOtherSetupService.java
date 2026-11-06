@@ -37,7 +37,7 @@ public class PayOtherSetupService {
     /** AS-IS insert: 적용일 이전 가장 최근 적용일의 행을 새 적용일로 복사한다(없으면 값이 빈 한 줄) */
     @Transactional
     public void createDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "적용일은 필수입력 항목입니다");
         }
@@ -55,7 +55,7 @@ public class PayOtherSetupService {
     /** AS-IS deleteByDate: 해당 적용일을 통째로 지운다 → 지운 건수 */
     @Transactional
     public int deleteDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
         }
@@ -65,7 +65,7 @@ public class PayOtherSetupService {
     /** AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<PayOtherSetupRes> save(UserPrincipal user, List<PayOtherSetupSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayOtherSetupSaveReq req : rows) {
             if (req.startDate() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
@@ -86,13 +86,7 @@ public class PayOtherSetupService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(ids);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

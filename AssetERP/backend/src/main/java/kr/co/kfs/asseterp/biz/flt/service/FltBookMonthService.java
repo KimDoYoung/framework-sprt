@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * 월말 평가금액 (AS-IS server/flt/Flt12_BookMonth.java selectByBookDate L26 / checkBookMonth L31 / update L41 / insertBookAmt L75) —
@@ -28,7 +29,7 @@ public class FltBookMonthService {
 
     /** AS-IS selectByBookDate — 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
     public List<BookMonthRes> search(UserPrincipal user, Long accountId, String startDate, String closeDate, String searchText, boolean myAccountYn) {
-        return mapper.selectBookMonths(user.getCompanyId(), user.getUserId(), accountId, startDate, closeDate, like(searchText), myAccountYn);
+        return mapper.selectBookMonths(user.getCompanyId(), user.getUserId(), accountId, startDate, closeDate, Texts.like(searchText), myAccountYn);
     }
 
     /** AS-IS checkBookMonth — 평가금액이 비어 있으면 실패 메시지 */
@@ -65,7 +66,7 @@ public class FltBookMonthService {
     @Transactional
     public int evaluate(UserPrincipal user, BookMonthEvalReq req) {
         List<BookMonthTargetRes> targets = mapper.selectInsertBookAmtTarget(user.getCompanyId(), user.getUserId(), req.accountId(),
-                req.startDate(), req.closeDate(), like(req.searchText()), req.type());
+                req.startDate(), req.closeDate(), Texts.like(req.searchText()), req.type());
         for (BookMonthTargetRes t : targets) {
             mapper.updateBookAmt(user.getCompanyId(), user.getUserId(), t.accountId(), t.itemType(), t.itemName(), t.itemCode(),
                     t.bookDate(), t.bookAmt(), t.stkPriceYn());
@@ -77,9 +78,5 @@ public class FltBookMonthService {
             }
         }
         return targets.size();
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

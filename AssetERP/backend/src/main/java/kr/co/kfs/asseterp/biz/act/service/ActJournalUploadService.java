@@ -11,18 +11,17 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/act/Act08_JournalUpload.java (deleteByCompanyId L25 · journalWork L32) · server/utils/file/ExcelUpload.journalUpload L3419-3517
@@ -38,11 +37,7 @@ public class ActJournalUploadService {
     private final ActJournalUploadMapper mapper;
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**

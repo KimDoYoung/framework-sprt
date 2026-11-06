@@ -48,7 +48,7 @@ public class PayTaxDeductService {
      */
     @Transactional
     public void createDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "적용일은 필수입력 항목입니다");
         }
@@ -71,7 +71,7 @@ public class PayTaxDeductService {
     /** AS-IS Pay27.deleteByDate: 해당 적용일의 세액공제·한도를 통째로 지운다 → 지운 건수(세액공제 + 한도) */
     @Transactional
     public int deleteDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
         }
@@ -81,7 +81,7 @@ public class PayTaxDeductService {
     /** AS-IS Pay27.update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<PayTaxDeductRes> save(UserPrincipal user, List<PayTaxDeductSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayTaxDeductSaveReq req : rows) {
             requireAmounts(req.startDate(), req.fromAmt(), req.toAmt());
         }
@@ -100,14 +100,14 @@ public class PayTaxDeductService {
     /** AS-IS Pay27.delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(ids);
     }
 
     /** AS-IS Pay28.update(UpdateDataModel) → 저장된 행(요청 순서) */
     @Transactional
     public List<PayTaxDeductLimitRes> saveLimits(UserPrincipal user, List<PayTaxDeductLimitSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayTaxDeductLimitSaveReq req : rows) {
             requireAmounts(req.startDate(), req.fromAmt(), req.toAmt());
         }
@@ -126,7 +126,7 @@ public class PayTaxDeductService {
     /** AS-IS Pay28.delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int deleteLimits(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteLimitByIds(ids);
     }
 
@@ -140,12 +140,6 @@ public class PayTaxDeductService {
         }
         if (toAmt == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "이하 금액은 필수입력 항목입니다.");
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

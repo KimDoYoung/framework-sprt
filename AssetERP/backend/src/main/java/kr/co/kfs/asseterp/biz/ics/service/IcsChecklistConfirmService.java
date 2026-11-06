@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS Ics15_Tab_ChecklistConfirm → server/ics/Ics11_ChecklistCompany.selectChecklistStatusPaging L40 + Ics15_ChecklistWrite.updateConfirmYn L79
@@ -32,7 +33,7 @@ public class IcsChecklistConfirmService {
     /** AS-IS selectChecklistStatusPaging: 목록 + 전체 건수. 검색어는 AS-IS처럼 앞뒤에 %를 붙인다 */
     public PageRes<IcsChecklistConfirmRes> search(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
                                                   String searchText, boolean unCheckYn, boolean unConfirmYn, int offset, int limit) {
-        String like = like(searchText);
+        String like = Texts.like(searchText);
         return new PageRes<>(mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn),
                 mapper.selectPaging(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, offset, limit));
     }
@@ -43,7 +44,7 @@ public class IcsChecklistConfirmService {
      */
     public byte[] download(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
                            String searchText, boolean unCheckYn, boolean unConfirmYn) {
-        String like = like(searchText);
+        String like = Texts.like(searchText);
         long total = mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn);
         List<List<Object>> rows = total == 0 ? List.of() : mapper.selectPaging(user.getCompanyId(), user.getUserId(), stdDate, cycleType,
                         checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, 0, total).stream()
@@ -105,10 +106,6 @@ public class IcsChecklistConfirmService {
         } else {
             mapper.updateRelateApprId(companyId, yyyymm, req.cycleType(), req.checklistLClassId(), req.apprId());
         }
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     private static List<Object> row(Object... values) {

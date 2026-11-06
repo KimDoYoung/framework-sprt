@@ -17,16 +17,15 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS Ics10_Tab_ChecklistAdmin·Ics10_Edit_Checklist → server/ics/Ics10_Checklist.java (selectByAdmin L40 / modelUpdate L69 / delete L121)
@@ -143,11 +142,7 @@ public class IcsChecklistService {
 
     /** 엑셀 템플릿 (AS-IS downloadForm → ./excelTemplete/Template_내부통제 체크리스트.xlsx) */
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**

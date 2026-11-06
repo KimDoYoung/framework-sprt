@@ -79,32 +79,26 @@ public class SysFileService {
 
     /** AS-IS Sys10_File.selectByTotalSize L180 (A16 고객별 서버사용량) — 관리자 메뉴라 sys admin만 */
     public List<FileTotalRes> selectByTotalSize(UserPrincipal user, boolean useYn) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysFileMapper.selectByTotalSize(String.valueOf(useYn));
     }
 
     /** AS-IS Sys10_File.selectByTotalSizeYear L188 */
     public List<FileYearRes> selectByTotalSizeYear(UserPrincipal user, String locName) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysFileMapper.selectByTotalSizeYear(new FileTotalParam(locName, null));
     }
 
     /** AS-IS Sys10_File.selectByTotalSizeMonth L196 */
     public List<FileMonthRes> selectByTotalSizeMonth(UserPrincipal user, String locName, String year) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysFileMapper.selectByTotalSizeMonth(new FileTotalParam(locName, year));
     }
 
     /** AS-IS Sys10_File.findTrashFile L257 (A17 미사용 파일조회) — 관리자 메뉴라 sys admin만 */
     public List<TrashFileRes> findTrashFile(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysFileMapper.findTrashFile();
-    }
-
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     /**

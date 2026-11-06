@@ -33,7 +33,7 @@ public class PayWorkTimeService {
     /** AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서). 원본도 필수값 검사 없음(열이 모두 NULL 허용) */
     @Transactional
     public List<PayWorkTimeRes> save(UserPrincipal user, List<PayWorkTimeSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return rows.stream().map(req -> {
             boolean exists = req.workTimeConfigId() != null && req.workTimeConfigId() > 0 && mapper.selectById(req.workTimeConfigId()) != null;
             if (exists) {
@@ -51,13 +51,7 @@ public class PayWorkTimeService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

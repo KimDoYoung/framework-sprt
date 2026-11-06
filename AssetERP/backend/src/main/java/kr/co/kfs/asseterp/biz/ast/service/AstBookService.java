@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/ast/Ast09_Book.java (selectByHoldDate L28 · selectDepositCurGroupSum L148 · createDepositBook L163) — 일일자금관리 U01 */
 @Service
@@ -55,7 +56,7 @@ public class AstBookService {
      * abroType은 W13(외화)만 "2"(통화가 KRW가 아닌 것)를 준다. W12는 주지 않는다(null = 전체).
      */
     public List<BookFullRes> searchFinanceBooks(UserPrincipal user, LocalDate holdDate, String abroType, String searchText) {
-        return mapper.selectFinanceBook(user.getCompanyId(), holdDate, "2", abroType, like(searchText));
+        return mapper.selectFinanceBook(user.getCompanyId(), holdDate, "2", abroType, Texts.like(searchText));
     }
 
     /**
@@ -68,7 +69,7 @@ public class AstBookService {
         Long personId = user.getUserId();
         long groupId = mapper.selectNextId();
         mapper.deletePrint(companyId, personId, FINANCE_WINDOW);
-        for (BookFullRes b : mapper.selectFinanceBook(companyId, holdDate, "2", null, like(searchText))) {
+        for (BookFullRes b : mapper.selectFinanceBook(companyId, holdDate, "2", null, Texts.like(searchText))) {
             mapper.insertPrintFinance(mapper.selectNextId(), companyId, personId, FINANCE_WINDOW, groupId, b);
         }
         return groupId;
@@ -77,10 +78,6 @@ public class AstBookService {
     /** ast09_book.getHoldDate — [상신] 전에 상신할 내용이 있는지 보는 종목유형별 합계 */
     public List<FinanceGroupRes> searchFinanceGroups(UserPrincipal user, LocalDate holdDate) {
         return mapper.selectFinanceGroup(user.getCompanyId(), holdDate);
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     /** ast09_book.selectDepositCurGroupSum */
@@ -120,7 +117,7 @@ public class AstBookService {
 
         mapper.deletePrint(companyId, personId, FINANCE_PERIOD_WINDOW);
 
-        String like = like(searchText);
+        String like = Texts.like(searchText);
         for (LocalDate day : mapper.selectCalendarDays(companyId, startDate.minusDays(1), closeDate)) {
             for (BookFullRes b : mapper.selectFinanceBook(companyId, day, "2", null, like)) {
                 mapper.insertPrintPeriod(mapper.selectBatchId(), companyId, personId, FINANCE_PERIOD_WINDOW, groupId, b);
@@ -159,6 +156,6 @@ public class AstBookService {
 
     /** ast09_book.selectPreDepositByHoldDate (Ast09_Tab_PreDepositBook, X19) — 검색어는 "%…%" */
     public List<PreDepositBookRes> searchPreDeposits(UserPrincipal user, LocalDate holdDate, String searchText) {
-        return mapper.selectPreDepositByHoldDate(user.getCompanyId(), holdDate, like(searchText), null, null);
+        return mapper.selectPreDepositByHoldDate(user.getCompanyId(), holdDate, Texts.like(searchText), null, null);
     }
 }

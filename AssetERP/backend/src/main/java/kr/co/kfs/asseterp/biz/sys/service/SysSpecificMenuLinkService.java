@@ -23,14 +23,14 @@ public class SysSpecificMenuLinkService {
 
     /** AS-IS selectBySpecificWorkCode L23 (특정업무 코드 그대로 =) */
     public List<SpecificMenuLinkRes> search(UserPrincipal user, Long companyId, String specificWorkCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysSpecificMenuLinkMapper.selectBySpecificWorkCode(companyId, specificWorkCd);
     }
 
     /** AS-IS update(UpdateDataModel) L32: 신규(임시 ID 0 이하)면 INSERT, 아니면 UPDATE → selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<SpecificMenuLinkRes> update(UserPrincipal user, Long companyId, List<SpecificMenuLinkSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<SpecificMenuLinkRes> saved = new ArrayList<>();
         for (SpecificMenuLinkSaveReq req : rows) {
             boolean isNew = req.specificMenuLinkId() == null || req.specificMenuLinkId() <= 0;
@@ -48,16 +48,10 @@ public class SysSpecificMenuLinkService {
     /** AS-IS delete(UpdateDataModel.deleteModel) L37 → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, Long companyId, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
         return sysSpecificMenuLinkMapper.deleteSpecificMenuLinks(companyId, ids);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

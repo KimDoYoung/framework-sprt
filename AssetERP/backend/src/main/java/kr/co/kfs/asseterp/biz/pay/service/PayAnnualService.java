@@ -9,26 +9,19 @@ import kr.co.kfs.asseterp.biz.pay.mapper.PayAnnualMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/pay/Pay01_Annual.java (selectByAll L24 / selectByPersonId L39 / update L54 / delete L59)
@@ -133,11 +126,7 @@ public class PayAnnualService {
     }
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -162,9 +151,9 @@ public class PayAnnualService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String personNo = cellString(row.getCell(0));
-                LocalDate startDate = cellDate(row.getCell(2));
-                LocalDate closeDate = cellDate(row.getCell(3));
+                String personNo = ExcelCells.string(row.getCell(0));
+                LocalDate startDate = ExcelCells.date(row.getCell(2));
+                LocalDate closeDate = ExcelCells.date(row.getCell(3));
                 Long personId = personNo == null ? null : mapper.selectPersonIdByEmpNo(companyId, personNo);
                 if (personId == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 사번 [" + personNo + "]을 찾을 수 없습니다.");
@@ -173,10 +162,10 @@ public class PayAnnualService {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 적용시작일·적용종료일을 읽을 수 없습니다.");
                 }
                 PayAnnualSaveReq req = new PayAnnualSaveReq(null, personId, startDate, closeDate,
-                        cellString(row.getCell(4)), cellString(row.getCell(5)), null,
-                        cellLong(row.getCell(6)), cellLong(row.getCell(7)), cellString(row.getCell(8)),
-                        cellLong(row.getCell(9)), cellLong(row.getCell(10)), cellLong(row.getCell(11)), null,
-                        cellLong(row.getCell(12)), cellLong(row.getCell(13)), cellLong(row.getCell(14)));
+                        ExcelCells.string(row.getCell(4)), ExcelCells.string(row.getCell(5)), null,
+                        ExcelCells.longValue(row.getCell(6)), ExcelCells.longValue(row.getCell(7)), ExcelCells.string(row.getCell(8)),
+                        ExcelCells.longValue(row.getCell(9)), ExcelCells.longValue(row.getCell(10)), ExcelCells.longValue(row.getCell(11)), null,
+                        ExcelCells.longValue(row.getCell(12)), ExcelCells.longValue(row.getCell(13)), ExcelCells.longValue(row.getCell(14)));
                 mapper.excelDelete(companyId, personId, startDate, closeDate);
                 mapper.excelInsert(mapper.selectNextId(), companyId, personId, req);
                 count++;
@@ -211,53 +200,5 @@ public class PayAnnualService {
 
     private PayAnnualRes existing(Long companyId, Long annualId) {
         return annualId != null && annualId > 0 ? mapper.selectById(annualId, companyId, 2) : null;
-    }
-
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getLongCellData — 수식은 마지막 계산값(숫자만), 숫자 셀은 소수점 버림, 글자는 쉼표를 빼고 숫자면 그 값 */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING) {
-            String str = cell.getStringCellValue().replace(",", "");
-            return str.matches("-?\\d+") ? Long.parseLong(str) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

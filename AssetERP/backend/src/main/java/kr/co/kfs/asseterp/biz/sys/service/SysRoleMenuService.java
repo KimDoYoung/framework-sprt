@@ -24,7 +24,7 @@ public class SysRoleMenuService {
      */
     @Transactional
     public int copyRole(UserPrincipal user, RoleMenuCopyReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireSource(req);
         int inserted = 0;
         for (Long companyId : req.companyIds()) {
@@ -44,7 +44,7 @@ public class SysRoleMenuService {
      */
     @Transactional
     public int copyMenu(UserPrincipal user, RoleMenuCopyReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireSource(req);
         if (req.menuId() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "복사할 매뉴를 선택해주세요");
@@ -79,12 +79,6 @@ public class SysRoleMenuService {
         }
         if (req.inCompanyId() == null || req.roleName() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "복사할 권한그룹을 선택해주세요");
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

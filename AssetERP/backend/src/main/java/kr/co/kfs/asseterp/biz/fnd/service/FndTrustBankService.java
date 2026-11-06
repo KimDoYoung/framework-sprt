@@ -38,20 +38,14 @@ public class FndTrustBankService {
      */
     @Transactional
     public List<TrustBankRes> save(UserPrincipal user, List<TrustBankSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         throw new BusinessException(ErrorCode.INVALID_INPUT, "수탁은행 저장 서비스(insertCheck)가 원본 서버에 없어 저장되지 않습니다");
     }
 
     /** AS-IS selectIcamTrustBank: 공통 회사(0)이면 모든 회사("%") */
     public void importIcam(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         icamImporter.importTrustBanks(user.getCompanyId() == 0 ? "%" : String.valueOf(user.getCompanyId()));
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     /** AS-IS fnd.Fnd09_TrustBank.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */

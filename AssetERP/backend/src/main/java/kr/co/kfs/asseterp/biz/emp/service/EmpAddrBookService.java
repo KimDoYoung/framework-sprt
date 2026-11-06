@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/emp/Emp10_AddrBook.java (G11 Emp10_Tab_AddrBook, G12 Emp10_Tab_PublicAddrBook, 그룹설정의 Emp10_Lookup_List) */
 @Service
@@ -22,12 +23,12 @@ public class EmpAddrBookService {
 
     /** AS-IS Emp10_AddrBook.selectByText L43: 내 개인 주소록. 클라이언트가 "%"+글자+"%"로 보내던 것을 여기서 감싼다 */
     public List<EmpAddrBookRes> search(UserPrincipal user, String searchText) {
-        return mapper.selectByText(user.getUserId(), like(searchText));
+        return mapper.selectByText(user.getUserId(), Texts.like(searchText));
     }
 
     /** AS-IS Emp10_AddrBook.selectByPublicText L52: 로그인 회사의 공용 주소록 */
     public List<EmpAddrBookRes> searchPublic(UserPrincipal user, String searchText) {
-        return mapper.selectByPublicText(user.getCompanyId(), like(searchText));
+        return mapper.selectByPublicText(user.getCompanyId(), Texts.like(searchText));
     }
 
     /**
@@ -55,9 +56,5 @@ public class EmpAddrBookService {
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
         return ids.stream().mapToInt(id -> mapper.deleteAddrBook(user.getCompanyId(), id)).sum();
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 }

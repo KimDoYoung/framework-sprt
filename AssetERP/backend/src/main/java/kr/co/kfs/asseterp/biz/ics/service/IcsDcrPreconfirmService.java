@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS Ics40_Tab_DcrPreConfirm·Ics40_Tab_DcrReviewConfirm·Ics41_Lookup_DcrType·Ics40_Edit_Msg
@@ -34,27 +35,23 @@ public class IcsDcrPreconfirmService {
 
     private final IcsDcrPreconfirmMapper mapper;
 
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
-    }
-
     private static String codeOrAll(String code) {
         return code == null || code.isBlank() ? "%" : code;
     }
 
     /** AS-IS selectByConfirm — 로그인 회사 */
     public List<IcsDcrPreconfirmRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String dcrTypeCode, String searchText) {
-        return mapper.selectByConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), like(searchText));
+        return mapper.selectByConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), Texts.like(searchText));
     }
 
     /** AS-IS selectByDate(statusCode "20") — 과거심사필번호 조회창(Ics40_Lookup_SelectSingle): 승인된 사전확인만 */
     public List<IcsDcrPreconfirmRes> searchApproved(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
-        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, like(searchText), "20");
+        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, Texts.like(searchText), "20");
     }
 
     /** AS-IS selectByReviewConfirm — 로그인 회사 */
     public List<IcsDcrPreconfirmRes> searchReview(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String dcrTypeCode, String searchText) {
-        return mapper.selectByReviewConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), like(searchText));
+        return mapper.selectByReviewConfirm(user.getCompanyId(), startDate, closeDate, codeOrAll(dcrTypeCode), Texts.like(searchText));
     }
 
     /** AS-IS LoginUser.getCompanyModel().getDcrPreconfirmSkipYn() — 승인자·승인일·승인여부 열을 숨기는 회사 설정 */
@@ -150,7 +147,7 @@ public class IcsDcrPreconfirmService {
         long groupId = mapper.selectNextId();
 
         mapper.deletePrint(companyId, personId, PRINT_WINDOW);
-        for (IcsDcrPreconfirmRes row : mapper.selectByConfirm(companyId, req.startDate(), req.closeDate(), codeOrAll(req.dcrTypeCode()), like(req.searchText()))) {
+        for (IcsDcrPreconfirmRes row : mapper.selectByConfirm(companyId, req.startDate(), req.closeDate(), codeOrAll(req.dcrTypeCode()), Texts.like(req.searchText()))) {
             mapper.insertPrint(mapper.selectNextId(), companyId, personId, PRINT_WINDOW, groupId, row);
         }
         return String.valueOf(groupId);

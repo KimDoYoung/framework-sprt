@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS server/pay/Pay20_Item.java (selectByText L24 / selectBySearchText L30 / update L53 / delete L58).
@@ -25,17 +26,17 @@ public class PayItemService {
 
     /** AS-IS selectBySearchText: 항목구분은 코드(전체면 "%"), 항목명은 "%검색어%" */
     public List<PayItemRes> search(String itemType, String searchText) {
-        return mapper.selectBySearchText(itemType == null || itemType.isEmpty() ? "%" : itemType, "%" + nvl(searchText) + "%");
+        return mapper.selectBySearchText(itemType == null || itemType.isEmpty() ? "%" : itemType, "%" + Texts.nvl(searchText) + "%");
     }
 
     /** AS-IS selectByText(급여항목 조회창): 항목명 "%검색어%" */
     public List<PayItemRes> lookup(String searchText) {
-        return mapper.selectByText("%" + nvl(searchText) + "%");
+        return mapper.selectByText("%" + Texts.nvl(searchText) + "%");
     }
 
     /** AS-IS getMonthItem(급여관리(항목별) 항목 List): 항목명 "%검색어%", 지급·공제만 */
     public List<PayItemRes> searchMonthItems(String searchText) {
-        return mapper.selectMonthItems("%" + nvl(searchText) + "%");
+        return mapper.selectMonthItems("%" + Texts.nvl(searchText) + "%");
     }
 
     /** AS-IS selectByItemType(급여 항목 행 추가 조회창): 항목구분 1 지급 / 2 공제 */
@@ -49,7 +50,7 @@ public class PayItemService {
      */
     @Transactional
     public List<PayItemRes> save(UserPrincipal user, List<PayItemSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayItemSaveReq req : rows) {
             if (isBlank(req.itemType())) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "항목구분은 필수입력 항목입니다.");
@@ -76,21 +77,11 @@ public class PayItemService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(ids);
-    }
-
-    private static String nvl(String s) {
-        return s == null ? "" : s;
     }
 
     private static boolean isBlank(String s) {
         return s == null || s.isEmpty();
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

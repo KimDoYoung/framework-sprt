@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS server/flt/Flt10_Tr.java (selectByAccountId L103 / selectInvestLimit L66 / selectItemName L45 / update L696 / delete L737 /
@@ -44,7 +45,7 @@ public class FltTrService {
     /** AS-IS selectByAccountId — 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
     public List<TrRes> search(UserPrincipal user, String trType, Long accountId, String regDate,
                               String startDate, String closeDate, String searchText) {
-        return mapper.selectTrs(user.getCompanyId(), user.getUserId(), trType, accountId, regDate, startDate, closeDate, like(searchText));
+        return mapper.selectTrs(user.getCompanyId(), user.getUserId(), trType, accountId, regDate, startDate, closeDate, Texts.like(searchText));
     }
 
     /** AS-IS Flt02_Emp.selectByDate(기준일) + Flt04_Oath.selectByDate(오늘) + 회사 소급 설정 + 서버 오늘 */
@@ -68,7 +69,7 @@ public class FltTrService {
 
     /** AS-IS selectItemName(종목 찾기 창) */
     public List<TrItemRes> itemNames(UserPrincipal user, String stdDate, String searchText) {
-        return mapper.selectItemNames(user.getCompanyId(), user.getUserId(), stdDate, like(searchText));
+        return mapper.selectItemNames(user.getCompanyId(), user.getUserId(), stdDate, Texts.like(searchText));
     }
 
     /** AS-IS Flt01_CompanyStd.getExpectTrDate — 기준관리가 없으면 null */
@@ -178,14 +179,14 @@ public class FltTrService {
     public List<TrListRes> searchList(UserPrincipal user, String startDate, String closeDate, boolean preTrYn,
                                       String trType, String ioType, String searchText) {
         return mapper.selectTrList(user.getCompanyId(), user.getUserId(), startDate, closeDate, String.valueOf(preTrYn),
-                "true", blankToAll(trType), blankToAll(ioType), like(searchText));
+                "true", blankToAll(trType), blankToAll(ioType), Texts.like(searchText));
     }
 
     /** AS-IS Flt10_Tab_TrListAdmin.retrieve (J03 준감인) — personId 생략 = 회사 전체 사원, unApprYn "false" */
     public List<TrListRes> searchListAdmin(UserPrincipal user, Long personId, String startDate, String closeDate, boolean preTrYn,
                                            String trType, String ioType, String searchText) {
         return mapper.selectTrList(user.getCompanyId(), personId, startDate, closeDate, String.valueOf(preTrYn),
-                "false", blankToAll(trType), blankToAll(ioType), like(searchText));
+                "false", blankToAll(trType), blankToAll(ioType), Texts.like(searchText));
     }
 
     /**
@@ -257,7 +258,7 @@ public class FltTrService {
 
     /** AS-IS Flt10_Tr.selectEmpAppr (J06 정기보고현황) — 기준일 시점 재직 사원의 서약서·점검주기·상신상태. 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
     public List<EmpApprRes> searchEmpApprs(UserPrincipal user, String stdDate, boolean unApprYn, String searchText) {
-        return mapper.selectEmpAppr(user.getCompanyId(), stdDate, unApprYn, like(searchText));
+        return mapper.selectEmpAppr(user.getCompanyId(), stdDate, unApprYn, Texts.like(searchText));
     }
 
     /** AS-IS Flt10_Tr.selectByApprId (J06 Flt10_Grid_EmpAppr) — 사원의 기간 내 정기보고 상신문서 */
@@ -275,10 +276,6 @@ public class FltTrService {
 
     private static String blankToAll(String code) {
         return code == null || code.isBlank() ? "%" : code;
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 
     /**

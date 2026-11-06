@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/fnd/Fnd31_OprFund.java (selectByOprId L25 / modelUpdate L39 / delete L62)
@@ -128,14 +129,14 @@ public class FndOprFundService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String fundCode = cellString(row.getCell(0));
+                String fundCode = ExcelCells.string(row.getCell(0));
                 Long qty = cellLong(wb, row.getCell(2));
                 // 공모주청약 펀드배분: 코드·펀드명·배정수량·단가·배정금액·수수료·납입금액·구분 / 수요예측 신청: 코드·펀드명·신청수량·신청금액·구분
                 Long price = subscription ? cellLong(wb, row.getCell(3)) : null;
                 Long contAmt = subscription ? cellLong(wb, row.getCell(4)) : null;
                 Long fee = subscription ? cellLong(wb, row.getCell(5)) : null;
                 Long settleAmt = cellLong(wb, row.getCell(subscription ? 6 : 3));
-                String fundAdviceType = cellString(row.getCell(subscription ? 7 : 4));
+                String fundAdviceType = ExcelCells.string(row.getCell(subscription ? 7 : 4));
                 if (fundAdviceType == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 운용펀드/일임(자문) 구분이 없습니다.");
                 }
@@ -176,18 +177,6 @@ public class FndOprFundService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return opr;
-    }
-
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
     }
 
     /** ExcelUpload.getFomulaCellData — 수식은 계산한 숫자, 숫자 셀은 그 값(소수점 버림), 그 밖은 null */

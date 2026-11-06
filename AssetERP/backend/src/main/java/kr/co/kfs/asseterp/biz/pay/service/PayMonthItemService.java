@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS server/pay/Pay11_MonthItem.java (selectByItemType L38 / updateList L116 / getInsureAdjustModi L158 / recalculationTax L340) — 급여 항목 (S16)
@@ -87,7 +88,7 @@ public class PayMonthItemService {
 
     /** S17 pay11_month_item.selectByText — 구분·지급일의 전체 사원 항목. 항목 코드 기본 "%", 검색어는 "%…%"(사원명+항목명) */
     public List<PayMonthItemTextRes> searchByText(UserPrincipal user, String payCode, LocalDate payDate, String itemCode, String searchText) {
-        return mapper.selectByText(user.getCompanyId(), payCode, payDate, blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+        return mapper.selectByText(user.getCompanyId(), payCode, payDate, blank(itemCode) ? "%" : itemCode, "%" + Texts.nvl(searchText) + "%");
     }
 
     /**
@@ -153,13 +154,13 @@ public class PayMonthItemService {
         long groupId = monthMapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), RD_WINDOW_CLASS_NAME);
         mapper.insertPrint(user.getCompanyId(), user.getUserId(), RD_WINDOW_CLASS_NAME, groupId, payCode, payDate,
-                blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+                blank(itemCode) ? "%" : itemCode, "%" + Texts.nvl(searchText) + "%");
         return String.valueOf(groupId);
     }
 
     /** S19 pay11_month_item.selectByDate — 조회기간(지급일)의 전체 사원 항목. 항목 코드 기본 "%", 검색어는 "%…%"(사원명+항목명) */
     public List<PayMonthItemDateRes> searchByDate(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String itemCode, String searchText) {
-        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, blank(itemCode) ? "%" : itemCode, "%" + Texts.nvl(searchText) + "%");
     }
 
     /** S19 AS-IS Sys99_Print.insertRdMonthSearch L2495: 내 지난 출력 자료 정리 → 목록 삽입 → 출력 자료 groupId */
@@ -171,16 +172,12 @@ public class PayMonthItemService {
         long groupId = monthMapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), RD_SEARCH_WINDOW_CLASS_NAME);
         mapper.insertPrintByDate(user.getCompanyId(), user.getUserId(), RD_SEARCH_WINDOW_CLASS_NAME, groupId, startDate, closeDate,
-                blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+                blank(itemCode) ? "%" : itemCode, "%" + Texts.nvl(searchText) + "%");
         return String.valueOf(groupId);
     }
 
     private static boolean blank(String s) {
         return s == null || s.isBlank();
-    }
-
-    private static String nvl(String s) {
-        return s == null ? "" : s;
     }
 
     /** AS-IS recalculationTax: 소득세 250·지방세 260 다시 계산 */

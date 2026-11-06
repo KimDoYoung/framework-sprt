@@ -35,7 +35,7 @@ public class FndConsignmentService {
     /** AS-IS insertCheck(GridUpdate): 있는 행은 코드·이름·사용여부·비고를 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<ConsignmentRes> save(UserPrincipal user, List<ConsignmentSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return rows.stream().map(req -> {
             ConsignmentRes found = req.consignmentId() == null ? null : mapper.selectById(req.consignmentId());
             if (found != null && !found.companyId().equals(user.getCompanyId())) {
@@ -53,14 +53,8 @@ public class FndConsignmentService {
 
     /** AS-IS selectIcamConsignment: 공통 회사(0)이면 모든 회사("%") */
     public void importIcam(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         icamImporter.importConsignments(user.getCompanyId() == 0 ? "%" : String.valueOf(user.getCompanyId()));
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     /** AS-IS fnd.Fnd03_Consignment.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */

@@ -48,7 +48,7 @@ public class SysUserRoleService {
 
     /** AS-IS Sys05_Page_CompanyUserRole.retrieve(roleModel) → selectByRoleId. 권한그룹은 고른 회사 것이어야 한다 */
     public List<UserRoleRes> searchCompanyUserRoles(UserPrincipal user, Long companyId, Long roleId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         checkRole(companyId, roleId);
         return sysUserRoleMapper.searchUserRoles(roleId);
     }
@@ -56,14 +56,14 @@ public class SysUserRoleService {
     /** AS-IS update() L207-210 → Sys05_UserRole.update. 사원·권한그룹은 고른 회사 것 */
     @Transactional
     public List<UserRoleRes> updateCompanyUserRoles(UserPrincipal user, Long companyId, List<UserRoleSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return saveUserRoles(companyId, rows);
     }
 
     /** AS-IS deleteRow() L239-243 → Sys05_UserRole.delete → 지운 건수 */
     @Transactional
     public int deleteCompanyUserRoles(UserPrincipal user, Long companyId, List<Long> userRoleIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return removeUserRoles(companyId, userRoleIds);
     }
 
@@ -100,12 +100,6 @@ public class SysUserRoleService {
     private void checkRole(Long companyId, Long roleId) {
         if (roleId == null || sysUserRoleMapper.countRole(companyId, roleId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

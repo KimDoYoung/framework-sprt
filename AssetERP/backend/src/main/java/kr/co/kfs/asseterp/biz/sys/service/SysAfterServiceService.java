@@ -30,7 +30,7 @@ public class SysAfterServiceService {
      */
     public List<AfterServiceRes> searchAdmin(UserPrincipal user, LocalDate happenStartDate, LocalDate happenEndDate, String companyText,
                                              String typeYn, String stateCd, boolean unconfirmedOnly, boolean incompleteOnly, String searchText) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         AfterServiceSearchParam param = new AfterServiceSearchParam(happenStartDate, happenEndDate,
                 likeOrAll(companyText), likeOrAll(typeYn), likeOrAll(stateCd), unconfirmedOnly ? "false" : "%",
                 "%" + (searchText == null ? "" : searchText) + "%");
@@ -39,7 +39,7 @@ public class SysAfterServiceService {
 
     /** AS-IS selectById — 저장 뒤 그리드 행 갱신 */
     public AfterServiceRes getById(UserPrincipal user, Long afterServiceId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         AfterServiceRes res = sysAfterServiceMapper.selectById(afterServiceId);
         if (res == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -50,7 +50,7 @@ public class SysAfterServiceService {
     /** AS-IS Sys90_Edit_BoardAdmin.updateRow() L374-394 → adminUpdate → updateEnd() L396-410(selectById) */
     @Transactional
     public AfterServiceRes adminUpdate(UserPrincipal user, AfterServiceAdminSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         sysAfterServiceMapper.adminUpdate(req);
         return getById(user, req.afterServiceId());
     }
@@ -58,7 +58,7 @@ public class SysAfterServiceService {
     /** AS-IS Sys90_Lookup_Remarks.update() L74-88 → updateRemarks */
     @Transactional
     public AfterServiceRes updateRemarks(UserPrincipal user, Long afterServiceId, String remarks) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         sysAfterServiceMapper.updateRemarks(afterServiceId, remarks);
         return getById(user, afterServiceId);
     }
@@ -104,12 +104,6 @@ public class SysAfterServiceService {
     private void requireOwnCompany(UserPrincipal user, Long afterServiceId) {
         AfterServiceRes row = afterServiceId == null ? null : sysAfterServiceMapper.selectById(afterServiceId);
         if (row != null && !user.getCompanyId().equals(row.companyId())) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/rpt/Rpt01_Daily.java (Z08 일일업무 입력) */
 @Service
@@ -80,7 +81,7 @@ public class RptDailyService {
 
     /** AS-IS selectByConfirmText L39 — 로그인 사원의 조직과 그 아래 조직 소속 사원의 일일업무. unconfirmedOnly = "미확인건만 조회" */
     public List<DailyConfirmRes> searchByConfirmText(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean unconfirmedOnly, String searchText) {
-        return mapper.selectByConfirmText(user.getCompanyId(), startDate, closeDate, String.valueOf(unconfirmedOnly), orgId(user), like(searchText));
+        return mapper.selectByConfirmText(user.getCompanyId(), startDate, closeDate, String.valueOf(unconfirmedOnly), orgId(user), Texts.like(searchText));
     }
 
     /** AS-IS confirmModelUpdate L69 — 확인자 비고 (Rpt01_Edit_DailyConfirm.update) → 다시 읽은 행 */
@@ -125,14 +126,10 @@ public class RptDailyService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONFIRM_WINDOW);
         for (DailyConfirmRes row : mapper.selectByConfirmText(user.getCompanyId(), req.startDate(), req.closeDate(), String.valueOf(req.unconfirmedOnly()),
-                orgId(user), like(req.searchText()))) {
+                orgId(user), Texts.like(req.searchText()))) {
             mapper.insertPrint(mapper.selectNextId(), user.getCompanyId(), user.getUserId(), CONFIRM_WINDOW, groupId, row);
         }
         return String.valueOf(groupId);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 
     /** LoginUser.getOrgCodeId() — 로그인 사원의 조직(없으면 -1: 조회 결과 없음) */

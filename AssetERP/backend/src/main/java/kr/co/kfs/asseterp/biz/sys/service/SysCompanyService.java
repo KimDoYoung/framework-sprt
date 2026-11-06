@@ -39,7 +39,7 @@ public class SysCompanyService {
 
     /** AS-IS selectByName: 고객명 '%입력값%'(없으면 '%'), useYn */
     public List<CompanyRes> searchCompanies(UserPrincipal user, String companyNm, String useYn) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         String like = companyNm == null || companyNm.isEmpty() ? "%" : "%" + companyNm + "%";
         return sysCompanyMapper.searchCompanies(new CompanySearchParam(like, useYn));
     }
@@ -50,7 +50,7 @@ public class SysCompanyService {
      */
     @Transactional
     public CompanyRes createCompany(UserPrincipal user, CompanyCreateReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         CompanyCreateReq in = trim(req);
         // AS-IS updateChk() L180-201 (클라이언트) / Sys01_Company.update L165-181 (서버) 필수 검사, 메시지는 팝업 것
         required(in.companyNm(), "고객사명은 필수 입력항목입니다.");
@@ -81,7 +81,7 @@ public class SysCompanyService {
      */
     @Transactional
     public CompanyManageRes getCompanyManage(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         CompanyManageRes res = sysCompanyMapper.selectCompanyManage(companyId);
         if (res == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -112,7 +112,7 @@ public class SysCompanyService {
     /** 관리정보 탭 저장 (AS-IS Sys01_Company.update L165-181: 고객명·접근코드 필수 → UpdateDataModel UPDATE → selectById) */
     @Transactional
     public CompanyManageRes updateCompanyManage(UserPrincipal user, CompanyManageReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         required(req.companyNm() == null ? null : req.companyNm().trim(), "고객명은 필수 입력항목입니다.");
         required(req.locNm() == null ? null : req.locNm().trim(), "접근코드는 필수 입력항목입니다.");
         // TOBE 추가: 서브도메인은 테넌트 판정에 쓰이므로 다른 회사와 겹치지 않게 한다
@@ -128,7 +128,7 @@ public class SysCompanyService {
     /** AS-IS Sys01_Company.updateNote L109-116 (비고 팝업) */
     @Transactional
     public void updateNote(UserPrincipal user, Long companyId, String note) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (sysCompanyMapper.updateNote(companyId, note) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
@@ -139,7 +139,7 @@ public class SysCompanyService {
     /** 기본정보 탭 조회 (AS-IS Info02.retrieve → selectById L20-29, main_image_id 채번 포함) */
     @Transactional
     public CompanyBasicRes getCompanyBasic(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return withMainImageId(companyId, sysCompanyMapper.selectCompanyBasic(companyId));
     }
 
@@ -149,7 +149,7 @@ public class SysCompanyService {
      */
     @Transactional
     public CompanyBasicRes updateCompanyBasic(UserPrincipal user, CompanyBasicReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         CompanyBasicReq in = new CompanyBasicReq(req.companyId(), req.startDate(), blankToNull(req.bizNo()),
                 blankToNull(req.decCorpRegNo()), req.empInfo(), req.mobileTelNo(), req.officeTelNo(), req.officeFaxNo(),
                 req.emailAddr(), req.zipCd(), req.zipAddr(), req.zipDetail());
@@ -165,14 +165,14 @@ public class SysCompanyService {
     /** 전자결재·내부통제 탭 조회 (AS-IS Info03.retrieve → selectById) */
     @Transactional
     public CompanyApprovalRes getCompanyApproval(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return withMainImageId(companyId, sysCompanyMapper.selectCompanyApproval(companyId));
     }
 
     /** 전자결재·내부통제 탭 저장 (AS-IS Info03.update L112-115 → update L165-187) */
     @Transactional
     public CompanyApprovalRes updateCompanyApproval(UserPrincipal user, CompanyApprovalReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireUpdateFields(req.companyId());
         sysCompanyMapper.updateCompanyApproval(req);
         return sysCompanyMapper.selectCompanyApproval(req.companyId());
@@ -181,14 +181,14 @@ public class SysCompanyService {
     /** 경영·회계 탭 조회 (AS-IS Info04.retrieve → selectById) */
     @Transactional
     public CompanyAccountRes getCompanyAccount(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return withMainImageId(companyId, sysCompanyMapper.selectCompanyAccount(companyId));
     }
 
     /** 경영·회계 탭 저장 (AS-IS Info04.update L169-172 → update L165-187) */
     @Transactional
     public CompanyAccountRes updateCompanyAccount(UserPrincipal user, CompanyAccountReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireUpdateFields(req.companyId());
         sysCompanyMapper.updateCompanyAccount(req);
         return sysCompanyMapper.selectCompanyAccount(req.companyId());
@@ -236,7 +236,7 @@ public class SysCompanyService {
     /** AS-IS delete L189 (UpdateDataModel.deleteModel): 선택한 회사의 sys01_company 행만 지운다 → 지운 건수 */
     @Transactional
     public int deleteCompanies(UserPrincipal user, List<Long> companyIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (companyIds == null || companyIds.isEmpty()) {
             return 0;
         }
@@ -248,13 +248,13 @@ public class SysCompanyService {
 
     /** AS-IS sys.Sys00_Common.selectCompanyInfo — 회사 콤보 (매뉴권한복사 출발지·도착지) */
     public List<CompanyOptionRes> searchCompanyOptions(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCompanyMapper.selectCompanyOptions();
     }
 
     /** AS-IS sys.Sys00_Common.selectCompanyName — 회사명 콤보 (C06 문자발송 고객사) */
     public List<CompanyOptionRes> searchCompanyNames(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCompanyMapper.selectCompanyNames();
     }
 
@@ -262,13 +262,13 @@ public class SysCompanyService {
 
     /** 일괄복사 고객사 목록: '%' + 검색어 + '%', 상품 코드(없으면 '%') */
     public List<CompanyCopyRes> searchCopyCompanies(UserPrincipal user, String searchText, String erpProductCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCompanyMapper.selectCopyCompanies("%" + (searchText == null ? "" : searchText) + "%", productOrAll(erpProductCd));
     }
 
     /** 메뉴를 쓰는 회사 그리드 (Sys01_Grid_CompanyMenu.retrieve) */
     public List<CompanyMenuYnRes> searchCompanyMenuYn(UserPrincipal user, Long menuId, String erpProductCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCompanyMapper.selectCompanyMenuYn(menuId, productOrAll(erpProductCd));
     }
 
@@ -278,7 +278,7 @@ public class SysCompanyService {
      */
     @Transactional
     public List<CompanyMenuYnRes> updateCompanyMenuYn(UserPrincipal user, Long menuId, List<CompanyMenuYnSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (CompanyMenuYnSaveReq r : rows) {
             if ("true".equals(r.menuYn())) {
                 sysCompanyMapper.insertCompanyMenuLink(sysCompanyMapper.selectNextId(), r.companyId(), menuId);
@@ -315,13 +315,6 @@ public class SysCompanyService {
         int com11 = sysCompanyMapper.insertFormMappingsFromAdmin(companyId);    // 15. com11
         log.info("회사 추가 초기화 companyId={} sys09={} ast02={} sys30={} pay04={} act01={} ics30={} ics33={} bbs12={} pay51={} com11={}",
                 companyId, codes, ast, leave, pay, act, ics30, ics33, bbs, pay51, com11);
-    }
-
-    /** 고객 관리는 KFS 관리자(admin 회사 관리자)만 — AS-IS는 메뉴가 admin 회사에만 있어서 막았다 */
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     private static void required(String value, String message) {

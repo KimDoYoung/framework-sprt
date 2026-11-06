@@ -81,7 +81,7 @@ public class DcrClassTreeService {
     public List<DcrClassTreeRes> searchTree(UserPrincipal user, String typeCode, Long companyId) {
         Long target = user.getCompanyId();
         if (companyId != null && !companyId.equals(target)) {
-            requireSysAdmin(user);
+            user.requireSysAdmin();
             target = companyId;
         }
         return mapper.selectTree(target, typeCode == null || typeCode.isEmpty() ? "C" : typeCode);
@@ -291,7 +291,7 @@ public class DcrClassTreeService {
 
     /** AS-IS sys01_company.selectByUseYn (Dcr01_Lookup_DcrCopyAdmin 오른쪽 그리드) — 관리자 회사만 */
     public List<DcrCopyCompanyRes> copyCompanies(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectCopyCompanies();
     }
 
@@ -301,7 +301,7 @@ public class DcrClassTreeService {
      */
     @Transactional
     public int insertAdminCopy(UserPrincipal user, DcrCopyReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (req.dcrClassTreeId() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "문서분류를 선택해주세요");
         }
@@ -335,12 +335,6 @@ public class DcrClassTreeService {
 
     private static String adminYn(UserPrincipal user) {
         return user.getCompanyId() == 0L ? "true" : "false";
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     /** NOT NULL 열인데 AS-IS 화면이 검사하지 않는 분류코드는 DB 오류 대신 안내로 막는다(05 §6 DB 오류) */

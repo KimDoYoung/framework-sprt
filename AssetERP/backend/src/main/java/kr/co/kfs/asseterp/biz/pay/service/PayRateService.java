@@ -34,7 +34,7 @@ public class PayRateService {
      */
     @Transactional
     public List<PayRateRes> save(UserPrincipal user, List<PayRateSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayRateSaveReq req : rows) {
             if (req.rateCode() == null || req.rateCode().isEmpty()) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "율 구분은 필수입력 항목입니다.");
@@ -61,13 +61,7 @@ public class PayRateService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(ids);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

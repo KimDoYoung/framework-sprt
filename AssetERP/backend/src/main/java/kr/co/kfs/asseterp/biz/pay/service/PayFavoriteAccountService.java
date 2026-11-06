@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/pay/Pay52_FavoriteAccount.java (selectByCompanyId L24·insert L30·update L52·delete L57) — 자주 쓰는 계정과목 (U03) */
 @Service
@@ -20,13 +21,9 @@ public class PayFavoriteAccountService {
 
     private final PayFavoriteAccountMapper mapper;
 
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
-    }
-
     /** pay52_favorite_account.selectByCompanyId — 계정속성 콤보의 "전체"가 '%' */
     public List<FavoriteAccountRes> search(UserPrincipal user, String attributeCode, String searchText, boolean allAccountYn) {
-        return mapper.selectByCompanyId(user.getCompanyId(), attributeCode == null ? "%" : attributeCode, like(searchText), allAccountYn);
+        return mapper.selectByCompanyId(user.getCompanyId(), attributeCode == null ? "%" : attributeCode, Texts.like(searchText), allAccountYn);
     }
 
     /** AS-IS insert — 이미 등록된 계정과목은 건너뛴다. 다른 회사의 계정코드는 받지 않는다(TOBE 추가) */

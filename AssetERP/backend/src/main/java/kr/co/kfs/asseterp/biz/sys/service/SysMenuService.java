@@ -98,7 +98,7 @@ public class SysMenuService {
 
     /** 전체 메뉴 트리(parentId 0부터) + 그 회사의 연결 상태 → 전위 순서 평평한 목록 */
     public List<CompanyMenuTreeRes> getCompanyMenuTree(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         // SQL이 부모별 sys06_seq, sys06_menu_nm 순
         return toPreorder(sysMenuMapper.selectCompanyMenuTree(companyId), CompanyMenuTreeRes::menuId, CompanyMenuTreeRes::parentId,
                 CompanyMenuTreeRes::withDepth);
@@ -136,7 +136,7 @@ public class SysMenuService {
     /** 바뀐 행마다 연결 행이 없으면 채번해 INSERT, 있으면 use_yn UPDATE → 저장된 행(다시 조회하지 않는다 — AS-IS 그대로) */
     @Transactional
     public List<CompanyMenuTreeRes> updateCompanyMenus(UserPrincipal user, Long companyId, List<CompanyMenuSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<CompanyMenuTreeRes> saved = new ArrayList<>();
         for (CompanyMenuSaveReq r : rows) {
             if (r.companyMenuId() == null) {
@@ -226,14 +226,14 @@ public class SysMenuService {
 
     /** 전체 메뉴 트리(parentId 0부터) → 전위 순서 평평한 목록 */
     public List<MenuTreeRes> getMenuTree(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return toPreorder(sysMenuMapper.selectMenuTree(), MenuTreeRes::menuId, MenuTreeRes::parentId, MenuTreeRes::withDepth);
     }
 
     /** 매뉴 등록 (AS-IS insertMenu: 클라이언트가 getSeq로 받던 ID를 서버가 채번) → 저장된 행 */
     @Transactional
     public MenuTreeRes createMenu(UserPrincipal user, MenuSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         MenuSaveReq row = req.withMenuId(sysMenuMapper.selectNextId());
         checkMenu(row);
         sysMenuMapper.insertMenu(row);
@@ -243,7 +243,7 @@ public class SysMenuService {
     /** 매뉴 수정·이동 (AS-IS UpdateDataModel UPDATE → selectById) */
     @Transactional
     public MenuTreeRes updateMenu(UserPrincipal user, Long menuId, MenuSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         MenuSaveReq row = req.withMenuId(menuId);
         checkMenu(row);
         if (sysMenuMapper.updateMenu(row) == 0) {
@@ -273,20 +273,20 @@ public class SysMenuService {
     /** 매뉴 삭제 (AS-IS deleteModel: ID로만 — 자식·연결 행은 남는다) → 지운 건수 */
     @Transactional
     public int deleteMenu(UserPrincipal user, Long menuId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysMenuMapper.deleteMenu(menuId);
     }
 
     /** 일괄복사 매뉴 목록 (AS-IS retrieve01: '%' + 검색어 + '%', 매뉴명만 검색) */
     public List<MenuCopyRes> searchCopyMenus(UserPrincipal user, String searchText, boolean menuNameYn) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return sysMenuMapper.selectCopyMenus(new MenuCopySearchParam(like, String.valueOf(menuNameYn)));
     }
 
     /** 매뉴찾기 조회창 (A15-4 Sys06_Lookup_SelectMulti.retrieve: '%' + 매뉴명 + '%', 매뉴명만 검색) — 같은 getAllMenuList */
     public List<kr.co.kfs.asseterp.biz.sys.dto.MenuLookupRes> searchLookupMenus(UserPrincipal user, String searchText, boolean menuNameYn) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return sysMenuMapper.selectLookupMenus(new MenuCopySearchParam(like, String.valueOf(menuNameYn)));
     }
@@ -298,7 +298,7 @@ public class SysMenuService {
      */
     @Transactional
     public void updateCompanyMenuUse(UserPrincipal user, CompanyMenuUseReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (req.menuIds() == null || req.menuIds().isEmpty() || req.companyIds() == null || req.companyIds().isEmpty()
                 || req.useYn() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT);
@@ -337,7 +337,7 @@ public class SysMenuService {
 
     /** sys admin이고 권한그룹이 그 회사 것인지 (A07·A08 — 메뉴가 admin 회사에만 있다) */
     private void requireCompanyRole(UserPrincipal user, Long companyId, Long roleId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         RoleRes role = sysRoleMapper.selectRole(roleId);
         if (role == null || !Objects.equals(role.companyId(), companyId)) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -349,13 +349,6 @@ public class SysMenuService {
         RoleRes role = sysRoleMapper.selectRole(roleId);
         if (role == null || !Objects.equals(role.companyId(), user.getCompanyId())) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        }
-    }
-
-    /** 회사별 메뉴맵핑·메뉴 관리는 KFS 관리자만 (AS-IS는 메뉴가 admin 회사에만 있어서 막았다) */
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

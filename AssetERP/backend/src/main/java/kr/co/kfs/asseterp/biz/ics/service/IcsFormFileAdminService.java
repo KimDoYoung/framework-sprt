@@ -36,7 +36,7 @@ public class IcsFormFileAdminService {
     /** AS-IS sys.Sys10_File.update(GridUpdate): 바꾼 행의 내용을 저장 → 저장된 행(요청 순서) */
     @Transactional
     public List<IcsFormFileAdminRes> save(UserPrincipal user, List<IcsFormFileAdminSaveReq> rows) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         return rows.stream().map(r -> {
             if (mapper.updateNote(r.fileId(), r.note()) == 0) {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "서식파일을 찾을 수 없습니다.");
@@ -48,7 +48,7 @@ public class IcsFormFileAdminService {
     /** AS-IS FileUpload?mode=ics01: 파일 하나를 올리고(parentId 0, fileYn true) 법령구분·관리자등록·내용을 채운다 */
     @Transactional
     public IcsFormFileAdminRes upload(UserPrincipal user, String lawType, String note, MultipartFile file) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         if (lawType == null || lawType.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "법령구분을 선택해주세요");
         }

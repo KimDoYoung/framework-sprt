@@ -24,14 +24,14 @@ public class SysUserService {
 
     /** AS-IS selectByName L354-368: 회사 + 이름 '%'(화면은 이름을 넘기지 않는다) */
     public List<AdminUserRes> searchUsers(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.searchUsers(companyId, "%");
     }
 
     /** AS-IS update L377-393: decPasswd가 있으면 to_encrypts → UpdateDataModel INSERT/UPDATE → selectById */
     @Transactional
     public List<AdminUserRes> updateUsers(UserPrincipal user, Long companyId, List<AdminUserReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<AdminUserRes> saved = new ArrayList<>();
         for (AdminUserReq req : rows) {
             // AS-IS는 sys02_kor_nm NOT NULL 위반을 DB 오류 원문으로 보여 준다 → 같은 시점에 메시지만 바꿔 실패
@@ -60,13 +60,7 @@ public class SysUserService {
     /** AS-IS delete L395-398 (UpdateDataModel) → 지운 건수 */
     @Transactional
     public int deleteUsers(UserPrincipal user, Long companyId, List<Long> userIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return userIds == null || userIds.isEmpty() ? 0 : mapper.deleteUsers(userIds, companyId);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

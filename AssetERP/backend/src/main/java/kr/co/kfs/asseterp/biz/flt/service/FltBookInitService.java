@@ -9,23 +9,20 @@ import kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * 최초원장 등록 (Flt13_Lookup_BookInit, EE46) — 로그인 사원 본인 것만 다룬다.
@@ -139,11 +136,7 @@ public class FltBookInitService {
 
     /** AS-IS downloadForm → ./excelTemplete/Template_초기원장등록.xlsx */
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -170,15 +163,15 @@ public class FltBookInitService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String accountNo = cellString(row.getCell(0));
+                String accountNo = ExcelCells.string(row.getCell(0));
                 if (accountNo != null && isExponentialFormat(accountNo)) {
                     accountNo = new BigDecimal(accountNo).toPlainString();
                 }
-                String itemName = nz(cellString(row.getCell(1))).trim();
-                String itemType = stripZero(nz(cellString(row.getCell(2))));
-                String itemCode = nz(cellString(row.getCell(3))).trim();
-                Double qty = cellDouble(row.getCell(4));
-                Long amt = cellLong(row.getCell(5));
+                String itemName = nz(ExcelCells.string(row.getCell(1))).trim();
+                String itemType = stripZero(nz(ExcelCells.string(row.getCell(2))));
+                String itemCode = nz(ExcelCells.string(row.getCell(3))).trim();
+                Double qty = ExcelCells.doubleValue(row.getCell(4));
+                Long amt = ExcelCells.longValue(row.getCell(5));
 
                 List<Long> accountIds = trMapper.selectAccountIdsByNo(companyId, personId, accountNo);
                 if (accountIds.size() != 1) {
@@ -215,49 +208,5 @@ public class FltBookInitService {
 
     private static boolean isExponentialFormat(String s) {
         return s.contains("E") || s.contains("e");
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getLongCellData */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING) {
-            String s = cell.getStringCellValue().replace(",", "");
-            return s.matches("-?\\d+") ? Long.valueOf(s) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getDoubleCellData */
-    private static Double cellDouble(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().length() > 0) {
-            return Double.parseDouble(cell.getStringCellValue());
-        }
-        return null;
     }
 }

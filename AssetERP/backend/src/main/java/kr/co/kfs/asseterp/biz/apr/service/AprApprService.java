@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/apr/Apr01_Appr.java selectByPaging L1170 (selectByDcrWrite) — 문서작성 목록 */
 @Service
@@ -68,7 +69,7 @@ public class AprApprService {
     public PageRes<AprDcrWriteRes> searchDcrWrite(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText,
                                                   String receiveName, Long classTreeId, long offset, long limit) {
         AprDcrWriteCond cond = new AprDcrWriteCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, "%",
-                like(searchText), like(receiveName), classTreeId, limit, offset);
+                Texts.like(searchText), Texts.like(receiveName), classTreeId, limit, offset);
         return new PageRes<>(mapper.selectByDcrWriteTotal(cond), mapper.selectByDcrWritePaging(cond));
     }
 
@@ -78,12 +79,12 @@ public class AprApprService {
      */
     public List<AprDocRes> searchDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
         Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
-        return mapper.selectByClassTreeId2(new AprDocListCond(classTreeId, orgId, user.getUserId(), startDate, endDate, like(searchText)));
+        return mapper.selectByClassTreeId2(new AprDocListCond(classTreeId, orgId, user.getUserId(), startDate, endDate, Texts.like(searchText)));
     }
 
     /** AS-IS Apr01_Appr.selectByClassTreeId2 (EE05 문서이동, admin=true): 열람권한 조건 없이 Link 문서만 뺀다. searchText는 서비스가 %…%로 */
     public List<AprDocRes> searchDocListAdmin(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
-        return mapper.selectByClassTreeId2Admin(new AprDocListCond(classTreeId, 0L, user.getUserId(), startDate, endDate, like(searchText)));
+        return mapper.selectByClassTreeId2Admin(new AprDocListCond(classTreeId, 0L, user.getUserId(), startDate, endDate, Texts.like(searchText)));
     }
 
     /**
@@ -115,7 +116,7 @@ public class AprApprService {
      */
     public List<AprIcsDocRes> searchIcsDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
         Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
-        return mapper.selectByIcsClassTreeId(new AprIcsDocListCond(classTreeId, user.getCompanyId(), orgId, startDate, endDate, like(searchText)));
+        return mapper.selectByIcsClassTreeId(new AprIcsDocListCond(classTreeId, user.getCompanyId(), orgId, startDate, endDate, Texts.like(searchText)));
     }
 
     /**
@@ -127,7 +128,7 @@ public class AprApprService {
         Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByText2(new AprDocSearchCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
-                like(searchText), like(receiveName), blankToAny(statusCode), blankToAny(inoutCode), "%"));
+                Texts.like(searchText), Texts.like(receiveName), blankToAny(statusCode), blankToAny(inoutCode), "%"));
     }
 
     /**
@@ -146,7 +147,7 @@ public class AprApprService {
     public List<AprItemDocRes> searchItemDocList(UserPrincipal user, Long astClassTreeId, String searchType, String searchText) {
         Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByItemDocList(new AprItemDocListCond(astClassTreeId, user.getCompanyId(), orgId, user.getUserId(),
-                "2".equals(searchType) ? "2" : "1", nvl(searchText)));
+                "2".equals(searchType) ? "2" : "1", Texts.nvl(searchText)));
     }
 
     /** AS-IS createRdExcel(sys.Sys99_Print.insertRdDocList + RD 리포트 Dcr00_Rd_DocList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
@@ -164,15 +165,15 @@ public class AprApprService {
             for (AprDocSearchRes a : rows) {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(a.regDate() == null ? "" : a.regDate().format(fmt));
-                row.createCell(1).setCellValue(nvl(a.regEmpName()));
-                row.createCell(2).setCellValue(nvl(a.statusName()).replaceAll("<[^>]+>", ""));
-                row.createCell(3).setCellValue(nvl(a.title()));
-                row.createCell(4).setCellValue(nvl(a.inOutTypeName()));
-                row.createCell(5).setCellValue(nvl(a.classTreeName()));
-                row.createCell(6).setCellValue(nvl(a.receiveName()));
-                row.createCell(7).setCellValue(nvl(a.stampSeq()));
-                row.createCell(8).setCellValue(nvl(a.relateDisplayName()));
-                row.createCell(9).setCellValue(nvl(a.note()));
+                row.createCell(1).setCellValue(Texts.nvl(a.regEmpName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.statusName()).replaceAll("<[^>]+>", ""));
+                row.createCell(3).setCellValue(Texts.nvl(a.title()));
+                row.createCell(4).setCellValue(Texts.nvl(a.inOutTypeName()));
+                row.createCell(5).setCellValue(Texts.nvl(a.classTreeName()));
+                row.createCell(6).setCellValue(Texts.nvl(a.receiveName()));
+                row.createCell(7).setCellValue(Texts.nvl(a.stampSeq()));
+                row.createCell(8).setCellValue(Texts.nvl(a.relateDisplayName()));
+                row.createCell(9).setCellValue(Texts.nvl(a.note()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -188,7 +189,7 @@ public class AprApprService {
     public List<AprMyApproveRes> searchMyApprove(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode,
                                                  boolean aprYn, String dateType, String searchText) {
         return mapper.selectApprListByEmpId(new AprMyApproveCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
-                String.valueOf(aprYn), "effect".equals(dateType) ? "effect" : "reg", like(searchText), classTreeId, "%"));
+                String.valueOf(aprYn), "effect".equals(dateType) ? "effect" : "reg", Texts.like(searchText), classTreeId, "%"));
     }
 
     /** AS-IS downLoadButton(sys.Sys99_Print.insertRdApproveList + RD 리포트 Apr01_Rd_MyApproveList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
@@ -205,18 +206,18 @@ public class AprApprService {
             int r = 1;
             for (AprMyApproveRes a : rows) {
                 Row row = sheet.createRow(r++);
-                row.createCell(0).setCellValue(nvl(a.statusName()));
+                row.createCell(0).setCellValue(Texts.nvl(a.statusName()));
                 row.createCell(1).setCellValue(a.regDate() == null ? "" : a.regDate().format(fmt));
-                row.createCell(2).setCellValue(nvl(a.inOutTypeName()));
-                row.createCell(3).setCellValue(nvl(a.title()).replaceAll("<[^>]+>", ""));
-                row.createCell(4).setCellValue(nvl(a.regEmpName()));
-                row.createCell(5).setCellValue(nvl(a.nextApprName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.inOutTypeName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.title()).replaceAll("<[^>]+>", ""));
+                row.createCell(4).setCellValue(Texts.nvl(a.regEmpName()));
+                row.createCell(5).setCellValue(Texts.nvl(a.nextApprName()));
                 row.createCell(6).setCellValue(a.effectDate() == null ? "" : a.effectDate().format(fmt));
-                row.createCell(7).setCellValue(nvl(a.classTreeName()));
-                row.createCell(8).setCellValue(nvl(a.mailYn()));
+                row.createCell(7).setCellValue(Texts.nvl(a.classTreeName()));
+                row.createCell(8).setCellValue(Texts.nvl(a.mailYn()));
                 row.createCell(9).setCellValue(a.myApprovalDate() == null ? "" : a.myApprovalDate().format(fmt));
                 row.createCell(10).setCellValue(a.finalApprovalDate() == null ? "" : a.finalApprovalDate().format(fmt));
-                row.createCell(11).setCellValue(nvl(a.note()));
+                row.createCell(11).setCellValue(Texts.nvl(a.note()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -232,7 +233,7 @@ public class AprApprService {
     public List<AprMyRequestRes> searchMyRequest(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode,
                                                  boolean aprYn, String searchText) {
         return mapper.selectByRequestEmpId(new AprMyRequestCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
-                String.valueOf(aprYn), like(searchText), classTreeId, "%"));
+                String.valueOf(aprYn), Texts.like(searchText), classTreeId, "%"));
     }
 
     /**
@@ -267,16 +268,16 @@ public class AprApprService {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(a.regDate() == null ? "" : a.regDate().format(fmt));
                 row.createCell(1).setCellValue(a.effectDate() == null ? "" : a.effectDate().format(fmt));
-                row.createCell(2).setCellValue(nvl(a.statusName()));
-                row.createCell(3).setCellValue(nvl(a.classTreeName()));
-                row.createCell(4).setCellValue(nvl(a.inOutTypeName()));
-                row.createCell(5).setCellValue(nvl(a.title()).replaceAll("<[^>]+>", ""));
-                row.createCell(6).setCellValue(nvl(a.preconfirmStatusName()));
-                row.createCell(7).setCellValue(nvl(a.preconfirmMsgYnStr()));
-                row.createCell(8).setCellValue(nvl(a.mailYn()));
-                row.createCell(9).setCellValue(nvl(a.recentApprovalName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.statusName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.classTreeName()));
+                row.createCell(4).setCellValue(Texts.nvl(a.inOutTypeName()));
+                row.createCell(5).setCellValue(Texts.nvl(a.title()).replaceAll("<[^>]+>", ""));
+                row.createCell(6).setCellValue(Texts.nvl(a.preconfirmStatusName()));
+                row.createCell(7).setCellValue(Texts.nvl(a.preconfirmMsgYnStr()));
+                row.createCell(8).setCellValue(Texts.nvl(a.mailYn()));
+                row.createCell(9).setCellValue(Texts.nvl(a.recentApprovalName()));
                 row.createCell(10).setCellValue(a.recentApprovalDate() == null ? "" : a.recentApprovalDate().format(fmt));
-                row.createCell(11).setCellValue(nvl(a.note()));
+                row.createCell(11).setCellValue(Texts.nvl(a.note()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -292,7 +293,7 @@ public class AprApprService {
     public List<AprMyReferenceRes> searchMyReference(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode,
                                                      boolean aprYn, String searchText) {
         return mapper.selectByReferenceEmpId(new AprMyReferenceCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
-                String.valueOf(aprYn), like(searchText), classTreeId, "%"));
+                String.valueOf(aprYn), Texts.like(searchText), classTreeId, "%"));
     }
 
     /** AS-IS downLoadButton(sys.Sys99_Print.insertRdReferenceList + RD 리포트 Apr01_Rd_MyReferenceList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
@@ -311,15 +312,15 @@ public class AprApprService {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(a.regDate() == null ? "" : a.regDate().format(fmt));
                 row.createCell(1).setCellValue(a.effectDate() == null ? "" : a.effectDate().format(fmt));
-                row.createCell(2).setCellValue(nvl(a.statusName()));
-                row.createCell(3).setCellValue(nvl(a.classTreeName()));
-                row.createCell(4).setCellValue(nvl(a.inOutTypeName()));
-                row.createCell(5).setCellValue(nvl(a.title()).replaceAll("<[^>]+>", ""));
-                row.createCell(6).setCellValue(nvl(a.mailYn()));
-                row.createCell(7).setCellValue(nvl(a.regEmpName()));
-                row.createCell(8).setCellValue(nvl(a.recentApprovalName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.statusName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.classTreeName()));
+                row.createCell(4).setCellValue(Texts.nvl(a.inOutTypeName()));
+                row.createCell(5).setCellValue(Texts.nvl(a.title()).replaceAll("<[^>]+>", ""));
+                row.createCell(6).setCellValue(Texts.nvl(a.mailYn()));
+                row.createCell(7).setCellValue(Texts.nvl(a.regEmpName()));
+                row.createCell(8).setCellValue(Texts.nvl(a.recentApprovalName()));
                 row.createCell(9).setCellValue(a.recentApprovalDate() == null ? "" : a.recentApprovalDate().format(fmt));
-                row.createCell(10).setCellValue(nvl(a.note()));
+                row.createCell(10).setCellValue(Texts.nvl(a.note()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -334,12 +335,12 @@ public class AprApprService {
      */
     public List<AprMyAuthRes> searchMyAuth(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode, String searchText) {
         return mapper.selectByAuthEmpId(new AprMyAuthCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
-                like(searchText), classTreeId, "%"));
+                Texts.like(searchText), classTreeId, "%"));
     }
 
     /** AS-IS Apr01_Appr.selectByTotalList (G16 Apr01_Tab_TotalList 운영현황표). 회사는 세션, 담당자·담당부서는 %…%(빈 글자면 전체) */
     public List<AprTotalListRes> searchTotalList(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String orgName, String personName) {
-        return mapper.selectByTotalList(new AprTotalListCond(user.getCompanyId(), like(personName), like(orgName), startDate, closeDate));
+        return mapper.selectByTotalList(new AprTotalListCond(user.getCompanyId(), Texts.like(personName), Texts.like(orgName), startDate, closeDate));
     }
 
     /**
@@ -350,7 +351,7 @@ public class AprApprService {
                                              String docType, String statusCode) {
         String docTypeText = "일반".equals(docType) || "내부통제".equals(docType) ? docType : "%";
         String statusText = "true".equals(statusCode) || "false".equals(statusCode) ? statusCode : "%";
-        return mapper.selectBySubList(new AprSubListCond(user.getCompanyId(), like(personName), like(orgName), startDate, closeDate,
+        return mapper.selectBySubList(new AprSubListCond(user.getCompanyId(), Texts.like(personName), Texts.like(orgName), startDate, closeDate,
                 docTypeText, statusText));
     }
 
@@ -378,7 +379,7 @@ public class AprApprService {
         if (searchText == null) {
             return mapper.selectLoadDocByClassTreeId(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), null));
         }
-        return mapper.selectLoadDocBySearch(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), like(searchText)));
+        return mapper.selectLoadDocBySearch(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), Texts.like(searchText)));
     }
 
     /** AS-IS Apr03_RelateFund.selectByApprId */
@@ -401,13 +402,5 @@ public class AprApprService {
 
     private String blankToAny(String code) {
         return code == null || code.isBlank() ? "%" : code;
-    }
-
-    private String nvl(String s) {
-        return s == null ? "" : s;
-    }
-
-    private String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

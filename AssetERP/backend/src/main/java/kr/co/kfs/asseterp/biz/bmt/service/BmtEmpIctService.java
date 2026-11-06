@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 임직원 정보통신수단 (AS-IS Bmt12_Tab_EmpIct → server/bmt/Bmt12_PcHistory) */
 @Service
@@ -22,7 +23,7 @@ public class BmtEmpIctService {
 
     /** AS-IS bmt.Bmt12_PcHistory.selectEmpICT(companyId, stdDate, searchText = '%' + 글자 + '%') */
     public List<BmtEmpIctRes> search(UserPrincipal user, LocalDate stdDate, String searchText) {
-        return mapper.selectEmpIct(user.getCompanyId(), stdDate, like(searchText));
+        return mapper.selectEmpIct(user.getCompanyId(), stdDate, Texts.like(searchText));
     }
 
     /** AS-IS Sys99_Print.insertRdEmplct L3957: ① 내 출력 자료 정리 ② 목록을 sys99_print 에 삽입 ③ 새 groupId 반환 */
@@ -30,11 +31,7 @@ public class BmtEmpIctService {
     public String insertRdPrint(UserPrincipal user, LocalDate stdDate, String searchText) {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME);
-        mapper.insertPrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME, groupId, stdDate, like(searchText));
+        mapper.insertPrint(user.getCompanyId(), user.getUserId(), WINDOW_CLASS_NAME, groupId, stdDate, Texts.like(searchText));
         return String.valueOf(groupId);
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 }

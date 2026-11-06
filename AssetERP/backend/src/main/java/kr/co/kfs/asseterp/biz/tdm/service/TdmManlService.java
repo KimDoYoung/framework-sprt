@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 부서 책무매뉴얼의 점검항목 (AS-IS Tdm43_Lookup_ManlItem → server/tdm/Tdm43_Manl) */
 @Service
@@ -146,7 +147,7 @@ public class TdmManlService {
 
     /** AS-IS tdm.Tdm43_Manl.selectByRoleId (TabPage [불러오기] 조회창 위 그리드) — 로그인 회사. searchText는 '%글자%' */
     public List<ManlCopySourceRes> sourcesByRole(UserPrincipal user, Long roleId, Long taskId, Long orgId, String stdDate, boolean allYn, String searchText) {
-        return mapper.selectByRoleId(user.getCompanyId(), roleId, taskId, orgId, stdDate, allYn, like(searchText));
+        return mapper.selectByRoleId(user.getCompanyId(), roleId, taskId, orgId, stdDate, allYn, Texts.like(searchText));
     }
 
     /** AS-IS tdm.Tdm43_Manl.selectByManlJobId (본 화면 [불러오기] 조회창 위 그리드) — 작업이 로그인 회사 것이어야 한다 */
@@ -159,7 +160,7 @@ public class TdmManlService {
         if (!jobCompanyId.equals(user.getCompanyId())) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
-        return mapper.selectByManlJobId(user.getCompanyId(), manlJobId, stdRoleId, stdOrgId, roleId, taskId, orgId, stdDate, allYn, like(searchText));
+        return mapper.selectByManlJobId(user.getCompanyId(), manlJobId, stdRoleId, stdOrgId, roleId, taskId, orgId, stdDate, allYn, Texts.like(searchText));
     }
 
     /** AS-IS tdm.Tdm43_Manl.selectByTaskRelateDutyId (조회창 아래 그리드) — 부서 책무매뉴얼의 회사로 범위를 검사한다 */
@@ -258,15 +259,11 @@ public class TdmManlService {
         }
     }
 
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
-    }
-
     // ── N27 책무관리현황 > 매뉴얼 규정/양식 연결 (Tdm43_Tab_ManlItemList) ──
 
     /** AS-IS tdm.Tdm43_Manl.selectByDate — 로그인 회사, 기준일에 쓰는 부서 책무매뉴얼의 점검항목 */
     public List<ManlListRes> searchByDate(UserPrincipal user, String stdDate, String searchText) {
-        return mapper.selectListByDate(user.getCompanyId(), stdDate, like(searchText), null);
+        return mapper.selectListByDate(user.getCompanyId(), stdDate, Texts.like(searchText), null);
     }
 
     /** AS-IS tdm.Tdm43_Manl.selectById — 연결·삭제 뒤 그 행만 다시 읽는다 */

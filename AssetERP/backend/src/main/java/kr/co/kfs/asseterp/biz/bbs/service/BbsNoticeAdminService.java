@@ -11,8 +11,6 @@ import kr.co.kfs.asseterp.biz.bbs.dto.TargetCompanyRes;
 import kr.co.kfs.asseterp.biz.bbs.mapper.BbsNoticeAdminMapper;
 import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
 import kr.co.kfs.asseterp.common.dto.PageRes;
-import kr.co.kfs.asseterp.common.error.BusinessException;
-import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +43,7 @@ public class BbsNoticeAdminService {
      */
     public PageRes<NoticeAdminRes> search(UserPrincipal user, String openYn, String noticeType, String noticeDetail, String searchText,
                                           String startDate, String closeDate, long offset, long limit) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         boolean all = "%".equals(noticeType);
         NoticeAdminCond cond = new NoticeAdminCond(KFS_COMPANY_ID,
                 "알림".equals(openYn) || "대기".equals(openYn) ? openYn : "%", noticeType, noticeDetail, TYPE_CODE,
@@ -58,7 +56,7 @@ public class BbsNoticeAdminService {
     /** 새 공지의 ID (AS-IS DBUtil.setSeq) — f_create_seq()가 시퀀스를 갱신하므로 쓰기 트랜잭션 */
     @Transactional
     public Long nextId(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectNextId();
     }
 
@@ -69,7 +67,7 @@ public class BbsNoticeAdminService {
      */
     @Transactional
     public NoticeAdminRes save(UserPrincipal user, NoticeAdminSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         boolean statusChanged = !Objects.equals(req.openYn(), req.latestOpenYn());
         boolean contentChanged = !Objects.equals(req.notice(), req.latestNotice());
         if (statusChanged || contentChanged) {
@@ -103,33 +101,33 @@ public class BbsNoticeAdminService {
     /** AS-IS bbs.Bbs02_Notice.delete — 대상 고객사는 화면이 이어서 deleteAllTargetCompanies를 부른다(E14) */
     @Transactional
     public void delete(UserPrincipal user, Long noticeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         mapper.deleteNotice(KFS_COMPANY_ID, noticeId);
     }
 
     /** AS-IS bbs.Bbs04_TargetCompany.selectByNoticeId */
     public List<TargetCompanyRes> searchTargetCompanies(UserPrincipal user, Long noticeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectTargetCompanies(noticeId);
     }
 
     /** AS-IS bbs.Bbs04_TargetCompany.delete (체크한 고객사) */
     @Transactional
     public int deleteTargetCompanies(UserPrincipal user, Long noticeId, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteTargetCompanies(noticeId, ids);
     }
 
     /** AS-IS bbs.Bbs04_TargetCompany.deleteAllTarget */
     @Transactional
     public void deleteAllTargetCompanies(UserPrincipal user, Long noticeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         mapper.deleteAllTargetCompanies(noticeId);
     }
 
     /** AS-IS bbs.Bbs09_NoticeHistory.selectByNoticeId */
     public List<NoticeHistoryRes> searchHistories(UserPrincipal user, Long noticeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectHistories(noticeId);
     }
 
@@ -138,7 +136,7 @@ public class BbsNoticeAdminService {
      * 실제 발송은 {@link SmsSender}가 하고 기본 구현은 보내지 않는다(사용자 지시). 번호가 없는 사원은 건너뛴다
      */
     public void sendNoticeMessage(UserPrincipal user, String message, List<Long> personIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (personIds == null || personIds.isEmpty()) {
             return;
         }
@@ -148,12 +146,6 @@ public class BbsNoticeAdminService {
                 continue;
             }
             smsSender.send(KFS_COMPANY_ID, null, target.mobileTelNo(), "[Asset-ERP] " + message, target.korName());
-        }
-    }
-
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

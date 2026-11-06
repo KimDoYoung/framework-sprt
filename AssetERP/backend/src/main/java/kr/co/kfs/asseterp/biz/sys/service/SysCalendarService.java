@@ -60,25 +60,19 @@ public class SysCalendarService {
 
     /** AS-IS selectByDay: 고객사반영 조회창 — 관리자 회사만 */
     public List<CalendarRes> searchByDay(UserPrincipal user, String day) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectByDay(day);
     }
 
     /** AS-IS update·updateList(UpdateDataModel): 고객사 일자의 영업일·휴일사유 → 저장한 행 수 */
     @Transactional
     public int updateCustomers(UserPrincipal user, List<CalendarSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (CalendarSaveReq req : rows) {
             if (req.calendarId() == null || mapper.updateOff(req) == 0) {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             }
         }
         return rows.size();
-    }
-
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

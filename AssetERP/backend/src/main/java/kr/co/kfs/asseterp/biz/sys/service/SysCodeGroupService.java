@@ -28,7 +28,7 @@ public class SysCodeGroupService {
 
     /** AS-IS selectByGroupCodeKind L25-32: 코드구분의 그룹 헤더(code_id = 0) */
     public List<CodeGroupRes> searchGroups(UserPrincipal user, Long codeKindId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCodeGroupMapper.searchGroups(codeKindId);
     }
 
@@ -38,7 +38,7 @@ public class SysCodeGroupService {
      */
     @Transactional
     public List<CodeGroupRes> updateGroups(UserPrincipal user, List<CodeGroupSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<CodeGroupRes> saved = new ArrayList<>();
         for (CodeGroupSaveReq req : rows) {
             if (req.kindGroupCd() == null || req.kindGroupCd().isBlank()) {
@@ -72,7 +72,7 @@ public class SysCodeGroupService {
      */
     @Transactional
     public int deleteGroups(UserPrincipal user, List<Long> codeGroupIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (codeGroupIds == null || codeGroupIds.isEmpty()) {
             return 0;
         }
@@ -93,7 +93,7 @@ public class SysCodeGroupService {
 
     /** AS-IS selectByKindGroupCode L34-42: 그룹의 코드, 코드의 회사 = 고른 회사 */
     public List<CodeGroupRes> searchMembers(UserPrincipal user, String kindGroupCd, Long codeKindId, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysCodeGroupMapper.searchMembers(new CodeGroupMemberParam(kindGroupCd, codeKindId, user.companyOf(companyId)));
     }
 
@@ -102,7 +102,7 @@ public class SysCodeGroupService {
      */
     @Transactional
     public int insertMembers(UserPrincipal user, List<CodeGroupMemberSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         int inserted = 0;
         for (CodeGroupMemberSaveReq req : rows) {
             sysCodeGroupMapper.insertGroup(new CodeGroupRow(sysCodeGroupMapper.selectNextId(), req.kindGroupCd(),
@@ -115,16 +115,10 @@ public class SysCodeGroupService {
     /** AS-IS delete L93-96 (UpdateDataModel.deleteModel): ID로 삭제 → 지운 건수 */
     @Transactional
     public int deleteMembers(UserPrincipal user, List<Long> codeGroupIds) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (codeGroupIds == null || codeGroupIds.isEmpty()) {
             return 0;
         }
         return sysCodeGroupMapper.deleteByIds(codeGroupIds);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

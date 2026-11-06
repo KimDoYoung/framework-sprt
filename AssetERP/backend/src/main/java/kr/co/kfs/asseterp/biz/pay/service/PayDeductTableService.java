@@ -50,7 +50,7 @@ public class PayDeductTableService {
      */
     @Transactional
     public void createDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "적용일은 필수입력 항목입니다");
         }
@@ -70,7 +70,7 @@ public class PayDeductTableService {
     /** AS-IS deleteByDate: 해당 적용일을 통째로 지운다 → 지운 건수 */
     @Transactional
     public int deleteDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
         }
@@ -80,7 +80,7 @@ public class PayDeductTableService {
     /** AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 구분 2(공제표)로 새 id에 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<PayDeductTableRes> save(UserPrincipal user, List<PayDeductTableSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (PayDeductTableSaveReq req : rows) {
             if (req.startDate() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
@@ -101,23 +101,17 @@ public class PayDeductTableService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(ids);
     }
 
     /** AS-IS updateLimitAmt(dataCode "1"): 적용일의 공제한도를 고친다 → 고친 건수 */
     @Transactional
     public int saveLimit(UserPrincipal user, LocalDate startDate, Long limitAmt) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
         }
         return mapper.updateLimitAmt(startDate, LIMIT, limitAmt);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

@@ -35,7 +35,7 @@ public class FndOfficeWorkService {
     /** AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<OfficeWorkRes> save(UserPrincipal user, List<OfficeWorkSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return rows.stream().map(req -> {
             OfficeWorkRes found = req.officeWorkId() == null ? null : mapper.selectById(req.officeWorkId());
             if (found != null && !found.companyId().equals(user.getCompanyId())) {
@@ -53,14 +53,8 @@ public class FndOfficeWorkService {
 
     /** AS-IS selectIcamOfficeWork: 로그인 회사의 사무수탁사를 ICAM에서 가져온다 */
     public void importIcam(UserPrincipal user) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         icamImporter.importOfficeWorks(user.getCompanyId());
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     /** AS-IS fnd.Fnd06_OfficeWork.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */

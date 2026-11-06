@@ -28,14 +28,14 @@ public class SysSpecificMenuHistoryService {
 
     /** AS-IS selectByCompanyId L26 */
     public List<SpecificMenuHistoryRes> search(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysSpecificMenuHistoryMapper.selectByCompanyId(companyId);
     }
 
     /** AS-IS update(UpdateDataModel) L56: 신규(임시 ID 0 이하)면 INSERT, 아니면 UPDATE → selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<SpecificMenuHistoryRes> update(UserPrincipal user, Long companyId, List<SpecificMenuHistorySaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<SpecificMenuHistoryRes> saved = new ArrayList<>();
         for (SpecificMenuHistorySaveReq req : rows) {
             boolean isNew = req.specificMenuHistoryId() == null || req.specificMenuHistoryId() <= 0;
@@ -53,7 +53,7 @@ public class SysSpecificMenuHistoryService {
     /** AS-IS delete(UpdateDataModel.deleteModel) L61 → 지운 건수 (첨부 sys10_file 행은 건드리지 않음 — 원본 delete도 같음) */
     @Transactional
     public int delete(UserPrincipal user, Long companyId, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
@@ -63,7 +63,7 @@ public class SysSpecificMenuHistoryService {
     /** AS-IS updateByNote L51 */
     @Transactional
     public void updateByNote(UserPrincipal user, Long companyId, Long specificMenuHistoryId, String note) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (sysSpecificMenuHistoryMapper.updateByNote(companyId, specificMenuHistoryId, note) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
@@ -75,7 +75,7 @@ public class SysSpecificMenuHistoryService {
      */
     @Transactional
     public void deleteFile(UserPrincipal user, Long companyId, Long specificMenuHistoryId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         SpecificMenuHistoryRes history = sysSpecificMenuHistoryMapper.selectById(specificMenuHistoryId);
         if (history == null || !companyId.equals(history.companyId())) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -85,11 +85,5 @@ public class SysSpecificMenuHistoryService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         sysFileService.delete(files.get(0).fileId());
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

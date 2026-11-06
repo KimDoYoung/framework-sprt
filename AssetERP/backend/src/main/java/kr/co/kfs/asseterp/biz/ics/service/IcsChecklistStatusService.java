@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS Ics15_Tab_ChecklistStatus → server/sys/Sys99_Print.insertIcsCheckListStatus L238 + ics.Ics11_ChecklistCompany.selectByChecklistIdStatus L26
@@ -35,7 +36,7 @@ public class IcsChecklistStatusService {
      */
     public List<IcsChecklistStatusRes> summary(UserPrincipal user, String year, String cycleType, Long checklistLClassId, Long checklistMClassId, String searchText) {
         Long companyId = user.getCompanyId();
-        String like = like(searchText);
+        String like = Texts.like(searchText);
         boolean monthly = "M".equals(cycleType);
         List<LocalDate> days = monthly ? mapper.selectMonthLastDays(companyId, year) : mapper.selectQuarterLastDays(companyId, year);
         LocalDate stdDate = monthly ? mapper.selectPreMonthLastDay(LocalDate.now()) : mapper.selectPreQuarterCloseDate(LocalDate.now(), "1");
@@ -76,7 +77,7 @@ public class IcsChecklistStatusService {
     /** AS-IS selectChecklistStatusPaging (K08): 목록 + 전체 건수. 검색어가 비면 AS-IS처럼 조건을 걸지 않는다(null) */
     public PageRes<IcsChecklistStatusDetailRes> search(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
                                                        String searchText, boolean unCheckYn, boolean unConfirmYn, int offset, int limit) {
-        String like = searchText == null || searchText.isEmpty() ? null : like(searchText);
+        String like = searchText == null || searchText.isEmpty() ? null : Texts.like(searchText);
         return new PageRes<>(mapper.selectTotal(user.getCompanyId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn),
                 mapper.selectPaging(user.getCompanyId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, offset, limit));
     }
@@ -87,7 +88,7 @@ public class IcsChecklistStatusService {
      */
     public byte[] download(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
                            String searchText, boolean unCheckYn, boolean unConfirmYn) {
-        String like = like(searchText);
+        String like = Texts.like(searchText);
         long total = mapper.selectTotal(user.getCompanyId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn);
         List<List<Object>> rows = total == 0 ? List.of() : mapper.selectPaging(user.getCompanyId(), stdDate, cycleType,
                         checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, 0, total).stream()
@@ -95,10 +96,6 @@ public class IcsChecklistStatusService {
                         Boolean.TRUE.equals(r.confirmYn()) ? "확인" : ""))
                 .toList();
         return IcsExcelWriter.write("내부통제내역 상세", List.of("대분류", "중분류", "체크결과", "담당부서", "담당자", "확인자", "확인여부"), rows);
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     private static final class Row {

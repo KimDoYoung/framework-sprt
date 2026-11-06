@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 임원정보 관리 (AS-IS Emp31_Tab_Director → emp.Emp31_Director.selectByText·updateList, sys.Sys99_Print.insertRdDirector01·02) */
 @Service
@@ -28,7 +29,7 @@ public class EmpDirectorService {
 
     /** AS-IS emp.Emp31_Director.selectByText — endCheck(해임임원 포함)가 false 면 해임일이 지난 임원은 뺀다 */
     public List<DirectorRes> search(UserPrincipal user, String searchText, boolean endCheck) {
-        return mapper.selectByText(user.getCompanyId(), like(searchText), endCheck);
+        return mapper.selectByText(user.getCompanyId(), Texts.like(searchText), endCheck);
     }
 
     /**
@@ -59,7 +60,7 @@ public class EmpDirectorService {
     public String insertRdSenior(UserPrincipal user, DirectorPrintReq req) {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_SENIOR);
-        mapper.insertPrintSenior(user.getCompanyId(), user.getUserId(), WINDOW_SENIOR, groupId, like(req.searchText()), false, req.personIds());
+        mapper.insertPrintSenior(user.getCompanyId(), user.getUserId(), WINDOW_SENIOR, groupId, Texts.like(req.searchText()), false, req.personIds());
         return String.valueOf(groupId);
     }
 
@@ -68,11 +69,7 @@ public class EmpDirectorService {
     public String insertRdTotal(UserPrincipal user, DirectorPrintReq req) {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW_TOTAL);
-        mapper.insertPrintTotal(user.getCompanyId(), user.getUserId(), WINDOW_TOTAL, groupId, like(req.searchText()), false);
+        mapper.insertPrintTotal(user.getCompanyId(), user.getUserId(), WINDOW_TOTAL, groupId, Texts.like(req.searchText()), false);
         return String.valueOf(groupId);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

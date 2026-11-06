@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 조회권한 예외사원 등록 (EE08 Dcr04_Tab_EmpAuth) — AS-IS dcr.Dcr04_EmpAuth */
 @Service
@@ -25,17 +26,17 @@ public class DcrEmpAuthService {
     /** AS-IS selectByText: 문서분류의 예외사원. 검색어는 부서·성명·직위·사원구분 이어붙인 글자에서 찾는다 */
     public List<DcrEmpAuthRes> search(UserPrincipal user, Long classTreeId, String searchText) {
         requireClassTree(user.getCompanyId(), classTreeId);
-        return mapper.selectByText(user.getCompanyId(), classTreeId, like(searchText));
+        return mapper.selectByText(user.getCompanyId(), classTreeId, Texts.like(searchText));
     }
 
     /** AS-IS getTargetList: 예외 권한이 하나라도 있는 사원 (사원별 권한현황 창) */
     public List<DcrEmpAuthTargetRes> searchTargets(UserPrincipal user, String searchText) {
-        return mapper.selectTargets(user.getCompanyId(), like(searchText));
+        return mapper.selectTargets(user.getCompanyId(), Texts.like(searchText));
     }
 
     /** AS-IS getTargetClassTreeList: 사원 한 명의 예외 문서분류 */
     public List<DcrEmpAuthClassRes> searchTargetClassTrees(UserPrincipal user, Long personId, String searchText) {
-        return mapper.selectTargetClassTrees(user.getCompanyId(), personId, like(searchText));
+        return mapper.selectTargetClassTrees(user.getCompanyId(), personId, Texts.like(searchText));
     }
 
     /** AS-IS updateList: 이미 있는 (사원, 문서분류)는 비고만 고치고 없으면 넣는다 → 처리한 행 수 */
@@ -66,10 +67,6 @@ public class DcrEmpAuthService {
             return 0;
         }
         return mapper.deleteAuths(user.getCompanyId(), ids);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 
     private void requireClassTree(Long companyId, Long classTreeId) {

@@ -23,7 +23,7 @@ public class SysSpecificMenuPersonService {
 
     /** AS-IS selectBySpecificMenuId L24 */
     public List<SpecificMenuPersonRes> search(UserPrincipal user, Long companyId, Long specificMenuId, String specificWorkCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireMenu(companyId, specificMenuId);
         return sysSpecificMenuPersonMapper.selectBySpecificMenuId(specificMenuId, specificWorkCd);
     }
@@ -34,7 +34,7 @@ public class SysSpecificMenuPersonService {
      */
     @Transactional
     public List<SpecificMenuPersonRes> update(UserPrincipal user, Long companyId, Long specificMenuId, List<SpecificMenuPersonSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireMenu(companyId, specificMenuId);
         List<SpecificMenuPersonRes> saved = new ArrayList<>();
         for (SpecificMenuPersonSaveReq req : rows) {
@@ -57,7 +57,7 @@ public class SysSpecificMenuPersonService {
     /** AS-IS delete(UpdateDataModel.deleteModel) L60 → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, Long companyId, Long specificMenuId, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
@@ -70,7 +70,7 @@ public class SysSpecificMenuPersonService {
      */
     @Transactional
     public void updateGroup(UserPrincipal user, Long companyId, Long specificMenuId, String specificWorkCd) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         requireMenu(companyId, specificMenuId);
         List<SpecificMenuPersonRes> list = sysSpecificMenuPersonMapper.selectBySpecificMenuId(specificMenuId, specificWorkCd);
         sysSpecificMenuPersonMapper.deleteByWork(companyId, specificWorkCd);
@@ -83,12 +83,6 @@ public class SysSpecificMenuPersonService {
     private void requireMenu(Long companyId, Long specificMenuId) {
         if (sysSpecificMenuPersonMapper.countMenu(companyId, specificMenuId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        }
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS server/emp/Emp17_Benefit.java (selectByText L42 / selectByBenefitCode L56 / selectByYyyymm L84 / selectApprId L100 / payRequestApprCheck L112
@@ -33,19 +34,15 @@ public class EmpBenefitService {
         return code == null || code.isEmpty() ? "%" : code;
     }
 
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
-    }
-
     /** AS-IS selectByText: 상신·결재중·완료(10·20·30), 지출결의 미등록, 미지급 신청 */
     public List<BenefitRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String benefitCode, String searchText) {
-        return mapper.selectByText(user.getCompanyId(), startDate, closeDate, codeOrAll(benefitCode), like(searchText));
+        return mapper.selectByText(user.getCompanyId(), startDate, closeDate, codeOrAll(benefitCode), Texts.like(searchText));
     }
 
     /** AS-IS selectByBenefitCode: benefitYn은 "true"(지급완료)·"false"(미지급)·없으면 전체("%") */
     public List<BenefitRes> searchPayRequests(UserPrincipal user, String yyyymm, String benefitCode, String benefitYn, String searchText) {
         String yn = benefitYn == null || benefitYn.isEmpty() ? "%" : benefitYn;
-        return mapper.selectByBenefitCode(user.getCompanyId(), yyyymm, codeOrAll(benefitCode), yn, like(searchText));
+        return mapper.selectByBenefitCode(user.getCompanyId(), yyyymm, codeOrAll(benefitCode), yn, Texts.like(searchText));
     }
 
     /** AS-IS selectByYyyymm (apprChk) — 없으면 null(미상신) */
@@ -132,7 +129,7 @@ public class EmpBenefitService {
 
     /** Y06 AS-IS selectByPersonId: 본인 신청 목록. benefitYn은 "true"·"false"·전체("%") */
     public List<BenefitRes> searchMine(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String benefitCode, String benefitYn, String searchText) {
-        return mapper.selectByPersonId(user.getCompanyId(), user.getUserId(), startDate, closeDate, codeOrAll(benefitCode), codeOrAll(benefitYn), like(searchText));
+        return mapper.selectByPersonId(user.getCompanyId(), user.getUserId(), startDate, closeDate, codeOrAll(benefitCode), codeOrAll(benefitYn), Texts.like(searchText));
     }
 
     /** Y06 AS-IS Emp17_Benefit.modelUpdate (Emp17_Lookup_Benefit.update — 신청일 오늘, 지급여부 false) → 저장한 행 */

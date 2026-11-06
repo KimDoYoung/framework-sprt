@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/rpt/Rpt02_Month.java (Z10 월간회의자료) */
 @Service
@@ -26,7 +27,7 @@ public class RptMonthService {
 
     /** AS-IS selectByText L23 — 회사 전체 글. yyyyMm = "yyyy.MM" 또는 "yyyy.%", 검색어는 '%…%' (retrieve L266-279) */
     public List<MonthRes> searchByText(UserPrincipal user, String yyyyMm, Long orgCodeId, String searchText) {
-        return mapper.selectByText(user.getCompanyId(), yyyyMm, orgCodeId, like(searchText));
+        return mapper.selectByText(user.getCompanyId(), yyyyMm, orgCodeId, Texts.like(searchText));
     }
 
     /**
@@ -70,13 +71,9 @@ public class RptMonthService {
     public String insertRdMonth(UserPrincipal user, MonthPrintReq req) {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), WINDOW);
-        for (MonthRes row : mapper.selectByText(user.getCompanyId(), req.yyyyMm(), req.orgCodeId(), like(req.searchText()))) {
+        for (MonthRes row : mapper.selectByText(user.getCompanyId(), req.yyyyMm(), req.orgCodeId(), Texts.like(req.searchText()))) {
             mapper.insertPrint(mapper.selectNextId(), user.getCompanyId(), user.getUserId(), WINDOW, groupId, row);
         }
         return String.valueOf(groupId);
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

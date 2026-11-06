@@ -7,8 +7,6 @@ import kr.co.kfs.asseterp.biz.kfs.mapper.KfsRemoteViewMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -21,6 +19,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /** 리모트뷰 사용기록 관리 (AS-IS server/kfs/Kfs01_RemoteView + ExcelUpload.remoteViewUpload) */
 @Service
@@ -83,10 +82,10 @@ public class KfsRemoteViewService {
                 if (row.getCell(0) == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
-                String dateTime = cellString(row.getCell(0));
-                String personName = cellString(row.getCell(2));
-                String startTime = cellString(row.getCell(13));
-                String closeTime = cellString(row.getCell(14));
+                String dateTime = ExcelCells.string(row.getCell(0));
+                String personName = ExcelCells.string(row.getCell(2));
+                String startTime = ExcelCells.string(row.getCell(13));
+                String closeTime = ExcelCells.string(row.getCell(14));
                 if (closeTime == null || closeTime.equals(startTime)) {
                     continue;
                 }
@@ -105,17 +104,5 @@ public class KfsRemoteViewService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
-    }
-
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
     }
 }

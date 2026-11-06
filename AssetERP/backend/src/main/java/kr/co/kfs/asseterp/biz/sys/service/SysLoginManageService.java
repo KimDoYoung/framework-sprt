@@ -27,7 +27,7 @@ public class SysLoginManageService {
 
     /** AS-IS Sys27_Tab_LoginManage.retrieve() L202-230: 회사·사원 '%' = 전체 */
     public List<LoginManageRes> search(UserPrincipal user, String companyId, String personId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return sysLoginManageMapper.selectByText(likeOrAll(companyId), likeOrAll(personId));
     }
 
@@ -37,7 +37,7 @@ public class SysLoginManageService {
      */
     @Transactional
     public LoginManageRes updateConfirmYn(UserPrincipal user, Long loginManageId, Long personId, String confirmYn) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         sysLoginManageMapper.updateConfirmYn(loginManageId, confirmYn);
         if ("true".equals(confirmYn)) {
             SysLoginManageMapper.PersonPhone person = sysLoginManageMapper.selectPersonPhone(personId);
@@ -72,12 +72,6 @@ public class SysLoginManageService {
         }
         sysLoginManageMapper.insertRequest(user.getCompanyId(), user.getUserId(), mac.isEmpty() ? null : mac, placeCode, reason);
         return true;
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     private static String likeOrAll(String value) {

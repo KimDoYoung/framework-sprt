@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS Ics20_Tab_RevisionHistoryAdmin·Ics20_Edit_RevisionHistoryAdmin → server/ics/Ics20_RevisionHistory.java (selectByDate L26 / update L71 / delete L76)
@@ -29,13 +30,13 @@ public class IcsRevisionHistoryAdminService {
     public List<IcsRevisionHistoryAdminRes> search(LocalDate startDate, LocalDate closeDate, String financeAgencyCode,
                                                    String searchText, String relatedLawSearchText, String dateType) {
         String agency = (financeAgencyCode == null || financeAgencyCode.isBlank()) ? "%" : financeAgencyCode;
-        return mapper.selectByDate(startDate, closeDate, agency, like(searchText), like(relatedLawSearchText), dateType);
+        return mapper.selectByDate(startDate, closeDate, agency, Texts.like(searchText), Texts.like(relatedLawSearchText), dateType);
     }
 
     /** AS-IS Ics20_RevisionHistory.update(UpdateDataModel): id가 없거나 0 이하면 새 id로 넣고, 아니면 고친다 → 저장된 행(selectById) */
     @Transactional
     public IcsRevisionHistoryAdminRes save(UserPrincipal user, IcsRevisionHistoryAdminSaveReq req) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         Long id = req.revisionHistoryId();
         if (id == null || id <= 0) {
             id = mapper.selectNextId();
@@ -49,7 +50,7 @@ public class IcsRevisionHistoryAdminService {
     /** AS-IS Ics20_RevisionHistory.delete: ID로만 지운다(연결 법규·첨부파일은 원본도 그대로 둔다) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, Long revisionHistoryId) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.deleteById(revisionHistoryId);
     }
 
@@ -61,7 +62,7 @@ public class IcsRevisionHistoryAdminService {
     /** AS-IS Ics19_RevisionRelateIcs.update(UpdateDataModel): 고른 법규마다 연결 행을 새 id로 넣는다 → 넣은 행(요청 순서) */
     @Transactional
     public List<IcsRevisionLawRes> addLaws(UserPrincipal user, Long revisionHistoryId, List<Long> classTreeIds) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         if (mapper.selectById(revisionHistoryId) == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "개정내역을 찾을 수 없습니다.");
         }
@@ -75,11 +76,7 @@ public class IcsRevisionHistoryAdminService {
     /** AS-IS Ics19_RevisionRelateIcs.delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int deleteLaws(UserPrincipal user, List<Long> revisionRelateIcsIds) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         return revisionRelateIcsIds.stream().mapToInt(mapper::deleteLawById).sum();
-    }
-
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
     }
 }

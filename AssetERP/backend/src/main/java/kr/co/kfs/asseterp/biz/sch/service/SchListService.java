@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/sch/Sch04_List.java (selectByIcs L171 / updateConfirm L396 / upsert L436) + sys.Sys99_Print.insertRdIcsList (H06 Sch04_Tab_IcsList) */
 @Service
@@ -216,18 +217,18 @@ public class SchListService {
             for (Sch04ListRes a : rows) {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(str(a.closeDate()));
-                row.createCell(1).setCellValue(nvl(a.mngOrgName()));
-                row.createCell(2).setCellValue(nvl(a.personName()));
-                row.createCell(3).setCellValue(nvl(a.statusName()));
+                row.createCell(1).setCellValue(Texts.nvl(a.mngOrgName()));
+                row.createCell(2).setCellValue(Texts.nvl(a.personName()));
+                row.createCell(3).setCellValue(Texts.nvl(a.statusName()));
                 row.createCell(4).setCellValue(str(a.manageDate()));
-                row.createCell(5).setCellValue(nvl(a.note()));
+                row.createCell(5).setCellValue(Texts.nvl(a.note()));
                 row.createCell(6).setCellValue(Boolean.TRUE.equals(a.confirmYn()) ? "O" : "");
-                row.createCell(7).setCellValue(nvl(a.title()));
-                row.createCell(8).setCellValue(nvl(a.relatedLaw()));
-                row.createCell(9).setCellValue(nvl(a.apprTitle()));
+                row.createCell(7).setCellValue(Texts.nvl(a.title()));
+                row.createCell(8).setCellValue(Texts.nvl(a.relatedLaw()));
+                row.createCell(9).setCellValue(Texts.nvl(a.apprTitle()));
                 row.createCell(10).setCellValue(str(a.issDate()));
-                row.createCell(11).setCellValue(nvl(a.scheduleName()));
-                row.createCell(12).setCellValue(nvl(a.cycleName()));
+                row.createCell(11).setCellValue(Texts.nvl(a.scheduleName()));
+                row.createCell(12).setCellValue(Texts.nvl(a.cycleName()));
                 row.createCell(13).setCellValue(Boolean.TRUE.equals(a.advisYn()) ? "O" : "");
             }
             wb.write(out);
@@ -239,10 +240,6 @@ public class SchListService {
 
     private static String blankToAny(String s) {
         return s == null || s.isBlank() ? "%" : s;
-    }
-
-    private static String nvl(String s) {
-        return s == null ? "" : s;
     }
 
     private static String str(LocalDate d) {

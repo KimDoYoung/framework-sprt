@@ -14,17 +14,16 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/fnd/Fnd32_Account.java (selectByText L26 / updateList L36 / copyUpdate L50 / delete L71)
@@ -78,11 +77,7 @@ public class FndAccountService {
     }
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -108,18 +103,18 @@ public class FndAccountService {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "엑셀파일이 비어있거나 데이터를 읽을 수 없습니다.");
                 }
                 LocalDate setupDate = cellDate(row.getCell(0), i + 1);
-                String corpName = cellString(row.getCell(1));
-                String branch = cellString(row.getCell(2));
-                String accountName1 = cellString(row.getCell(3));
-                String accountName2 = cellString(row.getCell(4));
-                String accountName = cellString(row.getCell(5));
-                String accountNo = cellString(row.getCell(6));
-                String bankCorpName = cellString(row.getCell(7));
-                String bankLinkNo = cellString(row.getCell(8));
-                String accountStateName = cellString(row.getCell(9));
-                String ipoOutName = cellString(row.getCell(10));
-                String managerTel = cellString(row.getCell(11));
-                String note = cellString(row.getCell(12));
+                String corpName = ExcelCells.string(row.getCell(1));
+                String branch = ExcelCells.string(row.getCell(2));
+                String accountName1 = ExcelCells.string(row.getCell(3));
+                String accountName2 = ExcelCells.string(row.getCell(4));
+                String accountName = ExcelCells.string(row.getCell(5));
+                String accountNo = ExcelCells.string(row.getCell(6));
+                String bankCorpName = ExcelCells.string(row.getCell(7));
+                String bankLinkNo = ExcelCells.string(row.getCell(8));
+                String accountStateName = ExcelCells.string(row.getCell(9));
+                String ipoOutName = ExcelCells.string(row.getCell(10));
+                String managerTel = ExcelCells.string(row.getCell(11));
+                String note = ExcelCells.string(row.getCell(12));
 
                 Long corpId = null;
                 if (corpName != null) {
@@ -163,25 +158,13 @@ public class FndAccountService {
         return code;
     }
 
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
     /** 개설일자: 원본은 글자를 yyyy-MM-dd로만 읽는다(날짜 서식 셀이면 일련번호 글자가 되어 읽기 오류). 날짜 서식 셀도 날짜 값으로 읽는다 */
     private static LocalDate cellDate(Cell cell, int rowNo) {
         try {
             if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
                 return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
-            return LocalDate.parse(cellString(cell));
+            return LocalDate.parse(ExcelCells.string(cell));
         } catch (DateTimeParseException | IllegalStateException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, rowNo + "행의 개설일자를 읽을 수 없습니다. (yyyy-MM-dd)", e);
         }

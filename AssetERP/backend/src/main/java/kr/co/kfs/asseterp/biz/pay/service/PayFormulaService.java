@@ -104,7 +104,7 @@ public class PayFormulaService {
      */
     @Transactional
     public int basicDataCreate(UserPrincipal user, Long companyId, LocalDate startDate) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (companyId == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "고객사는 필수 선택 사항입니다");
         }
@@ -131,11 +131,5 @@ public class PayFormulaService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
         return companyId;
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

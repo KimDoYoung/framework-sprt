@@ -47,7 +47,7 @@ public class IcsClassTreeService {
     /** AS-IS Ics01_Tab_ClassTree.insertIcsClass → Ics01_Edit_ClassTree.update: 새 id·회사·구분 IC·사용 true, 조회순서 = 분류코드 */
     @Transactional
     public ClassTreeRes create(UserPrincipal user, ClassTreeSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         validate(req);
         if (req.parentTreeId() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "상위분류가 없습니다");
@@ -63,7 +63,7 @@ public class IcsClassTreeService {
     /** AS-IS Ics01_Edit_ClassTree.update (edit): 분류코드·분류명, 조회순서 = 분류코드 */
     @Transactional
     public ClassTreeRes update(UserPrincipal user, Long classTreeId, ClassTreeSaveReq req) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         validate(req);
         if (mapper.updateTreeNode(classTreeId, withSeq(req)) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -74,7 +74,7 @@ public class IcsClassTreeService {
     /** AS-IS Ics01_Move_TreeGrid.moveTree / Ics01_Move_Grid.moveTree: 상위 분류를 바꾼다 */
     @Transactional
     public void move(UserPrincipal user, Long classTreeId, Long parentTreeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (parentTreeId == null || mapper.countById(parentTreeId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
@@ -90,7 +90,7 @@ public class IcsClassTreeService {
     /** AS-IS Ics01_ClassTree.deleteAll: 자신과 모든 하위(법규 포함)를 삭제 이력(ics99)에 남기고 지운다 → 지운 건수 */
     @Transactional
     public int deleteAll(UserPrincipal user, Long classTreeId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<Long> ids = mapper.selectDownTreeIds(classTreeId);
         for (Long id : ids) {
             mapper.insertDeleteHistory(id, user.getUserId());
@@ -110,12 +110,6 @@ public class IcsClassTreeService {
         }
         if (req.classTreeName() == null || req.classTreeName().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "분류명을 입력해주세요");
-        }
-    }
-
-    static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

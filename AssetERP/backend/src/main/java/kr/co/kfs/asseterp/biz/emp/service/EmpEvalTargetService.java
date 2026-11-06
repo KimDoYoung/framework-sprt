@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * AS-IS server/emp/Emp43_EvalTarget.java (selectByTermCode L32 / updateEval L89 / updateList L125 / deleteList L163 / update L199)
@@ -56,7 +57,7 @@ public class EmpEvalTargetService {
 
     /** AS-IS Emp00_TransInfo.selectByEvalText — 서버가 기준일을 오늘로 정한다 */
     public List<EvalCandidateRes> searchCandidates(UserPrincipal user, String searchText) {
-        return mapper.selectByEvalText(user.getCompanyId(), "%" + nvl(searchText) + "%", LocalDate.now().toString());
+        return mapper.selectByEvalText(user.getCompanyId(), "%" + Texts.nvl(searchText) + "%", LocalDate.now().toString());
     }
 
     /** AS-IS Emp00_TransInfo.getHighInfo */
@@ -66,7 +67,7 @@ public class EmpEvalTargetService {
 
     /** AS-IS Emp43_EvalTarget.selectByText (Emp43_Tab_EvalExecute) — 로그인 사원이 평가자인 대상자 */
     public List<EvalExecuteRes> searchExecutes(UserPrincipal user, String stdYear, String stdTermCode, String searchText) {
-        return mapper.selectByText(user.getCompanyId(), stdYear, stdTermCode, "%" + nvl(searchText) + "%", user.getUserId());
+        return mapper.selectByText(user.getCompanyId(), stdYear, stdTermCode, "%" + Texts.nvl(searchText) + "%", user.getUserId());
     }
 
     /** AS-IS Emp43_EvalTarget.getWrite (Emp44_Lookup_Write refresh) — 평가상태('완료'·'작성중'·'') */
@@ -94,12 +95,12 @@ public class EmpEvalTargetService {
 
     /** AS-IS Emp43_EvalTarget.selectByTextAdmin (Emp43_Tab_FirstAppr·Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
     public List<EvalAdminRes> searchAdmin(UserPrincipal user, String stdYear, String stdTermCode, String searchText, Long targetPersonId) {
-        return mapper.selectByTextAdmin(user.getCompanyId(), stdYear, stdTermCode, "%" + nvl(searchText) + "%", targetPersonId);
+        return mapper.selectByTextAdmin(user.getCompanyId(), stdYear, stdTermCode, "%" + Texts.nvl(searchText) + "%", targetPersonId);
     }
 
     /** AS-IS Emp43_EvalTarget.selectByTextAdminAll (Emp43_Tab_EvalResult "기간조건 제외") — 평가기간 조건 없이 전체 */
     public List<EvalAdminRes> searchAdminAll(UserPrincipal user, String searchText, Long targetPersonId) {
-        return mapper.selectByTextAdminAll(user.getCompanyId(), "%" + nvl(searchText) + "%", targetPersonId);
+        return mapper.selectByTextAdminAll(user.getCompanyId(), "%" + Texts.nvl(searchText) + "%", targetPersonId);
     }
 
     /** AS-IS Emp45_EvalRelateAppr.selectByTermCode — 상신 상태(1차·최종). 상신 행이 없으면 null */
@@ -221,9 +222,5 @@ public class EmpEvalTargetService {
     private EvalTargetRow withId(EvalTargetRow r, Long id) {
         return new EvalTargetRow(id, r.personId(), r.stdYear(), r.stdTermCd(), r.evalListStdId(), r.evalStartDate(),
                 r.evalCloseDate(), r.firstEvaluatorId(), r.firstEvalWeight(), r.secondEvaluatorId(), r.secondEvalWeight());
-    }
-
-    private String nvl(String s) {
-        return s == null ? "" : s;
     }
 }

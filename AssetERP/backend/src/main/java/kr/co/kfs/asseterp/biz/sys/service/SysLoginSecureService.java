@@ -23,14 +23,14 @@ public class SysLoginSecureService {
     private final SysLoginSecureMapper mapper;
 
     public List<LoginSecureRes> searchLoginSecures(UserPrincipal user, Long companyId) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.searchLoginSecures(companyId);
     }
 
     /** AS-IS update(UpdateDataModel): ID ≤ 0이면 INSERT, 아니면 UPDATE → 다시 읽어 요청 순서로 */
     @Transactional
     public List<LoginSecureRes> updateLoginSecures(UserPrincipal user, Long companyId, List<LoginSecureReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<LoginSecureRes> saved = new ArrayList<>();
         for (LoginSecureReq req : rows) {
             // AS-IS는 sys29_public_ip NOT NULL 위반을 DB 오류 원문으로 보여 준다 → 같은 시점에 메시지만 바꿔 실패
@@ -53,13 +53,7 @@ public class SysLoginSecureService {
     /** AS-IS delete(UpdateDataModel) → 지운 건수 */
     @Transactional
     public int deleteLoginSecures(UserPrincipal user, Long companyId, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteLoginSecures(ids, companyId);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

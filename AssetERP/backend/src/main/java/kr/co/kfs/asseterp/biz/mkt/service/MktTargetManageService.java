@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /**
  * Z05 Mkt01_Tab_TargetCompany·Mkt01_Grid_TargetCompany·Mkt01_Lookup_TargetCompany·Mkt01_Lookup_SelectCompany·Mkt01_Lookup_Favorite
@@ -49,7 +50,7 @@ public class MktTargetManageService {
     /** AS-IS mkt.Mkt01_TargetCompany.selectByCompanyIdPaging (itemTypeCode `%`면 전체) */
     public PageRes<MktTargetCompanyRes> search(UserPrincipal user, String itemTypeCode, boolean unUseYn, String searchText, long offset, long limit) {
         String type = itemTypeCode == null || itemTypeCode.isEmpty() ? "%" : itemTypeCode;
-        String text = like(searchText);
+        String text = Texts.like(searchText);
         return new PageRes<>(mapper.selectByCompanyIdTotal(user.getCompanyId(), type, unUseYn, text),
                 mapper.selectByCompanyIdPaging(user.getCompanyId(), type, unUseYn, text, offset, limit));
     }
@@ -109,7 +110,7 @@ public class MktTargetManageService {
     /** AS-IS mkt.Mkt01_TargetCompany.selectFavoritePaging·selectFavoriteTotal */
     public PageRes<MktFavoriteRes> searchFavorites(UserPrincipal user, String searchText, long offset, long limit) {
         return new PageRes<>(mapper.selectFavoriteTotal(user.getCompanyId(), user.getUserId()),
-                mapper.selectFavoritePaging(user.getCompanyId(), user.getUserId(), like(searchText), offset, limit));
+                mapper.selectFavoritePaging(user.getCompanyId(), user.getUserId(), Texts.like(searchText), offset, limit));
     }
 
     /** AS-IS sys.Sys99_Print.insertRdTargetCompany L4945 → 새 groupId */
@@ -119,9 +120,5 @@ public class MktTargetManageService {
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), PRINT_WINDOW);
         mapper.insertPrint(user.getCompanyId(), user.getUserId(), PRINT_WINDOW, groupId);
         return String.valueOf(groupId);
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 }

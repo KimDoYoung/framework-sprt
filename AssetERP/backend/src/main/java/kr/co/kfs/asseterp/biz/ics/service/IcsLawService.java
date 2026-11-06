@@ -118,7 +118,7 @@ public class IcsLawService {
      */
     @Transactional
     public List<IcsLawRes> save(UserPrincipal user, List<IcsLawSaveReq> rows) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         return rows.stream().map(req -> {
             if (req.classTreeName() == null || req.classTreeName().isEmpty()) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "법규 내용을 입력해주세요");
@@ -143,7 +143,7 @@ public class IcsLawService {
     /** AS-IS delete(GridDeleteData → deleteModel): id마다 DELETE → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> classTreeIds) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         int count = 0;
         for (Long id : classTreeIds) {
             count += mapper.deleteLaw(id);
@@ -154,7 +154,7 @@ public class IcsLawService {
     /** AS-IS Ics01_Lookup_Content.update → ics.Ics01_ClassTree.modelUpdate → 저장된 행 */
     @Transactional
     public IcsLawRes updateContent(UserPrincipal user, Long classTreeId, IcsLawContentReq req) {
-        IcsClassTreeService.requireSysAdmin(user);
+        user.requireSysAdmin();
         if (req.classTreeName() == null || req.classTreeName().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "법규 내용을 입력해주세요");
         }

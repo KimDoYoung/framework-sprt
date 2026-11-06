@@ -15,26 +15,19 @@ import kr.co.kfs.asseterp.biz.pay.mapper.PayInsureApplyMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /**
  * AS-IS server/pay/Pay31_InsureApply.java (selectByCompanyId L49 / insert1 L81 / insert3 L122 / updateList L326 / deleteList L349 / update L368 / delete L373)
@@ -266,11 +259,7 @@ public class PayInsureApplyService {
 
     /** 탭 4 [템플릿] */
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**
@@ -283,17 +272,17 @@ public class PayInsureApplyService {
         Long companyId = user.getCompanyId();
         LocalDate toDay = LocalDate.now();
         return readSheet(file, (row, rowIndex) -> {
-            String insureCode1Chk = cellString(row.getCell(1));
-            String insureCode2Chk = cellString(row.getCell(2));
-            String insureCode4Chk = cellString(row.getCell(3));
-            String personName = cellString(row.getCell(5));
-            String personCtzNo = cellString(row.getCell(6));
-            Long insureCode1MonthPay = cellLong(row.getCell(9));
-            String insureCode2Month = cellString(row.getCell(11));
-            Long insureCode2MonthPay = cellLong(row.getCell(12));
-            String insureCode4Month = cellString(row.getCell(15));
-            Long insureCode4MonthPay = cellLong(row.getCell(13));
-            String insureApplyCode = cellString(row.getCell(14));
+            String insureCode1Chk = ExcelCells.string(row.getCell(1));
+            String insureCode2Chk = ExcelCells.string(row.getCell(2));
+            String insureCode4Chk = ExcelCells.string(row.getCell(3));
+            String personName = ExcelCells.string(row.getCell(5));
+            String personCtzNo = ExcelCells.string(row.getCell(6));
+            Long insureCode1MonthPay = ExcelCells.longValue(row.getCell(9));
+            String insureCode2Month = ExcelCells.string(row.getCell(11));
+            Long insureCode2MonthPay = ExcelCells.longValue(row.getCell(12));
+            String insureCode4Month = ExcelCells.string(row.getCell(15));
+            Long insureCode4MonthPay = ExcelCells.longValue(row.getCell(13));
+            String insureApplyCode = ExcelCells.string(row.getCell(14));
 
             String applyMonth2 = yearMonth(insureCode2Month);
             String applyMonth4 = yearMonth(insureCode4Month);
@@ -330,11 +319,11 @@ public class PayInsureApplyService {
     public int uploadPayMethod(UserPrincipal user, MultipartFile file) {
         Long companyId = user.getCompanyId();
         return readSheet(file, (row, rowIndex) -> {
-            String personNo = cellString(row.getCell(0));
-            String insureCode = cellString(row.getCell(2));
-            String payCode = cellString(row.getCell(3));
-            Long payDiv = cellLong(row.getCell(4));
-            LocalDate applyDate = cellDate(row.getCell(5));
+            String personNo = ExcelCells.string(row.getCell(0));
+            String insureCode = ExcelCells.string(row.getCell(2));
+            String payCode = ExcelCells.string(row.getCell(3));
+            Long payDiv = ExcelCells.longValue(row.getCell(4));
+            LocalDate applyDate = ExcelCells.date(row.getCell(5));
             List<Long> persons = personNo == null ? List.of() : mapper.selectPersonIdsByEmpNo(companyId, personNo.trim());
             if (persons.isEmpty()) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, (rowIndex + 1) + "행의 사번 [" + personNo + "]을 찾을 수 없습니다.");
@@ -387,53 +376,5 @@ public class PayInsureApplyService {
         } catch (NumberFormatException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년도를 입력해주세요", e);
         }
-    }
-
-    /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getLongCellData — 수식은 마지막 계산값(숫자만), 숫자 셀은 소수점 버림, 글자는 쉼표를 빼고 숫자면 그 값 */
-    private static Long cellLong(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        if (cell.getCellType() == CellType.FORMULA) {
-            return cell.getCachedFormulaResultType() == CellType.NUMERIC ? (long) cell.getNumericCellValue() : null;
-        }
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return (long) cell.getNumericCellValue();
-        }
-        if (cell.getCellType() == CellType.STRING) {
-            String str = cell.getStringCellValue().replace(",", "");
-            return str.matches("-?\\d+") ? Long.parseLong(str) : null;
-        }
-        return null;
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** AS-IS server/pay/Pay50_Expense.java (selectExpenseAppr L73·selectExpenseRequest L79·selectById L40 …) — 지출결의서(경영관리) U03 */
 @Service
@@ -53,20 +54,16 @@ public class PayExpenseService {
     private final ActJournalService journalService;
     private final AprNoticeService noticeService;
 
-    private static String like(String text) {
-        return "%" + (text == null ? "" : text) + "%";
-    }
-
     /** pay50_expense.selectExpenseAppr — 코드 인자는 콤보의 "전체"가 '%' */
     public List<ExpenseRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean statusCheckYn,
                                    String expenseCode, String payMethodCode, String searchText, boolean managerYn, Integer limit) {
         return mapper.selectExpenseAppr(user.getCompanyId(), user.getUserId(), startDate, closeDate, statusCheckYn,
-                expenseCode == null ? "%" : expenseCode, payMethodCode, like(searchText), managerYn, limit);
+                expenseCode == null ? "%" : expenseCode, payMethodCode, Texts.like(searchText), managerYn, limit);
     }
 
     /** pay50_expense.selectExpenseRequest */
     public List<ExpenseRequestRes> requests(UserPrincipal user, String searchText) {
-        return mapper.selectExpenseRequest(user.getCompanyId(), like(searchText));
+        return mapper.selectExpenseRequest(user.getCompanyId(), Texts.like(searchText));
     }
 
     /** pay50_expense.selectById */
@@ -286,12 +283,12 @@ public class PayExpenseService {
     public List<ExpenseSettleRes> searchSettles(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String expenseCode,
                                                 String payYnCode, boolean statusCheckYn, String searchText) {
         return mapper.selectExpensePay(user.getCompanyId(), startDate, closeDate, expenseCode == null ? "%" : expenseCode,
-                payYnCode == null ? "%" : payYnCode, statusCheckYn, like(searchText));
+                payYnCode == null ? "%" : payYnCode, statusCheckYn, Texts.like(searchText));
     }
 
     /** pay50_expense.selectNewExpenseAppr — 이 화면은 targetType = SETTLE */
     public List<ExpenseNewRes> newSettles(UserPrincipal user, String expenseCode, String searchText) {
-        return mapper.selectNewExpenseAppr(user.getCompanyId(), "SETTLE", expenseCode, like(searchText));
+        return mapper.selectNewExpenseAppr(user.getCompanyId(), "SETTLE", expenseCode, Texts.like(searchText));
     }
 
     /**
@@ -394,7 +391,7 @@ public class PayExpenseService {
 
     /** pay50_expense.selectExpenseAccountSum (L1076) — 검색어는 "%…%"로 감싼다 */
     public List<ExpenseAccountSumRes> searchAccountSums(UserPrincipal user, String year, String searchText) {
-        return mapper.selectExpenseAccountSum(user.getCompanyId(), year, like(searchText));
+        return mapper.selectExpenseAccountSum(user.getCompanyId(), year, Texts.like(searchText));
     }
 
     /**
@@ -416,7 +413,7 @@ public class PayExpenseService {
     /** pay50_expense.selectBySettleDate */
     public List<ExpenseSettleApprRes> searchBySettleDate(UserPrincipal user, LocalDate startDate, LocalDate closeDate,
                                                          boolean statusCheckYn, String searchText) {
-        return mapper.selectBySettleDate(user.getCompanyId(), startDate, closeDate, statusCheckYn, like(searchText));
+        return mapper.selectBySettleDate(user.getCompanyId(), startDate, closeDate, statusCheckYn, Texts.like(searchText));
     }
 
     /** pay50_expense.selectBySettleApprId */
@@ -428,12 +425,12 @@ public class PayExpenseService {
 
     /** pay50_expense.selectExpenseJournal (L127) */
     public List<ExpenseJournalRes> searchJournals(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String expenseCode, String searchText) {
-        return mapper.selectExpenseJournal(user.getCompanyId(), startDate, closeDate, expenseCode == null ? "%" : expenseCode, like(searchText));
+        return mapper.selectExpenseJournal(user.getCompanyId(), startDate, closeDate, expenseCode == null ? "%" : expenseCode, Texts.like(searchText));
     }
 
     /** pay50_expense.selectNewExpenseAppr (L85) — 이 화면은 targetType = JOURNAL (전표가 아직 없는 내역) */
     public List<ExpenseNewRes> newJournals(UserPrincipal user, String expenseCode, String searchText) {
-        return mapper.selectNewExpenseAppr(user.getCompanyId(), "JOURNAL", expenseCode, like(searchText));
+        return mapper.selectNewExpenseAppr(user.getCompanyId(), "JOURNAL", expenseCode, Texts.like(searchText));
     }
 
     /**
@@ -571,6 +568,6 @@ public class PayExpenseService {
 
     /** pay.Pay50_Expense.selectOfficeAssets — searchText는 "%…%" */
     public List<ExpenseOfficeRes> searchOfficeAssets(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
-        return mapper.selectOfficeAssets(user.getCompanyId(), startDate, closeDate, like(searchText));
+        return mapper.selectOfficeAssets(user.getCompanyId(), startDate, closeDate, Texts.like(searchText));
     }
 }

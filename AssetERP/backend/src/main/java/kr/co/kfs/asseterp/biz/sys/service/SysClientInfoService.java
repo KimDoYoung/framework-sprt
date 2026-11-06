@@ -23,14 +23,14 @@ public class SysClientInfoService {
 
     /** AS-IS selectByText: 검색어는 클라이언트가 "%"+값+"%"로 보냈다 → 서버가 만든다 */
     public List<ClientInfoRes> search(UserPrincipal user, String searchText) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return mapper.selectByText("%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** AS-IS update(UpdateDataModel): 행마다 신규(화면 임시 ID 0 이하)면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<ClientInfoRes> update(UserPrincipal user, List<ClientInfoSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         List<ClientInfoRes> saved = new ArrayList<>();
         for (ClientInfoSaveReq req : rows) {
             boolean isNew = req.clientInfoId() == null || req.clientInfoId() <= 0;
@@ -48,16 +48,10 @@ public class SysClientInfoService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
         return mapper.deleteClientInfos(ids);
-    }
-
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }

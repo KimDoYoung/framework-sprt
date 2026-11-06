@@ -11,13 +11,12 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
+import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /** Z05 Mkt01_Lookup_ExcelUpload → server/utils/file/ExcelUpload.java targetCompanyUpload (L3835-4042) + ./excelTemplete/Template_업무활동등록.xlsx */
 @Service
@@ -30,11 +29,7 @@ public class MktTargetUploadService {
     private final MktTargetManageMapper mapper;
 
     public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
-        }
+        return ExcelCells.template(TEMPLATE);
     }
 
     /**

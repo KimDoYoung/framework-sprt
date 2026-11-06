@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 금융상품 운용내역 W15 (Ast09_Tab_FinanceBookOpr · Ast06_TabPage_FinanceBookOpr) — Ast09_Book.selectInvestAssetLimit·selectFinanceByHoldDate, Sys99_Print.insertRdFinanceBookOpr1·2 */
 @Service
@@ -42,7 +43,7 @@ public class AstFinanceOprService {
     /** periodType "0" = 미보유 제외, "1"~"4" = 미보유 포함 + 기간(1개월·3개월·1년·기간지정) */
     public List<FinanceOprRes> search(UserPrincipal user, LocalDate holdDate, String searchText, String investAssetType, boolean holdYn,
                                       String periodType, LocalDate startDate, LocalDate closeDate) {
-        return mapper.selectFinanceByHoldDate(user.getCompanyId(), holdDate, like(searchText), investAssetType == null ? "%" : investAssetType + "%",
+        return mapper.selectFinanceByHoldDate(user.getCompanyId(), holdDate, Texts.like(searchText), investAssetType == null ? "%" : investAssetType + "%",
                 holdYn, periodType, startDate, closeDate);
     }
 
@@ -153,10 +154,6 @@ public class AstFinanceOprService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "미보유 포함 기간조건을 선택하세요");
         }
         return radio;
-    }
-
-    private static String like(String searchText) {
-        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     private static Double nz(Double v) {

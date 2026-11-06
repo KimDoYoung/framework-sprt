@@ -40,6 +40,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import kr.co.kfs.asseterp.common.util.Texts;
 
 /** 회사규정관리 (AS-IS Bbs15_Tab_CompanyRuleManager → server/bbs/Bbs15_CompanyRule) */
 @Slf4j
@@ -232,10 +233,10 @@ public class BbsCompanyRuleService {
             int r = 1;
             for (CompanyRuleRes c : rows) {
                 Row row = sheet.createRow(r++);
-                row.createCell(0).setCellValue(nvl(c.ruleTypeName()));
-                row.createCell(1).setCellValue(nvl(c.companyRuleCode()));
-                row.createCell(2).setCellValue(nvl(c.title()));
-                row.createCell(3).setCellValue(nvl(c.revisionDate()));
+                row.createCell(0).setCellValue(Texts.nvl(c.ruleTypeName()));
+                row.createCell(1).setCellValue(Texts.nvl(c.companyRuleCode()));
+                row.createCell(2).setCellValue(Texts.nvl(c.title()));
+                row.createCell(3).setCellValue(Texts.nvl(c.revisionDate()));
                 if (c.revisionNo() != null) {
                     row.createCell(4).setCellValue(c.revisionNo());
                 }
@@ -243,11 +244,11 @@ public class BbsCompanyRuleService {
                     row.createCell(5).setCellValue(c.fileCnt());
                 }
                 row.createCell(6).setCellValue(Boolean.TRUE.equals(c.publicYn()) ? "Y" : "");
-                row.createCell(7).setCellValue(nvl(c.closeDate()));
-                row.createCell(8).setCellValue(nvl(c.note()));
-                row.createCell(9).setCellValue(nvl(c.creName()));
-                row.createCell(10).setCellValue(nvl(c.updName()));
-                row.createCell(11).setCellValue(nvl(c.updDateStr()));
+                row.createCell(7).setCellValue(Texts.nvl(c.closeDate()));
+                row.createCell(8).setCellValue(Texts.nvl(c.note()));
+                row.createCell(9).setCellValue(Texts.nvl(c.creName()));
+                row.createCell(10).setCellValue(Texts.nvl(c.updName()));
+                row.createCell(11).setCellValue(Texts.nvl(c.updDateStr()));
             }
             wb.write(out);
             return out.toByteArray();
@@ -330,9 +331,5 @@ public class BbsCompanyRuleService {
 
     private static boolean isBlank(String s) {
         return s == null || s.isEmpty();
-    }
-
-    private static String nvl(String s) {
-        return s == null ? "" : s;
     }
 }

@@ -34,7 +34,7 @@ public class AstDetailService {
      */
     @Transactional
     public List<AstDetailRes> save(UserPrincipal user, List<AstDetailSaveReq> rows) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         for (AstDetailSaveReq req : rows) {
             if (req.seq() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "조회순번은 필수입력 항목입니다.");
@@ -60,7 +60,7 @@ public class AstDetailService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
+        user.requireSysAdmin();
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
     }
 
@@ -128,11 +128,5 @@ public class AstDetailService {
     @Transactional
     public int deleteItemDetails(UserPrincipal user, List<Long> ids) {
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
-    }
-
-    private static void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
     }
 }
