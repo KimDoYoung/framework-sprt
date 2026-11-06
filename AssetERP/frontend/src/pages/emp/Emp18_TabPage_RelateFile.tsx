@@ -58,7 +58,7 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
   });
   checkedRows.current = () => crud.gridRef.current?.api?.getSelectedRows() ?? [];
 
-  const { retrieve } = crud;
+  const { retrieve, saveRows } = crud;
 
   // checkFileDelete() L242-267: sys.Sys11_RelateFile.checkFileDelete(fileId, parentId=relateFileId)
   //   1 → retrieve() / 2 → 서버 문구 / 3 → FileDelete?fileId= ([E5] fileDeleteForm.SubmitComplete (L78) → retrieve())
@@ -127,8 +127,8 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
   useEffect(() => {
     if (!saveAfterInsert) return;
     setSaveAfterInsert(false);
-    void crud.saveRows();
-  }, [saveAfterInsert, crud.saveRows]);  // eslint-disable-line react-hooks/exhaustive-deps
+    void saveRows();
+  }, [saveAfterInsert, saveRows]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>

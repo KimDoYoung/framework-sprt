@@ -126,6 +126,10 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
     reloadAfterSave: true,
   });
 
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수·ref 만 꺼내 쓴다
+  const { clear: cfClear, retrieve: cfRetrieve } = cfCrud;
+  const { retrieve: cfInfoRetrieve, gridRef: cfInfoGridRef } = cfInfoCrud;
+
   // [E8] retrieveCfButton[조회].Select (L191) & [E1] uploadExcelForm.SubmitComplete (L141) → retrieveCf()
   const retrieveCf = useCallback(
     async (cfInfo?: AstCfInfo | null) => {
@@ -133,31 +137,31 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
       deleteCfList.current = [];
       setSelectedCfRows([]);
       if (!target || !target.cfInfoId || target.cfInfoId <= 0) {
-        cfCrud.clear();
+        cfClear();
         return;
       }
       selectedCfInfoRef.current = target;
-      await cfCrud.retrieve();
+      await cfRetrieve();
     },
-    [cfCrud.clear, cfCrud.retrieve]  // eslint-disable-line react-hooks/exhaustive-deps
+    [cfClear, cfRetrieve]
   );
 
   // [E4] retrieveCfInfoButton[조회].Select (L166) → retrieveCfInfo()
   const retrieveCfInfo = useCallback(async () => {
     if (!astClassTreeId) return;
     deleteCfInfoList.current = [];
-    await cfInfoCrud.retrieve();
+    await cfInfoRetrieve();
     setTimeout(() => {
-      const firstNode = cfInfoCrud.gridRef.current?.api?.getDisplayedRowAtIndex(0);
+      const firstNode = cfInfoGridRef.current?.api?.getDisplayedRowAtIndex(0);
       if (firstNode?.data) {
         firstNode.setSelected(true);
       } else {
         setSelectedCfInfo(null);
         selectedCfInfoRef.current = null;
-        cfCrud.clear();
+        cfClear();
       }
     });
-  }, [astClassTreeId, cfInfoCrud.retrieve, cfInfoCrud.gridRef, cfCrud.clear]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [astClassTreeId, cfInfoRetrieve, cfInfoGridRef, cfClear]);
 
   // [E0] 화면 열림 (생성자 L105-135) → show()
   useEffect(() => {

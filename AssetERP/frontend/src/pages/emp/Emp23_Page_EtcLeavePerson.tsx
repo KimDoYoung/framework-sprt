@@ -39,9 +39,11 @@ export const Emp23_Page_EtcLeavePerson: React.FC<Props> = ({ etcLeaveId }) => {
     newRow: useCallback(() => ({}), []),
   });
   retrieveRef.current = crud.retrieve;
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수만 꺼내 쓴다 (search 가 안정이라 retrieve 도 안정)
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L44-77) → 초기화: 부르는 쪽이 고른 포상휴가가 바뀔 때마다 retrieve(etcLeaveId)
-  useEffect(() => { void crud.retrieve(); }, [etcLeaveId]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRetrieve(); }, [etcLeaveId, crudRetrieve]);
 
   // [E1] insertButton[등록].Select (L45) [etcLeaveId == null] → "포상휴가를 먼저 선택해주세요", 아니면 insertRow() L107-135
   const insertRow = () => {

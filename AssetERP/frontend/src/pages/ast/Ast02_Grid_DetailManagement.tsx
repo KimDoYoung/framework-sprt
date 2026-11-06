@@ -90,12 +90,15 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       reloadAfterSave: true,
     });
 
+    // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수만 꺼내 쓴다
+    const { clear: crudClear, retrieve: crudRetrieve } = crud;
+
     // [E1] retrieveButton[조회].Select (L106) → retrieve()
     const retrieve = useCallback(
       async (targetNode?: AstClassTree | null) => {
         const activeNode = targetNode ?? nodeRef.current;
         if (!activeNode || !activeNode.classTreeId) {
-          crud.clear();
+          crudClear();
           setContent('');
           setEditorKey((k) => k + 1);
           return;
@@ -106,9 +109,9 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         setContent(activeNode.content || '');
         setEditorKey((k) => k + 1);
         managerRef.current?.retrieve(activeNode.classTreeId);
-        await crud.retrieve();
+        await crudRetrieve();
       },
-      [crud.clear, crud.retrieve]  // eslint-disable-line react-hooks/exhaustive-deps
+      [crudClear, crudRetrieve]
     );
 
     const loadNode = useCallback(
@@ -127,11 +130,11 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       setEnabled(false);
       setNode(null);
       nodeRef.current = null;
-      crud.clear();
+      crudClear();
       setContent('');
       setEditorKey((k) => k + 1);
       managerRef.current?.clear();
-    }, [crud.clear]);  // eslint-disable-line react-hooks/exhaustive-deps
+    }, [crudClear]);
 
     useImperativeHandle(ref, () => ({
       loadNode,

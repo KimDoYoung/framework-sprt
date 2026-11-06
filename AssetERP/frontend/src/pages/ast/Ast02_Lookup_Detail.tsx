@@ -64,12 +64,15 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
     reloadAfterSave: true,
   });
 
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
+
   // [E4] retrieveButton[조회].Select (L119) & [E1] searchText.KeyPress [Enter] (L86) → retrieve()
   const retrieve = useCallback(async () => {
     deleteList.current = [];
     setSelectedRows([]);
-    await crud.retrieve();
-  }, [crud.retrieve]);  // eslint-disable-line react-hooks/exhaustive-deps
+    await crudRetrieve();
+  }, [crudRetrieve]);
 
   // [E0] 화면 열림 (생성자 L67-83) → show()
   useEffect(() => {
