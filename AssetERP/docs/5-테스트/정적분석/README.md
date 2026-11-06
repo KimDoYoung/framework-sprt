@@ -5,8 +5,9 @@
 - TOBE 소스를 정적분석한 보고서를 두는 곳. 변환 중에는 돌리지 않고, 여러 화면을 변환한 뒤 몰아서 돌린다.
 - 실행: AssetERP 폴더에서 `yunhee run -t 1800 "./tools/code-health.sh"` (옵션은 `--help`). 전체 약 3분.
 - 도구: PMD 7(규칙) · CPD(중복) · Checkstyle(TOBE 규칙) · SpotBugs + FindSecBugs(버그·보안) · 자체 점검(매퍼 `${}`, 레이어 패키지).
-  `backend/build.gradle`은 건드리지 않는다. 분석 플러그인은 init script(`tools/code-health/analysis.gradle`)로만 붙는다.
-- 규칙 조정: `tools/code-health/` 의 `pmd-ruleset.xml`·`checkstyle.xml`·`spotbugs-exclude.xml`, 등급은 `report.py`의 `RULE_GRADE`.
+  frontend는 `--front`로 켠다: CPD(TypeScript 중복) · ESLint(typescript-eslint + react-hooks, 약 15초). 첫 실행에 `tools/code-health/eslint`에서 `npm install`을 한다.
+  `backend/build.gradle`·`frontend/package.json`은 건드리지 않는다. 분석 플러그인은 init script(`tools/code-health/analysis.gradle`)로만 붙는다.
+- 규칙 조정: `tools/code-health/` 의 `pmd-ruleset.xml`·`checkstyle.xml`·`spotbugs-exclude.xml`·`eslint/eslint.config.mjs`, 등급은 `report.py`의 `RULE_GRADE`.
 
 ## 파일 및 폴더
 
@@ -44,6 +45,7 @@
 ## 읽을 때 주의
 
 - `PreserveStackTrace`: `catch` 안에서 `BusinessException`을 던지며 원인 예외를 버린 것. 로그에서 원인을 잃는다.
+- ESLint `UnusedDisableDirective`: 이제 필요 없는 `// eslint-disable…` 주석(A, 주석만 지운다). `react-hooks/exhaustive-deps`는 B — 의존 배열을 고치면 effect가 다시 돌아 동작이 바뀔 수 있으니 그 화면의 흐름을 보고 고친다. 고친 뒤 확인은 `yunhee run "npx tsc -b --noEmit"`(frontend).
 - `POTENTIAL_XML_INJECTION`: 전자결재 링크 HTML(`biz/apr/service/link/`)의 문자열 이어 붙이기. 2026-11-06에 글자 값은 `common.util.Html.esc`로 escape했다(원래 HTML인 값 — 편집기 본문 `pay50_content`·`plan`, SQL이 `<br>`로 잇는 파일·발령·징계 목록 — 은 그대로). 도구는 계속 잡으므로 대장에 오탐으로 둔다. 새 링크 HTML을 만들 때도 DB 글자 값은 `Html.esc`로 감싼다.
 - 매퍼 `DollarSubstitution`: `${}` 문자열 치환. ORDER BY 열 이름처럼 정상인 것도 있으니, 사용자 입력이 들어가는지 본다.
 - 공통화 "관련 있을 수 있는 기존 common 부품"은 이름이 비슷한 클래스를 뽑았을 뿐이다. 실제로 쓸 수 있는지는 열어 보고 판단한다.

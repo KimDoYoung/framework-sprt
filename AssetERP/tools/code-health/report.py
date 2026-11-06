@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""code-health 요약기: raw XML(PMD·CPD·Checkstyle·SpotBugs) + 자체 점검 → docs/5-테스트/정적분석/ 의 md.
+"""code-health 요약기: raw XML(PMD·CPD·Checkstyle·SpotBugs)·JSON(ESLint) + 자체 점검 → docs/5-테스트/정적분석/ 의 md.
 
 직접 쓰지 않고 tools/code-health.sh 가 부른다.
   python3 report.py --root <AssetERP> --raw <raw폴더> --out <정적분석 폴더> [--date YYYY-MM-DD]
@@ -42,11 +42,14 @@ RULE_GRADE = {
     # Checkstyle
     "AvoidStarImport": "A", "TobeComAsseterp": "A",
     "ParameterNumber": "R", "MethodLength": "R", "FileLength": "R",
+    # ESLint (frontend)
+    "UnusedDisableDirective": "A", "@typescript-eslint/no-unused-vars": "A", "prefer-const": "A",
+    "no-console": "A",
 }
 DEFAULT_GRADE = "B"
 GRADE_NAME = {"A": "A 기계적", "B": "B 판단", "C": "C 공통화", "R": "참고"}
 TOOL_NAME = {"pmd": "PMD", "checkstyle": "Checkstyle", "spotbugs": "SpotBugs", "mapper": "매퍼 SQL",
-             "layer": "레이어 규칙", "cpd": "CPD Java", "cpdts": "CPD TS"}
+             "layer": "레이어 규칙", "cpd": "CPD Java", "cpdts": "CPD TS", "eslint": "ESLint"}
 JAVA_ROOT = "backend/src/main/java/"
 
 
@@ -215,6 +218,25 @@ def parse_spotbugs(root: Path, raw: Path, counts: dict) -> list[Item]:
         out.append(Item("", "spotbugs", typ, "B", f, ls[0], f"[{g['cat']}] {g['msg']}{more}",
                         {"1": "높음", "2": "보통"}.get(g["prio"], "낮음")))
     counts["spotbugs"] = len(x.findall("BugInstance"))
+    return out
+
+
+def parse_eslint(root: Path, raw: Path, counts: dict) -> list[Item]:
+    """ESLint JSON(-f json). severity 2(error)=높음, 1(warn)=보통. 안 쓰는 eslint-disable 주석은 규칙 이름이 없어 따로 이름을 준다."""
+    p = raw / "eslint.json"
+    if not p.exists():
+        return []
+    out, n = [], 0
+    for f in json.loads(p.read_text(encoding="utf-8")):
+        fr = rel(root, f["filePath"])
+        for m in f.get("messages", []):
+            r = m.get("ruleId")
+            if not r:
+                r = "ParseError" if m.get("fatal") else "UnusedDisableDirective"
+            n += 1
+            out.append(Item("", "eslint", r, RULE_GRADE.get(r, DEFAULT_GRADE), fr, int(m.get("line") or 0),
+                            " ".join(m.get("message", "").split()), "높음" if m.get("severity") == 2 else "보통"))
+    counts["eslint"] = n
     return out
 
 
@@ -435,7 +457,7 @@ def write_summary(out: Path, raw: Path, date: str, items: list[Item], dups: list
         if t in by_tool or t in counts:
             c = by_tool[t]
             s.append(f"| {TOOL_NAME[t]} | {c['A']} | {c['B']} | {c['C']} | {c['R']} |\n")
-    skipped = [TOOL_NAME[t] for t in ("pmd", "checkstyle", "spotbugs", "cpd", "cpdts") if t not in counts]
+    skipped = [TOOL_NAME[t] for t in ("pmd", "checkstyle", "spotbugs", "cpd", "cpdts", "eslint") if t not in counts]
     if skipped:
         s.append(f"\nraw 결과가 없는 도구: {', '.join(skipped)}\n")
 
@@ -472,7 +494,7 @@ def write_summary(out: Path, raw: Path, date: str, items: list[Item], dups: list
              "- \"CH-cpd-xxxxxxxx 공통화해줘\" → C 후보 하나를 공통 부품으로\n"
              "- 고친 뒤 `수정대장.md` 에 행을 더한다. 오탐이면 `오탐(사유)` 로 적으면 다음부터 빠진다.\n")
     s.append("\n## raw 결과 시각\n\n`--only` 로 일부만 돌리면 나머지는 옛 결과다.\n\n| 파일 | 만든 시각 |\n|:---|:---|\n")
-    for f in ("pmd.xml", "checkstyle.xml", "spotbugs.xml", "cpd-java.xml", "cpd-ts.xml"):
+    for f in ("pmd.xml", "checkstyle.xml", "spotbugs.xml", "cpd-java.xml", "cpd-ts.xml", "eslint.json"):
         rp = raw / f
         when = dt.datetime.fromtimestamp(rp.stat().st_mtime).strftime("%Y-%m-%d %H:%M") if rp.exists() else "없음"
         s.append(f"| `raw/{f}` | {when} |\n")
@@ -503,6 +525,8 @@ def main() -> int:
         items += parse_checkstyle(root, raw, counts)
     if want("spotbugs"):
         items += parse_spotbugs(root, raw, counts)
+    if want("eslint"):
+        items += parse_eslint(root, raw, counts)
     if want("rules"):
         items += scan_mapper(root, lines) + scan_layer(root)
     for i in items:

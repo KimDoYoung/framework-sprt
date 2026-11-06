@@ -3,8 +3,8 @@
 # 변환 중에는 돌리지 않는다 — 여러 화면을 변환한 뒤 몰아서 돌린다. backend/build.gradle 은 건드리지 않는다(init script).
 # 사용: yunhee run -t 1800 "./tools/code-health.sh [옵션]"   (AssetERP 폴더에서. SpotBugs 포함 전체 약 3분)
 #   (옵션 없음)          backend 전부: PMD · Checkstyle · SpotBugs+FindSecBugs · CPD(중복) · 자체 규칙(매퍼 ${}·레이어)
-#   --front              + frontend/src TypeScript 중복(CPD)
-#   --only a,b           그 도구만 다시 돌림: pmd checkstyle spotbugs cpd cpdts (보고서는 raw/ 의 나머지 옛 결과와 합침)
+#   --front              + frontend/src TypeScript 중복(CPD) · ESLint(tools/code-health/eslint, 첫 실행에 npm install)
+#   --only a,b           그 도구만 다시 돌림: pmd checkstyle spotbugs cpd cpdts eslint (보고서는 raw/ 의 나머지 옛 결과와 합침)
 #   --min-tokens N       CPD 최소 토큰(기본 100. 작을수록 작은 중복까지)
 #   --report-only        분석은 건너뛰고 raw/ 로 보고서만 다시 만든다(report.py 를 고친 뒤)
 # 결과: docs/5-테스트/정적분석/{날짜}-요약.md, 목록/{A-기계적,B-판단,C-공통화,참고}.md, 수정대장.md, raw/(gitignore)
@@ -32,7 +32,7 @@ done
 # 돌릴 도구
 if [[ -z "$ONLY" ]]; then
     ONLY="pmd,checkstyle,spotbugs,cpd,rules"
-    [[ $FRONT == 1 ]] && ONLY="$ONLY,cpdts"
+    [[ $FRONT == 1 ]] && ONLY="$ONLY,cpdts,eslint"
 fi
 has() { [[ ",$ONLY," == *",$1,"* ]]; }
 
@@ -73,6 +73,24 @@ if [[ $REPORT_ONLY == 0 && ${#TASKS[@]} -gt 0 ]]; then
     if [[ ${#missing[@]} -gt 0 ]]; then
         echo "[ERROR] 결과가 안 나온 도구: ${missing[*]} — $RAW/gradle.log 를 본다" >&2
         exit 1
+    fi
+fi
+
+# ESLint 는 gradle 이 아니라 node. 도구 폴더에 따로 설치하고(frontend/package.json 은 건드리지 않는다) frontend 에서 돌린다.
+# 위반이 있으면 종료코드 1 이라 무시하고, 2(설정·실행 오류)나 결과 없음만 실패로 본다.
+if [[ $REPORT_ONLY == 0 ]] && has eslint; then
+    ESL="$TOOL/eslint"
+    mkdir -p "$RAW"; rm -f "$RAW/eslint.json"
+    command -v npm >/dev/null || { echo "[ERROR] npm 이 없습니다." >&2; exit 1; }
+    if [[ ! -x "$ESL/node_modules/.bin/eslint" ]]; then
+        echo "==> ESLint 설치 (tools/code-health/eslint)"
+        npm install --no-audit --no-fund --prefix "$ESL" >"$RAW/eslint.log" 2>&1 || { tail -20 "$RAW/eslint.log" >&2; echo "[ERROR] npm install 실패 — $RAW/eslint.log" >&2; exit 1; }
+    fi
+    echo "==> 분석: eslint"
+    rc=0
+    (cd "$ROOT/frontend" && "$ESL/node_modules/.bin/eslint" -c "$ESL/eslint.config.mjs" -f json -o "$RAW/eslint.json" src) >"$RAW/eslint.log" 2>&1 || rc=$?
+    if [[ $rc -gt 1 || ! -s "$RAW/eslint.json" ]]; then
+        tail -20 "$RAW/eslint.log" >&2; echo "[ERROR] eslint 실패(종료 $rc) — $RAW/eslint.log" >&2; exit 1
     fi
 fi
 

@@ -1,4 +1,4 @@
-# C 공통화 후보 (2026-11-06, 72건)
+# C 공통화 후보 (2026-11-07, 77건)
 CPD 중복 블록. 점수 = 줄 수 × (출현-1) × (도메인 간이면 2). 한 후보씩, 사용자 승인 뒤 진행:
 util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영향 API 를 `yunhee api` 로 확인.
 
@@ -1043,6 +1043,72 @@ public interface AdvBookExtrMapper {
     }
 ```
 
+## CH-cpdts-95b234f8 — 기타 로직 · 같은 파일 · 19줄×2곳 (점수 19)
+
+- 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
+- 도메인: fe.types
+- `frontend/src/types/sch.ts:347-365`
+- `frontend/src/types/sch.ts:475-493`
+
+```typescript
+  contentLimit?: string | null;
+  content?: string | null;
+  deadlineName?: string | null;
+  deadlineId?: number | null;
+  statusName?: string | null;
+  personName?: string | null;
+  note?: string | null;
+  classId?: number | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  personId?: number | null;
+  orgName?: string | null;
+```
+
+## CH-cpdts-f24d7bd1 — API 호출 · 같은 도메인 · 18줄×2곳 (점수 18)
+
+- 권고: api/ 의 공통 함수로
+- 도메인: fe.api
+- `frontend/src/api/flt.ts:649-666`
+- `frontend/src/api/ics.ts:8-24`
+
+```typescript
+async function downloadBlob(path: string, params: object, fileName: string): Promise<void> {
+  try {
+    const res = await apiClient.get<Blob>(path, { params, responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+```
+
+## CH-cpdts-de66c98a — 기타 로직 · 같은 파일 · 17줄×2곳 (점수 17)
+
+- 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
+- 도메인: fe.types
+- `frontend/src/types/bizErp.ts:114-130`
+- `frontend/src/types/bizErp.ts:145-161`
+
+```typescript
+  erpProductCd: string | null;
+  chargeDate: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  erpFee: number | null;
+  dataFee: number | null;
+  smsCount: number | null;
+  addSmsFee: number | null;
+  serverUsage: number | null;
+  addServerFee: number | null;
+  userCount: number | null;
+  addUserFee: number | null;
+```
+
 ## CH-cpd-fc655a38 — 기타 로직 · 같은 도메인 · 16줄×2곳 (점수 16)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
@@ -1129,6 +1195,28 @@ public interface AdvBookExtrMapper {
                         trStart + 
                             tdEmpty( 1, 1, 0) +
                             tdStColor(     19,    1,    0,     "left",     12, "※ 실제 휴가 사용 시 휴가신청서 별도 제출","#FFFFFF") +
+```
+
+## CH-cpdts-56f73d72 — 기타 로직 · 같은 파일 · 16줄×2곳 (점수 16)
+
+- 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
+- 도메인: fe.types
+- `frontend/src/types/tdm.ts:1109-1124`
+- `frontend/src/types/tdm.ts:1218-1233`
+
+```typescript
+  roleName?: string | null;
+  commonTypeName?: string | null;
+  taskName?: string | null;
+  checkItem?: string | null;
+  checkCycleInfo?: string | null;
+  checkHow?: string | null;
+  checkEvidDocName?: string | null;
+  refBasis?: string | null;
+  checkerId?: number | null;
+  checkerName?: string | null;
+  checkDate?: string | null;
+  checkResultCode?: string | null;
 ```
 
 ## CH-cpd-383bd1eb — 기타 로직 · 같은 파일 · 15줄×2곳 (점수 15)
@@ -1555,4 +1643,17 @@ public record FundRes(
         for (TrFinanceRes t : list) {
             rows.add(new Object[]{t.date() == null ? null : t.date().toString(), t.trName(), t.corpAccountName(), t.astClassName(), t.classTreeName(),
                     zero(t.qty()), zero(t.price()), zero(t.trAmt()), zero(t.fee()), zero(t.amt()),
+```
+
+## CH-cpdts-28d9be89 — API 호출 · 같은 파일 · 3줄×2곳 (점수 3)
+
+- 권고: api/ 의 공통 함수로
+- 도메인: fe.api
+- `frontend/src/api/sch.ts:350-352`
+- `frontend/src/api/sch.ts:497-499`
+
+```typescript
+  saveWriteGroupShares: async (writeGroupId: number, rows: Sch02Share[]): Promise<Sch02Share[]> => {
+    const body = rows.map(r => ({ shareId: r.shareId > 0 ? r.shareId : null, shareCode: r.shareCode, personId: r.personId ?? null, orgId: r.orgId ?? null, startDate: r.startDate ?? null, closeDate: r.closeDate ?? null }));
+    const res = await apiClient.put<ApiResponse<Sch02Share[]>>(`v1/sch/write-groups/${writeGroupId}/shares`, body);
 ```
