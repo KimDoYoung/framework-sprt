@@ -165,7 +165,7 @@ export const App: React.FC = () => {
         if (res.success && res.data) {
           setUser(res.data);
         }
-      } catch (err) {
+      } catch {
         setUser(null);
       } finally {
         setInitializing(false);

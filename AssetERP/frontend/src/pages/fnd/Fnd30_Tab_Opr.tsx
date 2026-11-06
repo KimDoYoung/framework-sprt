@@ -183,7 +183,7 @@ export const Fnd30_Tab_Opr: React.FC = () => {
     gb.textCenter('apprStatusName', 100, '결재상태'),
     iconCell<OprSub>('view', 'viewAction', 80, '상세보기', viewAppr),
     gb.text('note', 400, '비고'),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, boxSizing: 'border-box', background: '#fff' }}>

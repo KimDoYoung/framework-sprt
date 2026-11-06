@@ -49,7 +49,7 @@ export const Icr01_Lookup_Share: React.FC<Props> = ({ classTreeId, onResult, onC
     icrApi.getRelateManager(classTreeId)
       .then(m => { setManager(m); return shareRetrieve(m.managerId); })
       .catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, [classTreeId]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [classTreeId]);
 
   // [E1] updateButton[저장].Select (L115) → update() L175-189: icr.Icr05_RelateManager.relateUpdate(icrClassTreeId, managerId) → callback.execute(); hide()
   const update = async () => {

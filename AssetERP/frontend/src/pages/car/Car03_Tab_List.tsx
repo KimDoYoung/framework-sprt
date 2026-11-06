@@ -43,7 +43,7 @@ export const Car03_Tab_List: React.FC = () => {
       if (my === seq.current) setLoading(false);
     }
   };
-  React.useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { void retrieve(); }, []);
 
   const canEdit = (row: CarBooking) => isManager || row.personId === user.userId || row.regEmpId === user.userId;
 

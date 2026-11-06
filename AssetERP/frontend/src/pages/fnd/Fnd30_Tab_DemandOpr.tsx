@@ -162,7 +162,7 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
     iconCell<OprDemand>('view', 'viewAction', 60, '상세보기', viewAppr),
     gb.textCenter('cancelName', 60, '참여취소'),
     gb.text('note', 400, '비고'),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, boxSizing: 'border-box', background: '#fff' }}>

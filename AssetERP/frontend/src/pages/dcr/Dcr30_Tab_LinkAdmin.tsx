@@ -89,7 +89,6 @@ export const Dcr30_Tab_LinkAdmin: React.FC = () => {
     }),
     iconCell<DcrLink>('edit', 'actionCell', 95, '데이터연결(양식)', openMapping),  // L252
     gb.text('note', 550, '비고', { editor: 'text' }),  // L253
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   /** 복사 공통 (E4~E7): 목적지 회사를 안 골랐으면 알리고, 확인창 뒤 서비스를 부른다 */

@@ -104,7 +104,6 @@ export const Ics01_Grid_IcsType: React.FC<Props> = ({ classTreeId }) => {
     gb.textCenter('tdmCount', 60, '연결책무'),  // L222
     iconCell<IcsLaw>('edit', 'actionCellTdm', 30, ' ', row => setTdmLaw(row)),  // L223 Ics01_Lookup_RelateTdm.open → 닫을 때 refresh
     gb.boolean('advisYn', 60, '일임<br>(자문)', { editable: true }),  // L224
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   const noParent = classTreeId == null;

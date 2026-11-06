@@ -110,7 +110,7 @@ export const Act02_Tab_JournalSub: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }), []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }), []);
 
   // [E1] accountCodeField.TriggerClick (L162) / [E2] ValueChange (L168) → lookupAccountCode() L643-659: Act01_Lookup_AccountTree.open: 고르면 "계정코드 계정과목", 아무것도 안 고르면 비운다
   const onAccountResult = (a: AccountCodeTree | null) => {

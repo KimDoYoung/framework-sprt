@@ -80,7 +80,6 @@ export const Fnd20_Lookup_ToDoList: React.FC<Props> = ({ planId, date, onClose }
     gb.textCenter('closeYn', 100, '진행상태'),             // L121
     iconCell<PlanTodo>('edit', 'actionCell', 60, '결재요청', row => void aprLookup(row)),  // L122
     gb.text('note', 350, '업무내용'),                      // L123
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

@@ -140,7 +140,6 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
     gb.textCenter('regEmpName', 80, '등록자'),  // L217
     gb.textCenter('statusName', 80, '상신상태'),  // L218
     iconCell<ComRelateAppr>('view', 'actionCell', 70, '상세보기', row => { void viewDoc(row); }),  // L219
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   // [E6] closeButton[닫기].Select [callback != null] (L170) → callback.execute(), hide()

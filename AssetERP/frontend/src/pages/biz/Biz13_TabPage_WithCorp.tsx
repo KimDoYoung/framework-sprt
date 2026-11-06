@@ -110,7 +110,6 @@ export const Biz13_TabPage_WithCorp: React.FC<Props> = ({ corp, nonce, onCorpCha
     }),  // L146
     gb.date('firstStartDate', 120, '최초업무시작일', { editor: 'date' }),  // L147
     gb.date('lastCloseDate', 120, '최종업무종료일', { editor: 'date' }),  // L148
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [manageTypes]);
 
   return (

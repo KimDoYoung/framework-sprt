@@ -188,7 +188,7 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
       message.error(errorMessage(err, '조회 실패'));
     }
   };
-  const columnDefs = useMemo(() => buildGrid(onEdit), []);  // eslint-disable-line react-hooks/exhaustive-deps
+  const columnDefs = useMemo(() => buildGrid(onEdit), []);
 
   // Emp02_Edit_Note callback: 선택 행의 noteAdmin을 바꾸고 store.update
   const onNoteSaved = (saved: NoteAdmin) => {

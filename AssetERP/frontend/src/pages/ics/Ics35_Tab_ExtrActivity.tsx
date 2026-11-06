@@ -150,7 +150,6 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
       gb.textStatus('resultApprStatusNm', 100, '결재상태'),  // L200
       iconCell<IcsExtrActivity>('view', 'actionCellResultView', 80, '문서보기', row => viewAppr(row.resultApprId)),  // L201 actionCell06
     ]),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

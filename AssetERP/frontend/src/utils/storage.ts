@@ -43,7 +43,7 @@ function migrateLegacySettings(settings: Partial<AppSettings>): AppSettings {
       try {
         merged.menu23_font_size = JSON.parse(oldFont);
         migrated = true;
-      } catch (e) {
+      } catch {
         // ignore
       }
       localStorage.removeItem('asseterp_font_size_offset');
@@ -55,7 +55,7 @@ function migrateLegacySettings(settings: Partial<AppSettings>): AppSettings {
       try {
         merged.flexlayout_model = JSON.parse(oldLayout);
         migrated = true;
-      } catch (e) {
+      } catch {
         // ignore
       }
       localStorage.removeItem('asseterp_flexlayout_model');

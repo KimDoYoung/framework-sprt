@@ -186,7 +186,6 @@ export const Ast06_Tab_TrAcntTransfer: React.FC = () => {
     iconCell<AstTrFinance>('view', 'relateAction', 25, ' ', openRelate),  // L304 actionCell2
     gb.text('note', 250, '적요'),  // L305
     gb.textCenter('personName', 80, '등록자'),  // L306
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

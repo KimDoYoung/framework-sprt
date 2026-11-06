@@ -169,7 +169,7 @@ export const Sch04_Tab_ToDoList: React.FC = () => {
     }),
     gb.textCenter('managerName', 100, '등록자'),
     gb.text('note', 350, '비고', { editor: 'text' }),
-  ], [statusCodes]);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], [statusCodes]);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

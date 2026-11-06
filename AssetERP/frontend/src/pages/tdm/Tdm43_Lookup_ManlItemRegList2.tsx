@@ -135,7 +135,6 @@ export const Tdm43_Lookup_ManlItemRegList2: React.FC<Props> = ({ target, onResul
         message.error(errorMessage(err, '조회 실패'));
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   // [E7] grid01.SelectionChanged [selectModel != null] (L254) → retrieve02(): 막 체크한 행(없으면 체크된 마지막 행)의 점검항목을 아래에 보인다

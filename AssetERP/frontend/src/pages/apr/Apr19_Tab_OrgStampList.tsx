@@ -147,7 +147,6 @@ export const Apr19_Tab_OrgStampList: React.FC = () => {
     gb.textCenter('stampSeq', 100, '대외문서번호'),  // L277 (L276 대장번호는 주석 처리)
     gb.date('stampDate', 100, '날인일자'),  // L278
     iconCell<AprRelateStampList>('edit', 'actionCell2', 27, ' ', editStampDate),  // L279 addCell(actionCell, 27, " ", actionCell2)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

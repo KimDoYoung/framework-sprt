@@ -54,7 +54,6 @@ export const Dcr05_Lookup_DocType: React.FC<Props> = ({ open, onResult, onClose 
     setTitleName('');
     setRows([]);
     void retrieve('', '%');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // buildGrid() L130-154: setChecked(SINGLE)이지만 open()이 MULTI로 바꾼다

@@ -36,7 +36,7 @@ export const Dcr03_Tab_DcrAuth: React.FC = () => {
       setLoading(false);
     }
   };
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // [E2] docSearch.KeyPress [Enter] (L63)·[E3] searchButton[찾기].Select (L73) → search() L178-198
   //   선택을 풀고 모두 접은 뒤, 이름에 검색어가 든 노드를 찾아 부모를 펼치고 선택한다. 화면 이동은 처음 찾은 노드로

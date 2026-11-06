@@ -210,7 +210,6 @@ export const Ast06_Tab_TrFinance: React.FC = () => {
     gb.text('depositName', 150, '예금계좌'),  // L389
     gb.text('note', 250, '적요'),  // L390
     gb.textCenter('personName', 80, '등록자'),  // L391
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

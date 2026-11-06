@@ -126,7 +126,6 @@ export const Tdm43_Lookup_ManlItemRegList: React.FC<Props> = ({ target, onResult
         message.error(errorMessage(err, '조회 실패'));
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   // confirm() L333-342: 고른 점검항목이 없으면 "선택된 매뉴얼이 없습니다", 있으면 callback + hide()

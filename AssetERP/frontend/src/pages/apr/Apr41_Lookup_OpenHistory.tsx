@@ -54,7 +54,6 @@ export const Apr41_Lookup_OpenHistory: React.FC<Props> = ({ apprId, onClose }) =
   useEffect(() => {
     if (apprId != null) void retrieveRef.current();
     else { setRows([]); setTotal(0); setPage(1); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apprId]);
 
   // buildGrid() L88-97

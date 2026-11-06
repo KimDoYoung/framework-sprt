@@ -179,7 +179,6 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
     gb.textCenter('apprStatusName', 100, '통지여부'),
     iconCell<UnLeave>('view', 'actionCell', 60, '상세보기', row => viewAppr(row.apprId)),
     { ...gb.textCenter('expectApprStatusName', 100, '지정통보여부'), hide: !showExpect },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [showExpect]);
 
   return (

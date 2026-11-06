@@ -74,7 +74,7 @@ export const Fnd30_Lookup_DemandOprList: React.FC<Props> = ({ open, onClose }) =
     gb.text('lockPeriod', 80, '확약기간'),
     iconCell<OprDemandOffer>('edit', 'editAction', 80, '등록', editRow),
     gb.text('note', 300, '비고'),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <LookupModal

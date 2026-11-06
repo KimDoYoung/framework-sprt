@@ -79,7 +79,6 @@ export const Dcr00_Lookup_FundPlan: React.FC<Props> = ({ open, onResult, onClose
     setSearchText('');
     setFindRows([]);
     void retrieveTree();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] tree.Selection (L84) → retrievePage() L197-200 → Dcr00_Tab_TreeFundPlan.retrieve(classTreeModel) L57-72:

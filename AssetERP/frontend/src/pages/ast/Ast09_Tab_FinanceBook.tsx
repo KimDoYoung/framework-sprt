@@ -86,7 +86,6 @@ export const Ast09_Tab_FinanceBook: React.FC = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retrieveApprStep]);
 
   // 목록이 바뀐 뒤 첫 행을 고른다 (grid.getSelectionModel().select(0, false))

@@ -100,7 +100,7 @@ export const Ast41_Lookup_InvestLimit: React.FC<Props> = ({ open, onClose }) => 
   }, [open]);
 
   // [E1] grid.SelectionChanged [선택>0] (L78) → retrieveForm()
-  useEffect(() => { if (open && startDate) void retrieveForm(); else clear(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [startDate]);
+  useEffect(() => { if (open && startDate) void retrieveForm(); else clear(); }, [startDate]);
 
   const onDateRowsUpdated = () => {
     if (!selectFirst.current) return;

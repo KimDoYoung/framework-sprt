@@ -80,7 +80,7 @@ export const Ast13_Lookup_ExpenseOfficeAssets: React.FC<Props> = ({ open, onChan
   }, [open]);
 
   // lookupExpense() L462-485: 고른 지출결의서를 위 줄에 넣고 retrieve()
-  useEffect(() => { if (open && expense) void retrieveRows(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [expense]);
+  useEffect(() => { if (open && expense) void retrieveRows(); }, [expense]);
 
   const retrieve = () => {
     if (!expense) {
@@ -202,7 +202,7 @@ export const Ast13_Lookup_ExpenseOfficeAssets: React.FC<Props> = ({ open, onChan
     gb.longCenter('trId', 150, '취득ID', {                                      // L241 (새 줄의 임시 음수 ID는 감춘다)
       valueFormatter: p => (p.value != null && Number(p.value) > 0 ? String(p.value) : ''),
     }),
-  ], [trCodes]);   // eslint-disable-line react-hooks/exhaustive-deps
+  ], [trCodes]);
 
   // BeforeStartEdit 메시지: 잠긴 줄의 적요 말고 다른 칸을 더블클릭하면 안내
   const onCellDoubleClicked = (e: { data?: OfficeTr; colDef: { field?: string } }) => {

@@ -43,7 +43,7 @@ export const Mrb01_Tab_List: React.FC = () => {
       if (my === seq.current) setLoading(false);
     }
   };
-  React.useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { void retrieve(); }, []);
 
   const canEdit = (row: MrbBooking) => isManager || row.empId === user.userId;
 

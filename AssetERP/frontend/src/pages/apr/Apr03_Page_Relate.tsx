@@ -391,7 +391,6 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     gbFund.booleanYn2('afterYn', 80, '결재이후'),
     ...(editable ? [iconCell<AprApprFund>('delete', 'deleteAction', 80, '삭제', row => removeFund(row))] : []),
     gbFund.boolean('printYn', 80, '출력'),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [editable]);
 
   // buildRelateAdvGrid L1415-1434: 코드 130 · 일임계좌명 500(삭제 숨김 시 580)
@@ -399,7 +398,6 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     gbAdv.text('manageCode', 130, '코드'),
     gbAdv.text('manageName', editable ? 500 : 580, '일임계좌명'),
     ...(editable ? [iconCell<AprApprAdv>('delete', 'deleteAction', 80, '삭제', row => removeAdv(row))] : []),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [editable]);
 
   // buildRelateApprGrid L1437-1503: 구분 50 · 등록일 100 · 문서명 400(삭제 숨김 시 480) · 미리보기 80
@@ -410,7 +408,6 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     // [E] viewCell → PDFViewer(apr.Apr10_StampPDF7) — 문서 PDF 미리보기는 V04
     iconCell<AprRelateAppr>('view', 'viewAction', 80, '미리보기', () => message.info(`PDF 미리보기: ${NEXT_V04}`)),
     ...(editable ? [iconCell<AprRelateAppr>('delete', 'deleteAction', 80, '삭제', row => removeAppr(row))] : []),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [editable]);
 
 

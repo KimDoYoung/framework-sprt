@@ -85,7 +85,6 @@ export function useInsureCodes(kind: { kindCd?: string; kindGroupCd?: string }):
   useEffect(() => {
     const p = kind.kindGroupCd ? sysApi.searchCodesByKindGroup(kind.kindGroupCd) : sysApi.searchCodes(kind.kindCd ?? '');
     p.then(setCodes).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind.kindCd, kind.kindGroupCd]);
   return codes;
 }

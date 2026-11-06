@@ -55,7 +55,6 @@ export const Fnd08_Lookup_OrgCode: React.FC<Props> = ({ open, onResult, onClose 
     setKorName('');
     setRows([]);
     void load('', today);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] oKButton[확인].Select · [E5] grid.CellDoubleClick (L98) → confirm() L139-149

@@ -50,7 +50,6 @@ export const Biz01_Lookup_ProvideCompany: React.FC<Props> = ({ open, onResult, o
     setSearchText('');
     setRows([]);
     void retrieve('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] oKButton[선택].Select (L95) · [E5] grid.CellDoubleClick (L108) → confirm() L139-150: 없으면 "선택된 내역이 없습니다" → callback.execute(거래상대방), hide()

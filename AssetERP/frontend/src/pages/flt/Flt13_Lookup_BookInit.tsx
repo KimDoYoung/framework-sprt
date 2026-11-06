@@ -272,7 +272,6 @@ export const Flt13_Lookup_BookInit: React.FC<Props> = ({ open, onClose }) => {
     gb.textCenter('itemCode', 120, '종목코드'),  // L381
     gb.double('bookQty', 100, '보유수량<br>(입출금액)', { editor: 'number' }),  // L382
     gb.long('bookAmt', 120, '보유금액', { editor: 'number' }),  // L383
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [itemTypes, pickItemType]);
 
   return (

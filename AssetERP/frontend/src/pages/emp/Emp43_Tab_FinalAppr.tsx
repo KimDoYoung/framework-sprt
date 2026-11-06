@@ -234,7 +234,6 @@ export const Emp43_Tab_FinalAppr: React.FC = () => {
       gb.doubleCenter('finalEvalScore', 80, '점수'),  // L375
       gb.textCenter('finalEvalGrade', 80, '등급'),  // L376
     ]), headerStyle: BLACK },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

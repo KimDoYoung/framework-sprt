@@ -159,7 +159,7 @@ export const Fnd32_Tab_Account: React.FC = () => {
     codeCol('ipoOutName', 120, '상장일출고', ipoOutCodes, 'ipoOutCode'),                              // L291
     gb.text('managerTel', 120, '담당자연락처', { editor: 'text' }),                                    // L292
     gb.text('note', 280, '비고', { editor: 'text' }),                                                 // L293
-  ], [codes1, codes2, stateCodes, ipoOutCodes]);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], [codes1, codes2, stateCodes, ipoOutCodes]);
 
   return (
     <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', background: '#fff' }}>

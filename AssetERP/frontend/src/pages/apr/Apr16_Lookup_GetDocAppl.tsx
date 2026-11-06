@@ -45,7 +45,6 @@ export const Apr16_Lookup_GetDocAppl: React.FC<Props> = ({ open, onDone }) => {
     if (!open) return;
     setRows([]);
     void retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E2] updateButton[확인].Select (L90) · [E4] grid.CellDoubleClick (L104) → update() L141-178

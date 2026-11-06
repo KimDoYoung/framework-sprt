@@ -185,7 +185,6 @@ export const Crm12_Lookup_WorkDetail: React.FC<Props> = ({ open, action, workDet
     gbFund.text('fundCode', 80, '코드'),
     gbFund.text('fundName', 480, '연관펀드명'),
     ...(view ? [] : [iconCell<CrmRelateFund>('delete', 'actionCell', 80, '삭제', row => void deleteFund(row))]),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [view]);
 
   // buildRelateFileGrid() L442-477 (단일 선택) — VIEW는 삭제 열(5번째)을 감춘다

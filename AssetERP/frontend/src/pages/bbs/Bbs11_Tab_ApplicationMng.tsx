@@ -133,7 +133,6 @@ export const Bbs11_Tab_ApplicationMng: React.FC = () => {
     gb.date('closeDate', 100, '완료일', { editor: 'date' }),  // L276
     iconCell<BbsApplicationMng>('send', 'actionCell', 100, '완료문자발송', row => void sendTagetMessage(row)),  // L277 actionCell
     gb.text('note', 190, '비고', { editor: 'text' }),  // L278
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [statuses]);
 
   return (

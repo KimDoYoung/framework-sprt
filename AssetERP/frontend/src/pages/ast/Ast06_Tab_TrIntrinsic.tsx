@@ -92,7 +92,6 @@ export const Ast06_Tab_TrIntrinsic: React.FC = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, closeDate, payCode, corpId, classTreeId, trCodeId, searchText]);
 
   // [E0] 화면 열림 (생성자 L98-134) → setting() — 마지막에 retrieve()
@@ -219,7 +218,6 @@ export const Ast06_Tab_TrIntrinsic: React.FC = () => {
     gb.text('depositName', 150, '예금계좌'),  // L382
     gb.textArea('note', 250, '적요'),  // L383
     gb.textCenter('personName', 80, '등록자'),  // L384
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

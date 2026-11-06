@@ -51,7 +51,6 @@ export const Fnd09_Lookup_TrustBank: React.FC<Props> = ({ open, onResult, onClos
     setSearchText('');
     setRows([]);
     void load('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] grid.CellDoubleClick (L80)·[E4] okButton[확인].Select (L91) → callback.execute(선택 행), hide()

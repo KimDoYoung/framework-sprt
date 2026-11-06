@@ -67,7 +67,6 @@ export const Ics15_Lookup_ChecklistStatusDetail: React.FC<Props> = ({ target, on
     setUnConfirmYn(false);
     setRows([]);
     void retrieve(target, { unCheckYn: false, unConfirmYn: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   // buildGrid() L125-152 — 열 순서·폭·제목은 원본 그대로

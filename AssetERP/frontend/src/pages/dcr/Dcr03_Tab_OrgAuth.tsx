@@ -53,7 +53,7 @@ export const Dcr03_Tab_OrgAuth: React.FC = () => {
       message.error(errorMessage(err, '매뉴조회 오류'));
     }
   };
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // [E2] copyButton[권한복사].Select (L88) → copy() L152-184: 고른 조직(출발)의 문서권한을 Org00_Lookup_SelectMulti(오늘)로 고른 조직(도착)마다 복사 → retrieve()
   //   조직을 안 고르고 누르면 원본은 NPE로 아무 일도 안 일어난다 → 안내 메시지를 보인다

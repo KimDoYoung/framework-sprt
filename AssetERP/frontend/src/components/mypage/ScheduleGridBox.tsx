@@ -91,7 +91,6 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
       await Promise.all([retrieve01(), retrieve01_1(), retrieve02(), retrieve03(), retrieve04(), retrieve05()].map(p => p.catch(fail)));
     } finally { setLoading(false); }
     setActiveTab(focusRef.current ?? 'grid01');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retrieve01, retrieve01_1, retrieve02, retrieve03, retrieve04, retrieve05]);
 
   // [E0] 화면 열림 (생성자 L107-123) → settings(), retrieve()

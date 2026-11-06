@@ -180,7 +180,7 @@ export const Ast30_Tab_OfficeMngFeeClose: React.FC = () => {
       ...iconCell<AstFundFeeClose>('edit', 'changeAction', 50, '변경', row => setFeeRow(row)),
       cellRendererSelector: (p: { node: { rowPinned?: string | null } }) => (p.node.rowPinned ? { component: () => null } : undefined),
     },
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', background: '#fff' }}>

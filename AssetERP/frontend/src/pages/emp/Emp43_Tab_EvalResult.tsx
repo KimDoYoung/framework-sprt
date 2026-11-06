@@ -152,7 +152,6 @@ export const Emp43_Tab_EvalResult: React.FC = () => {
       gb.doubleCenter('finalEvalScore', 60, '점수'),  // L272
       gb.textCenter('finalEvalGrade', 60, '등급'),  // L273
     ]), headerStyle: BLACK },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

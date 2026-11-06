@@ -59,7 +59,6 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
     dcrApi.searchClassTree('%')
       .then(setRows)
       .catch(err => message.error(errorMessage(err, '매뉴조회 오류')));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E1] docSearch.KeyPress [Enter] (L111), [E2] searchButton[찾기].Select (L119) → search() L262-282

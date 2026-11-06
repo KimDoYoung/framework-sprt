@@ -123,7 +123,7 @@ export const Sch01_Tab_ListOrg: React.FC = () => {
     gb.textCenter('personName', 80, '처리자'),
     gb.text('managerOrgInfo', 200, '등록자'),   // SQL에 없는 열 — 원본도 빈 칸
     gb.text('note', 250, '비고'),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

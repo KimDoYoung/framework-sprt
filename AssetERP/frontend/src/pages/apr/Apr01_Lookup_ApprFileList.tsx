@@ -84,7 +84,6 @@ export const Apr01_Lookup_ApprFileList: React.FC<Props> = ({ apprId, onClosed, o
       gb.boolean('printYn', 120, '파일 표시', { editable: true }),  // L108
       gb.boolean('extYn', 120, '확장자 표시', { editable: true }),  // L109
     ]),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

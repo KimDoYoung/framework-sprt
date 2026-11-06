@@ -103,7 +103,6 @@ export const Ast09_Tab_FinanceBookOpr: React.FC = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // [E0] 화면 열림 (생성자 L96-156) → settings() / [E3] 콤보 만들어지면(callbackOnCreate L241) "전체"로 두고 retrieve()
@@ -191,7 +190,7 @@ export const Ast09_Tab_FinanceBookOpr: React.FC = () => {
     },
     gb.date('sellPossibleDate', 90, '매도가능일'),                                      // L345 (원본 100 — UX-08)
     gb.textRight('holdPeriod', 115, '보유기간'),                                        // L346
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   const bar = { background: '#fff' };
   return (

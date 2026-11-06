@@ -229,7 +229,7 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
     iconCell<Sch04DailyCheck>('edit', 'editCell', 60, '', edit),   // → edit()
     gb.textStatus('apprStatusName', 80, '결재상태'),
     iconCell<Sch04DailyCheck>('view', 'apprViewCell', 60, '', viewAppr),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

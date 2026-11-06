@@ -50,7 +50,6 @@ export const Apr30_Lookup_ApprStepGroup: React.FC<Props> = ({ open, onResult, on
   useEffect(() => {
     if (!open) return;
     void retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E2] oKButton[확인].Select (L80) · [E5] grid.CellDoubleClick (L98) → confirm("update") L125-140: 고른 것이 없으면 "선택된 지정그룹이 없습니다"

@@ -134,7 +134,7 @@ export const Est01_Tab_PfFeeType: React.FC = () => {
     gb.text('note', 250, '비고', { editor: 'text' }),                                                // L181
     iconCell<PfFeeType>('edit', 'planForm', 120, '계획서양식', row => { void openMapping(row, LINK_CODE_01); }),        // L182 actionCell01
     iconCell<PfFeeType>('edit', 'resultForm', 120, '결과보고서양식', row => { void openMapping(row, LINK_CODE_02); }),  // L183 actionCell02
-  ], [feeCodes]);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], [feeCodes]);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

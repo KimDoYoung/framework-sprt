@@ -115,7 +115,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
     const selected = crud.gridRef.current?.api.getSelectedRows() ?? [];
     if (selected.length === 0) { message.warning('복사할 대상을 선택하세요'); return; }
     if (selected.length !== 1) { message.warning('대상은 한개만 선택하세요'); return; }
-    const { companyStdId: _id, ...rest } = selected[0];  // eslint-disable-line @typescript-eslint/no-unused-vars
+    const { companyStdId: _id, ...rest } = selected[0];
     crud.addRows([{ ...rest, startDate: dayjs().format('YYYY-MM-DD') }], false);
   };
 

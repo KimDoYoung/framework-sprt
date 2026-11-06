@@ -49,7 +49,7 @@ export const Emp21_Tab_PersonList: React.FC = () => {
   };
 
   // [E0] 화면 열림 (생성자 L55-78) → settings(), retrieve()
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // [E2] actionCell2 (ImageCell "View").callbackOnCreate (L139) → 인라인 L139-144: apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …), 없으면 "관련 상신문서가 존재하지 않습니다"
   // [E3] actionCell3 (ImageCell "View").callbackOnCreate (L169) → 인라인 L169-174: 같은 일을 지정통보 문서(expectApprId)로 한다

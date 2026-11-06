@@ -245,7 +245,6 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
       gb.doubleCenter('adjustEvalScore', 60, '점수'),  // L368
       gb.textCenter('adjustEvalGrade', 60, '등급'),  // L369
     ]), headerStyle: BLACK },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

@@ -127,7 +127,6 @@ export const Tdm08_Tab_Manager: React.FC = () => {
     }),
     gbInfo.textCenter('posName', 100, '직위'),  // L213
     gbInfo.text('orgName', 250, '본부(부서)'),  // L214
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   // lookupEmpTransInfo.open(startDate, true, callback) L335-345: 고른 사원의 성명·본부(부서)·직위를 행의 변경으로

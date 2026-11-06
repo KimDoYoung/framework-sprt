@@ -66,7 +66,6 @@ export const Mkt01_Lookup_Favorite: React.FC<Props> = ({ open, onClose }) => {
     setRows([]);
     setTotal(0);
     void load(1, '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {

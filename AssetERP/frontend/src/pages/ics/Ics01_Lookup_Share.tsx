@@ -48,7 +48,7 @@ export const Ics01_Lookup_Share: React.FC<Props> = ({ target, onResult, onClose 
     icsApi.getRelateManager(target.classTreeId)
       .then(m => { setManager(m); return shareRetrieve(m.managerId); })
       .catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, [target]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [target]);
 
   // [E1] updateButton[저장].Select (L134) → update() L200-240: ics.Ics05_RelateManager.relateUpdate(managerId, 법규 목록)
   const update = async () => {

@@ -57,7 +57,6 @@ export const Fnd00_Lookup_FundCode: React.FC<Props> = ({ open, onResult, onClose
     setCloseYn(false);
     setRows([]);
     void load('', false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] okButton[확인].Select (L115) · [E5] grid.CellDoubleClick (L132) → confirm() L193-205

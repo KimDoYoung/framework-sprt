@@ -131,7 +131,7 @@ export const Fnd20_TabPage_Plan: React.FC<Props> = ({ target }) => {
     gb.date('dueDate', 100, '완료예정일', { editor: 'date' }),  // L87
     gb.text('closeYn', 100, '진행상태'),  // L88
     gb.text('note', 400, '업무내용', { editor: 'text' }),  // L89
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>

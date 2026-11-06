@@ -88,7 +88,7 @@ export const Sch04_Tab_IcsListManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // [E0] 화면 열림 (생성자 L93-138) → setting() L140-272: 년 = 올해, 월 = 이번 달, 발생구분·주기구분 "전체", 담당부서 "전체" — 열자마자 조회하지 않는다
   //   (issTypeComboBox 콜백의 retrieve()가 주석 처리돼 있다 L170)

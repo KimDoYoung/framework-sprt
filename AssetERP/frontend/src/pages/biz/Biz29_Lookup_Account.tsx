@@ -109,7 +109,6 @@ export const Biz29_Lookup_Account: React.FC<Props> = ({ open, onClose }) => {
     gb.text('accountNm', 120, '예금주명', { editor: 'text' }),  // L179
     gb.text('astClassTreeNm', 150, '연결계좌', trigger(setAstTarget)),  // L180
     gb.text('note', 250, '비고', { editor: 'text' }),  // L181
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [banks]);
 
   // lookupCorp() L186-197: Sys15_Lookup_Corp.open(true) → corpId·corpName 을 그 행의 변경으로

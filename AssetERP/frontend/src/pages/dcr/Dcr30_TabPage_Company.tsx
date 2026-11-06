@@ -146,7 +146,6 @@ export const Dcr30_TabPage_Company = forwardRef<Dcr30CompanyHandle, Props>(({ in
     iconCell<DcrLink>('edit', 'actionCell01', 95, '데이터연결(양식)', openMapping),  // L186
     gbLink.text('note', 550, '비고'),  // L187
     iconCell<DcrLink>('edit', 'actionCell02', 60, '비고', setNoteLink),  // L188
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

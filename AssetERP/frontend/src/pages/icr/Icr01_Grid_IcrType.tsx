@@ -110,7 +110,6 @@ export const Icr01_Grid_IcrType: React.FC<Props> = ({ classTreeId }) => {
     iconCell<IcrRule>('add', 'actionCellFile', 30, ' ', row => setFileId(row.classTreeId)),  // L184 fileAddList() → Icr01_Lookup_IcrFile.open
     gb.textArea('relatedLaw', 200, '관련조문', { editor: 'largeText' }),  // L185
     gb.boolean('useYn', 100, '사용여부', { editable: true }),  // L186
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   const noParent = classTreeId == null;

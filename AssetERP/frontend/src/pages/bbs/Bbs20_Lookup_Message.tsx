@@ -50,7 +50,6 @@ export const Bbs20_Lookup_Message: React.FC<Props> = ({ target, onClose }) => {
     setSearchText(text);
     setRows([]);
     void retrieve(text);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   // [E3] updateButton[발송].Select (L106) → sendMessage() L132-162

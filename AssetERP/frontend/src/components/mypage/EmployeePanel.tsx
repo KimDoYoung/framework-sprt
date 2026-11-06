@@ -40,7 +40,6 @@ export const EmployeePanel: React.FC<EmployeePanelProps> = ({ refreshKey = 0 }) 
   const retrieve = useCallback(async (text: string) => {
     try { setRows(await frmApi.searchMonitorEmps(text.trim() || undefined)); }
     catch (err) { message.error(errorMessage(err, '조회 실패')); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // [E0] 화면 열림 (생성자 L50-152) → retrieve()

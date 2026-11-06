@@ -104,7 +104,6 @@ export const Biz17_TabPage_DualManageFund: React.FC<Props> = ({ corp, nonce, onC
         return true;
       },
     }),  // L109
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [positionTypes]);
 
   return (

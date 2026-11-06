@@ -68,7 +68,6 @@ export const Apr16_Tab_StampFileCheck: React.FC = () => {
   // [E0] 화면 열림 (생성자 L68-98) → settings(), retrieve()
   useEffect(() => {
     void retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // findLookupStampSeq() L184-202: Apr10_Lookup_Stamp(flag=true, checkflag=true).open → 고른 인감 이름·ID를 칸에 넣고, "전체보기"는 칸을 비우고 stampId = null. 어느 쪽이든 retrieve()

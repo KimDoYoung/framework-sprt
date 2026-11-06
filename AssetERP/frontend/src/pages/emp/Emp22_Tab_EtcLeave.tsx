@@ -79,7 +79,7 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
     } catch { setClassTreeId(null); }
   }, []);
 
-  useEffect(() => { void retrieve(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { void retrieve(); }, []);
 
   // [E1] searchText.KeyPress [Enter] (L127) / [E2] retrieveButton[조회].Select (L136) → retrieve()
   const retrieve = async () => {

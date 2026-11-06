@@ -128,7 +128,6 @@ export const Apr07_Tab_AltApprMgr: React.FC = () => {
     gb.text('reasonCd', 250, '대결사유', { editor: 'text' }),  // L175
     gb.text('emgrPoint', 120, '본인비상연락망', { editor: 'text' }),  // L176
     gb.text('note', 200, '비고', { editor: 'text' }),  // L177
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

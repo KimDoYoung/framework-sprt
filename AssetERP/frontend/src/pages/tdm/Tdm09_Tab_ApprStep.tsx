@@ -221,7 +221,6 @@ export const Tdm09_Tab_ApprStep: React.FC = () => {
     gb.textCenter('exctName', 100, '책무임원'),  // L243
     gb.text('orgName', 150, '책무이행점검<br>수행부서', triggerCell(row => lookupOrgCode(row))),  // L244
     gb.textCenter('managerName', 100, '부서책무<br>담당자'),  // L245
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   // stepBuildGrid() L250-283 (행번호 숨김)

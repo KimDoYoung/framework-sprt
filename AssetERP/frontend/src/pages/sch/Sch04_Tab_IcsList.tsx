@@ -73,7 +73,7 @@ export const Sch04_Tab_IcsList: React.FC = () => {
   const search = useCallback(async (): Promise<Sch04List[]> => {
     const cond = condition();
     return cond ? schApi.searchIcsList(cond) : [];
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // update() L355-389: sch.Sch04_List.upsert(personId) 뒤 retrieve()
   const save = useCallback(async (changed: Sch04List[]) => {

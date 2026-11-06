@@ -179,7 +179,6 @@ export const Icam55_Tab_UserStopAuthAppr: React.FC = () => {
     gb.date('procDate', 90, '처리일자'),                                         // L279 (UX-08)
     gb.text('procEmpName', 80, '처리자'),                                        // L280
     gb.textArea('procNote', 300, '처리상세'),                                    // L281
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

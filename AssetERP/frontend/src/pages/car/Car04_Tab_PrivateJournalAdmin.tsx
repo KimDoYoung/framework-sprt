@@ -237,7 +237,6 @@ export const Car04_Tab_PrivateJournalAdmin: React.FC = () => {
     gb.text('reason', 240, '목적'),  // L289
     iconCell<CarJournal>('edit', 'actionCell', 80, '변경', editRow),  // L290 addCell(ImageCell("Edit"))
     gb.textCenter('fixYnText', 100, '확정여부', { valueGetter: p => (p.data?.fixYn ? '확정' : ' ') }),  // L291 getFixYnText()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

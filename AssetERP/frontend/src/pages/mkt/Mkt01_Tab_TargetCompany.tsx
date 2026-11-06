@@ -36,7 +36,7 @@ export const Mkt01_Tab_TargetCompany: React.FC = () => {
   };
 
   // [E0] 화면 열림 (생성자 L29-63) → retrieve()
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // buildGrid() L65-73: 행번호 숨김, 구분 이름 한 열(255, 제목 없음)
   const columnDefs = useMemo(() => [gb.textArea('name', 255, '')], []);   // L70

@@ -81,7 +81,6 @@ export const Fbx01_Grid_DocList = forwardRef<Fbx01_Grid_DocListHandle>((_props, 
     gb.textCenter('empName', 100, '등록자'),  // L154
     iconCell<FbxFile>('view', 'actionCell01', 80, '미리보기', row => void viewRow(row)),  // L155
     iconCell<FbxFile>('down', 'actionCell02', 80, '파일받기', row => void downRow(row)),  // L156
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

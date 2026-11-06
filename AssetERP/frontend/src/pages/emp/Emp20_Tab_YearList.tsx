@@ -80,7 +80,7 @@ export const Emp20_Tab_YearList: React.FC = () => {
       setLeaveMonthCode(code);
       void retrieve({ year: y, leaveMonthCode: code });
     })();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // [E3] leaveYText.ValueChange (L178) → radioCheck() L306-356
   const radioCheck = () => {

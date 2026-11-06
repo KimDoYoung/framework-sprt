@@ -51,7 +51,6 @@ export const Fnd03_Lookup_Consignment: React.FC<Props> = ({ open, onResult, onCl
     setSearchText('');
     setRows([]);
     void load('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] grid.CellDoubleClick (L80)·[E4] okButton[확인].Select (L91) → callback.execute(선택 행), hide()

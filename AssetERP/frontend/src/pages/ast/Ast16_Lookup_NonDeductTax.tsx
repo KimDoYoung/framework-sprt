@@ -58,7 +58,7 @@ export const Ast16_Lookup_NonDeductTax: React.FC<Props> = ({ target, onSaved, on
   const { retrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L61-76) → show(), setting() L78-115 → retrieve() — 열 때마다 새로 읽는다
-  useEffect(() => { if (open) void retrieve(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [target]);
+  useEffect(() => { if (open) void retrieve(); }, [target]);
 
   // buildGrid() L117-127: MultiGrid(체크), 편집 열
   const columnDefs = useMemo(() => [

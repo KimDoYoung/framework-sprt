@@ -52,7 +52,7 @@ export const Pay32_Tab_InsurePay: React.FC = () => {
   };
 
   // [E0] 화면 열림 (생성자 L66-94) → settings(), retrieve()
-  useEffect(() => { void retrieve(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // buildGrid() L172-197 — MultiGrid(Pay32_InsurePayModel), 체크 다중 + 합계 행
   const columnDefs = useMemo(() => [

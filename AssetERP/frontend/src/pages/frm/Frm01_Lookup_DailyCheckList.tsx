@@ -95,7 +95,7 @@ export const Frm01_Lookup_DailyCheckList: React.FC<Props> = ({ open, onChanged, 
       gb.boolean('yes', 100, '처리완료', { editable: true, ...checkValue('1') }),
       gb.boolean('not', 100, '해당없음', { editable: true, ...checkValue('5') }),
     ]),
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   return (
     <>

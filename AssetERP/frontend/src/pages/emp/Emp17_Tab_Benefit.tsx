@@ -118,7 +118,6 @@ export const Emp17_Tab_Benefit: React.FC = () => {
     iconCell<BenefitRow>('view', 'actionCell', 80, '문서보기', viewAppr),
     gb.textCenter('benefitYnStr', 100, '지급여부'),
     gb.textArea('note', 350, '알림'),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

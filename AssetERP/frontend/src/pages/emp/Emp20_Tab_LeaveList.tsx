@@ -54,7 +54,7 @@ export const Emp20_Tab_LeaveList: React.FC = () => {
   };
 
   // [E0] 화면 열림 (생성자 L65-84) → buttonBarSetting(), retrieve()
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void retrieve(); }, []);
 
   // [E1] personName.TriggerClick (L114) → 인라인 L114-128: Emp00_Lookup_SelectSingle.open(오늘, true, callback) → 이름(과 ID)을 칸에 넣는다
   const onPickPerson = (t: TransInfo | null) => {

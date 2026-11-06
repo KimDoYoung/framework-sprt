@@ -72,7 +72,7 @@ export const Pay10_Tab_PersonList: React.FC = () => {
   };
 
   // [E0] 화면이 열리면 한 번 조회한다
-  useEffect(() => { retrieve(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { retrieve(); }, []);
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column' }}>

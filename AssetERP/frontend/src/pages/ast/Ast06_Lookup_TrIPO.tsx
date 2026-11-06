@@ -133,7 +133,6 @@ export const Ast06_Lookup_TrIPO: React.FC<Props> = ({ target, onChanged, onClose
     const init = target.mode === 'NEW' ? newForm() : fromTr(target.tr);
     setF(init);
     setLockDateEnabled(target.mode === 'NEW' ? true : lockEnabledFor(init.trCode, init.lockUpPeriodCode));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   /** setEnable()의 매도제한일 칸: 청약 거래유형이면 미확약(00)만 막고, 그 밖의 거래유형은 항상 막는다 */

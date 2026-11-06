@@ -144,7 +144,7 @@ export const Sch10_Tab_Ipo2: React.FC = () => {
     gb.double('subscriptionRate', 80, 'ICAM<br>청약률(%)'),                               // L317 addDoubleHtml
     gb.text('shareInfo', 150, '일정공유', { headerClass: ['gb-hdr', 'sch10-share-hdr'] }),   // L318 addText(…, "0069B4")
     iconCell<Sch10IpoUser>('edit', 'shareAction', 30, '', row => setShareIpoId(row.ipoId)),  // shareCell → lookupShare()
-  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
+  ], []);
 
   const noticeStyle: React.CSSProperties = { color: '#4472C4', fontSize: 12, lineHeight: '25px' };
 

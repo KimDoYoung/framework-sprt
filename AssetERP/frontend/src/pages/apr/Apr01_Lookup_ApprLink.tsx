@@ -63,7 +63,6 @@ export const Apr01_Lookup_ApprLink: React.FC<Props> = ({ apprIds, onClosed, onCl
     gb.text('title', 400, '상신제목'),  // L167
     gb.textCenter('statusName', 100, '상태'),  // L168
     iconCell<AprApprIdRow>('view', 'actionCell', 80, '문서보기', viewAppr),  // L169
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   const close = () => {

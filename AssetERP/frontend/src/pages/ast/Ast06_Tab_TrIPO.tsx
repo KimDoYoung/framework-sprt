@@ -209,7 +209,6 @@ export const Ast06_Tab_TrIPO: React.FC = () => {
     gb.text('depositName', 150, '예금계좌'),  // L375
     gb.text('note', 250, '적요'),  // L376
     gb.textCenter('personName', 80, '등록자'),  // L377
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   return (

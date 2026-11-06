@@ -171,7 +171,6 @@ export const Emp21_TabPage_UnLeaveList1: React.FC = () => {
     iconCell<UnLeave>('view', 'actionCell', 60, isFirst ? '사용촉진<br>상세보기' : '지정통보<br>상세보기', row => viewAppr(row.apprId)),
     { ...gb.textCenter('expectApprStatusName', 100, '지정통보'), hide: !isFirst },
     { ...iconCell<UnLeave>('view', 'actionCell2', 60, '지정통보<br>상세보기', row => viewAppr(row.expectApprId)), hide: !isFirst },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [isFirst]);
 
   return (
