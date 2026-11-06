@@ -6,7 +6,7 @@
  * 그리드 buildGrid() L105-137: 상품기획명 300 · 문서분류 300 · 최종결재 100 · 시작일 100 · 완료예정일 100 · 진행상태 100 · 결재요청 60(아이콘) · 업무내용 350 (모두 읽기 전용)
  * 결재요청 아이콘 → aprLookup() L139: fnd.Fnd20_Plan.insertAppr(상신 문서가 없으면 만들어 줌) → 전자결재 문서창 열기, 닫히면 retrieve()
  * [E2] updateButton[저장] (L75)은 원본도 툴바에 안 붙인 도달 불가 버튼, [E4] gridBuilder.BeforeStartEdit (L140)은 편집기가 있는 열이 없어 일어나지 않는다 — 만들지 않는다
- * TOBE의 MyPage 할일 목록(DayListBox)은 목업이라 여는 곳이 없다(작업기록)
+ * TOBE에서는 MyPage Day List(`components/mypage/DayListBox`, EE106)가 연다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Space } from 'antd';

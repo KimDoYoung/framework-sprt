@@ -6,7 +6,7 @@
  *   gubunCode "6": 내규(infoId = 내규 ID)를 읽어 채운다(setIcr L152: icr.Icr01_ClassTree.selectById → "(코드) 이름" · 상세내용 · 제출처 · 관련조문 + 서식파일)
  *   gubunCode "7": apr.Apr22_RelateIcr.selectById(relateIcrId = infoId) → 그 내규(setIcr) + 원인문서(setAppr L170: apr.Apr01_Appr.selectById → 제목)
  * 원인문서 [E2] apprName.TriggerClick (L138): 문서가 없으면 "원인문서가 없습니다", 있으면 전자결재 문서창(apprView L233)
- * 호출처(MyPage 할일 목록)가 TOBE에서는 목업이라 여는 곳이 없다(작업기록). 법규판 Sch04_Lookup_IcsList(미변환 목록 31번)는 이 창과 쌍
+ * TOBE에서는 MyPage Day List(`DayListBox`, EE106)와 법규 박스(`ComplianceGridBox`, EE105)가 연다. 법규판 Sch04_Lookup_IcsList(미변환 목록 31번)는 이 창과 쌍
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Typography } from 'antd';

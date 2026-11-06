@@ -1,0 +1,118 @@
+/* MyPage 표 박스 공통 (MonitorGridBox.tsx) — ScheduleGridBox 목업의 모양 */
+.monitor-box {
+  background-color: #fff;
+  border: 1px solid #d9dfe8;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.monitor-head {
+  padding: 6px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: #fafbfc;
+  flex-shrink: 0;
+  min-height: 35px;
+  box-sizing: border-box;
+}
+.monitor-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e3a5f;
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.monitor-total.ant-tag {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 400;
+}
+.monitor-extra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.monitor-extra .ant-btn {
+  font-size: 11px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.monitor-tabs {
+  display: flex;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 3px 6px;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.monitor-chip {
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  color: #334155;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.monitor-chip.has-count {
+  color: #4472c4;
+  font-weight: 600;
+}
+.monitor-chip.is-selected {
+  border-color: #1677ff;
+  background-color: #1677ff;
+  color: #fff;
+  font-weight: 600;
+}
+.monitor-chip-count {
+  opacity: 0.85;
+}
+
+.monitor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 행 높이 조밀하게: 위아래 패딩 2px */
+.monitor-table .ant-table-thead > tr > th,
+.monitor-table .ant-table-tbody > tr > td {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  font-size: 12px;
+}
+.monitor-table .ant-table-tbody > tr:hover > td,
+.monitor-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #dbeafe !important;
+  cursor: pointer;
+}
+.monitor-table .ant-table-tbody > tr.monitor-row-selected > td {
+  background-color: #e6f0ff;
+}
+.monitor-date {
+  font-size: 11px;
+  color: #64748b;
+}
+.monitor-detail.ant-btn {
+  padding: 0;
+  font-size: 11px;
+  height: auto;
+}

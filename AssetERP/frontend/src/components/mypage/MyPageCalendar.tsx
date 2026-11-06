@@ -1,423 +1,193 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Button, Space } from 'antd';
+/**
+ * MyPage 달력
+ * AS-IS: myApp/client/vi/frm/Calendar.java (241줄) → iframe fullcalendar.jsp(jQuery FullCalendar, 449줄) → JsonProvider mode=calendar(JsonCalendar)
+ *   fullcalendar.jsp makeCalendar L136-294: 머리 가운데 = 제목 + [🔔 일정표시][⭐ 북마크][📆 공모주][💼 출퇴근(Beta)], 오른쪽 = ◀◀ ◀ ▶ ▶▶ [오늘][새로고침]
+ *   일정은 날짜 칸에 색 막대(제목 = "나의일정(0/4)"·"부서일정3건" 등), eventLimit(칸이 넘치면 +n개)
+ *   날짜 클릭(dayClick)·일정 클릭(eventClick) → JSCaller.returnValue(날짜) → Calendar.toDoListRetrieve(날짜) = Day List·법규·일정 박스를 그 날짜로
+ *   일정 클릭은 그와 함께 JSCaller.returnTitle(제목) → 일정 박스가 그 종류의 탭을 연다
+ *   [새로고침]·일정표시 창 닫기 → returnValue(null) → Calendar.allRetrieve() = 달력과 모든 박스 다시 조회
+ * FullCalendar를 들이지 않고 antd Calendar로 그린다(칸 모양은 TOBE 목업 설계). 머리 버튼은 fullcalendar 툴바 버튼이라 AS-IS ColorButton 이름표(button-types)가 아니다
+ */
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Calendar, Space, message } from 'antd';
 import type { CellRenderInfo } from 'rc-picker/lib/interface';
 import {
-  DoubleLeftOutlined,
-  LeftOutlined,
-  RightOutlined,
-  DoubleRightOutlined,
-  ReloadOutlined,
+  BellFilled, CalendarOutlined, DoubleLeftOutlined, DoubleRightOutlined, LeftOutlined, ReloadOutlined, RightOutlined, ShoppingOutlined, StarFilled,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
+import { frmApi } from '@/api/frm';
+import { errorMessage } from '@/api/client';
+import type { FrmCalendarEvent } from '@/types/frm';
+import { openMenuByNo } from '@/utils/tempData';
 import { Emp90_Lookup_Notice } from '@/pages/emp/Emp90_Lookup_Notice';
+import { Sys06_Lookup_SearchMenu } from '@/components/lookup/Sys06_Lookup_SearchMenu';
+import { Att02_Lookup_Commute } from '@/pages/att/Att02_Lookup_Commute';
+import { RdViewer_Sch10 } from '@/pages/sch/RdViewer_Sch10';
 
 interface CalendarProps {
-  selectedDate?: number;
-  onSelectDate?: (day: number) => void;
-  value?: Dayjs;
-  onChange?: (date: Dayjs) => void;
+  /** 고른 날짜 'YYYY-MM-DD' */
+  selectedDate: string;
+  /** 날짜·일정 클릭, [오늘] — AS-IS JSCaller.returnValue(date) */
+  onSelectDate: (date: string) => void;
+  /** 일정 클릭 — AS-IS JSCaller.returnTitle(제목) (일정 박스 탭 고르기) */
+  onEventClick?: (event: FrmCalendarEvent) => void;
+  /** [새로고침]·일정표시 창 닫기 — AS-IS returnValue(null) → allRetrieve() */
+  onRefreshAll: () => void;
+  /** 값이 바뀌면 달력 일정을 다시 읽는다 */
+  refreshKey?: number;
 }
 
-interface EventItem {
-  badge?: string;
-  count?: string;
-  holiday?: string;
-}
+/** eventLimit: 칸에 보이는 막대 수 (넘치면 "+n개") */
+const VISIBLE_EVENTS = 2;
+const DAY = 'YYYY-MM-DD';
 
-// 2026-09 기준 목업 일정 데이터
-const eventMap: Record<string, EventItem> = {
-  '2026-09-02': { badge: '부서일정 1건' },
-  '2026-09-03': { count: '+2 개' },
-  '2026-09-04': { count: '+2 개' },
-  '2026-09-06': { count: '+2 개' },
-  '2026-09-07': { count: '+2 개' },
-  '2026-09-08': { count: '+4 개' },
-  '2026-09-09': { count: '+2 개' },
-  '2026-09-10': { count: '+2 개' },
-  '2026-09-11': { count: '+2 개' },
-  '2026-09-13': { count: '+3 개' },
-  '2026-09-15': { badge: '부서일정 1건' },
-  '2026-09-16': { count: '+2 개' },
-  '2026-09-17': { count: '+2 개' },
-  '2026-09-18': { badge: '부서일정 1건' },
-  '2026-09-20': { count: '+2 개' },
-  '2026-09-22': { badge: '부서일정 1건' },
-  '2026-09-23': { count: '+2 개' },
-  '2026-09-24': { holiday: '휴일(추석연휴)' },
-  '2026-09-25': { holiday: '휴일(추석)' },
-  '2026-09-26': { holiday: '휴일(추석연휴)' },
-  '2026-09-27': { count: '+2 개' },
-  '2026-09-29': { count: '+2 개' },
-  '2026-09-30': { badge: '부서일정 1건' },
-};
+export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelectDate, onEventClick, onRefreshAll, refreshKey = 0 }) => {
+  const [viewMonth, setViewMonth] = useState<Dayjs>(() => dayjs(selectedDate).startOf('month'));
+  const [events, setEvents] = useState<FrmCalendarEvent[]>([]);
+  const [noticeOpen, setNoticeOpen] = useState(false);     // EE66 [🔔 일정표시] → Emp90_Lookup_Notice
+  const [bookmarkOpen, setBookmarkOpen] = useState(false); // [⭐ 북마크] → Sys06_Lookup_SearchMenu
+  const [ipoOpen, setIpoOpen] = useState(false);           // [📆 공모주] → RDViewer.openSch10(Sch10_Rd_Ipo)
+  const [commuteOpen, setCommuteOpen] = useState(false);   // [💼 출퇴근(Beta)] → Att02_Lookup_Commute
 
-export const MyPageCalendar: React.FC<CalendarProps> = ({
-  selectedDate = 16,
-  onSelectDate,
-  value: propValue,
-  onChange: propOnChange,
-}) => {
-  const [internalValue, setInternalValue] = useState<Dayjs>(() =>
-    dayjs('2026-09-01').set('date', selectedDate)
+  // getViewDate L296-311 → calEvent L313-338: 보이는 달(intervalStart ~ intervalEnd-1)의 일정
+  const getViewDate = useCallback(async (month: Dayjs) => {
+    try {
+      setEvents(await frmApi.searchCalendar(month.startOf('month').format(DAY), month.endOf('month').format(DAY)));
+    } catch (err) { message.error(errorMessage(err, '달력 조회 실패')); }
+  }, []);
+
+  // [E0] Calendar.init → retrieve() → getViewDate(…) (첫 그림 eventAfterAllRender) · 달 이동(◀◀ ◀ ▶ ▶▶ 클릭 L266-271)
+  useEffect(() => { void getViewDate(viewMonth); }, [getViewDate, viewMonth, refreshKey]);
+
+  // 다른 곳에서 고른 날짜가 다른 달이면 그 달로
+  useEffect(() => {
+    const d = dayjs(selectedDate);
+    if (!d.isSame(viewMonth, 'month')) setViewMonth(d.startOf('month'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
+
+  const byDate = useMemo(() => {
+    const m = new Map<string, FrmCalendarEvent[]>();
+    events.forEach(e => { const k = e.date.slice(0, 10); m.set(k, [...(m.get(k) ?? []), e]); });
+    return m;
+  }, [events]);
+
+  const today = dayjs();
+
+  const renderHeader = () => (
+    <div style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, backgroundColor: '#fafbfc' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{viewMonth.year()}년 {viewMonth.month() + 1}월</span>
+        <Space size={4}>
+          <Button size="small" className="mypage-cal-btn" icon={<BellFilled style={{ color: '#eab308' }} />} onClick={() => setNoticeOpen(true)}>일정표시</Button>
+          <Button size="small" className="mypage-cal-btn" icon={<StarFilled style={{ color: '#eab308' }} />} onClick={() => setBookmarkOpen(true)}>북마크</Button>
+          <Button size="small" className="mypage-cal-btn" icon={<CalendarOutlined style={{ color: '#ef4444' }} />} onClick={() => setIpoOpen(true)}>공모주</Button>
+          <Button size="small" className="mypage-cal-btn" icon={<ShoppingOutlined style={{ color: '#854d0e' }} />} onClick={() => setCommuteOpen(true)}>출퇴근(Beta)</Button>
+        </Space>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <Space.Compact size="small">
+          <Button icon={<DoubleLeftOutlined style={{ fontSize: 10 }} />} title="이전 연도" onClick={() => setViewMonth(m => m.subtract(1, 'year'))} />
+          <Button icon={<LeftOutlined style={{ fontSize: 10 }} />} title="이전 달" onClick={() => setViewMonth(m => m.subtract(1, 'month'))} />
+          <Button icon={<RightOutlined style={{ fontSize: 10 }} />} title="다음 달" onClick={() => setViewMonth(m => m.add(1, 'month'))} />
+          <Button icon={<DoubleRightOutlined style={{ fontSize: 10 }} />} title="다음 연도" onClick={() => setViewMonth(m => m.add(1, 'year'))} />
+        </Space.Compact>
+        {/* .fc-today-button L272-284: 오늘 칸 표시 → returnValue(오늘) → getViewDate */}
+        <Button size="small" className="mypage-cal-btn" onClick={() => {
+          const t = dayjs();
+          setViewMonth(t.startOf('month'));
+          onSelectDate(t.format(DAY));
+        }}>오늘</Button>
+        {/* myCustomButton[새로고침] L146-153 → returnValue() = allRetrieve */}
+        <Button size="small" type="primary" className="mypage-cal-btn" style={{ backgroundColor: '#1e3a5f' }} icon={<ReloadOutlined style={{ fontSize: 10 }} />} onClick={onRefreshAll}>새로고침</Button>
+      </div>
+    </div>
   );
 
-  const [noticeOpen, setNoticeOpen] = useState(false);   // EE66 [🔔 일정표시] → Emp90_Lookup_Notice
-  const currentValue = propValue ?? internalValue;
-  const calendarRef = useRef<HTMLDivElement>(null);
-
-  // 이번 달(in-view) 날짜가 단 하루도 없는 다음 달 잉여 행(6번째 주 등) 자동 숨김
-  useEffect(() => {
-    const hideEmptyRows = () => {
-      if (!calendarRef.current) return;
-      const trList = calendarRef.current.querySelectorAll('.ant-picker-content tbody tr');
-      trList.forEach((tr) => {
-        const inViewCell = tr.querySelector('.ant-picker-cell-in-view');
-        if (!inViewCell) {
-          (tr as HTMLElement).style.display = 'none';
-        } else {
-          (tr as HTMLElement).style.display = '';
-        }
-      });
-    };
-
-    hideEmptyRows();
-    const rafId = requestAnimationFrame(hideEmptyRows);
-    return () => cancelAnimationFrame(rafId);
-  }, [currentValue]);
-
-  const handleDateSelect = (date: Dayjs) => {
-    setInternalValue(date);
-    onSelectDate?.(date.date());
-    propOnChange?.(date);
-  };
-
-  // Ant Design Calendar 헤더 렌더러 (연/월 네비게이션 및 빠른 액션 버튼)
-  const renderHeader = ({ value, onChange }: { value: Dayjs; onChange: (date: Dayjs) => void }) => {
-    return (
-      <div
-        style={{
-          padding: '8px 12px',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 8,
-          backgroundColor: '#fafbfc',
-        }}
-      >
-        {/* Left: 연/월 표시 및 빠른 버튼들 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>
-            {value.year()}년 {value.month() + 1}월
-          </span>
-
-          <Space size={4}>
-            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }} onClick={() => setNoticeOpen(true)}>
-              <span style={{ color: '#eab308', marginRight: 2 }}>🔔</span> 일정표시
-            </Button>
-            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
-              <span style={{ color: '#eab308', marginRight: 2 }}>⭐</span> 북마크
-            </Button>
-            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
-              <span style={{ color: '#ef4444', marginRight: 2 }}>📅</span> 공모주
-            </Button>
-            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
-              <span style={{ color: '#854d0e', marginRight: 2 }}>💼</span> 출퇴근(Beta)
-            </Button>
-          </Space>
-        </div>
-
-        {/* Right: 연/월 이동 버튼 그룹 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Button.Group size="small">
-            <Button
-              icon={<DoubleLeftOutlined style={{ fontSize: 10 }} />}
-              onClick={() => onChange(value.subtract(1, 'year'))}
-              style={{ height: 24, padding: '0 6px' }}
-              title="이전 연도"
-            />
-            <Button
-              icon={<LeftOutlined style={{ fontSize: 10 }} />}
-              onClick={() => onChange(value.subtract(1, 'month'))}
-              style={{ height: 24, padding: '0 6px' }}
-              title="이전 달"
-            />
-            <Button
-              icon={<RightOutlined style={{ fontSize: 10 }} />}
-              onClick={() => onChange(value.add(1, 'month'))}
-              style={{ height: 24, padding: '0 6px' }}
-              title="다음 달"
-            />
-            <Button
-              icon={<DoubleRightOutlined style={{ fontSize: 10 }} />}
-              onClick={() => onChange(value.add(1, 'year'))}
-              style={{ height: 24, padding: '0 6px' }}
-              title="다음 연도"
-            />
-          </Button.Group>
-
-          <Button
-            size="small"
-            style={{ fontSize: 11, height: 24, borderRadius: 3 }}
-            onClick={() => {
-              const today = dayjs('2026-09-16');
-              onChange(today);
-              handleDateSelect(today);
-            }}
-          >
-            오늘
-          </Button>
-
-          <Button
-            size="small"
-            type="primary"
-            style={{ fontSize: 11, height: 24, borderRadius: 3, backgroundColor: '#1e3a5f' }}
-            icon={<ReloadOutlined style={{ fontSize: 10 }} />}
-            onClick={() => {
-              onChange(value.clone());
-            }}
-          >
-            새로고침
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  // Ant Design Calendar 커스텀 날짜 셀 렌더러
   const fullCellRender = (date: Dayjs, info: CellRenderInfo<Dayjs>) => {
     if (info.type !== 'date') return info.originNode;
-
-    const isCurrentMonth = date.month() === currentValue.month();
-    const isChosen = date.isSame(currentValue, 'day');
-    const isToday = date.isSame(dayjs('2026-09-16'), 'day');
-    const dayOfWeek = date.day(); // 0 = Sun, 6 = Sat
-    const dateKey = date.format('YYYY-MM-DD');
-    const event = eventMap[dateKey];
-    const isHoliday = Boolean(event?.holiday);
-
-    // 공휴일 및 일요일: 빨간색, 토요일: 파란색, 평일: 진한 텍스트
-    const dayColor = !isCurrentMonth
-      ? '#cbd5e1'
-      : isHoliday || dayOfWeek === 0
-      ? '#dc2626'
-      : dayOfWeek === 6
-      ? '#2563eb'
-      : '#1e293b';
-
+    const isCurrentMonth = date.isSame(viewMonth, 'month');
+    const isChosen = date.isSame(dayjs(selectedDate), 'day');
+    const isToday = date.isSame(today, 'day');
+    const dow = date.day();
+    const list = byDate.get(date.format(DAY)) ?? [];
+    const dayColor = !isCurrentMonth ? '#cbd5e1' : dow === 0 ? '#dc2626' : dow === 6 ? '#2563eb' : '#1e293b';
     return (
       <div
-        className={`mypage-calendar-day-cell ${isChosen ? 'is-chosen' : ''} ${isCurrentMonth ? 'is-current-month' : 'is-other-month'}`}
+        className="mypage-calendar-day-cell"
         style={{
-          height: '100%',
-          minHeight: 48,
-          borderRight: '1px solid #e2e8f0',
-          borderBottom: '1px solid #e2e8f0',
-          padding: '4px 5px',
-          boxSizing: 'border-box',
-          // 선택된 셀은 짙은 빨간색 대신 눈이 편안한 소프트 블루 배경 + 2px 인셋 테두리 적용
-          backgroundColor: isChosen
-            ? '#eff6ff'
-            : isToday
-            ? '#f8fafc'
-            : isCurrentMonth
-            ? '#ffffff'
-            : '#fafafa',
-          boxShadow: isChosen ? 'inset 0 0 0 2px #1677ff' : 'none',
-          color: '#334155',
-          cursor: isCurrentMonth ? 'pointer' : 'default',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start', // 하단이 아닌 상단부터 차례대로 표시
-          gap: 3,
-          transition: 'background-color 0.12s, box-shadow 0.12s',
+          height: '100%', minHeight: 48, borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', boxSizing: 'border-box',
+          backgroundColor: isChosen ? '#eff6ff' : isToday ? '#f8fafc' : isCurrentMonth ? '#ffffff' : '#fafafa',
+          boxShadow: isChosen ? 'inset 0 0 0 2px #1677ff' : 'none', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden',
         }}
       >
-        {/* 1. 셀 상단: 날짜 번호 + '오늘' 뱃지 + 건수 카운트 */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', lineHeight: 1, marginBottom: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', lineHeight: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span
-              style={{
-                fontWeight: isChosen ? 800 : isHoliday || dayOfWeek === 0 ? 600 : 500,
-                color: dayColor,
-                fontSize: 12,
-                lineHeight: '13px',
-                display: 'inline-block',
-              }}
-            >
-              {date.date()}
-            </span>
-            {isToday && (
-              <span
-                style={{
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: '#1677ff',
-                  backgroundColor: '#dbeafe',
-                  padding: '1px 3px',
-                  borderRadius: 2,
-                  lineHeight: '11px',
-                }}
-              >
-                오늘
-              </span>
-            )}
+            <span style={{ fontWeight: isChosen ? 800 : dow === 0 ? 600 : 500, color: dayColor, fontSize: 12, lineHeight: '13px' }}>{date.date()}</span>
+            {isToday && <span style={{ fontSize: 9, fontWeight: 700, color: '#1677ff', backgroundColor: '#dbeafe', padding: '1px 3px', borderRadius: 2, lineHeight: '11px' }}>오늘</span>}
           </div>
-
-          {event?.count && (
-            <span
-              style={{
-                fontSize: 10,
-                color: '#64748b',
-                fontWeight: 500,
-                lineHeight: '13px',
-              }}
-            >
-              {event.count}
-            </span>
-          )}
+          {list.length > VISIBLE_EVENTS && <span style={{ fontSize: 10, color: '#64748b', fontWeight: 500 }}>+{list.length - VISIBLE_EVENTS} 개</span>}
         </div>
-
-        {/* 2. 셀 상단 이어서 표시: 공휴일 배지 및 부서일정 항목들 */}
-        {event?.holiday && (
+        {list.slice(0, VISIBLE_EVENTS).map((e, i) => (
           <div
+            key={i}
+            title={e.title}
+            // eventClick L214-224 → returnValue(날짜) · eventRender click L209-212 → returnTitle(제목)
+            onClick={ev => { ev.stopPropagation(); onSelectDate(date.format(DAY)); onEventClick?.(e); }}
             style={{
-              backgroundColor: '#dc2626', // 공휴일 전용 빨간색 배경
-              color: '#ffffff',
-              fontSize: 10,
-              fontWeight: 600,
-              padding: '2px 4px',
-              borderRadius: 3,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              lineHeight: '13px',
+              backgroundColor: e.color, color: e.textColor, fontSize: 10, fontWeight: 500, padding: '1px 4px', borderRadius: 3,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '13px',
             }}
           >
-            {event.holiday}
+            {e.title}
           </div>
-        )}
-
-        {event?.badge && (
-          <div
-            style={{
-              backgroundColor: '#1d63b8',
-              color: '#ffffff',
-              fontSize: 10,
-              fontWeight: 500,
-              padding: '2px 4px',
-              borderRadius: 3,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              lineHeight: '13px',
-            }}
-          >
-            {event.badge}
-          </div>
-        )}
+        ))}
       </div>
     );
   };
 
   return (
-    <div
-      ref={calendarRef}
-      className="mypage-calendar-container"
-      style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid #d9dfe8',
-        borderRadius: 4,
-        overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <Emp90_Lookup_Notice open={noticeOpen} onClose={() => setNoticeOpen(false)} />
+    <div className="mypage-calendar-container" style={{ backgroundColor: '#ffffff', border: '1px solid #d9dfe8', borderRadius: 4, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <style>{`
-        /* 캘린더 전체 및 내부 테이블 높이 가변 100% 확장 */
-        .mypage-calendar-container .ant-picker-calendar {
-          height: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-          flex: 1 !important;
-          min-height: 0 !important;
-        }
-        .mypage-calendar-container .ant-picker-panel {
-          height: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-          flex: 1 !important;
-          min-height: 0 !important;
-        }
-        .mypage-calendar-container .ant-picker-date-panel {
-          height: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-          flex: 1 !important;
-          min-height: 0 !important;
-        }
-        .mypage-calendar-container .ant-picker-body {
-          flex: 1 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          min-height: 0 !important;
-          padding: 0 !important;
-        }
-        .mypage-calendar-container .ant-picker-content {
-          height: 100% !important;
-          width: 100% !important;
-          border-collapse: collapse !important;
-        }
-        .mypage-calendar-container .ant-picker-content thead tr {
-          border-bottom: 2px solid #cbd5e1 !important;
-        }
-        .mypage-calendar-container .ant-picker-content th {
-          padding: 5px 0 !important;
-          color: #334155 !important;
-          font-weight: 600 !important;
-          font-size: 12px !important;
-          background-color: #f8fafc !important;
-          border-bottom: 1px solid #cbd5e1 !important;
-        }
-        .mypage-calendar-container .ant-picker-content th:first-child {
-          color: #dc2626 !important;
-        }
-        .mypage-calendar-container .ant-picker-content th:last-child {
-          color: #2563eb !important;
-        }
-        .mypage-calendar-container .ant-picker-content tbody {
-          height: 100% !important;
-        }
-        .mypage-calendar-container .ant-picker-cell {
-          padding: 0 !important;
-          vertical-align: top !important;
-          height: 1% !important; /* 남은 높이 균등 분할 */
-        }
-        .mypage-calendar-container .ant-picker-cell-inner {
-          padding: 0 !important;
-          border-radius: 0 !important;
-          height: 100% !important;
-          min-height: 48px !important;
-          display: flex !important;
-          flex-direction: column !important;
-        }
-        /* 이번 달 날짜가 단 하나도 없는 행(완전히 다음 달로만 채워진 6번째 주 등) 자동 숨김 */
-        .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) {
-          display: none !important;
-        }
+        .mypage-calendar-container .ant-picker-calendar,
+        .mypage-calendar-container .ant-picker-panel,
+        .mypage-calendar-container .ant-picker-date-panel { height: 100% !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+        .mypage-calendar-container .ant-picker-body { flex: 1 !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; padding: 0 !important; }
+        .mypage-calendar-container .ant-picker-content { height: 100% !important; width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+        .mypage-calendar-container .ant-picker-content th { padding: 5px 0 !important; color: #334155 !important; font-weight: 600 !important; font-size: 12px !important; background-color: #f8fafc !important; border-bottom: 1px solid #cbd5e1 !important; }
+        .mypage-calendar-container .ant-picker-content th:first-child { color: #dc2626 !important; }
+        .mypage-calendar-container .ant-picker-content th:last-child { color: #2563eb !important; }
+        .mypage-calendar-container .ant-picker-content tbody { height: 100% !important; }
+        .mypage-calendar-container .ant-picker-cell { padding: 0 !important; vertical-align: top !important; height: 1% !important; }
+        .mypage-calendar-container .ant-picker-cell-inner { padding: 0 !important; border-radius: 0 !important; height: 100% !important; min-height: 48px !important; display: flex !important; flex-direction: column !important; }
+        .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) { display: none !important; }
+        .mypage-calendar-container .mypage-cal-btn { font-size: 12px; padding: 0 8px; height: 25px; border-radius: 3px; }
       `}</style>
       <Calendar
         fullscreen={false}
-        value={currentValue}
-        onSelect={handleDateSelect}
+        value={dayjs(selectedDate).isSame(viewMonth, 'month') ? dayjs(selectedDate) : viewMonth}
+        // dayClick L225-243: 고른 칸 표시 → returnValue(날짜)
+        onSelect={(d, info) => { if (info.source === 'date') { if (!d.isSame(viewMonth, 'month')) setViewMonth(d.startOf('month')); onSelectDate(d.format(DAY)); } }}
         headerRender={renderHeader}
         fullCellRender={fullCellRender}
         style={{ height: '100%' }}
       />
+      {/* JSCaller.returnOpenNotice L142-151: Emp90_Lookup_Notice.open(callback → callback2·callback4 = allRetrieve) */}
+      <Emp90_Lookup_Notice open={noticeOpen} onClosed={onRefreshAll} onClose={() => setNoticeOpen(false)} />
+      {/* JSCaller.returnBookmark L153-163: Sys06_Lookup_SearchMenu → MainFrame bookMarkCallback L196-206 = 고른 메뉴 탭 열기 */}
+      <Sys06_Lookup_SearchMenu
+        open={bookmarkOpen}
+        onResult={menu => {
+          setBookmarkOpen(false);
+          if (menu.menuNo && !openMenuByNo(menu.menuNo)) message.warning('화면을 열 수 없습니다. 메뉴 권한을 확인해주세요.');
+        }}
+        onClose={() => setBookmarkOpen(false)}
+      />
+      {/* JSCaller.returnOpenIpo L118-132: RDViewer.openSch10(Sch10_Rd_Ipo, companyId·personId·YYYYMM=오늘) */}
+      <RdViewer_Sch10 open={ipoOpen} onClose={() => setIpoOpen(false)} />
+      {/* JSCaller.returnInOut L114-116: new Att02_Lookup_Commute(userId) */}
+      <Att02_Lookup_Commute open={commuteOpen} onClose={() => setCommuteOpen(false)} />
     </div>
   );
 };

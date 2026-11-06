@@ -4,7 +4,7 @@
  * 생성자 L50-68: 380×320 모달 "C/F", 읽기 전용 5줄 [구분][거래처][금액][세금][실수령/지급액](금액은 ###,###,###) + [닫기]
  * 호출처가 보내는 값(Monitoring_Page_DayList.open L211-232): ast.Ast04_Cf.selectByRelateId(relateId, 로그인 회사) → cfId가 없으면
  *   "예기치못한 오류가 발생했습니다. 관리자에게 문의해주세요" → 창. 이 창이 그 조회까지 한다.
- * TOBE의 MyPage 할일 목록(DayListBox)은 목업이라 여는 곳이 없다(작업기록)
+ * TOBE에서는 MyPage Day List(`components/mypage/DayListBox`, EE106)가 연다
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

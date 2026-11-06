@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml — MyPage 전자결재 박스(frm/Monitoring_Page_Appr) -->
+<!-- AS-IS와 다른 점: ${empId}·${companyId}(문자 치환)를 #{}(바인딩)로 바꿨다. 바깥 SELECT는 a.* 대신 그리드가 쓰는 열만 고른다. 나머지 본문은 그대로 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprMonitorMapper">
+
+    <!-- AS-IS apr01_appr.selectOutstanding L1297 (IDMS-IC) — 미결함 -->
+    <select id="selectOutstanding" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMonitorOutstandingRes">
+<![CDATA[
+/** 미결함 */
+WITH first_pending_step AS (
+    SELECT  apr04_appr_id
+         ,  apr04_step_emp_id
+         ,  ROW_NUMBER() OVER (PARTITION BY apr04_appr_id ORDER BY apr04_seq) AS rn
+      FROM  apr04_appr_step
+            INNER JOIN apr01_appr ON apr01_appr_id = apr04_appr_id AND apr01_company_id = #{companyId}
+     WHERE  apr04_step_type_cd NOT IN ('00','30')
+       AND  apr04_step_status_cd = '10'
+)
+SELECT  a.apr01_appr_id                                                     AS appr_id
+     ,  CASE WHEN f.apr04_step_emp_id = #{empId} OR alt.apr07_alt_emp_id = #{empId}
+             THEN '승인대기'
+             WHEN alt.apr07_stamp_yn = 'true' AND s.apr10_second_emp_id = #{empId} AND b.apr04_step_type_cd = '40'
+             THEN '인감대기'
+             ELSE '진행중'
+        	 END															AS status_name
+     ,  a.apr01_reg_date::date                                              AS reg_date
+     ,  a.apr01_title                                                       AS title
+     ,  f_emp_kor_nm(a.apr01_reg_emp_id)									AS reg_emp_name
+  FROM  apr01_appr a
+        INNER JOIN (
+			            SELECT	*
+			              FROM	apr04_appr_step
+			             WHERE	apr04_step_type_cd NOT IN ('00','30')
+			               AND	apr04_step_status_cd NOT IN ('20','30')
+			        ) b					ON a.apr01_appr_id = b.apr04_appr_id
+        LEFT JOIN apr10_stamp s 		ON a.apr01_stamp_id = s.apr10_stamp_id
+        LEFT JOIN first_pending_step f	ON a.apr01_appr_id = f.apr04_appr_id AND f.rn = 1
+        LEFT JOIN apr07_alt_appr alt	ON alt.apr07_target_emp_id = b.apr04_step_emp_id AND f_today() BETWEEN alt.apr07_start_date AND alt.apr07_close_date
+ WHERE  a.apr01_status_cd NOT IN ('30','40','99')
+   AND  a.apr01_reg_emp_id != #{empId}
+   AND  a.apr01_company_id = #{companyId}
+   AND	(
+        	#{empId} = b.apr04_step_emp_id
+        	OR
+        	#{empId} = alt.apr07_alt_emp_id
+       		OR
+       		(
+	       	  	s.apr10_second_emp_id = #{empId}
+	         	AND
+	         	b.apr04_step_type_cd = '40'
+	         	AND
+	         	COALESCE(alt.apr07_stamp_yn, 'false') = 'true'
+	       	)
+   		)
+ ORDER BY a.apr01_reg_date DESC, apr01_appr_id DESC
+]]>
+    </select>
+    <!-- (AS-IS의 next_approver_info CTE와 n.next_appr_nm 열은 미결함 그리드가 쓰지 않아 뺐다 — LEFT JOIN이라 행 수는 같다) -->
+
+    <!-- AS-IS apr01_appr.selectMonitorngAppr L1487 (IDMS-IC) — 결재요청함 -->
+    <select id="selectMonitorngAppr" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMonitorRequestRes">
+<![CDATA[
+/** 결재요청함 */
+SELECT	a.apr01_appr_id                                                             AS appr_id
+     ,	f_cdnm('AprStatusCode', apr01_status_cd, #{companyId}, apr01_reg_date)      AS status_name
+     ,  a.apr01_reg_date::date                                                      AS reg_date
+     ,  a.apr01_title                                                               AS title
+     ,  a.next_appr_nm                                                              AS next_appr_name
+  FROM	(
+			SELECT	a.*
+				 ,	'없음' as next_appr_nm
+			  FROM	apr01_appr a
+					INNER JOIN apr04_appr_step b ON a.apr01_appr_id = b.apr04_appr_id
+			 WHERE	1=1
+			   AND	a.apr01_status_cd IN ('30','40')
+			   AND	b.apr04_step_status_cd IN ('20','30')
+			   AND	f_trunc(apr04_appr_date) BETWEEN f_add_day(#{toDay,jdbcType=DATE}, -7) AND #{toDay,jdbcType=DATE}
+			   AND	a.apr01_reg_emp_id = #{empId}
+			 UNION ALL
+			SELECT	a.*
+				 ,	f_get_empTrans(apr04_step_emp_id, apr01_reg_date::date, 'title_nm')||' '||f_emp_kor_nm(apr04_step_emp_id) as next_appr_nm
+			  FROM	apr01_appr a
+			  		INNER JOIN (
+			  						SELECT	*
+			  						  FROM	apr04_appr_step
+								 	 WHERE	LPAD(apr04_seq,4,'0')||apr04_step_type_cd||apr04_appr_step_id IN (
+								 	 																			SELECT	MIN(LPAD(apr04_seq,4,'0')||apr04_step_type_cd||apr04_appr_step_id)
+												                                                            	  FROM	apr04_appr_step
+												                                                           		 WHERE	apr04_step_type_cd not in ('00','30')
+												                                                             	   AND	apr04_step_status_cd = '10'
+												                                                           		 GROUP BY apr04_appr_id
+												                                                           	  )
+					) b ON apr01_appr_id = apr04_appr_id
+			 WHERE	1=1
+			   AND	apr01_status_cd IN ('10','20')
+			   AND	apr01_reg_emp_id = #{empId}
+		) a
+ ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+]]>
+    </select>
+
+    <!-- AS-IS apr01_appr.selectTemporary L1523 (IDMS-IC) — 임시저장함 -->
+    <select id="selectTemporary" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMonitorTemporaryRes">
+<![CDATA[
+SELECT	apr01_appr_id           AS appr_id
+     ,  apr01_reg_date::date    AS reg_date
+     ,  apr01_title             AS title
+     ,  apr01_status_cd         AS status_code
+  FROM	apr01_appr
+ WHERE	apr01_reg_emp_id = #{empId}
+   AND	apr01_company_id = #{companyId}
+   AND	COALESCE(apr01_status_cd, '00') = '99'
+ ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+]]>
+    </select>
+</mapper>
