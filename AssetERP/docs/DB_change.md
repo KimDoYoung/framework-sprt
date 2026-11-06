@@ -175,3 +175,22 @@ CREATE TABLE public.sys55_menu_guide_company (
 );
 CREATE INDEX sys55_menu_guide_company_idx01 ON public.sys55_menu_guide_company USING btree (sys55_company_id, sys55_menu_id);
 ```
+
+---
+
+```sql
+
+  BEGIN;
+
+  -- 1) 열 추가 (이미 있으면 건너뜀)
+  ALTER TABLE ics32_relate_appr ADD COLUMN IF NOT EXISTS ics32_person_id numeric;
+  ALTER TABLE ics32_relate_appr ADD COLUMN IF NOT EXISTS ics32_appr_type varchar(1);
+
+  COMMENT ON COLUMN ics32_relate_appr.ics32_person_id IS '사원ID (부서장 준수확인서일 때. 준수보고는 NULL)';
+  COMMENT ON COLUMN ics32_relate_appr.ics32_appr_type IS '상신구분 (1:준수보고 A32, 2:부서장 준수확인서 A52)';
+
+  -- 2) 기존 행(지금 17행)은 모두 준수보고로 채운다
+  UPDATE ics32_relate_appr SET ics32_appr_type = '1' WHERE ics32_appr_type IS NULL;
+
+  COMMIT;
+```  
