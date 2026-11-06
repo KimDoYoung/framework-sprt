@@ -66,7 +66,7 @@ export const Apr01_Tab_ItemDocument: React.FC = () => {
   // getMenuTree() L145-180 — 트리 컬럼 하나(이름 = 분류명), 행번호 없음
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 420, '분류'),
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

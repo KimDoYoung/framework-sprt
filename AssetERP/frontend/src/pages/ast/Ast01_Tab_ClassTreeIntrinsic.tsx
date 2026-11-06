@@ -61,7 +61,7 @@ export const Ast01_Tab_ClassTreeIntrinsic: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [tree.setRows, tree.expandAncestors]);
+  }, [tree.setRows, tree.expandAncestors]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E0] 화면 열림 (생성자 L57-149) → retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,7 +142,7 @@ export const Ast01_Tab_ClassTreeIntrinsic: React.FC = () => {
       }),
       iconCell<AstClassTree>('move', 'moveCol', 50, '이동', (row) => setMoveClassTreeId(row.classTreeId)),
     ],
-    [tree.treeCol]
+    [tree.treeCol]  // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (

@@ -49,7 +49,7 @@ const buildViewGrid = () => [
 export const Sys91_Tab_AdviceMember: React.FC = () => {
   const user = useLoginUser();
   const editable = isSysAdmin(user);  // AS-IS LoginUser.getCompanyId().equals(0l)
-  const columnDefs = useMemo(editable ? buildEditGrid : buildViewGrid, [editable]);
+  const columnDefs = useMemo(editable ? buildEditGrid : buildViewGrid, [editable]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const crud = useGridCrud<AdviceMember>({
     idField: 'adviceMemberId',

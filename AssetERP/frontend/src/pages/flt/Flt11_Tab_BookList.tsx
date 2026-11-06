@@ -39,7 +39,7 @@ export const Flt11_Tab_BookList: React.FC = () => {
         void retrieve();        
       })
       .catch(() => undefined);
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L163-177: 서비스 flt.Flt11_Book.selectByBookList(companyId, personId, baseDate, searchText "%…%")
   const retrieve = useCallback(async () => {

@@ -80,7 +80,7 @@ export const Ast13_Lookup_ExpenseOfficeAssets: React.FC<Props> = ({ open, onChan
   }, [open]);
 
   // lookupExpense() L462-485: 고른 지출결의서를 위 줄에 넣고 retrieve()
-  useEffect(() => { if (open && expense) void retrieveRows(); }, [expense]);
+  useEffect(() => { if (open && expense) void retrieveRows(); }, [expense]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const retrieve = () => {
     if (!expense) {

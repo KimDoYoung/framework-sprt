@@ -108,7 +108,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         managerRef.current?.retrieve(activeNode.classTreeId);
         await crud.retrieve();
       },
-      [crud.clear, crud.retrieve]
+      [crud.clear, crud.retrieve]  // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const loadNode = useCallback(
@@ -131,7 +131,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       setContent('');
       setEditorKey((k) => k + 1);
       managerRef.current?.clear();
-    }, [crud.clear]);
+    }, [crud.clear]);  // eslint-disable-line react-hooks/exhaustive-deps
 
     useImperativeHandle(ref, () => ({
       loadNode,

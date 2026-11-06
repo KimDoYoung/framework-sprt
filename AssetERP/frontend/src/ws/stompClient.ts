@@ -1,6 +1,6 @@
 import { Client, IFrame, IMessage, ReconnectionTimeMode } from '@stomp/stompjs';
 import { authApi } from '../api/auth';
-import { notifySessionTerminated, SessionTerminateReason } from '../api/client';
+import { errorStatus, notifySessionTerminated, SessionTerminateReason } from '../api/client';
 import { ErrorPayload, SessionTerminatedPayload, WsMessage } from '../types/ws';
 
 /** 서버 목적지 (backend: common/websocket/WsDestinations) */
@@ -61,9 +61,9 @@ class RealtimeClient {
         this.setStatus('CONNECTING');
         try {
           await authApi.getMe();
-        } catch (err: any) {
+        } catch (err) {
           // 401: 인터셉터가 세션 종료를 통지함 → 재연결 중단. 그 밖의 오류는 연결 시도 후 백오프 재시도
-          if (err?.response?.status === 401) {
+          if (errorStatus(err) === 401) {
             await client.deactivate();
           }
         }

@@ -90,7 +90,7 @@ export const Ics40_Tab_DcrPreConfirm: React.FC = () => {
     msgIcon: 'edit',
     // buildGrid actionCell(Edit) L225-236: Ics40_Edit_Msg.editConfirmMsg(선택 행, callback → retrieve())
     onMsg: row => setMsgTarget({ row, mode: 'edit' }),
-  }), [skipYn]);
+  }), [skipYn]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E4] excelDownloadButton[엑셀다운로드].Select (L161) → 전체(%)면 downLoad(true), 아니면 ics.Ics41_DcrType.adYnCheck(dcrTypeCode, companyId) → downLoad(adYn)
   //   downLoad() L397-463: 서비스 sys.Sys99_Print.insertRdDcrPreConfirm → RDUtil.download(page CommonInvokerDownload.jsp · mrd Ics40_Rd_DcrPreConfirm · options "/rxlsopt [100]" · 파일 "사전확인대장(시작 ~ 종료).xlsx" · rv rdGroupId·companyId·personId·startDate·closeDate·adYn·dcrpreconfirmSkipYn)

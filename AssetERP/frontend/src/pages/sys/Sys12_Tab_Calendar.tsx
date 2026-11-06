@@ -44,7 +44,7 @@ export const Sys12_Tab_Calendar: React.FC = () => {
   const crud = useGridCrud<Calendar>({
     idField: 'calendarId',
     // retrieve() L205-218: companyId(서버) · year · month → sys.Sys12_Calendar.selectByYear
-    search: useCallback(() => sysApi.searchCalendars(sp.current.current.year, sp.current.current.month), [sp.current]),
+    search: useCallback(() => sysApi.searchCalendars(sp.current.current.year, sp.current.current.month), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L221-224: GridUpdate → sys.Sys12_Calendar.update
     save: sysApi.updateCalendars,
     // 행 추가·삭제 버튼이 없다(insertRow L227-229·deleteRow L232-234는 비어 있음)

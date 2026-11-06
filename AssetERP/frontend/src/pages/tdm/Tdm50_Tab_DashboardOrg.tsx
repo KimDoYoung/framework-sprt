@@ -130,7 +130,7 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     gbUndone.textCenter('checkStatusName', 80, '진행상태'),  // L299
     gbUndone.text('checkerName', 90, '점검자'),  // L300
     viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L301
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
   // buildGrid02() L306-319 — [반려의견] 아이콘은 핸들러가 비어 있다 (AS-IS 그대로 아무 일도 안 한다)
   const columns2 = useMemo(() => [
     gbUndone.text('checkItem', 450, '점검항목'),  // L314
@@ -143,7 +143,7 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     gbUndone.text('checkerName', 100, '점검자'),  // L331
     { ...gbUndone.text('checkerName', 100, '점검자'), colId: 'checkerName2' },  // L332
     viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L333 → Tdm52_Edit_ChckManl.view(선택 행) (L322-328)
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
   // buildGrid04() L338-357 → [보기] Tdm54_Lookup_ChckInsuffCmnt.view(chckInsuffId) (L339-345)
   const columns4 = useMemo(() => [
     gbInsuff.textCenter('checkYm', 100, '발생년월'),  // L347
@@ -154,7 +154,7 @@ export const Tdm50_Tab_DashboardOrg = forwardRef<DashboardTabHandle>((_props, re
     gbInsuff.text('actionEmpName', 200, '조치(예정)자'),  // L352
     gbInsuff.text('actionName', 650, '조치명'),  // L353
     viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', row => viewInsuff(row.chckInsuffId)),  // L354
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

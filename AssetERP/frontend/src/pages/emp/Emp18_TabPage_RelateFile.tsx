@@ -128,7 +128,7 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
     if (!saveAfterInsert) return;
     setSaveAfterInsert(false);
     void crud.saveRows();
-  }, [saveAfterInsert, crud.saveRows]);
+  }, [saveAfterInsert, crud.saveRows]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>

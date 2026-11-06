@@ -12,7 +12,7 @@ import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react'
 import { DatePicker, Select, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { schApi } from '@/api/sch';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { aprDetailApi } from '@/api/apr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Sch04CheckStatus, Sch08ClassCombo, Sch10Ipo } from '@/types/sch';
@@ -87,8 +87,8 @@ export const Sch04_Tab_DailyCheckListStatus: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.warning('관련 상신문서가 존재하지 않습니다');
+    } catch (err) {
+      if (errorCode(err) === 'DATA_NOT_FOUND') message.warning('관련 상신문서가 존재하지 않습니다');
       else message.error(errorMessage(err, '조회 실패'));
     }
   };

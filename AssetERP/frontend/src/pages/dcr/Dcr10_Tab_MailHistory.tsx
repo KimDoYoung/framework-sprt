@@ -10,7 +10,7 @@ import { DatePicker, Select, message } from 'antd';
 import { Fnd01_Lookup_SelectSingle } from '@/components/lookup/Fnd01_Lookup_SelectSingle';
 import dayjs, { Dayjs } from 'dayjs';
 import { dcrMailHistoryApi } from '@/api/dcr';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { aprDetailApi } from '@/api/apr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { DcrMailHistory } from '@/types/dcr';
@@ -73,8 +73,8 @@ export const Dcr10_Tab_MailHistory: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    } catch (err) {
+      if (errorCode(err) !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
     }
   };
 

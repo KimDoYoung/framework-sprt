@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Form, Input, Button, Typography, Alert, Spin, Modal, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined, SafetyCertificateOutlined, BankOutlined, WarningOutlined, SearchOutlined } from '@ant-design/icons';
 import { authApi } from '../api/auth';
-import { errorMessage } from '../api/client';
+import { errorCode, errorMessage } from '../api/client';
 import { CompanyItem, TenantInfo, User } from '../types/auth';
 import { Sys25_Lookup_Password } from './sys/Sys25_Lookup_Password';
 import { Sys25_Lookup_Reset } from './sys/Sys25_Lookup_Reset';
@@ -73,7 +73,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           const list = await authApi.getCompanies();
           setCompanies(list.data ?? []);
         }
-      } catch (err: any) {
+      } catch (err) {
         setTenantError(errorMessage(err, '회사 정보 조회 실패'));
       }
     };
@@ -116,11 +116,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
       } else {
         setLoginError(res.message || '로그인에 실패했습니다.');
       }
-    } catch (err: any) {
+    } catch (err) {
       const msg = errorMessage(err, '로그인 요청 중 오류가 발생했습니다.');
       setLoginError(msg);
       // AS-IS getServiceResult() L538-561: status 99 최초로그인/초기화 후 → init, 98 비밀번호 만료 → modi. 안내 확인 뒤 비밀번호 변경 창
-      const code = err?.response?.data?.code;
+      const code = errorCode(err);
       if (code === 'PASSWORD_INIT_REQUIRED' || code === 'PASSWORD_CHANGE_REQUIRED') {
         const statusType = code === 'PASSWORD_INIT_REQUIRED' ? 'init' : 'modi';
         Modal.confirm({

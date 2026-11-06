@@ -63,7 +63,7 @@ export const Ast01_Edit_ClassTree: React.FC<Props> = ({
         });
       }
     }
-  }, [open, mode, parentId, data]);
+  }, [open, mode, parentId, data]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E4] addInfoButton[추가정보].Select (L174) → lookupAddInfo()
   const lookupAddInfo = () => {

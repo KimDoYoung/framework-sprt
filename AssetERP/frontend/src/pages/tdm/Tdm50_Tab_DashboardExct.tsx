@@ -146,7 +146,7 @@ export const Tdm50_Tab_DashboardExct = forwardRef<DashboardTabHandle>((_props, r
     gbInsuff.text('actionEmpName', 90, '조치(예정)자'),  // L337
     gbInsuff.text('actionName', 200, '조치명'),  // L338
     viewCell<TdmDashboardInsuff>('actionCell', 45, '보기', row => viewInsuff(row.chckInsuffId)),  // L339
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
   // buildGrid04() L344-362 → [보기] Tdm52_Edit_ChckManl.view(선택 행) (L345-351)
   const columns4 = useMemo(() => [
     gbUndone.text('orgName', 150, '점검부서'),  // L354
@@ -155,7 +155,7 @@ export const Tdm50_Tab_DashboardExct = forwardRef<DashboardTabHandle>((_props, r
     gbUndone.textCenter('checkCycleName', 70, '점검주기'),  // L357
     gbUndone.textCenter('checkStatusName', 80, '진행상태'),  // L358
     viewCell<TdmDashboardUndone>('actionCell', 45, '보기', row => viewManl(row.chckManlId)),  // L359
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

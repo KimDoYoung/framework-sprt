@@ -24,7 +24,7 @@ export const Sys07_Tree_PersonRoleMenu: React.FC<Props> = ({ personId }) => {
   const [searchText, setSearchText] = useState('');
 
   // getMenuTree() L88-119: 값 = menuNoPlusName, 트리에 헤더가 없다
-  const columnDefs = useMemo(() => [tree.treeCol('menuNoPlusNm', 400, '')], [tree.treeCol]);
+  const columnDefs = useMemo(() => [tree.treeCol('menuNoPlusNm', 400, '')], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // search() L177-197: 모두 접고 선택 해제 → 화면명(소문자)에 검색어가 있으면 그 행이 보이게 펼치고 선택
   // AS-IS는 바로 위 부모만 펼친다 → TOBE는 조상을 모두 펼친다(그래야 보인다, A06과 같음)

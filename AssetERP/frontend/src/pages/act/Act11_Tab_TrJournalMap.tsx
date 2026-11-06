@@ -111,7 +111,7 @@ export const Act11_Tab_TrJournalMap: React.FC = () => {
   const crud = useGridCrud<TrMap>({
     idField: 'trMapId',
     // retrieve() L385-419: 로그인 회사, 거래코드/명·분개그룹은 "%검색어%"(없으면 "%" — 서버가 만든다) → act.Act11_TrMap.selectByCompanyId
-    search: useCallback(() => actApi.searchTrMaps(sp.current.current.searchText, sp.current.current.journalGroup), [sp.current]),
+    search: useCallback(() => actApi.searchTrMaps(sp.current.current.searchText, sp.current.current.journalGroup), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L422-437: GridUpdate → act.Act11_TrMap.update
     save: useCallback((rows: TrMap[]) => actApi.updateTrMaps(rows), []),
     remove: useCallback((ids: number[]) => actApi.deleteTrMaps(ids), []),

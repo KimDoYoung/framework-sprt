@@ -10,7 +10,7 @@ import { message, Modal } from 'antd';
 import type { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { fltApi } from '@/api/flt';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { aprDetailApi } from '@/api/apr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { FltEmpAppr, FltEmpApprDoc } from '@/types/flt';
@@ -76,8 +76,8 @@ export const Flt10_Grid_EmpAppr: React.FC<Props> = ({ emp, stdDate }) => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    } catch (err) {
+      if (errorCode(err) !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
     }
   };
 

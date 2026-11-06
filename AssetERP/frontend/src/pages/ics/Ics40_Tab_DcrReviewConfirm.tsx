@@ -82,7 +82,7 @@ export const Ics40_Tab_DcrReviewConfirm: React.FC = () => {
     msgIcon: 'view',
     // buildGrid actionCell02 L150-156: Ics40_Edit_Msg.show(선택 행) — 읽기 전용
     onMsg: row => setMsgTarget({ row, mode: 'view' }),
-  }), [skipYn]);
+  }), [skipYn]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>

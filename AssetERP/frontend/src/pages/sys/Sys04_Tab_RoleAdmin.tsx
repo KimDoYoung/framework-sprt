@@ -57,9 +57,9 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
     search: useCallback(
       () => (roleCompanyId.current == null ? Promise.resolve([]) : sysApi.searchCompanyRoles(roleCompanyId.current)), []),
     // update() L191-194: GridUpdate — 검사 없음
-    save: useCallback((rows: Role[]) => sysApi.updateCompanyRoles(targetCompanyId(), rows), []),
+    save: useCallback((rows: Role[]) => sysApi.updateCompanyRoles(targetCompanyId(), rows), []),  // eslint-disable-line react-hooks/exhaustive-deps
     // deleteRow() L238-242: GridDeleteData — 체크한 행
-    remove: useCallback((ids: number[]) => sysApi.deleteCompanyRoles(targetCompanyId(), ids), []),
+    remove: useCallback((ids: number[]) => sysApi.deleteCompanyRoles(targetCompanyId(), ids), []),  // eslint-disable-line react-hooks/exhaustive-deps
     // insertRow() L197-209: 모델에 companyId를 넣는다. 고객명(보기 전용)도 선택 고객사로 보여 준다 (사용자 결정 2026-10-12 — 원본은 저장 뒤에 채워짐)
     newRow: () => ({ companyId: selectedCompanyId(), companyNm: selectedCompany()?.companyNm, roleNm: '' }),
     firstEditField: 'roleNm',
@@ -86,7 +86,7 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [searchText]);
+  }, [searchText]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() 콜백 L168-172: 원본은 첫 행 select(0) → retrieveRole().
   // 사용자 결정(2026-10-12): 조회 전에 선택한 고객사가 결과에 있으면 그 고객사를 다시 선택해 조회한다(없으면 원본대로 첫 행)

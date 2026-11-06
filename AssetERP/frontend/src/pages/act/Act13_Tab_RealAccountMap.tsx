@@ -96,7 +96,7 @@ export const Act13_Tab_RealAccountMap: React.FC = () => {
   const crud = useGridCrud<RealAccountMap>({
     idField: 'realAccountMapId',
     // retrieve() L340-364: 로그인 회사, searchText "%검색어%"(없으면 "%" — 서버가 만든다) → act.Act13_RealAccountMap.selectByCompanyId
-    search: useCallback(() => actApi.searchRealAccountMaps(sp.current.current.searchText), [sp.current]),
+    search: useCallback(() => actApi.searchRealAccountMaps(sp.current.current.searchText), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L367-382: 바뀐 행마다 대표계정코드 필수 검사 → GridUpdate → act.Act13_RealAccountMap.update
     save: useCallback((rows: RealAccountMap[]) => actApi.updateRealAccountMaps(rows), []),
     remove: useCallback((ids: number[]) => actApi.deleteRealAccountMaps(ids), []),

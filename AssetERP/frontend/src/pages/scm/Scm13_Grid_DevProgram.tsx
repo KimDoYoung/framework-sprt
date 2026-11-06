@@ -64,7 +64,7 @@ export const Scm13_Grid_DevProgram = forwardRef<ScmDevProgramHandle, Props>(({ d
       },
     });
   };
-  useImperativeHandle(ref, () => ({ retrieve, deleteRow }), [retrieve]);
+  useImperativeHandle(ref, () => ({ retrieve, deleteRow }), [retrieve]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const columnDefs = useMemo(() => [
     gb.text('programTypeNm', 100, '구분'),

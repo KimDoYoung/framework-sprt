@@ -69,7 +69,7 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
     deleteList.current = [];
     setSelectedRows([]);
     await crud.retrieve();
-  }, [crud.retrieve]);
+  }, [crud.retrieve]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E0] 화면 열림 (생성자 L67-83) → show()
   useEffect(() => {

@@ -14,7 +14,7 @@ import { Checkbox, DatePicker, message, Splitter } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { payApi } from '@/api/pay';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { aprDetailApi } from '@/api/apr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { PayExpenseSettleAppr, PayExpenseSettleApprRow } from '@/types/pay';
@@ -99,8 +99,8 @@ export const Pay50_Tab_ExpensePay: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.warning('상신문서가 존재하지 않습니다');
+    } catch (err) {
+      if (errorCode(err) === 'DATA_NOT_FOUND') message.warning('상신문서가 존재하지 않습니다');
       else message.error(errorMessage(err, '조회 실패'));
     }
   };

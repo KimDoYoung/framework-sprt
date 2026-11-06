@@ -32,7 +32,7 @@ export const Adv05_Page_OrgAuth: React.FC<Props> = ({ accountId }) => {
     gb.text('orgCode', 60, '조직코드'),  // L93
     gb.boolean('authYn', 40, '권한'),  // L94 authYnAccount — 클릭은 getColumn()이 처리
     gb.text('note', 300, '비고'),  // L95
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L99-105: 서비스 org.Org01_Code.selectByAccountId(로그인 회사, accountId) → 트리 구성 → 모두 펼친다
   const retrieve = async () => {

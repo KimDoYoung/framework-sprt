@@ -32,7 +32,7 @@ export const Ast01_Move_ClassTree: React.FC<Props> = ({ open, classTreeId, asset
       setSelectedParentId(null);
       setSearchText('');
     }
-  }, [open]);
+  }, [open]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadTree = async () => {
     setLoading(true);

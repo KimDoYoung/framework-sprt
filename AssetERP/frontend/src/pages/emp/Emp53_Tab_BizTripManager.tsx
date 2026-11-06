@@ -9,7 +9,7 @@ import { Checkbox, DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { empBizTripApi } from '@/api/emp';
 import { aprDetailApi } from '@/api/apr';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { BizTrip } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
@@ -52,8 +52,8 @@ export const Emp53_Tab_BizTripManager: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    } catch (err) {
+      if (errorCode(err) !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
     }
   };
 

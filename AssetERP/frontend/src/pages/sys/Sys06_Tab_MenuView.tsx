@@ -21,7 +21,7 @@ export const Sys06_Tab_MenuView: React.FC = () => {
   const [menuId, setMenuId] = useState<number>();
 
   // buildTreeGrid() L127-134: menuNoPlusName 400 "매뉴명" (getTreeGrid(1) — 행번호 다음이 트리 칸. TOBE 트리는 행번호를 두지 않는다, A09와 같음)
-  const columnDefs = useMemo(() => [tree.treeCol('menuNoPlusNm', 400, '매뉴명')], [tree.treeCol]);
+  const columnDefs = useMemo(() => [tree.treeCol('menuNoPlusNm', 400, '매뉴명')], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L136-142 → getServiceResult() L176-200: 서비스 sys.Sys06_Menu.selectByCompanyId(로그인 회사)
   //   트리를 비우고 다시 구성한 뒤 맨 위(루트) 메뉴를 모두 펼친다

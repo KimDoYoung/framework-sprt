@@ -53,7 +53,7 @@ export const Scm02_Grid_ApprStep = forwardRef<ScmApprStepGridHandle, Props>(({ s
       if (steps.some(s => s.stepTypeCd === '00')) setEditor({ open: true, steps });
       else setEditor({ open: true, steps: renumber([await makeMeLine(), ...steps]) });
     },
-  }), [steps, srId, user]);
+  }), [steps, srId, user]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const columnDefs = useMemo(() => [
     gb.textCenter('stepTypeNm', 80, '구분'),

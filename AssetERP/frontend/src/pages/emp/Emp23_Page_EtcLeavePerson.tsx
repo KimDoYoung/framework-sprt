@@ -41,7 +41,7 @@ export const Emp23_Page_EtcLeavePerson: React.FC<Props> = ({ etcLeaveId }) => {
   retrieveRef.current = crud.retrieve;
 
   // [E0] 화면 열림 (생성자 L44-77) → 초기화: 부르는 쪽이 고른 포상휴가가 바뀔 때마다 retrieve(etcLeaveId)
-  useEffect(() => { void crud.retrieve(); }, [etcLeaveId]);
+  useEffect(() => { void crud.retrieve(); }, [etcLeaveId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E1] insertButton[등록].Select (L45) [etcLeaveId == null] → "포상휴가를 먼저 선택해주세요", 아니면 insertRow() L107-135
   const insertRow = () => {

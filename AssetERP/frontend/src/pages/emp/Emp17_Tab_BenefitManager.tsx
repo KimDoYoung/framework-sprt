@@ -162,8 +162,8 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
   useEffect(() => { void comboBoxRetrieve(); }, []);
 
   /** 선택한 신청의 ID들 */
-  const selectedIds = (ref: React.RefObject<AgGridReact<any> | null>): number[] =>
-    (ref.current?.api.getSelectedRows() ?? []).map((r: Benefit) => r.benefitId);
+  const selectedIds = <T extends Benefit>(ref: React.RefObject<AgGridReact<T> | null>): number[] =>
+    (ref.current?.api.getSelectedRows() ?? []).map((r) => r.benefitId);
 
   // [E20]·[E22] actionCell (ImageCell).callbackOnCreate (L413·L516) → 인라인: 신청문서보기 아이콘 (buildGrid L395-497 · payRequestdGrid L499-546): 상신문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval() (다음 단계)
   const viewAppr = (row: Benefit) => {

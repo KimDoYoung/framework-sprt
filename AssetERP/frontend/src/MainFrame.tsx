@@ -16,6 +16,13 @@ import {
 } from 'flexlayout-react';
 import './flexlayout-custom.css';
 
+/** 저장된 레이아웃 JSON 의 노드(fixNode 가 읽고 고치는 부분만) */
+type LayoutJsonNode = {
+  type?: string; enableClose?: boolean; enableDeleteWhenEmpty?: boolean; maximized?: boolean;
+  enableMaximize?: boolean; enableDivide?: boolean; enableDrop?: boolean; enableScrollbars?: boolean;
+  children?: LayoutJsonNode[];
+};
+
 import { TopBar } from './components/TopBar';
 import { LeftMenuBar } from './components/LeftMenuBar';
 import { StatusBar } from './components/StatusBar';
@@ -108,7 +115,7 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   json.global.enableEdgeDock = true;
   json.global.enableEdgeDockIndicators = true;
 
-  const fixNode = (node: any) => {
+  const fixNode = (node?: LayoutJsonNode) => {
     if (!node) return;
     if (node.type === 'tabset') {
       if (node.enableClose === false) delete node.enableClose;
@@ -475,7 +482,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   };
 
   // ── 탭 헤더 우클릭 시 컨텍스트 메뉴 표시 ──
-  const handleContextMenu = (node: any, event: React.MouseEvent<HTMLElement>) => {
+  const handleContextMenu = (node: unknown, event: React.MouseEvent<HTMLElement>) => {
     if (node instanceof TabNode) {
       event.preventDefault();
       event.stopPropagation();

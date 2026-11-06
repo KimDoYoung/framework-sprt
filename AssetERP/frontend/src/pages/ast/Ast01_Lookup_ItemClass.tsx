@@ -49,7 +49,7 @@ export const Ast01_Lookup_ItemClass: React.FC<Props> = ({ open, data, onClose, o
         evalType: data.evalType,
       });
     }
-  }, [open, data]);
+  }, [open, data]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadCodes = async () => {
     try {

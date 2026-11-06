@@ -159,7 +159,7 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
       managerRef.current?.retrieve(active.classTreeId);
       await crud.retrieve();
     },
-    [crud.clear, crud.retrieve, form]
+    [crud.clear, crud.retrieve, form]  // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // visible() L394-396: this.setEnabled(false)
@@ -175,7 +175,7 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
     setContent('');
     setEditorKey((k) => k + 1);
     managerRef.current?.clear();
-  }, [crud.clear, form]);
+  }, [crud.clear, form]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useImperativeHandle(ref, () => ({ loadNode: (n) => { retrieve(n); }, visible, clear }));
 

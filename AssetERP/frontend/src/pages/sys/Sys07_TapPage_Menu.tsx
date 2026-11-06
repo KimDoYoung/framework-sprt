@@ -29,7 +29,7 @@ export const Sys07_TapPage_Menu = forwardRef<Sys07_TapPage_MenuHandle>((_, ref) 
     gb.booleanYn('useYn', 30, '권한'),  // L75 roleMenuYn
     gb.text('seq', 70, '조회순서'),  // L76
     gb.text('note', 500, '매뉴설명'),  // L77
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve(roleId, companyId) L88-113: sys.Sys06_Menu.selectByRoleId → 트리를 비우고 다시 채운다.
   // 원본은 (null, null)이면 서버가 빈 결과를 준다(회사 조건 = NULL) → TOBE는 부르지 않고 비운다

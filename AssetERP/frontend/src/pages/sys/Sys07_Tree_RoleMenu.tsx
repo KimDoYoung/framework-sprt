@@ -33,7 +33,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
     gb.boolean('useYn', 40, '권한'),  // L145 roleMenuYn(= roleMenuModel.useYn) — 클릭은 getColumn()이 처리
     gb.text('seq', 80, '조회순서'),  // L146
     gb.text('note', 500, '매뉴설명'),  // L147
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // search() L213-231: 모두 접고 선택 해제 → 매뉴명(소문자)에 검색어가 있으면 그 행이 보이게 펼치고 선택
   // AS-IS는 바로 위 부모만 펼친다 → TOBE는 조상을 모두 펼친다(그래야 보인다, A15 Sys82와 같음)

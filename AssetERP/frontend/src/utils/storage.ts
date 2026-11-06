@@ -4,22 +4,24 @@
  * - 개별 설정 항목(menu23_font_size, flexlayout_model 등)을 일관되게 관리합니다.
  */
 
+import type { IJsonModel } from 'flexlayout-react';
+
 export const SETTINGS_STORAGE_KEY = 'asseterp_settings';
 
 export interface SavedLayoutItem {
   id: string;
   name: string;
   createdAt: string;
-  modelJson: any;
+  modelJson: IJsonModel;
 }
 
 export interface AppSettings {
   menu23_font_size: number;
   font_family?: 'pretendard' | 'nanum-square-neo' | 'nanum-gothic' | 'system';
-  flexlayout_model?: any;
+  flexlayout_model?: IJsonModel;
   saved_layouts?: SavedLayoutItem[];
   mypage_employee_collapsed?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export const defaultAppSettings: AppSettings = {
@@ -166,7 +168,7 @@ export const appSettingsStorage = {
   /**
    * 현재 화면 레이아웃을 이름과 함께 저장합니다.
    */
-  saveLayout(name: string, modelJson: any): SavedLayoutItem {
+  saveLayout(name: string, modelJson: IJsonModel): SavedLayoutItem {
     const list = this.getSavedLayouts();
     const cleanName = name.trim() || `레이아웃 ${list.length + 1}`;
     const newItem: SavedLayoutItem = {

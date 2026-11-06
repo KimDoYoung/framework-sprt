@@ -35,7 +35,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
     gb.boolean('useYn', 40, '권한'),  // L172 adminUserMenuYn — 클릭은 getColumn()이 처리
     gb.text('seq', 80, '조회순서'),  // L173
     gb.text('note', 250, '매뉴설명'),  // L174
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // search() L247-265: 모두 접고 선택 해제 → 매뉴명에 검색어가 있으면 그 행이 보이게 펼치고 선택
   const search = useCallback((list: AdminUserMenu[] = tree.rows) => {

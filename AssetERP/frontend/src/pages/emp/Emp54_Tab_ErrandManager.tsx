@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { empErrandApi } from '@/api/emp';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { aprDetailApi } from '@/api/apr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Errand } from '@/types/emp';
@@ -47,8 +47,8 @@ export const Emp54_Tab_ErrandManager: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
+    } catch (err) {
+      if (errorCode(err) !== 'DATA_NOT_FOUND') message.error(errorMessage(err, '조회 실패'));
     }
   };
 

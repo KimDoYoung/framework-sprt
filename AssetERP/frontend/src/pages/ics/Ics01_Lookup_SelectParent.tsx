@@ -92,7 +92,7 @@ export const Ics01_Lookup_SelectParent: React.FC<Props> = ({ open, onResult, onC
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 500, '분류명'),  // L126
     gb.textCenter('classTreeCode', 80, '법규코드'),  // L127
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LookupModal

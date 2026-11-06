@@ -37,7 +37,7 @@ export const Dcr01_Lookup_UseYn: React.FC<Props> = ({ open, onClosed, onClose })
     tree.treeCol('classTreeName', 345, '문서분류'),  // L162
     gb.long('apprCount', 75, '등록문서건수'),  // L163
     gb.boolean('useYn', 80, '사용여부'),  // L164 — 클릭은 getColumn()이 처리
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L179-186: 서비스 dcr.Dcr01_ClassTree.selectByAll(companyId, typeCode %) → getServiceResult() L189-203
   const retrieve = useCallback(async () => {

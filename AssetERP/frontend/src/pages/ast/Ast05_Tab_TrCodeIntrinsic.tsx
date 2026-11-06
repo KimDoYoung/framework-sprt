@@ -48,7 +48,7 @@ export const Ast05_Tab_TrCodeIntrinsic: React.FC = () => {
       const list = await astApi.searchTrCodesIntrinsic(sp.current.current.searchText, sp.current.current.useYn);
       originals.current = new Map(list.map(r => [r.trCodeId, { ...r }]));
       return list;
-    }, [sp.current]),
+    }, [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L267-313: GridUpdate → ast.Ast05_TrCode.update 뒤 "저장이 완료되었습니다."
     save: useCallback(async (rows: TrCodeIntrinsic[]) => {
       const saved = await astApi.updateTrCodesIntrinsic(rows);

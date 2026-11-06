@@ -38,7 +38,7 @@ export const Dcr03_TabPage_OrgAuth: React.FC<Props> = ({ orgCodeId }) => {
     gb.boolean('updateYn', 60, '작성'),  // L198 updateYnCheck
     gb.text('seq', 80, '조회순서'),  // L199
     gb.text('note', 400, '상세설명'),  // L200
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L204-211 → getServiceResult() L226-240: 서비스 dcr.Dcr03_OrgAuth.selectByOrgCodeId(로그인 회사, orgCodeId) → 트리 구성 (펼치지 않는다)
   const retrieve = async () => {

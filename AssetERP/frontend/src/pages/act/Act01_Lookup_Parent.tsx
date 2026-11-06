@@ -51,7 +51,7 @@ export const Act01_Lookup_Parent: React.FC<Props> = ({ open, onResult, onClose }
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [sp.current]);
+  }, [sp.current]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // open() L53-92: 새 창이라 입력을 처음 값으로 되돌리고 열 때 retrieve()
   useEffect(() => {

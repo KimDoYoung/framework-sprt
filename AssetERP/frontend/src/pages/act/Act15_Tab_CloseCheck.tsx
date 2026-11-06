@@ -42,7 +42,7 @@ export const Act15_Tab_CloseCheck: React.FC = () => {
   const crud = useGridCrud<CloseCheck>({
     idField: 'closeCheckId',
     // retrieve() L112-128: "%검색어%" → act.Act15_CloseCheck.selectByText
-    search: useCallback(() => actApi.searchCloseChecks(sp.current.current.searchText), [sp.current]),
+    search: useCallback(() => actApi.searchCloseChecks(sp.current.current.searchText), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L135-143: GridUpdate → act.Act15_CloseCheck.update, 끝나면 retrieve()
     save: useCallback((rows: CloseCheck[]) => actApi.updateCloseChecks(rows), []),
     // 등록·삭제 버튼이 없다 — 행은 고객사마다 SQL이 만든다

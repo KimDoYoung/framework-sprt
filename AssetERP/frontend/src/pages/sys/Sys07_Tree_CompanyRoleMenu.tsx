@@ -32,7 +32,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
     gb.boolean('useYn', 40, '권한'),  // L127 roleMenuYn(= roleMenuModel.useYn) — 클릭은 getColumn()이 처리
     gb.text('seq', 80, '조회순서'),  // L128
     gb.text('note', 500, '매뉴설명'),  // L129
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve(roleModel) L142-167: 서비스 sys.Sys06_Menu.selectByRoleId(roleModel.companyId, roleModel.roleId) → 트리 구성
   const retrieve = useCallback(async (role: Role) => {

@@ -77,7 +77,7 @@ export const Ast01_Lookup_ClassTree: React.FC<Props> = ({ open, onResult, onClos
   // getMenuTree() L127-163 — 트리 컬럼 하나(이름 = 분류명), 행번호 없음
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 440, '분류'),
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LookupModal open={open} title="비품구분" width={560} style={{ top: 20 }} maskClosable={false} onCancel={onClose} destroyOnHidden

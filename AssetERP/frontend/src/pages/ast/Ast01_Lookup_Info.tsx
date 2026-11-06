@@ -100,7 +100,7 @@ export const Ast01_Lookup_Info: React.FC<Props> = ({ open, assetType, trCode, it
   // getMenuTree() L251-286 — 트리 컬럼 하나(이름 = 분류명), 행번호 없음
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 560, '분류'),
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LookupModal open={open} title={title} width={650} maskClosable={false} onCancel={onClose} destroyOnHidden

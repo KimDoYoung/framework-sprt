@@ -34,7 +34,7 @@ export const Dcr03_TabPage_DcrAuth: React.FC<Props> = ({ classTreeId }) => {
     gb.boolean('retrieveYn', 60, '조회'),  // L164 retrieveYnCheck — 클릭은 getColumn()이 처리
     gb.boolean('updateYn', 60, '작성'),  // L165 updateYnCheck
     gb.text('note', 400, '비고'),  // L166
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L171-178 → getServiceResult() L193-206: 서비스 org.Org01_Code.selectByDcrCodeId(로그인 회사, dcrCodeId) → 트리 구성 → expandAll
   const retrieve = async () => {

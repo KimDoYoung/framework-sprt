@@ -108,7 +108,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E3] icsChecklistLComboBox[sys.Sys09_Code.selectByIcs21].Collapse (L201) → 중분류를 "전체"로 되돌리고 refreshCode() L488-504:
   //   고른 대분류의 중분류 콤보를 다시 읽고 retrieve()

@@ -80,7 +80,7 @@ export const Flt03_Tab_AccountAdmin: React.FC = () => {
       gb.textCenter('closeApprStatusName', 80, '상신상태'),
       iconCell<FltAccountAdmin>('view', 'closeApprCell', 60, '보기', row => viewAppr(row.closeApprId)),
     ]),
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>

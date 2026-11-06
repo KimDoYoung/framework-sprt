@@ -42,7 +42,7 @@ export const Sys06_Tab_MenuGuide: React.FC = () => {
     search: useCallback(() => {
       const { menuId, searchText } = sp.current.current;
       return sysApi.searchMenuGuides(menuId === ALL ? undefined : Number(menuId), searchText);
-    }, [sp.current]),
+    }, [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L190-207: GridUpdate → sys.Sys06_Menu.update, 성공하면 retrieveFocus() L157-188(같은 조건으로 다시 조회, 스크롤 유지)
     save: sysApi.updateMenuGuides,
     reloadAfterSave: true,

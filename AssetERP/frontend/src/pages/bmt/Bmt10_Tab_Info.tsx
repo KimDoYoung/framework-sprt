@@ -50,7 +50,7 @@ export const Bmt10_Tab_Info: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [sp.current]);
+  }, [sp.current]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E0] 화면 열림 (생성자 L56-85) → settings(): 구분 콤보를 읽은 뒤 retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps

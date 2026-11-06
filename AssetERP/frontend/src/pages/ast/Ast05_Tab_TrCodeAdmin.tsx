@@ -71,7 +71,7 @@ export const Ast05_Tab_TrCodeAdmin: React.FC = () => {
   const crud = useGridCrud<TrCode>({
     idField: 'trCodeId',
     // retrieve() L276-293: 로그인 회사, "%검색어%", 사용항목만 보기, 자산구분 "1" → ast.Ast05_TrCode.selectByCompanyId
-    search: useCallback(() => astApi.searchTrCodes(sp.current.current.searchText, sp.current.current.useYn), [sp.current]),
+    search: useCallback(() => astApi.searchTrCodes(sp.current.current.searchText, sp.current.current.useYn), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L296-330: GridUpdate → ast.Ast05_TrCode.update
     save: useCallback((rows: TrCode[]) => astApi.updateTrCodes(rows), []),
     remove: useCallback((ids: number[]) => astApi.deleteTrCodes(ids), []),

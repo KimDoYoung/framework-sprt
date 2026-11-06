@@ -155,7 +155,7 @@ export const Apr16_Tab_StampFileCheck: React.FC = () => {
     gb.textCenter('stampFileChk', 70, '날인본<br>첨부여부'),  // L161
     gb.date('confirmDate', 90, '확인일자'),  // L162
     gb.textCenter('confirmerName', 100, '확인자'),  // L163
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

@@ -116,7 +116,7 @@ export const Tdm50_Tab_Dashboard = forwardRef<DashboardTabHandle>((_props, ref) 
     gbInsuff.text('actionEmpName', 100, '조치(예정)자'),  // L285
     gbInsuff.text('actionName', 650, '조치명'),  // L286
     viewCell<TdmDashboardInsuff>('actionCell', 80, '상세보기', row => viewInsuff(row.chckInsuffId)),  // L287 → Tdm54_Lookup_ChckInsuffCmnt.view(chckInsuffId) (L271-277)
-  ], []);
+  ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

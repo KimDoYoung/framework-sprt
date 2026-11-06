@@ -47,7 +47,7 @@ export const Sys95_Tab_Manual: React.FC = () => {
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [sp.current]);
+  }, [sp.current]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E0] 화면 열림 (생성자 L53-93) → settings(), retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps

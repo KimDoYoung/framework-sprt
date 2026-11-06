@@ -47,7 +47,7 @@ export const Ast40_Tab_OwnerCapital: React.FC = () => {
   const { retrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L55-86) → settings(), retrieve()
-  useEffect(() => { void retrieve(); }, []);
+  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // 조회 뒤 첫 행 선택(retrieve() L153-157: grid.getSelectionModel().select(0, false))
   const selectFirst = React.useRef(true);

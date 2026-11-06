@@ -139,7 +139,7 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
       selectedCfInfoRef.current = target;
       await cfCrud.retrieve();
     },
-    [cfCrud.clear, cfCrud.retrieve]
+    [cfCrud.clear, cfCrud.retrieve]  // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // [E4] retrieveCfInfoButton[조회].Select (L166) → retrieveCfInfo()
@@ -157,7 +157,7 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
         cfCrud.clear();
       }
     });
-  }, [astClassTreeId, cfInfoCrud.retrieve, cfInfoCrud.gridRef, cfCrud.clear]);
+  }, [astClassTreeId, cfInfoCrud.retrieve, cfInfoCrud.gridRef, cfCrud.clear]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E0] 화면 열림 (생성자 L105-135) → show()
   useEffect(() => {

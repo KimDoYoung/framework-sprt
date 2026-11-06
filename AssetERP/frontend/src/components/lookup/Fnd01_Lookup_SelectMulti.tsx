@@ -64,7 +64,7 @@ export const Fnd01_Lookup_SelectMulti: React.FC<Props> = ({ open, onSelect, onCl
       .then(setRows)
       .catch(err => message.error(errorMessage(err, '조회 실패')))
       .finally(() => setBusy(false));
-  }, [open]);
+  }, [open]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E1] toggleFundType.ValueChange (L97) → retrieve() — 원본은 라디오가 툴바에 붙어 있지 않아 도달 불가였지만 open()의 buttonBar에는 붙어 있다
   const onToggleFundType = (plan: boolean) => { setPlanYn(plan); void retrieve({ planYn: plan }); };

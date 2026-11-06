@@ -11,6 +11,8 @@ export const apiClient = axios.create({
   }
 });
 
+type ErrorBody = { message?: string; code?: string };
+
 // 인터셉터를 거치지 않는 토큰 갱신 전용 클라이언트 (갱신 실패가 다시 갱신을 유발하지 않도록)
 const refreshClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,7 +20,7 @@ const refreshClient = axios.create({
 });
 
 // 토큰 갱신 이벤트 리스너 (UI 상태 업데이트용)
-type RefreshListener = (data: any) => void;
+type RefreshListener = (data: unknown) => void;
 const refreshListeners: RefreshListener[] = [];
 
 export const onTokenRefresh = (listener: RefreshListener) => {
@@ -47,19 +49,32 @@ export const notifySessionTerminated = (reason: SessionTerminateReason) => {
   sessionTerminateListeners.forEach(listener => listener(reason));
 };
 
+/** axios 오류든 일반 Error 든 errorMessage() 가 읽는 부분만 적은 모양 */
+export interface HttpErrorLike {
+  message?: string;
+  response?: { status?: number; data?: { message?: string; code?: string }; headers?: Record<string, string | undefined> };
+}
+
 /**
  * 화면에 표시할 오류 메시지. 서버 오류(5xx)에는 추적ID(X-Trace-Id)를 붙여
  * 사용자가 알려준 ID로 운영자가 서버 로그에서 해당 요청을 바로 찾을 수 있게 한다.
  */
-export const errorMessage = (err: any, fallback = '요청 처리 실패'): string => {
+export const errorMessage = (e: unknown, fallback = '요청 처리 실패'): string => {
+  const err = e as HttpErrorLike | undefined;
   const message: string = err?.response?.data?.message || err?.message || fallback;
   const traceId: string | undefined = err?.response?.headers?.['x-trace-id'];
   const isServerError = (err?.response?.status ?? 0) >= 500;
   return isServerError && traceId && !message.includes(traceId) ? `${message} (추적ID: ${traceId})` : message;
 };
 
+/** 서버가 ApiResponse.code 로 준 업무 오류 코드(없으면 undefined) */
+export const errorCode = (e: unknown): string | undefined => (e as HttpErrorLike | undefined)?.response?.data?.code;
+
+/** 응답이 있었던 오류의 HTTP 상태(네트워크 오류 등 응답이 없으면 undefined) */
+export const errorStatus = (e: unknown): number | undefined => (e as HttpErrorLike | undefined)?.response?.status;
+
 /** 서버 에러 코드: X-Auth-Error 헤더 우선, 없으면 ApiResponse.code */
-const getErrorCode = (error: AxiosError<any>): string | undefined =>
+const getErrorCode = (error: AxiosError<ErrorBody>): string | undefined =>
   error.response?.headers?.['x-auth-error'] || error.response?.data?.code;
 
 const TERMINATE_REASON_BY_CODE: Record<string, SessionTerminateReason> = {
@@ -74,12 +89,12 @@ const notifyByErrorCode = (code: string | undefined) => {
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
   config: InternalAxiosRequestConfig;
 }> = [];
 
-const processQueue = (error: any = null) => {
+const processQueue = (error: unknown = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
@@ -93,7 +108,7 @@ const processQueue = (error: any = null) => {
 // Response Interceptor: 401(토큰 만료) 감지 시 자동 토큰 갱신 (Silent Refresh)
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<any>) => {
+  async (error: AxiosError<ErrorBody>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // 401 에러가 아니거나 원래 요청 정보가 없으면 그대로 reject
@@ -153,9 +168,9 @@ apiClient.interceptors.response.use(
         notifySessionTerminated('EXPIRED');
         return Promise.reject(error);
       }
-    } catch (refreshErr: any) {
+    } catch (refreshErr) {
       processQueue(refreshErr);
-      notifyByErrorCode(getErrorCode(refreshErr));
+      notifyByErrorCode(getErrorCode(refreshErr as AxiosError<ErrorBody>));
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;

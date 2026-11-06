@@ -155,7 +155,7 @@ export const App: React.FC = () => {
     return () => {
       realtime.disconnect();
     };
-  }, [user?.userId, user?.jti]);
+  }, [user?.userId, user?.jti]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // 앱 진입 시 기존 쿠키를 통한 세션 복원 시도

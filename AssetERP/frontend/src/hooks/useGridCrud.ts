@@ -139,7 +139,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       return { ...r, ...patch };
     }));
     bump();
-  }, [getId, bump]);
+  }, [getId, bump]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   /** 서버에서 다시 읽은 한 행으로 바꾼다 (AS-IS grid.getStore().update(model) — 조회창을 닫은 뒤 refresh). 변경 표시는 지운다 */
   const replaceRow = useCallback((id: number, row: T) => {

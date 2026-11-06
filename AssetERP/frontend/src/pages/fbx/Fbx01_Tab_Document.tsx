@@ -69,7 +69,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const crud = useGridCrud<FbxBox>({
     idField: 'boxId',
     // retrieve() L348-361: fbx.Fbx01_Box.selectByCompanyId(companyId, searchText) — 끝나면 첫 행을 고른다
-    search: useCallback(() => fbxApi.searchBoxes(sp.current.current.searchText), [sp.current]),
+    search: useCallback(() => fbxApi.searchBoxes(sp.current.current.searchText), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L363-366: GridUpdate → fbx.Fbx01_Box.update
     save: useCallback((rows: FbxBox[]) => fbxApi.updateBoxes(rows.map(r => ({
       boxId: r.boxId, crtDate: r.crtDate, title: r.title, note: r.note || null, statusCd: r.statusCd,

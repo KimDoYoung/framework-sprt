@@ -67,7 +67,7 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [tree.setRows, tree.expandAncestors]);
+  }, [tree.setRows, tree.expandAncestors]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     retrieve();
@@ -148,7 +148,7 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
         setEditModalOpen(true);
       }),
     ],
-    [tree.treeCol]
+    [tree.treeCol]  // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (

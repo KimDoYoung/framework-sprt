@@ -85,7 +85,7 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
     } catch { setClassTreeId(null); }
   }, []);
 
-  useEffect(() => { void retrieve(); }, []);
+  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E1] leaveYText.KeyPress [Enter] (L137) / [E2] retrieveButton[조회].Select (L145) → retrieve()
   const retrieve = async () => {

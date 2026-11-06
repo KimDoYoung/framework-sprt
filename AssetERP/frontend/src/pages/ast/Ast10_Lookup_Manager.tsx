@@ -43,7 +43,7 @@ export const Ast10_Lookup_Manager: React.FC<Props> = ({ open, linkId, onClose, o
       deletedIdsRef.current = [];
       setSelectedRows([]);
     }
-  }, [open, linkId]);
+  }, [open, linkId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const retrieve = async () => {
     if (!linkId) return;

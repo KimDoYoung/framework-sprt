@@ -60,7 +60,7 @@ export const Ics01_Tab_ApprList: React.FC = () => {
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 345, '분류명'),  // L130
     gb.text('classTreeCode', 100, '분류코드'),  // L131
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

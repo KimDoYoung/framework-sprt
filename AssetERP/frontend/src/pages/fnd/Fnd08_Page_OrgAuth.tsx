@@ -32,7 +32,7 @@ export const Fnd08_Page_OrgAuth: React.FC<Props> = ({ fundCodeId }) => {
     gb.text('orgCode', 60, '조직코드'),  // L87
     gb.boolean('authYn', 40, '권한'),  // L88 authYnCheck — 클릭은 getColumn()이 처리
     gb.text('note', 300, '비고'),  // L89
-  ], [tree.treeCol]);
+  ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L93-99 → getServiceResult() L114-128: 서비스 org.Org01_Code.selectByFundCodeId(로그인 회사, fundCodeId) → 트리 구성 → expandAll
   const retrieve = async () => {

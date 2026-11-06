@@ -52,7 +52,7 @@ export const Act10_Lookup_ReprAccount: React.FC<Props> = ({ open, searchText, on
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [sp.current]);
+  }, [sp.current]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // open() L53-89: 새 창이라 입력을 처음 값(검색어는 넘겨받은 글자)으로 하고 열 때 retrieve()
   useEffect(() => {

@@ -67,7 +67,7 @@ export const Sys15_Tab_Corp: React.FC = () => {
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [corpType, searchText, useYn]);
+  }, [corpType, searchText, useYn]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E5] insertButton[등록].Select (L173) → insertRow() L283-291: 구분 '0'(일반)·사용 true인 빈 행을 맨 아래에 (GridInsertRow, 03 원칙 17)
   const insertRow = () => {

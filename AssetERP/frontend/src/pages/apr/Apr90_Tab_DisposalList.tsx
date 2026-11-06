@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprApi, aprDetailApi } from '@/api/apr';
-import { errorMessage } from '@/api/client';
+import { errorCode, errorMessage } from '@/api/client';
 import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { AprDisposalList } from '@/types/apr';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -61,8 +61,8 @@ export const Apr90_Tab_DisposalList: React.FC = () => {
     try {
       await aprDetailApi.getDetail(apprId);
       setViewApprId(apprId);
-    } catch (err: any) {
-      if (err?.response?.data?.code === 'DATA_NOT_FOUND') message.info('해당 문서는 폐기된 문서입니다.');
+    } catch (err) {
+      if (errorCode(err) === 'DATA_NOT_FOUND') message.info('해당 문서는 폐기된 문서입니다.');
       else message.error(errorMessage(err, '조회 실패'));
     }
   };

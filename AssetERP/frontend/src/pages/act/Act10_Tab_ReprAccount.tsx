@@ -85,7 +85,7 @@ export const Act10_Tab_ReprAccount: React.FC = () => {
   const crud = useGridCrud<ReprAccount>({
     idField: 'reprAccountId',
     // retrieve() L304-336: 로그인 회사, attributeCode(없으면 "%"), searchText "%검색어%"(없으면 "%" — 서버가 만든다) → act.Act10_ReprAccount.selectByCompanyId
-    search: useCallback(() => actApi.searchReprAccounts(sp.current.current.attributeCode, sp.current.current.searchText), [sp.current]),
+    search: useCallback(() => actApi.searchReprAccounts(sp.current.current.attributeCode, sp.current.current.searchText), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
     // update() L343-346: GridUpdate → act.Act10_ReprAccount.update
     save: useCallback((rows: ReprAccount[]) => actApi.updateReprAccounts(rows), []),
     remove: useCallback((ids: number[]) => actApi.deleteReprAccounts(ids), []),

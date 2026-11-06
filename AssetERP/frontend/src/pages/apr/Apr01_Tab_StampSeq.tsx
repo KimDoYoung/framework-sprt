@@ -111,7 +111,7 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
     { ...iconCell<AprStampSeq>('edit', 'actionCell02', 80, '확인자입력', updatePutSealConfirm), hide: !putSealVisible },
     { ...gb.text('putSealEmpName', 80, '인감확인자'), hide: !putSealVisible },  // L233
     { ...gb.dateTime('putSealDate', 160, '확인일시'), hide: !putSealVisible },  // L234
-  ], [putSealVisible]);
+  ], [putSealVisible]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // findLookupStampSeq() L293-309: Apr10_Lookup_Stamp(flag=true, checkflag=true).open → [확인]은 인감 이름·ID를 칸에 넣고, [전체]("전체보기")는 칸을 비우고 ID 0
   const pickStamp = (stamp: AprStamp | null) => {
