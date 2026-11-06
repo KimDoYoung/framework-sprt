@@ -69,4 +69,8 @@ public interface SchListMapper {
 
     /** AS-IS sch04_list.selectCheckListStatus (O06 업무일정 체크내역) */
     List<Sch04CheckStatusRes> selectCheckListStatus(Sch04CheckStatusSearchCond cond);
+
+    /** AS-IS sch04_list.selectByToDoList L704 — MyPage 나의일정 상세(Sch04_Lookup_SchList)가 여는 할일 한 건(저장 전이면 임시 번호) */
+    List<Sch04TodoRes> selectByToDoList(@Param("companyId") Long companyId, @Param("infoId") Long infoId,
+                                        @Param("deadlineId") Long deadlineId, @Param("closeDate") LocalDate closeDate);
 }

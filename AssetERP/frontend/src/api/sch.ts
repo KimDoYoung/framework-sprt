@@ -377,6 +377,12 @@ export const schApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sch.Sch04_List.selectByToDoList — MyPage 나의일정 상세(Sch04_Lookup_SchList) 할일 한 건, 없으면 null (EE109) */
+  getToDoList: async (infoId: number, deadlineId: number, closeDate: string): Promise<Sch04Todo | null> => {
+    const res = await apiClient.get<ApiResponse<Sch04Todo | null>>('v1/sch/lists/todo/detail', { params: { infoId, deadlineId, closeDate } });
+    return res.data.data ?? null;
+  },
+
   /** AS-IS sch.Sch04_List.insertCheck — 고친 행(처리여부·처리일·담당자·비고) 저장 (O04) */
   saveTodo: async (rows: Sch04Todo[]): Promise<number> => {
     const body = rows.map(({ listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, personId, statusCode, note, deadlineId, mngOrgId }) =>

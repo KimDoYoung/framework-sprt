@@ -1024,4 +1024,92 @@
          WHERE sch04_list_id = #{listId}
            AND sch04_company_id = #{companyId}
     </update>
+
+    <!-- AS-IS sch04_list.selectByToDoList L704 (IDMS-IC) — MyPage 나의일정 [상세보기](Monitoring_Page_Relate.view01) → Sch04_Lookup_SchList.
+         안쪽 UNION은 그대로(저장된 할일 + 아직 없는 할일), 바깥 SELECT 열을 Sch04TodoRes 생성자 순서로 맞췄다(manager_name은 원본에 없어 NULL, 결재 열은 창이 쓰지 않아 뺐다) -->
+    <select id="selectByToDoList" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoRes">
+<![CDATA[
+SELECT list_id                                                          AS list_id
+     , close_date::date                                                 AS close_date
+     , manage_date::date                                                AS manage_date
+     , schedule_cd                                                      AS schedule_code
+     , info_id                                                          AS info_id
+     , cycle_cd                                                         AS cycle_code
+     , title                                                            AS title
+     , org_id                                                           AS mng_org_id
+     , manager_id                                                       AS manager_id
+     , person_id                                                        AS person_id
+     , status_cd                                                        AS status_code
+     , note                                                             AS note
+     , company_id                                                       AS company_id
+     , deadline_id                                                      AS deadline_id
+     , f_cdnm('CycleCode', cycle_cd, company_id, f_sysdate())           AS cycle_name
+     , f_cdnm('ScheduleStatusCode', status_cd, company_id, f_sysdate()) AS status_name
+     , NULL::text                                                       AS manager_name
+     , CASE WHEN status_cd IN ('0','9') THEN ''
+            ELSE f_emp_kor_nm(person_id) END                            AS person_name
+     , class_nm                                                         AS class_name
+      FROM (
+             SELECT sch04_list_id                                   list_id
+                  , sch04_close_date                                close_date
+                  , sch04_manage_date                               manage_date
+                  , sch04_schedule_cd                               schedule_cd
+                  , sch04_info_id                                   info_id
+                  , sch04_cycle_cd                                  cycle_cd
+                  , sch04_title                                     title
+                  , sch04_mng_org_id                                org_id
+                  , sch04_manager_id                                manager_id
+                  , sch04_person_id                                 person_id
+                  , sch04_status_cd                                 status_cd
+                  , sch04_company_id                                company_id
+                  , sch04_deadline_id                               deadline_id
+                  , sch04_note                                      note
+                  , CASE WHEN sch04_schedule_cd = '1'
+                         THEN (CASE WHEN COALESCE(appr1.apr01_status_cd,'X') != 'X'
+                                    THEN f_cdnm('AprStatusCode', appr1.apr01_status_cd, sch04_company_id, f_sysdate())
+                                    ELSE null END)
+                         ELSE '' END                                appr_status_nm
+                  , CASE WHEN sch04_schedule_cd = '1'
+                         THEN COALESCE(sch04_appr_id,0)
+                         ELSE 0 END                                 appr_id
+                  , sch08_class_nm                                  class_nm
+              FROM sch04_list
+                   LEFT OUTER JOIN apr01_appr appr1 ON appr1.apr01_appr_id = sch04_appr_id
+                   LEFT OUTER JOIN sch01_info ON sch01_info_id = sch04_info_id
+                   LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+             WHERE sch04_company_id  = #{companyId}
+               AND sch04_info_id     = #{infoId}
+               AND sch04_close_date  = #{closeDate}::date
+             UNION
+            SELECT row_number() OVER (ORDER BY sch01_info_id)                                       list_id
+                 , #{closeDate}::date                                                               close_date
+                 , null                                                                             manage_date
+                 , '1'                                                                              schedule_cd
+                 , sch01_info_id                                                                    info_id
+                 , sch03_cycle_cd                                                                   cycle_cd
+                 , sch01_title                                                                      title
+                 , cast(f_get_empTrans(sch01_manager_id, #{closeDate}, 'org_code_id') as numeric)   org_id
+                 , sch01_manager_id                                                                 manager_id
+                 , sch01_manager_id                                                                 person_id
+                 , '0'                                                                              status_cd
+                 , sch01_company_id                                                                 company_id
+                 , sch03_deadline_id                                                                deadline_id
+                 , ''                                                                               note
+                 , ''                                                                               appr_status_nm
+                 , 0                                                                                appr_id
+                 , sch08_class_nm                                                                   class_nm
+              FROM sch01_info
+                   INNER JOIN sch03_deadline ON sch01_info_id = sch03_info_id
+                   LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+             WHERE sch01_info_id     = #{infoId}
+               AND sch03_deadline_id = #{deadlineId}
+               AND NOT EXISTS ( SELECT 1
+                                  FROM sch04_list
+                                 WHERE sch04_company_id = sch01_company_id
+                                   AND sch04_info_id    = sch01_info_id
+                                   AND sch04_close_date = #{closeDate}::date
+                                   AND sch04_mng_org_id = cast(f_get_empTrans(sch01_manager_id, #{closeDate}, 'org_code_id') as numeric) )
+           ) sch
+]]>
+    </select>
 </mapper>

@@ -9,6 +9,7 @@ import { Input, message } from 'antd';
 import dayjs from 'dayjs';
 import { frmApi } from '@/api/frm';
 import { mrbApi } from '@/api/mrb';
+import { schApi } from '@/api/sch';
 import { carApi } from '@/api/car';
 import { bbsFloralApi } from '@/api/bbs';
 import { errorMessage } from '@/api/client';
@@ -24,6 +25,8 @@ import { Sch14_Lookup_IpoMismatch } from '@/pages/sch/Sch14_Lookup_IpoMismatch';
 import { Bbs20_Edit_FloralRequest, type FloralEditTarget } from '@/pages/bbs/Bbs20_Edit_FloralRequest';
 import { Mrb01_Popup_MeetingRoomReg, type MrbBookingRegTarget } from '@/pages/mrb/Mrb01_Popup_MeetingRoomReg';
 import { Car03_Popup_BookingReg, type BookingRegTarget } from '@/pages/car/Car03_Popup_BookingReg';
+import { Sch04_Lookup_SchList, type SchListTarget } from '@/pages/sch/Sch04_Lookup_SchList';
+import { Bbs02_Popup_Notice, type NoticeViewInfo } from '@/pages/bbs/Bbs02_Popup_Notice';
 import { MonitorGridBox, monitorDate, monitorDetail, monitorText, type MonitorTab } from './MonitorGridBox';
 
 /** 탭 키 = AS-IS 그리드 이름 */
@@ -65,6 +68,8 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
   const [mrb, setMrb] = useState<MrbBookingRegTarget | null>(null);
   const [car, setCar] = useState<BookingRegTarget | null>(null);
   const [textMsg, setTextMsg] = useState<TextMsg | null>(null);
+  const [schList, setSchList] = useState<SchListTarget | null>(null);
+  const [noticeView, setNoticeView] = useState<NoticeViewInfo | null>(null);
   const [baroChoice, setBaroChoice] = useState<'grid04' | 'grid05' | null>(null);
 
   const fail = (err: unknown) => message.error(errorMessage(err, '조회 실패'));
@@ -98,8 +103,13 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
   // ── 상세보기 ──────────────────────────────────────────────
 
   // buildGrid01 viewCell L164-169 → view01() L426-453: sch.Sch04_List.selectByToDoList → Sch04_Lookup_SchList.open(model, "010", callback → retrieve01())
-  const view01 = (_row: FrmRelateMySchedule) => {
-    message.info('나의일정 상세(Sch04_Lookup_SchList)는 아직 변환 전입니다 — 다음 단계에서 연결됩니다');
+  const view01 = async (row: FrmRelateMySchedule) => {
+    if (row.deadlineId == null) { message.info('예기치못한 오류가 발생했습니다. 관리자에게 문의해주세요'); return; }
+    try {
+      const todo = await schApi.getToDoList(row.realInfoId, row.deadlineId, stdDate);
+      if (todo?.listId == null) { message.info('예기치못한 오류가 발생했습니다. 관리자에게 문의해주세요'); return; }
+      setSchList({ row: todo, gubunCode: '010' });
+    } catch (err) { fail(err); }
   };
 
   // buildGrid01_1 viewCell L183-188 → view01_1() L455-458: Sch01_Lookup_InfoView.open(realInfoId, deadlineId)
@@ -115,7 +125,9 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
   const view03 = async (row: FrmRelateNotice) => {
     switch (row.noticeType) {
       case '10010':   // 공지사항 → bbs.Bbs02_Notice.selectById → Bbs02_Popup_Notice.openWithComment(title, notice, keyId, null)
-        message.info('공지사항 보기(Bbs02_Popup_Notice)는 아직 변환 전입니다 — 다음 단계에서 연결됩니다');
+        //   TOBE는 다시 읽지 않고 이 행의 값(bbs02_title·bbs02_notice·bbs02_notice_id — selectById와 같은 열)을 쓴다
+        if (row.noticeId == null) return;
+        setNoticeView({ noticeId: row.noticeId, title: row.title ?? '', notice: row.notice, withComment: true });
         break;
       case '10020':   // 메세지 → SocketMessage.show(title)
         setTextMsg({ title: '실시간 알림', text: row.title ?? '' });
@@ -192,7 +204,7 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
           monitorText<FrmRelateMySchedule>('managerName', 90, '등록자', 'center'),
           monitorDate<FrmRelateMySchedule>('closeDate', 90, '마감일'),
           monitorDate<FrmRelateMySchedule>('manageDate', 90, '처리일'),
-          monitorDetail<FrmRelateMySchedule>(60, view01),
+          monitorDetail<FrmRelateMySchedule>(60, row => void view01(row)),
         ]} />;
       case 'grid01_1': // buildGrid01_1 L182-198
         return <MonitorGridBox<FrmRelateOrgSchedule> {...common} rowKey="rowId" dataSource={grid01_1} columns={[
@@ -273,6 +285,9 @@ export const ScheduleGridBox: React.FC<Props> = ({ selectDate, refreshKey = 0, f
       >
         <Input.TextArea readOnly value={textMsg?.text ?? ''} style={{ height: 150, resize: 'none' }} />
       </LookupModal>
+      {/* Sch04_Lookup_SchList.open(model, "010", callback → retrieve01()) — 창을 닫으면(저장 뒤 포함) 나의일정을 다시 읽는다 */}
+      <Sch04_Lookup_SchList target={schList} onClose={() => { setSchList(null); void retrieve01().catch(fail); }} />
+      <Bbs02_Popup_Notice notice={noticeView} onClose={() => setNoticeView(null)} />
       <Sch01_Lookup_InfoView target={infoView} onClose={() => setInfoView(null)} />
       <Mkt03_Lookup_History
         target={mktTarget}

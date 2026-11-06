@@ -110,6 +110,14 @@ public class SchListController {
         return ApiResponse.ok(service.searchTodo(principal, manageCheck, startDate, exceptYn, cancelYn, statusCode, classId));
     }
 
+    /** AS-IS sch.Sch04_List.selectByToDoList — MyPage 나의일정 상세(Sch04_Lookup_SchList) 할일 한 건 */
+    @GetMapping("/todo/detail")
+    public ApiResponse<Sch04TodoRes> getToDoList(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam Long infoId, @RequestParam Long deadlineId,
+                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate) {
+        return ApiResponse.ok(service.getToDoList(principal, infoId, deadlineId, closeDate));
+    }
+
     /** AS-IS sch.Sch04_List.insertCheck — 고친 행(처리여부·처리일·담당자·비고)을 저장한다 */
     @PutMapping("/todo")
     public ApiResponse<Integer> saveTodo(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Sch04TodoSaveReq> rows) {

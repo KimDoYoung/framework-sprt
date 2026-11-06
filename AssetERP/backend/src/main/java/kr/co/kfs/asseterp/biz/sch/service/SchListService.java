@@ -95,6 +95,15 @@ public class SchListService {
     }
 
     /**
+     * AS-IS Monitoring_Page_Relate.view01 L426-453 → Sch04_List.selectByToDoList L318-323: 첫 행(없으면 null — 화면이 "예기치못한 오류" 안내).
+     * closeDate = MyPage 기준일, infoId = 일정의 realInfoId
+     */
+    public Sch04TodoRes getToDoList(UserPrincipal user, Long infoId, Long deadlineId, LocalDate closeDate) {
+        List<Sch04TodoRes> list = mapper.selectByToDoList(user.getCompanyId(), infoId, deadlineId, closeDate);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    /**
      * AS-IS Sch04_List.insertCheck L207-252: 고친 행마다 sch04_list에 있으면(selectById) 처리여부·처리일·담당자·비고만 confirmUpdate(처리일은 미처리·취소면 마감일),
      * 없으면(UNION이 만든 미처리 건) 새 ID로 insert. 회사는 로그인 회사(AS-IS는 모델 값)
      */
