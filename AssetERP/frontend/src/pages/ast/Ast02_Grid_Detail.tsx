@@ -125,13 +125,16 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
   });
 
   // retrieve(classTreeModel) L430-453: 담당자 그리드·폼(editDriver.edit)·내용(editData)·상세 목록
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수(clear·retrieve)만 꺼내 쓴다
+  const { clear: crudClear, retrieve: crudRetrieve } = crud;
+
   // [E1] retrieveButton[조회].Select (L162) → retrieve()
   // [E4] cfButton[현금흐름표].Select 닫힘 뒤에도 retrieve()
   const retrieve = useCallback(
     async (target?: AstClassTree | null) => {
       const active = target ?? nodeRef.current;
       if (!active || !active.classTreeId) {
-        crud.clear();
+        crudClear();
         setContent('');
         setEditorKey((k) => k + 1);
         return;
@@ -157,9 +160,9 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
       });
       setCorpName(active.corpName ?? '');
       managerRef.current?.retrieve(active.classTreeId);
-      await crud.retrieve();
+      await crudRetrieve();
     },
-    [crud.clear, crud.retrieve, form]  // eslint-disable-line react-hooks/exhaustive-deps
+    [crudClear, crudRetrieve, form]
   );
 
   // visible() L394-396: this.setEnabled(false)
@@ -169,13 +172,13 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
     setEnabled(false);
     setNode(null);
     nodeRef.current = null;
-    crud.clear();
+    crudClear();
     form.resetFields();
     setCorpName('');
     setContent('');
     setEditorKey((k) => k + 1);
     managerRef.current?.clear();
-  }, [crud.clear, form]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [crudClear, form]);
 
   useImperativeHandle(ref, () => ({ loadNode: (n) => { retrieve(n); }, visible, clear }));
 
