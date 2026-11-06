@@ -9,10 +9,10 @@
  * FullCalendar를 들이지 않고 antd Calendar로 그린다(칸 모양은 TOBE 목업 설계). 머리 버튼은 fullcalendar 툴바 버튼이라 AS-IS ColorButton 이름표(button-types)가 아니다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Calendar, Space, message } from 'antd';
+import { Button, Calendar, Popover, Space, message } from 'antd';
 import type { CellRenderInfo } from 'rc-picker/lib/interface';
 import {
-  BellFilled, CalendarOutlined, DoubleLeftOutlined, DoubleRightOutlined, LeftOutlined, ReloadOutlined, RightOutlined, ShoppingOutlined, StarFilled,
+  BellFilled, CalendarOutlined, CloseOutlined, DoubleLeftOutlined, DoubleRightOutlined, LeftOutlined, ReloadOutlined, RightOutlined, ShoppingOutlined, StarFilled,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { frmApi } from '@/api/frm';
@@ -37,8 +37,8 @@ interface CalendarProps {
   refreshKey?: number;
 }
 
-/** eventLimit: 칸에 보이는 막대 수 (넘치면 "+n개") */
-const VISIBLE_EVENTS = 2;
+/** eventLimit: 칸 높이에 막대 한 줄만 들어간다 — 1건이면 그 막대, 2건 이상이면 막대 없이 "+n 개"(n = 전부) (FullCalendar 줄 단위 제한과 같은 모양) */
+const VISIBLE_EVENTS = 1;
 const DAY = 'YYYY-MM-DD';
 
 export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelectDate, onEventClick, onRefreshAll, refreshKey = 0 }) => {
@@ -48,6 +48,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
   const [bookmarkOpen, setBookmarkOpen] = useState(false); // [⭐ 북마크] → Sys06_Lookup_SearchMenu
   const [ipoOpen, setIpoOpen] = useState(false);           // [📆 공모주] → RDViewer.openSch10(Sch10_Rd_Ipo)
   const [commuteOpen, setCommuteOpen] = useState(false);   // [💼 출퇴근(Beta)] → Att02_Lookup_Commute
+  const [moreDate, setMoreDate] = useState<string | null>(null); // eventLimit "+n 개" 팝오버를 연 날짜
 
   // getViewDate L296-311 → calEvent L313-338: 보이는 달(intervalStart ~ intervalEnd-1)의 일정
   const getViewDate = useCallback(async (month: Dayjs) => {
@@ -95,11 +96,41 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
         {/* .fc-today-button L272-284: 오늘 칸 표시 → returnValue(오늘) → getViewDate */}
         <Button size="small" className="mypage-cal-btn" onClick={() => {
           const t = dayjs();
-          setViewMonth(t.startOf('month'));
+          // 같은 달이어도 getViewDate로 일정을 다시 읽는다 (다른 달이면 viewMonth가 바뀌어 읽힌다)
+          if (t.isSame(viewMonth, 'month')) void getViewDate(t); else setViewMonth(t.startOf('month'));
           onSelectDate(t.format(DAY));
         }}>오늘</Button>
         {/* myCustomButton[새로고침] L146-153 → returnValue() = allRetrieve */}
         <Button size="small" type="primary" className="mypage-cal-btn" style={{ backgroundColor: '#1e3a5f' }} icon={<ReloadOutlined style={{ fontSize: 10 }} />} onClick={onRefreshAll}>새로고침</Button>
+      </div>
+    </div>
+  );
+
+  // eventClick L214-224 → returnValue(날짜) · eventRender click L209-212 → returnTitle(제목)
+  const eventBar = (date: Dayjs, e: FrmCalendarEvent, i: number, big = false) => (
+    <div
+      key={i}
+      title={e.title}
+      onClick={ev => { ev.stopPropagation(); setMoreDate(null); onSelectDate(date.format(DAY)); onEventClick?.(e); }}
+      style={{
+        backgroundColor: e.color, color: e.textColor, fontSize: big ? 12 : 10, fontWeight: 500, padding: big ? '2px 6px' : '1px 4px', borderRadius: 3,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: big ? '16px' : '13px', cursor: 'pointer',
+      }}
+    >
+      {e.title}
+    </div>
+  );
+
+  /** FullCalendar eventLimit 팝오버(fc-more-popover): 머리 = 날짜(ko LL) + ×, 몸 = 그날 일정 전부. 일정을 누르면 칸의 일정과 같다 */
+  const morePopover = (date: Dayjs, list: FrmCalendarEvent[]) => (
+    // 포털 안 클릭이 React 이벤트로 날짜 칸(dayClick)까지 올라가지 않게 막는다
+    <div style={{ width: 200 }} onClick={ev => ev.stopPropagation()}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: '#eeeeee', borderBottom: '1px solid #ddd', fontSize: 12, fontWeight: 600 }}>
+        <span>{date.format('YYYY년 M월 D일')}</span>
+        <CloseOutlined style={{ fontSize: 10, cursor: 'pointer' }} onClick={() => setMoreDate(null)} />
+      </div>
+      <div style={{ padding: 6, display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 260, overflowY: 'auto' }}>
+        {list.map((e, i) => eventBar(date, e, i, true))}
       </div>
     </div>
   );
@@ -111,38 +142,39 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
     const isToday = date.isSame(today, 'day');
     const dow = date.day();
     const list = byDate.get(date.format(DAY)) ?? [];
-    const dayColor = !isCurrentMonth ? '#cbd5e1' : dow === 0 ? '#dc2626' : dow === 6 ? '#2563eb' : '#1e293b';
+    // fullcalendar.jsp: 일요일 빨강(fc-sun), 다른 달은 흐리게, 오늘 fc-today(#fcf8e3), 고른 날 #DCDDE1(dayClick L230-236)
+    const dayColor = dow === 0 ? '#e31b23' : '#4a5568';
     return (
       <div
         className="mypage-calendar-day-cell"
         style={{
-          height: '100%', minHeight: 48, borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', boxSizing: 'border-box',
-          backgroundColor: isChosen ? '#eff6ff' : isToday ? '#f8fafc' : isCurrentMonth ? '#ffffff' : '#fafafa',
-          boxShadow: isChosen ? 'inset 0 0 0 2px #1677ff' : 'none', cursor: 'pointer',
-          display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden',
+          height: '100%', minHeight: 48, borderRight: '1px solid #dddddd', borderBottom: '1px solid #dddddd', padding: '4px 4px', boxSizing: 'border-box',
+          backgroundColor: isChosen ? '#DCDDE1' : isToday ? '#fcf8e3' : '#ffffff',
+          cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3, overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', lineHeight: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontWeight: isChosen ? 800 : dow === 0 ? 600 : 500, color: dayColor, fontSize: 12, lineHeight: '13px' }}>{date.date()}</span>
-            {isToday && <span style={{ fontSize: 9, fontWeight: 700, color: '#1677ff', backgroundColor: '#dbeafe', padding: '1px 3px', borderRadius: 2, lineHeight: '11px' }}>오늘</span>}
-          </div>
-          {list.length > VISIBLE_EVENTS && <span style={{ fontSize: 10, color: '#64748b', fontWeight: 500 }}>+{list.length - VISIBLE_EVENTS} 개</span>}
-        </div>
-        {list.slice(0, VISIBLE_EVENTS).map((e, i) => (
-          <div
-            key={i}
-            title={e.title}
-            // eventClick L214-224 → returnValue(날짜) · eventRender click L209-212 → returnTitle(제목)
-            onClick={ev => { ev.stopPropagation(); onSelectDate(date.format(DAY)); onEventClick?.(e); }}
-            style={{
-              backgroundColor: e.color, color: e.textColor, fontSize: 10, fontWeight: 500, padding: '1px 4px', borderRadius: 3,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '13px',
-            }}
+        {/* .fc-day-number: 오른쪽 위 */}
+        <div style={{ textAlign: 'right', paddingRight: 6, fontSize: 14, lineHeight: '18px', color: dayColor, opacity: isCurrentMonth ? 1 : 0.35 }}>{date.date()}</div>
+        {list.length <= VISIBLE_EVENTS && list.map((e, i) => eventBar(date, e, i))}
+        {/* eventLimit: 넘친 일정은 칸 왼쪽 아래 "+n 개"(fc-more) → 누르면 그날 일정 팝오버 */}
+        {list.length > VISIBLE_EVENTS && (
+          <Popover
+            open={moreDate === date.format(DAY)}
+            onOpenChange={o => { if (!o) setMoreDate(null); }}
+            trigger="click"
+            placement="bottomLeft"
+            arrow={false}
+            overlayInnerStyle={{ padding: 0, borderRadius: 2 }}
+            content={morePopover(date, list)}
           >
-            {e.title}
-          </div>
-        ))}
+            <span
+              onClick={ev => { ev.stopPropagation(); setMoreDate(date.format(DAY)); }}
+              style={{ alignSelf: 'flex-start', fontSize: 11, color: '#4a5568', cursor: 'pointer', lineHeight: '14px', paddingLeft: 2 }}
+            >
+              +{list.length} 개
+            </span>
+          </Popover>
+        )}
       </div>
     );
   };
@@ -155,13 +187,13 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
         .mypage-calendar-container .ant-picker-date-panel { height: 100% !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
         .mypage-calendar-container .ant-picker-body { flex: 1 !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; padding: 0 !important; }
         .mypage-calendar-container .ant-picker-content { height: 100% !important; width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
-        .mypage-calendar-container .ant-picker-content th { padding: 5px 0 !important; color: #334155 !important; font-weight: 600 !important; font-size: 12px !important; background-color: #f8fafc !important; border-bottom: 1px solid #cbd5e1 !important; }
-        .mypage-calendar-container .ant-picker-content th:first-child { color: #dc2626 !important; }
-        .mypage-calendar-container .ant-picker-content th:last-child { color: #2563eb !important; }
+        .mypage-calendar-container .ant-picker-content th { padding: 8px 0 !important; color: #242E3E !important; font-weight: 600 !important; font-size: 13px !important; text-align: center !important; background-color: #F7F8FC !important; border: 1px solid #dddddd !important; }
+        .mypage-calendar-container .ant-picker-content th:first-child { color: #242E3E !important; }
+        .mypage-calendar-container .ant-picker-content th:last-child { color: #242E3E !important; }
+        .mypage-calendar-container .ant-picker-content td:first-child .mypage-calendar-day-cell { border-left: 1px solid #dddddd; }
         .mypage-calendar-container .ant-picker-content tbody { height: 100% !important; }
         .mypage-calendar-container .ant-picker-cell { padding: 0 !important; vertical-align: top !important; height: 1% !important; }
         .mypage-calendar-container .ant-picker-cell-inner { padding: 0 !important; border-radius: 0 !important; height: 100% !important; min-height: 48px !important; display: flex !important; flex-direction: column !important; }
-        .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) { display: none !important; }
         .mypage-calendar-container .mypage-cal-btn { font-size: 12px; padding: 0 8px; height: 25px; border-radius: 3px; }
       `}</style>
       <Calendar
