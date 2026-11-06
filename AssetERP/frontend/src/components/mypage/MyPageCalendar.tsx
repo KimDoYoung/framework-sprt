@@ -40,6 +40,9 @@ interface CalendarProps {
 /** eventLimit: 칸 높이에 막대 한 줄만 들어간다 — 1건이면 그 막대, 2건 이상이면 막대 없이 "+n 개"(n = 전부) (FullCalendar 줄 단위 제한과 같은 모양) */
 const VISIBLE_EVENTS = 1;
 const DAY = 'YYYY-MM-DD';
+/** 휴일(BizNoticeCode 900) 막대는 엷은 빨강 — 사용자 요청(2026-11-06). AS-IS JsonCalendar는 휴일도 다른 일정처럼 테마 기본색 */
+const HOLIDAY_KIND = '휴일';
+const HOLIDAY_COLOR = { bg: '#FBD5D5', text: '#B42318' };
 
 export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelectDate, onEventClick, onRefreshAll, refreshKey = 0 }) => {
   const [viewMonth, setViewMonth] = useState<Dayjs>(() => dayjs(selectedDate).startOf('month'));
@@ -113,7 +116,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
       title={e.title}
       onClick={ev => { ev.stopPropagation(); setMoreDate(null); onSelectDate(date.format(DAY)); onEventClick?.(e); }}
       style={{
-        backgroundColor: e.color, color: e.textColor, fontSize: big ? 12 : 10, fontWeight: 500, padding: big ? '2px 6px' : '1px 4px', borderRadius: 3,
+        backgroundColor: e.kind === HOLIDAY_KIND ? HOLIDAY_COLOR.bg : e.color, color: e.kind === HOLIDAY_KIND ? HOLIDAY_COLOR.text : e.textColor, fontSize: big ? 12 : 10, fontWeight: 500, padding: big ? '2px 6px' : '1px 4px', borderRadius: 3,
         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: big ? '16px' : '13px', cursor: 'pointer',
       }}
     >
@@ -143,7 +146,9 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
     const dow = date.day();
     const list = byDate.get(date.format(DAY)) ?? [];
     // fullcalendar.jsp: 일요일 빨강(fc-sun), 다른 달은 흐리게, 오늘 fc-today(#fcf8e3), 고른 날 #DCDDE1(dayClick L230-236)
-    const dayColor = dow === 0 ? '#e31b23' : '#4a5568';
+    const isHoliday = list.some(e => e.kind === HOLIDAY_KIND);
+    // 토요일 파랑(fc-sat #007dc3, fullcalendar.jsp L101 주석 처리분 — 사용자 요청 2026-11-06)
+    const dayColor = dow === 0 || isHoliday ? '#e31b23' : dow === 6 ? '#007dc3' : '#4a5568';
     return (
       <div
         className="mypage-calendar-day-cell"
@@ -154,7 +159,12 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({ selectedDate, onSelect
         }}
       >
         {/* .fc-day-number: 오른쪽 위 */}
-        <div style={{ textAlign: 'right', paddingRight: 6, fontSize: 14, lineHeight: '18px', color: dayColor, opacity: isCurrentMonth ? 1 : 0.35 }}>{date.date()}</div>
+        <div style={{ textAlign: 'right', paddingRight: isToday ? 2 : 6, fontSize: 14, lineHeight: '18px', color: dayColor, opacity: isCurrentMonth ? 1 : 0.35 }}>
+          {/* 오늘은 날짜에 동그라미 — 사용자 요청(2026-11-06) */}
+          {isToday
+            ? <span style={{ display: 'inline-block', minWidth: 24, height: 24, lineHeight: '22px', textAlign: 'center', borderRadius: '50%', border: `1.5px solid ${dayColor}`, boxSizing: 'border-box', fontWeight: 700, marginTop: -3 }}>{date.date()}</span>
+            : date.date()}
+        </div>
         {list.length <= VISIBLE_EVENTS && list.map((e, i) => eventBar(date, e, i))}
         {/* eventLimit: 넘친 일정은 칸 왼쪽 아래 "+n 개"(fc-more) → 누르면 그날 일정 팝오버 */}
         {list.length > VISIBLE_EVENTS && (
