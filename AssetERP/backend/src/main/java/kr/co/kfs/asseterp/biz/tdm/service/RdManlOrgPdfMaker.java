@@ -83,7 +83,7 @@ public class RdManlOrgPdfMaker implements ManlOrgPdfMaker {
             sysFileService.registerRdFile(generated, manlOrgId, target.locName(), fileNm, FILE_TYPE);
         } catch (IOException e) {
             log.error("RD 파일 옮기기 실패 manlOrgId={}", manlOrgId, e);
-            throw fail("파일을 저장하지 못했습니다");
+            throw fail("파일을 저장하지 못했습니다").causedBy(e);
         }
     }
 
@@ -95,10 +95,10 @@ public class RdManlOrgPdfMaker implements ManlOrgPdfMaker {
             return res.statusCode() / 100 == 2 ? res.body().trim() : "HTTP " + res.statusCode();
         } catch (IOException e) {
             log.error("RD 서버 호출 실패 url={}", rdProperties.url(), e);
-            throw fail("RD 서버에 연결하지 못했습니다");
+            throw fail("RD 서버에 연결하지 못했습니다").causedBy(e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw fail("RD 서버 호출이 중단되었습니다");
+            throw fail("RD 서버 호출이 중단되었습니다").causedBy(e);
         }
     }
 

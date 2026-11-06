@@ -53,7 +53,7 @@ public class InfoDataAction implements BatchAction {
                         trCode, r.getString("icam01_tr_nm"), icsClassTreeId, note));
             }
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "ICAM연계작업 정보코드 작업완료.. commit";
     }

@@ -46,7 +46,7 @@ public class CsvIcamReader implements IcamReader {
         try {
             lines = parse(Files.readString(file, StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "ICAM 시뮬레이터 CSV를 읽을 수 없습니다: " + file);
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "ICAM 시뮬레이터 CSV를 읽을 수 없습니다: " + file, e);
         }
         if (lines.isEmpty()) {
             return List.of();

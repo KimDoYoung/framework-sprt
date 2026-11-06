@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.pay.service;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -125,9 +127,9 @@ final class PayMonthListHtml {
             deductionSum += n(m.deductionSum());
 
             text.append(TR_START)
-                    .append(tdColor(1, 2, 1, "center", 7, checkNull(m.personNo()), "none"))
-                    .append(tdColor(1, 2, 1, "center", 7, checkNull(m.personName()), "none"))
-                    .append(tdColor(1, 2, 1, "center", 7, checkNull(m.posName()), "none"))
+                    .append(tdColor(1, 2, 1, "center", 7, checkNull(Html.esc(m.personNo())), "none"))
+                    .append(tdColor(1, 2, 1, "center", 7, checkNull(Html.esc(m.personName())), "none"))
+                    .append(tdColor(1, 2, 1, "center", 7, checkNull(Html.esc(m.posName())), "none"))
                     .append(tdColor(1, 2, 1, "right", 7, checkLongNull(m.code110()), "none"))
                     .append(tdColor(1, 2, 1, "right", 7, checkLongNull(m.code130()), "none"))
                     .append(tdColor(1, 2, 1, "right", 7, checkLongNull(m.code111()), "none"))

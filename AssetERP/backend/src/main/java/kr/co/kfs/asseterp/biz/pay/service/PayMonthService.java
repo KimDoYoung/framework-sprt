@@ -133,7 +133,7 @@ public class PayMonthService {
             throw e;
         } catch (Exception e) {
             log.error("급여 생성 실패 payCode={} payDate={}", payCode, payDate, e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "데이터를 불러올수 없습니다. 관리자에게 문의해주세요");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "데이터를 불러올수 없습니다. 관리자에게 문의해주세요", e);
         }
     }
 

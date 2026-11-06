@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -153,7 +155,7 @@ public class PayIncomeTaxLinkSeedProvider implements AprLinkSeedProvider {
     private static String html(PayIncomeTaxPrintRow m) {
         String title = "<b>갑종근로소득에 대한 소득세원천징수확인서</b><br>"
                 + "<span style=\"font-size:13px;\">"
-                + checkNull(m.text01())
+                + checkNull(Html.esc(m.text01()))
                 + "</span>";
 
         long basicPay = z(m.long01()) + z(m.long03()) + z(m.long05()) + z(m.long07()) + z(m.long09()) + z(m.long11())
@@ -171,44 +173,44 @@ public class PayIncomeTaxLinkSeedProvider implements AprLinkSeedProvider {
                 .append(tdHeaderColor(5, 1, 1, "center", 12, "관리번호"))
                 .append(TR_CLOSE);
         t.append(TR_START)
-                .append(tdColor(5, 1, 1, "center", 12, checkNull(m.text02())))
+                .append(tdColor(5, 1, 1, "center", 12, checkNull(Html.esc(m.text02()))))
                 .append(tdColor(5, 1, 1, "center", 12, " "))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(2, 2, 1, "center", 12, "납<br>세<br>자"))
                 .append(tdColor(6, 1, 1, "left", 12, "① 성 명"))
-                .append(tdColor(8, 1, 1, "center", 12, checkNull(m.string01())))
+                .append(tdColor(8, 1, 1, "center", 12, checkNull(Html.esc(m.string01()))))
                 .append(tdColor(7, 1, 1, "left", 12, "② 주민등록번호"))
-                .append(tdColor(11, 1, 1, "center", 12, checkNull(m.string02())))
+                .append(tdColor(11, 1, 1, "center", 12, checkNull(Html.esc(m.string02()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(6, 1, 1, "left", 12, "③ 주소또는거소"))
-                .append(tdColor(26, 1, 1, "left", 12, checkNull(m.string03())))
+                .append(tdColor(26, 1, 1, "left", 12, checkNull(Html.esc(m.string03()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(2, 3, 1, "center", 12, "징<br>수<br>의<br>무<br>자"))
                 .append(tdColor(6, 1, 1, "left", 12, "④ 상호또는명칭"))
-                .append(tdColor(8, 1, 1, "center", 12, checkNull(m.string04())))
+                .append(tdColor(8, 1, 1, "center", 12, checkNull(Html.esc(m.string04()))))
                 .append(tdColor(9, 1, 1, "left", 12, "⑤ 사업자등록번호"))
-                .append(tdColor(9, 1, 1, "center", 12, checkNull(m.string05())))
+                .append(tdColor(9, 1, 1, "center", 12, checkNull(Html.esc(m.string05()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(6, 1, 1, "left", 12, "⑥ 사업장소재지"))
-                .append(tdColor(26, 1, 1, "left", 12, checkNull(m.string06())))
+                .append(tdColor(26, 1, 1, "left", 12, checkNull(Html.esc(m.string06()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(6, 1, 1, "left", 12, "⑦ 대 표 자"))
-                .append(tdColor(8, 1, 1, "center", 12, checkNull(m.string07())))
+                .append(tdColor(8, 1, 1, "center", 12, checkNull(Html.esc(m.string07()))))
                 .append(tdColor(9, 1, 1, "left", 12, "⑧ 주민(법인)등록번호"))
-                .append(tdColor(9, 1, 1, "center", 12, checkNull(m.string08())))
+                .append(tdColor(9, 1, 1, "center", 12, checkNull(Html.esc(m.string08()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(8, 1, 1, "left", 12, "⑨ 확인서의 사용목적"))
-                .append(tdColor(6, 1, 1, "center", 12, checkNull(m.string09())))
+                .append(tdColor(6, 1, 1, "center", 12, checkNull(Html.esc(m.string09()))))
                 .append(tdColor(4, 1, 1, "left", 12, "⑩ 제출처"))
-                .append(tdColor(7, 1, 1, "center", 12, checkNull(m.string10())))
+                .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.string10()))))
                 .append(tdColor(5, 1, 1, "left", 12, "⑪ 소요수량"))
-                .append(tdColor(4, 1, 1, "center", 12, checkNull(m.string11())))
+                .append(tdColor(4, 1, 1, "center", 12, checkNull(Html.esc(m.string11()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(tdColor(4, 1, 1, "center", 12, "연 월"))
@@ -273,7 +275,7 @@ public class PayIncomeTaxLinkSeedProvider implements AprLinkSeedProvider {
         t.append(TR_START)
                 .append(tdBorderColor(4, 1, 0, 0, 0, 1, "center", 12, " "))
                 .append(tdBorderColor(10, 1, 0, 0, 0, 0, "right", 12, "신청인"))
-                .append(tdBorderColor(12, 1, 0, 0, 0, 0, "right", 12, checkNull(m.string01())))
+                .append(tdBorderColor(12, 1, 0, 0, 0, 0, "right", 12, checkNull(Html.esc(m.string01()))))
                 .append(tdBorderColor(8, 1, 0, 1, 0, 0, "left", 12, "(서명 또는 인)"))
                 .append(TR_CLOSE);
         t.append(TR_START).append(tdBorderColor(34, 1, 0, 1, 1, 1, "center", 12, " ")).append(TR_CLOSE);
@@ -285,7 +287,7 @@ public class PayIncomeTaxLinkSeedProvider implements AprLinkSeedProvider {
         t.append(TR_START)
                 .append(tdBorderColor(4, 1, 0, 0, 0, 1, "center", 12, " "))
                 .append(tdBorderColor(10, 1, 0, 0, 0, 0, "right", 12, "확인자(원천징수의무자)"))
-                .append(tdBorderColor(12, 1, 0, 0, 0, 0, "right", 12, checkNull(m.string04()) + " " + checkNull(m.string07())))
+                .append(tdBorderColor(12, 1, 0, 0, 0, 0, "right", 12, checkNull(Html.esc(m.string04())) + " " + checkNull(Html.esc(m.string07()))))
                 .append(tdBorderColor(8, 1, 0, 1, 0, 0, "left", 12, "(서명 또는 인)"))
                 .append(TR_CLOSE);
         t.append(TR_START).append(tdBorderColor(34, 1, 0, 1, 1, 1, "center", 12, " ")).append(TR_CLOSE);

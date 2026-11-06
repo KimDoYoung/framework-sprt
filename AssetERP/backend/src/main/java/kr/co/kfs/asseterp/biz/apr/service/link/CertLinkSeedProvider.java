@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.date;
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.str;
 
@@ -44,24 +46,24 @@ public class CertLinkSeedProvider implements AprLinkSeedProvider {
 
         // createMapping L418-443
         Map<String, String> mapping = new HashMap<>();
-        mapping.put("사번", str(c.personNo()));
-        mapping.put("성명", str(c.personName()));
+        mapping.put("사번", str(Html.esc(c.personNo())));
+        mapping.put("성명", str(Html.esc(c.personName())));
         mapping.put("생년월일", date(c.birthDay(), true));
         mapping.put("주민번호", str(maskedCtzNo(c.personCtzNo())));
-        mapping.put("부서명", str(c.orgName()));
-        mapping.put("주소", str(c.personAddress()));
-        mapping.put("직책", str(c.personTitle()));
-        mapping.put("직위", str(c.personPos()));
+        mapping.put("부서명", str(Html.esc(c.orgName())));
+        mapping.put("주소", str(Html.esc(c.personAddress())));
+        mapping.put("직책", str(Html.esc(c.personTitle())));
+        mapping.put("직위", str(Html.esc(c.personPos())));
         mapping.put("입사일", date(c.hireDate(), false));
-        mapping.put("퇴사일", str(c.retireDate()));
+        mapping.put("퇴사일", str(Html.esc(c.retireDate())));
         mapping.put("근속년수", str(workYear(c.hireDate(), c.retireDate(), LocalDate.now())));
         mapping.put("발급일", date(c.issueDate(), false));
-        mapping.put("용도", str(c.certUseName()));
+        mapping.put("용도", str(Html.esc(c.certUseName())));
         mapping.put("발령내역", str(c.transList()));
         mapping.put("징계내역", str(c.rewardList()));
-        mapping.put("회사명", str(c.companyName()));
-        mapping.put("회사주소", str(c.companyAddress()));
-        mapping.put("회사대표", str(c.companyAgent()));
+        mapping.put("회사명", str(Html.esc(c.companyName())));
+        mapping.put("회사주소", str(Html.esc(c.companyAddress())));
+        mapping.put("회사대표", str(Html.esc(c.companyAgent())));
 
         String content = support.fill(user.getCompanyId(), linkCode, mapping);
         return new Seed(title, content, null, true, false, "-", "-");

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +71,7 @@ public class ScheduleLinkSeedProvider implements AprLinkSeedProvider {
                     }
                 }
             } catch (NumberFormatException e) {
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "행 번호 형식이 올바르지 않습니다.");
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "행 번호 형식이 올바르지 않습니다.", e);
             }
         }
         if (list.isEmpty()) {
@@ -112,10 +114,10 @@ public class ScheduleLinkSeedProvider implements AprLinkSeedProvider {
                 .append("</tr>");
         for (Sch04LinkRow r : list) {
             t.append("<tr>")
-                    .append(tdColor(4, 1, 1, "center", 12, r.className(), "none"))
-                    .append(tdColor(9, 1, 1, "left", 12, r.title(), "none"))
-                    .append(tdColor(3, 1, 1, "center", 12, r.statusName(), "none"))
-                    .append(tdColor(4, 1, 1, "left", 12, r.note(), "none"))
+                    .append(tdColor(4, 1, 1, "center", 12, Html.esc(r.className()), "none"))
+                    .append(tdColor(9, 1, 1, "left", 12, Html.esc(r.title()), "none"))
+                    .append(tdColor(3, 1, 1, "center", 12, Html.esc(r.statusName()), "none"))
+                    .append(tdColor(4, 1, 1, "left", 12, Html.esc(r.note()), "none"))
                     .append("</tr>");
         }
         return t.append("</tbody></table>").toString();

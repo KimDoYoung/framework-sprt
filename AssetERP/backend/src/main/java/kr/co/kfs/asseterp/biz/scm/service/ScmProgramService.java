@@ -81,8 +81,8 @@ public class ScmProgramService {
         if (files == null || files.isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT, "업로드 파일 없음");
         int count = 0;
         for (MultipartFile file : files) {
-            if (file == null || file.isEmpty() || file.getOriginalFilename() == null) continue;
-            String name = file.getOriginalFilename();
+            String name = file == null ? null : file.getOriginalFilename();
+            if (file == null || file.isEmpty() || name == null) continue;
             int dot = name.lastIndexOf('.');
             String programCd = dot < 0 ? name : name.substring(0, dot);
             long programId = devProgramMapper.selectNextId();

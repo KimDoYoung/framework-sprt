@@ -96,7 +96,7 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
         try {
             return LocalDate.parse(arg(args, "stdDate"));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 형식이 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 형식이 올바르지 않습니다.", e);
         }
     }
 

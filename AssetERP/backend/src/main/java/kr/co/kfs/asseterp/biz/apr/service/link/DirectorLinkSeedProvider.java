@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.TABLE_START;
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.tdColor;
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.tdEmpty;
@@ -101,8 +103,8 @@ public class DirectorLinkSeedProvider implements AprLinkSeedProvider {
                         tdEmpty(18, 1, 0)));
         for (DirectorRes d : list) {
             t.append(tr(tdEmpty(2, 1, 0),
-                    tdColor(20, 1, 1, "center", 13, nul(d.posName()), "none"),
-                    tdColor(20, 1, 1, "center", 13, nul(d.personName()), "none"),
+                    tdColor(20, 1, 1, "center", 13, nul(Html.esc(d.posName())), "none"),
+                    tdColor(20, 1, 1, "center", 13, nul(Html.esc(d.personName())), "none"),
                     tdColor(20, 1, 1, "center", 13, dt(d.rcntAssingDate()), "none"),
                     tdColor(20, 1, 1, "center", 13, dt(end ? d.endDate() : d.expireDate()), "none"),
                     tdEmpty(18, 1, 0)));

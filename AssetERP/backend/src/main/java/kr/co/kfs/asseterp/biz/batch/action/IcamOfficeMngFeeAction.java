@@ -59,7 +59,7 @@ public class IcamOfficeMngFeeAction implements BatchAction {
             companyId = Long.parseLong(req.companyId());
         } catch (NumberFormatException e) {
             // AS-IS는 Long.parseLong 예외가 try 밖이라 서블릿이 죽는다(원본-이상한점 #219)
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "companyId가 필요합니다: " + req.companyId());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "companyId가 필요합니다: " + req.companyId(), e);
         }
         if (companyId != 1 && companyId != 28000) {
             // AS-IS는 -1 응답을 쓰고도 계속 진행한다(#219). TOBE는 여기서 멈춘다
@@ -116,7 +116,7 @@ public class IcamOfficeMngFeeAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "사무관리보수분개 가져오기 작업완료..commit";
     }

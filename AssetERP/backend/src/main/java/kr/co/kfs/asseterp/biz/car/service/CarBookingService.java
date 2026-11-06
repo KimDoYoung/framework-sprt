@@ -128,7 +128,7 @@ public class CarBookingService {
         if (cur == null || infoMapper.selectById(companyId, cur.infoId()) == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         String check = mapper.confirmUpdate(req.bookingId(), req.infoId(), req.date(), req.startHour(), req.startMin(), req.closeHour(), req.closeMin());
         if (check != null && !"0".equals(check)) throw new BusinessException(ErrorCode.INVALID_INPUT, check);
-        mapper.updateBooking(req.bookingId(), cur.startDate(), cur.closeDate(), cur.parentId() == null ? 0L : cur.parentId(),
+        mapper.updateBooking(req.bookingId(), cur.startDate(), cur.closeDate(), cur.parentId() == null ? Long.valueOf(0L) : cur.parentId(),
                 new CarBookingSaveReq(cur.bookingId(), cur.infoId(), req.personId(), cur.startDate(), req.startHour(), req.startMin(), cur.closeDate(),
                         req.closeHour(), req.closeMin(), req.destination(), req.reason(), req.attendance(), cur.note(), cur.parentId(), cur.regEmpId(), false));
         CarJournalSaveReq journal = new CarJournalSaveReq(null, req.infoId(), req.date(), req.personId(), req.mileage(), req.commuteMileage(),

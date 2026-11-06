@@ -52,7 +52,7 @@ public class AstTrFinanceService {
      */
     public List<TrFinanceRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String windowClassName,
                                      String assetType, String abroType, Long accountId, Long classTreeId, Long trCodeId, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByPayCode(new TrFinanceSearchCond(user.getCompanyId(), user.getUserId(), orgId, startDate, closeDate, "%",
                 blank(assetType) ? "%" : assetType, blank(abroType) ? "1" : abroType,
                 accountId, null, zeroToNull(classTreeId), zeroToNull(trCodeId), windowClassName, blank(searchText) ? "%" : searchText));
@@ -227,7 +227,7 @@ public class AstTrFinanceService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 

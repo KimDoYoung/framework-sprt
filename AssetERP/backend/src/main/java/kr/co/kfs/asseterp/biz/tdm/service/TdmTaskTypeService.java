@@ -41,7 +41,7 @@ public class TdmTaskTypeService {
             if (row.taskTypeName() == null || row.taskTypeName().isEmpty()) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "책무유형명을 입력하세요");
             }
-            Long id = row.taskTypeId() == null || row.taskTypeId() <= 0 ? -1L : row.taskTypeId();
+            Long id = row.taskTypeId() == null || row.taskTypeId() <= 0 ? Long.valueOf(-1L) : row.taskTypeId();
             // Tdm14_TaskType.update L31-57
             if (mapper.countDupByTaskTypeCode(companyId, row.taskTypeCode(), id) != 0) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "사용중인 코드입니다(" + row.taskTypeCode() + ")");

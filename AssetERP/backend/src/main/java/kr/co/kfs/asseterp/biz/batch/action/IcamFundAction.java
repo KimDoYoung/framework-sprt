@@ -99,7 +99,7 @@ public class IcamFundAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, errMsg + " / " + e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, errMsg + " / " + e.getMessage(), e);
         }
         return "FUND 작업완료..commit";
     }

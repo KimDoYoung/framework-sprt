@@ -170,7 +170,7 @@ public class AstCfInfoService {
             mapper.updateBatchInfo(req);
 
         } catch (ParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "날짜 형식이 올바르지 않습니다: " + e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "날짜 형식이 올바르지 않습니다: " + e.getMessage(), e);
         }
 
         return mapper.selectCfList(req.cfInfoId());

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -177,13 +179,13 @@ public class TrTaxLinkSeedProvider implements AprLinkSeedProvider {
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdStNone(100, 1, "left", 13, "1. 발생부서 : " + orgName)))
                 .append(tr(tdEmpty(100, 1, 0)))
-                .append(tr(tdStNone(100, 1, "left", 13, "2. 계정과목 : " + checkNull2(t.insureAccountName()))))
+                .append(tr(tdStNone(100, 1, "left", 13, "2. 계정과목 : " + checkNull2(Html.esc(t.insureAccountName())))))
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdStNone(100, 1, "left", 13, "3. 일 &nbsp;&nbsp;&nbsp;&nbsp; 금 : " + numberToKorean(t.amt()) + "원 ( ₩ " + checkLongNull(t.amt()) + " )")))
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdStNone(100, 1, "left", 13, "4. 지출일자 :&nbsp;" + checkDateNull(t.date()))))
                 .append(tr(tdEmpty(100, 1, 0)))
-                .append(tr(tdStNone(100, 1, "left", 13, "5. 내 &nbsp;&nbsp;&nbsp;&nbsp; 역 : " + checkNull2(t.note()))))
+                .append(tr(tdStNone(100, 1, "left", 13, "5. 내 &nbsp;&nbsp;&nbsp;&nbsp; 역 : " + checkNull2(Html.esc(t.note())))))
                 .append(tr(
                         tdStColor(12, 1, 1, "center", 13, "고지 내역", "#EAEFF4"),
                         tdStColor(12, 1, 1, "center", 13, "고지년월", "#EAEFF4"),
@@ -205,8 +207,8 @@ public class TrTaxLinkSeedProvider implements AprLinkSeedProvider {
             etcAmtSum += nz(m.etcAmt());
             realPayAmtSum += nz(m.realPayAmt());
             sb.append(tr(
-                    tdColor(12, 1, 1, "center", 13, checkNull(m.typeName()), "none"),
-                    tdColor(12, 1, 1, "center", 13, checkNull(m.noticeMonth()), "none"),
+                    tdColor(12, 1, 1, "center", 13, checkNull(Html.esc(m.typeName())), "none"),
+                    tdColor(12, 1, 1, "center", 13, checkNull(Html.esc(m.noticeMonth())), "none"),
                     tdColor(12, 1, 1, "center", 13, checkLongNull(m.empCnt()) + "명", "none"),
                     tdColor(13, 1, 1, "right", 13, checkLongNull(m.companyAmt()) + "&nbsp;", "none"),
                     tdColor(13, 1, 1, "right", 13, checkLongNull(m.empAmt()) + "&nbsp;", "none"),
@@ -222,7 +224,7 @@ public class TrTaxLinkSeedProvider implements AprLinkSeedProvider {
                 tdColor(12, 1, 1, "right", 13, checkLongNull(etcAmtSum) + "&nbsp;", "none"),
                 tdColor(13, 1, 1, "right", 13, checkLongNull(realPayAmtSum) + "&nbsp;", "none")));
         sb.append(tr(tdEmpty(100, 1, 0)));
-        for (String note : new String[] {t.npEtcNote(), t.hiEtcNote(), t.eiEtcNote(), t.ohEtcNote()}) {
+        for (String note : new String[] {Html.esc(t.npEtcNote()), Html.esc(t.hiEtcNote()), Html.esc(t.eiEtcNote()), Html.esc(t.ohEtcNote())}) {
             if (!" - ".equals(checkNull(note))) {
                 sb.append(tr(tdStNone(100, 1, "left", 13, "&nbsp;" + "- " + note)));
             }

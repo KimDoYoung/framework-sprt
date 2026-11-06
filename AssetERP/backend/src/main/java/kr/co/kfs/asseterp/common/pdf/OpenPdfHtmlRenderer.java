@@ -46,7 +46,7 @@ public class OpenPdfHtmlRenderer implements HtmlPdfRenderer {
             return out.toByteArray();
         } catch (Exception e) {
             log.error("PDF 생성 실패", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "PDF를 만들지 못했습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "PDF를 만들지 못했습니다.", e);
         }
     }
 

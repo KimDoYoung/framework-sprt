@@ -67,7 +67,7 @@ public class ScrapingIpoAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "공모주청약 및 수요예측 일정 ScrapingIpo 작업 완료.. commit";
     }

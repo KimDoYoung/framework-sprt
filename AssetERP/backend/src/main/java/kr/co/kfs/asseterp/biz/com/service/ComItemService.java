@@ -33,7 +33,7 @@ public class ComItemService {
     public List<Com50ItemRes> update(UserPrincipal user, List<Com50ItemSaveReq> rows) {
         requireAdminCompany(user);
         for (Com50ItemSaveReq req : rows) {
-            if (mapper.checkItemCode(req.itemId() == null ? 0L : req.itemId(), req.itemCode()) != 0) {
+            if (mapper.checkItemCode(req.itemId() == null ? Long.valueOf(0L) : req.itemId(), req.itemCode()) != 0) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 등록된 종목코드 입니다 [" + req.itemCode() + "]");
             }
         }

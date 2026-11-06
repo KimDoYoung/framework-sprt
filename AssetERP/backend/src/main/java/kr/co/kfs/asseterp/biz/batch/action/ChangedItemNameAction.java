@@ -58,7 +58,7 @@ public class ChangedItemNameAction implements BatchAction {
                 itemNameMapper.updateFlt13ItemName(t.isin(), t.itemName());
             }
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "종목명 변경 작업완료..commit";
     }

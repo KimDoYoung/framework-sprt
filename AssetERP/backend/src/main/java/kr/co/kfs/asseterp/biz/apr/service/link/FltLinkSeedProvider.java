@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -179,7 +181,7 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
                 }
             }
         } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "행 번호 형식이 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "행 번호 형식이 올바르지 않습니다.", e);
         }
         if (list.isEmpty() && required) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "상신할 행이 없습니다.");
@@ -191,7 +193,7 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
         try {
             return LocalDate.parse(args.get(key));
         } catch (DateTimeParseException | NullPointerException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 올바르지 않습니다: " + key);
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 올바르지 않습니다: " + key, e);
         }
     }
 
@@ -318,12 +320,12 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
         } else {
             for (LinkBookRes b : bookList) {
                 t.append(TR_START)
-                        .append(tdCreate(u, 6, 1, 1, "left", 12, checkNull(b.accountNo())))
-                        .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(b.accountRelateName())))
-                        .append(tdCreate(u, 6, 1, 1, "left", 12, checkNull(b.itemName())))
+                        .append(tdCreate(u, 6, 1, 1, "left", 12, checkNull(Html.esc(b.accountNo()))))
+                        .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(Html.esc(b.accountRelateName()))))
+                        .append(tdCreate(u, 6, 1, 1, "left", 12, checkNull(Html.esc(b.itemName()))))
                         .append(tdCreate(u, 3, 1, 1, "right", 12, checkDoubleNull(b.bookQty())))
                         .append(tdCreate(u, 3, 1, 1, "right", 12, checkLongNull(b.bookAmt())))
-                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(b.itemTypeName())))
+                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(Html.esc(b.itemTypeName()))))
                         .append(TR_CLOSE);
             }
         }
@@ -358,14 +360,14 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
         } else {
             for (RealTrRes r : trList) {
                 t.append(TR_START)
-                        .append(tdCreate(u, 5, 1, 1, "left", 12, checkNull(r.accountNo())))
-                        .append(tdCreate(u, 3, 1, 1, "center", 12, r.trDate() == null ? "" : r.trDate()))
-                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(r.trItemName())))
-                        .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(r.trTypeName())))
+                        .append(tdCreate(u, 5, 1, 1, "left", 12, checkNull(Html.esc(r.accountNo()))))
+                        .append(tdCreate(u, 3, 1, 1, "center", 12, r.trDate() == null ? "" : Html.esc(r.trDate())))
+                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(Html.esc(r.trItemName()))))
+                        .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(Html.esc(r.trTypeName()))))
                         .append(tdCreate(u, 2, 1, 1, "right", 12, checkDoubleNull(r.trQty())))
                         .append(tdCreate(u, 2, 1, 1, "right", 12, checkLongNull(r.trAmt())))
-                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(r.trItemTypeName())))
-                        .append(tdCreate(u, 2, 1, 1, "left", 12, checkNull(r.trNote())))
+                        .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(Html.esc(r.trItemTypeName()))))
+                        .append(tdCreate(u, 2, 1, 1, "left", 12, checkNull(Html.esc(r.trNote()))))
                         .append(TR_CLOSE);
             }
         }
@@ -429,13 +431,13 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_CLOSE);
         for (LinkBookInitRes b : bookInitList) {
             t.append(TR_START)
-                    .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(b.accountRelateName())))
-                    .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(b.accountName())))
-                    .append(tdCreate(u, 3, 1, 1, "left", 12, checkNull(b.accountBankName())))
-                    .append(tdCreate(u, 5, 1, 1, "left", 12, checkNull(b.accountNo())))
-                    .append(tdCreate(u, 5, 1, 1, "center", 12, checkNull(b.itemName())))
+                    .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(Html.esc(b.accountRelateName()))))
+                    .append(tdCreate(u, 2, 1, 1, "center", 12, checkNull(Html.esc(b.accountName()))))
+                    .append(tdCreate(u, 3, 1, 1, "left", 12, checkNull(Html.esc(b.accountBankName()))))
+                    .append(tdCreate(u, 5, 1, 1, "left", 12, checkNull(Html.esc(b.accountNo()))))
+                    .append(tdCreate(u, 5, 1, 1, "center", 12, checkNull(Html.esc(b.itemName()))))
                     .append(tdCreate(u, 3, 1, 1, "center", 12, checkDoubleNull(b.bookQty())))
-                    .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(b.accountNote())))
+                    .append(tdCreate(u, 4, 1, 1, "left", 12, checkNull(Html.esc(b.accountNote()))))
                     .append(TR_CLOSE);
         }
         t.append(TR_START).append(tdCreate(u, 20, 1, 0, "left", 12, "□ 상기 신고자는 자기계산으로 보유하고 있는 모든 내역을 신고하였습니다.")).append(TR_CLOSE);
@@ -464,11 +466,11 @@ public class FltLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_CLOSE);
         for (AccountCloseRes r : list) {
             t.append(TR_START)
-                    .append(tdCreate(u, 4, 1, 1, "center", 14, checkNull(r.closeDate())))
-                    .append(tdCreate(u, 4, 1, 1, "left", 14, checkNull(r.corpName())))
-                    .append(tdCreate(u, 5, 1, 1, "left", 14, checkNull(r.accountNoDec())))
-                    .append(tdCreate(u, 3, 1, 1, "left", 14, checkNull(r.familyRelateName())))
-                    .append(tdCreate(u, 4, 1, 1, "center", 14, checkNull(r.accountName())))
+                    .append(tdCreate(u, 4, 1, 1, "center", 14, checkNull(Html.esc(r.closeDate()))))
+                    .append(tdCreate(u, 4, 1, 1, "left", 14, checkNull(Html.esc(r.corpName()))))
+                    .append(tdCreate(u, 5, 1, 1, "left", 14, checkNull(Html.esc(r.accountNoDec()))))
+                    .append(tdCreate(u, 3, 1, 1, "left", 14, checkNull(Html.esc(r.familyRelateName()))))
+                    .append(tdCreate(u, 4, 1, 1, "center", 14, checkNull(Html.esc(r.accountName()))))
                     .append(TR_CLOSE);
         }
         t.append(emptyRow(u, 20));

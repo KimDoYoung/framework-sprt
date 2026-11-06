@@ -27,7 +27,7 @@ public class OprFundLookupService {
 
     /** 내 조직(LoginUser.getOrgCodeId — 회사관리자(userId < 0)는 0)이 권한을 가진 연관펀드만 */
     public List<OprFundRes> searchFunds(UserPrincipal user, Long createId) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectFundsByCreateId(user.getCompanyId(), createId, orgId);
     }
 

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -111,9 +113,9 @@ public class UnLeaveLinkSeedProvider implements AprLinkSeedProvider {
                 .append("</tr><tr>").append(tdEmpty(20, 1, 0))
                 .append("</tr><tr>").append(tdEmpty(1, 1, 0))
                 .append(tdStColor(3, 1, 1, "center", 12, "성 명", "#EAEFF4"))
-                .append(tdColor(3, 1, 1, "center", 12, checkNull(m.personName()), "none"))
+                .append(tdColor(3, 1, 1, "center", 12, checkNull(Html.esc(m.personName())), "none"))
                 .append(tdStColor(3, 1, 1, "center", 12, "소 속", "#EAEFF4"))
-                .append(tdColor(3, 1, 1, "center", 12, checkNull(m.orgName()), "none"))
+                .append(tdColor(3, 1, 1, "center", 12, checkNull(Html.esc(m.orgName())), "none"))
                 .append(tdStColor(3, 1, 1, "center", 12, "입사일자", "#EAEFF4"))
                 .append(tdColor(3, 1, 1, "center", 12, m.hireDate().format(DATE), "none"))
                 .append(tdEmpty(1, 1, 0))
@@ -153,11 +155,11 @@ public class UnLeaveLinkSeedProvider implements AprLinkSeedProvider {
                 .append(tdStColor(11, 1, 1, "center", 12, "사 용 시 기 지 정 일", "#EAEFF4"))
                 .append(tdStColor(3, 1, 1, "center", 12, "사 용 일 수", "#EAEFF4"))
                 .append(tdEmpty(1, 1, 0)).append("</tr>")
-                .append(monthRow(m.month01())).append(monthRow(m.month02())).append(monthRow(m.month03()))
-                .append(monthRow(m.month04())).append(monthRow(m.month05())).append(monthRow(m.month06()))
+                .append(monthRow(Html.esc(m.month01()))).append(monthRow(Html.esc(m.month02()))).append(monthRow(Html.esc(m.month03())))
+                .append(monthRow(Html.esc(m.month04()))).append(monthRow(Html.esc(m.month05()))).append(monthRow(Html.esc(m.month06())))
                 .append("<tr>").append(tdEmpty(20, 1, 0))
                 .append("</tr><tr>").append(tdStColor(20, 1, 0, "center", 16, today.format(DATE_KOR), "#FFFFFF"))
-                .append("</tr><tr>").append(tdStColor(20, 1, 0, "center", 20, m.companyName(), "#FFFFFF"))
+                .append("</tr><tr>").append(tdStColor(20, 1, 0, "center", 20, Html.esc(m.companyName()), "#FFFFFF"))
                 .append("</tr></tbody></table>");
         return t.toString();
     }

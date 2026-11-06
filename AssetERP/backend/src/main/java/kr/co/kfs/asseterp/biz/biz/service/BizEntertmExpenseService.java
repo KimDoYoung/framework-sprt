@@ -68,7 +68,7 @@ public class BizEntertmExpenseService {
         try {
             m = "전체".equals(month) ? 12 : Integer.parseInt(month);
         } catch (NumberFormatException | NullPointerException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT);
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e);
         }
         if (m < 1 || m > 12) {
             throw new BusinessException(ErrorCode.INVALID_INPUT);

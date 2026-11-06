@@ -52,7 +52,7 @@ public class SysAViewService {
             Files.copy(stored.file().toPath(), dir.resolve(randomName), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.error("A-View 임시 파일 복사 실패: fileId={}", fileId, e);
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "미리보기 파일 생성 중 오류. 다운로드하여 확인해주세요");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "미리보기 파일 생성 중 오류. 다운로드하여 확인해주세요", e);
         }
         String tmpUrl = trimSlash(properties.fileBaseUrl()) + TMP_PATH + randomName;
         String viewUrl = trimSlash(properties.homeUrl()) + "/view?url=" + tmpUrl

@@ -219,12 +219,19 @@ def parse_spotbugs(root: Path, raw: Path, counts: dict) -> list[Item]:
 
 
 def scan_mapper(root: Path, lines: Lines) -> list[Item]:
-    """MyBatis ${} 치환 — SQL injection 후보(ORDER BY 처럼 정상인 것도 있음)."""
+    """MyBatis ${} 치환 — SQL injection 후보. 주석 안의 것과, 같은 파일의 <include><property name=…> 로
+    채우는 것(XML 에 박힌 고정값이라 입력이 아님)은 뺀다."""
     out = []
     for p in sorted((root / "backend/src/main/resources/mapper").rglob("*.xml")):
         fr = str(p.relative_to(root))
-        for i, s in enumerate(lines.get(fr), 1):
+        text = "\n".join(lines.get(fr))
+        props = set(re.findall(r'<property\s+name="(\w+)"', text))
+        # 주석을 같은 길이의 공백으로 지워 줄 번호를 유지
+        code = re.sub(r"<!--.*?-->", lambda m: re.sub(r"[^\n]", " ", m.group(0)), text, flags=re.S)
+        for i, s in enumerate(code.split("\n"), 1):
             for m in re.finditer(r"\$\{([^}]+)\}", s):
+                if m.group(1).strip() in props:
+                    continue
                 out.append(Item("", "mapper", "DollarSubstitution", "B", fr, i,
                                 f"${{{m.group(1)}}} 문자열 치환 — 입력값이면 #{{}} 또는 화이트리스트", "보통"))
     return out

@@ -190,8 +190,8 @@ public class CrdDataService {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "카드정보가 존재하지 않습니다. 카드번호 및 사용자 등록을 확인하세요");
             }
             boolean cancel = "승인취소".equals(d.stateName());
-            Long amount = cancel && d.approvalAmount() > 0 ? -d.approvalAmount() : d.approvalAmount();
-            Long tax = cancel && d.surtax() > 0 ? -d.surtax() : d.surtax();
+            Long amount = cancel && d.approvalAmount() != null && d.approvalAmount() > 0 ? Long.valueOf(-d.approvalAmount()) : d.approvalAmount();
+            Long tax = cancel && d.surtax() != null && d.surtax() > 0 ? Long.valueOf(-d.surtax()) : d.surtax();
             CrdCardManagerRow card = cards.get(0);
             if (promoIds.isEmpty()) {
                 mapper.insertPromo(mapper.selectNextId(), companyId, d, amount, tax, card.cardId(), taxType, card.cardManagerId());

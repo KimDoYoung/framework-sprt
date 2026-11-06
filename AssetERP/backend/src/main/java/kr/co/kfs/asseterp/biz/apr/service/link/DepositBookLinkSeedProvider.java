@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -56,7 +58,7 @@ public class DepositBookLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.", e);
         }
         String text = "%" + args.getOrDefault("searchText", "") + "%";
         List<DepositDiffRes> list = mapper.selectDepositDiff(user.getCompanyId(), std, "1", text);
@@ -145,9 +147,9 @@ public class DepositBookLinkSeedProvider implements AprLinkSeedProvider {
                 holdQtySum += m.holdQty() == null ? 0 : m.holdQty();
                 realAmtSum += m.realAmt() == null ? 0 : m.realAmt();
                 sb.append(TR_START)
-                        .append(tdColor(10, 1, 1, "center", 12, checkNull(m.astSClassName()), "none"))
-                        .append(tdColor(13, 1, 1, "left", 12, checkNull(m.corpName()), "none"))
-                        .append(tdColor(17, 1, 1, "left", 12, checkNull(m.accountNo()), "none"))
+                        .append(tdColor(10, 1, 1, "center", 12, checkNull(Html.esc(m.astSClassName())), "none"))
+                        .append(tdColor(13, 1, 1, "left", 12, checkNull(Html.esc(m.corpName())), "none"))
+                        .append(tdColor(17, 1, 1, "left", 12, checkNull(Html.esc(m.accountNo())), "none"))
                         .append(tdColor(15, 1, 1, "right", 12, checkDoubleNull(m.holdQty()), "none"))
                         .append(tdColor(15, 1, 1, "right", 12, checkDoubleNull(m.realAmt()), "none"))
                         .append(tdColor(16, 1, 1, "right", 12, checkDoubleNull(m.diffAmt()), "none"))
@@ -181,13 +183,13 @@ public class DepositBookLinkSeedProvider implements AprLinkSeedProvider {
             for (DepositDiffRes m : list) {
                 if (!"KRW".equals(m.curCode())) {
                     sb.append(TR_START)
-                            .append(tdColor(11, 1, 1, "center", 12, checkNull(m.astSClassName()), "none"))
-                            .append(tdColor(13, 1, 1, "left", 12, checkNull(m.corpName()), "none"))
-                            .append(tdColor(18, 1, 1, "left", 12, checkNull(m.accountNo()), "none"))
+                            .append(tdColor(11, 1, 1, "center", 12, checkNull(Html.esc(m.astSClassName())), "none"))
+                            .append(tdColor(13, 1, 1, "left", 12, checkNull(Html.esc(m.corpName())), "none"))
+                            .append(tdColor(18, 1, 1, "left", 12, checkNull(Html.esc(m.accountNo())), "none"))
                             .append(tdColor(11, 1, 1, "right", 12, checkDoubleNull(m.holdQty()), "none"))
                             .append(tdColor(11, 1, 1, "right", 12, checkDoubleNull(m.realAmt()), "none"))
                             .append(tdColor(11, 1, 1, "right", 12, checkDoubleNull(m.diffAmt()), "none"))
-                            .append(tdColor(5, 1, 1, "center", 12, checkNull(m.curCode()), "none"))
+                            .append(tdColor(5, 1, 1, "center", 12, checkNull(Html.esc(m.curCode())), "none"))
                             .append(tdColor(8, 1, 1, "right", 12, checkDoubleNull(m.fxRate()), "none"))
                             .append(tdColor(12, 1, 1, "left", 12, "", "none"))
                             .append(TR_CLOSE);

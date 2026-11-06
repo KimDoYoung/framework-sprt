@@ -128,7 +128,7 @@ public class AstEvalService {
                 throw e;
             } catch (RuntimeException e) {
                 log.warn("평가처리 중 DB 오류", e);
-                throw invalid("update fail : \n" + e.getMessage());
+                throw invalid("update fail : \n" + e.getMessage()).causedBy(e);
             }
         }
 
@@ -158,7 +158,7 @@ public class AstEvalService {
                 throw e;
             } catch (RuntimeException e) {
                 log.warn("평가취소 중 DB 오류", e);
-                throw invalid("update fail : \n" + e.getMessage());
+                throw invalid("update fail : \n" + e.getMessage()).causedBy(e);
             }
         }
         for (EvalItemReq r : items) {

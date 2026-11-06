@@ -35,7 +35,7 @@ public class IcamFeeSupport {
             return new LocalDate[]{LocalDate.parse(req.startDate()), LocalDate.parse(req.closeDate())};
         } catch (DateTimeParseException | NullPointerException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT,
-                    "startDate·closeDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.startDate() + " ~ " + req.closeDate());
+                    "startDate·closeDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.startDate() + " ~ " + req.closeDate(), e);
         }
     }
 

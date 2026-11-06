@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.car.service;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -88,7 +90,7 @@ final class CarJournalHtml {
                 .append(tdStColor(6, 1, 1, "center", 8, "월간 운행거리", "#EAEFF4"))
                 .append("</tr>")
                 .append("<tr>")
-                .append(tdColor(10, 1, 1, "center", 8, checkNull(first.infoNm()), "none"))
+                .append(tdColor(10, 1, 1, "center", 8, checkNull(Html.esc(first.infoNm())), "none"))
                 .append(tdColor(8, 1, 1, "center", 8, checkNull(first.date().format(DATE) + " ~ " + last.date().format(DATE)), "none"))
                 .append(tdColor(6, 1, 1, "center", 8, checkLongNull(first.beforeMileage()), "none"))
                 .append(tdColor(6, 1, 1, "center", 8, checkLongNull(first.beforeMileage() + totalMileage), "none"))
@@ -120,7 +122,7 @@ final class CarJournalHtml {
         for (CarJournalRes m : list) {
             text.append("<tr>")
                     .append(tdColor(3, 1, 1, "center", 8, checkNull(m.date().format(DATE)), "none"))
-                    .append(tdColor(3, 1, 1, "center", 8, checkNull(m.infoPersonNm()), "none"))
+                    .append(tdColor(3, 1, 1, "center", 8, checkNull(Html.esc(m.infoPersonNm())), "none"))
                     .append(tdColor(3, 1, 1, "center", 8, checkLongNull(m.beforeMileage()), "none"))
                     .append(tdColor(3, 1, 1, "center", 8, checkLongNull(m.afterMileage()), "none"))
                     .append(tdColor(3, 1, 1, "center", 8, checkLongNull(m.mileage()), "none"));
@@ -128,8 +130,8 @@ final class CarJournalHtml {
             text.append(tdColor(3, 1, 1, "center", 8, checkLongNull(0L), "none"))
                     .append(tdColor(3, 1, 1, "center", 8, checkLongNull(m.mileage()), "none"))
                     .append(tdColor(3, 1, 1, "center", 8, checkLongNull(0L), "none"));
-            text.append(tdColor(4, 1, 1, "center", 8, checkNull(m.destination()), "none"))
-                    .append(tdColor(8, 1, 1, "center", 8, checkNull(m.reason()), "none"))
+            text.append(tdColor(4, 1, 1, "center", 8, checkNull(Html.esc(m.destination())), "none"))
+                    .append(tdColor(8, 1, 1, "center", 8, checkNull(Html.esc(m.reason())), "none"))
                     .append("</tr>");
         }
 

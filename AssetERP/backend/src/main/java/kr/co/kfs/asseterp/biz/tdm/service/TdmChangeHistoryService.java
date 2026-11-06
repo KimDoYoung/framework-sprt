@@ -77,7 +77,7 @@ public class TdmChangeHistoryService {
         try {
             json = objectMapper.writeValueAsString(historyMap);
         } catch (JsonProcessingException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "변경이력 생성시 오류발생");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "변경이력 생성시 오류발생", e);
         }
         String resultMsg = mapper.createChangeHistory(json);
         if (!"Y".equals(resultMsg)) {

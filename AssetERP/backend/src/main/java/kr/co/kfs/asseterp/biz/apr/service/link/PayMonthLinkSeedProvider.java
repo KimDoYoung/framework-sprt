@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.List;
@@ -150,7 +152,7 @@ public class PayMonthLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_CLOSE);
         for (PayItemAmtRow m : monthList3) {
             text.append(TR_START).append(tdEmpty(2, 1, 0))
-                    .append(tdColor(5, 1, 1, "center", 14, checkNull(m.itemName()), "none"))
+                    .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(m.itemName())), "none"))
                     .append(tdColor(5, 1, 1, "right", 14, checkLongNull(m.itemAmt()), "none"))
                     .append(tdColor(5, 1, 1, "left", 14, checkNull(" "), "none"))
                     .append(TR_CLOSE);
@@ -170,7 +172,7 @@ public class PayMonthLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_CLOSE);
         for (PayItemAmtRow m : monthList) {
             text.append(TR_START).append(tdEmpty(2, 1, 0))
-                    .append(tdColor(5, 1, 1, "center", 14, checkNull(m.itemName()), "none"))
+                    .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(m.itemName())), "none"))
                     .append(tdColor(5, 1, 1, "right", 14, checkLongNull(m.itemAmt()), "none"))
                     .append(tdColor(5, 1, 1, "left", 14, checkNull(" "), "none"))
                     .append(TR_CLOSE);

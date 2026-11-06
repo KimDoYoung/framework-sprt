@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -183,7 +185,7 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
     static String content(List<PayExpenseLinkRow> list, boolean isManager) {
         PayExpenseLinkRow e = list.get(0);
         String confirmer = isManager
-                ? tdEmpty(2, 1, 0) + tdStNone(98, 1, "left", 13, checkNull("- 승 인 자 : " + e.confirmerTitleName() + " " + e.confirmerOrgName()))
+                ? tdEmpty(2, 1, 0) + tdStNone(98, 1, "left", 13, checkNull("- 승 인 자 : " + Html.esc(e.confirmerTitleName()) + " " + Html.esc(e.confirmerOrgName())))
                 : "";
         StringBuilder t = new StringBuilder();
         t.append(TABLE_START).append("<tbody>")
@@ -191,10 +193,10 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdStNone(100, 1, "left", 13, "1. 발생부서")))
-                .append(tr(tdEmpty(2, 1, 0), tdStNone(98, 1, "left", 13, checkNull("- 발 생 자 : " + e.regEmpTitleName() + " " + e.regEmpOrgName()))))
+                .append(tr(tdEmpty(2, 1, 0), tdStNone(98, 1, "left", 13, checkNull("- 발 생 자 : " + Html.esc(e.regEmpTitleName()) + " " + Html.esc(e.regEmpOrgName())))))
                 .append(tr(confirmer))
                 .append(tr(tdEmpty(100, 1, 0)))
-                .append(tr(tdStNone(100, 1, "left", 13, "2. 계정과목 : " + e.accountName())))
+                .append(tr(tdStNone(100, 1, "left", 13, "2. 계정과목 : " + Html.esc(e.accountName()))))
                 .append(tr(tdEmpty(100, 1, 0)))
                 .append(tr(tdStNone(100, 1, "left", 13, "3. 내 &nbsp;&nbsp;&nbsp;&nbsp; 역")))
                 .append(tr(tdEmpty(100, 1, 0)))
@@ -209,12 +211,12 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
         for (PayExpenseLinkRow m : list) {
             settleSum += nz(m.settleAmt());
             t.append(tr(tdColor(12, 1, 1, "center", 13, checkDateNull(m.occDate()), "none"),
-                    tdColor(16, 1, 1, "left", 13, checkNull(m.corpName()), "none"),
-                    tdColor(20, 1, 1, "left", 13, checkNull(m.desc()), "none"),
+                    tdColor(16, 1, 1, "left", 13, checkNull(Html.esc(m.corpName())), "none"),
+                    tdColor(20, 1, 1, "left", 13, checkNull(Html.esc(m.desc())), "none"),
                     tdColor(13, 1, 1, "right", 13, checkLongNull(m.settleAmt()) + "&nbsp;", "none"),
-                    tdColor(7, 1, 1, "center", 13, checkNull(m.taxTypeName()), "none"),
-                    tdColor(20, 1, 1, "left", 13, checkNull(checkDateNull(m.dueDate()) + " (" + m.payMethodName() + ")"), "none"),
-                    tdColor(12, 1, 1, "left", 13, checkNull(m.note()), "none")));
+                    tdColor(7, 1, 1, "center", 13, checkNull(Html.esc(m.taxTypeName())), "none"),
+                    tdColor(20, 1, 1, "left", 13, checkNull(checkDateNull(m.dueDate()) + " (" + Html.esc(m.payMethodName()) + ")"), "none"),
+                    tdColor(12, 1, 1, "left", 13, checkNull(Html.esc(m.note())), "none")));
         }
         t.append(tr(tdColor(48, 1, 1, "center", 13, "합 계", "none"),
                 tdColor(13, 1, 1, "right", 13, checkLongNull(settleSum) + "&nbsp;", "none"),
@@ -222,7 +224,7 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
                 .append(tr(tdEmpty(100, 1, 0)));
         if ("10".equals(e.payMethodCode())) {
             t.append(tr(tdStNone(100, 1, "left", 13, "4. 계좌번호")))
-                    .append(tr(tdEmpty(3, 1, 0), tdStNone(97, 1, "left", 13, checkNull(e.payAccountInfo()))))
+                    .append(tr(tdEmpty(3, 1, 0), tdStNone(97, 1, "left", 13, checkNull(Html.esc(e.payAccountInfo())))))
                     .append(tr(tdEmpty(100, 1, 0)))
                     .append(tr(tdStNone(100, 1, "left", 13, "5. 세부내역")))
                     .append(tr(tdEmpty(3, 1, 0), tdStNone(97, 1, "left", 13, checkNull(e.content()))));
@@ -266,13 +268,13 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
             }
             t.append(tr(tdColor(4, 1, 1, "center", 13, checkLongNull(cnt), "none"),
                     tdColor(12, 1, 1, "center", 13, checkDateNull(m.occDate()), "none"),
-                    tdColor(15, 1, 1, "left", 13, checkNull(m.corpName()), "none"),
-                    tdColor(19, 1, 1, "left", 13, checkNull(m.desc()), "none"),
+                    tdColor(15, 1, 1, "left", 13, checkNull(Html.esc(m.corpName())), "none"),
+                    tdColor(19, 1, 1, "left", 13, checkNull(Html.esc(m.desc())), "none"),
                     tdColor(13, 1, 1, "right", 13, checkLongNull(m.settleAmt()) + "&nbsp;", "none"),
-                    tdColor(5, 1, 1, "center", 13, checkNull(m.taxTypeName()), "none"),
+                    tdColor(5, 1, 1, "center", 13, checkNull(Html.esc(m.taxTypeName())), "none"),
                     tdColor(12, 1, 1, "center", 13, checkNull(checkDateNull(m.dueDate())), "none"),
-                    tdColor(10, 1, 1, "left", 13, checkNull(m.payMethodName()), "none"),
-                    tdColor(10, 1, 1, "left", 13, checkNull(m.note()), "none")));
+                    tdColor(10, 1, 1, "left", 13, checkNull(Html.esc(m.payMethodName())), "none"),
+                    tdColor(10, 1, 1, "left", 13, checkNull(Html.esc(m.note())), "none")));
         }
         cnt = 0;
         t.append(tr(tdColor(50, 1, 1, "center", 13, "합 계", "none"),
@@ -285,7 +287,7 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
                 if (!"10".equals(m.payMethodCode())) {
                     continue;
                 }
-                t.append(tr(tdEmpty(3, 1, 0), tdStNone(97, 1, "left", 13, "&nbsp;" + cnt + " : " + m.payAccountInfo())));
+                t.append(tr(tdEmpty(3, 1, 0), tdStNone(97, 1, "left", 13, "&nbsp;" + cnt + " : " + Html.esc(m.payAccountInfo()))));
             }
         }
         return t.append("</tbody></table>").toString();
@@ -302,7 +304,7 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
         }
         Map<String, Long> payMethodSum = new LinkedHashMap<>();
         for (PayExpenseLinkRow m : list) {
-            payMethodSum.merge(checkNull(m.payMethodName()), nz(m.settleAmt()), Long::sum);
+            payMethodSum.merge(checkNull(Html.esc(m.payMethodName())), nz(m.settleAmt()), Long::sum);
         }
         StringBuilder t = new StringBuilder();
         t.append(TABLE_START).append("<tbody>")
@@ -323,20 +325,20 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
                         tdStColor(24, 1, 1, "center", 13, "지급방법", "#EAEFF4")));
         Map<String, List<PayExpenseLinkRow>> grouped = new LinkedHashMap<>();
         for (PayExpenseLinkRow m : list) {
-            grouped.computeIfAbsent(m.depositName(), k -> new ArrayList<>()).add(m);
+            grouped.computeIfAbsent(Html.esc(m.depositName()), k -> new ArrayList<>()).add(m);
         }
         int cnt = 1;
         for (Map.Entry<String, List<PayExpenseLinkRow>> g : grouped.entrySet()) {
             long depositSum = 0;
             for (PayExpenseLinkRow m : g.getValue()) {
                 depositSum += nz(m.settleAmt());
-                String payAccountInfo = m.payAccountInfo() != null ? "(" + m.payAccountInfo() + ")" : "";
+                String payAccountInfo = m.payAccountInfo() != null ? "(" + Html.esc(m.payAccountInfo()) + ")" : "";
                 t.append(tr(tdColor(5, 1, 1, "center", 13, (cnt++) + "", "none"),
                         tdColor(14, 1, 1, "center", 13, checkDateNull(m.occDate()), "none"),
-                        tdColor(19, 1, 1, "left", 13, checkNull(m.corpName()), "none"),
-                        tdColor(24, 1, 1, "left", 13, checkNull(m.desc()), "none"),
+                        tdColor(19, 1, 1, "left", 13, checkNull(Html.esc(m.corpName())), "none"),
+                        tdColor(24, 1, 1, "left", 13, checkNull(Html.esc(m.desc())), "none"),
                         tdColor(14, 1, 1, "right", 13, checkLongNull(m.settleAmt()) + "&nbsp;", "none"),
-                        tdColor(24, 1, 1, "left", 13, checkNull(m.payMethodName() + payAccountInfo), "none")));
+                        tdColor(24, 1, 1, "left", 13, checkNull(Html.esc(m.payMethodName()) + payAccountInfo), "none")));
             }
             t.append(tr(tdStColor(62, 1, 1, "center", 13, "출금계좌(" + g.getKey() + ") 합계", "#FFF79D"),
                     tdStColor(14, 1, 1, "right", 13, checkLongNull(depositSum) + "&nbsp;", "#FFF79D"),

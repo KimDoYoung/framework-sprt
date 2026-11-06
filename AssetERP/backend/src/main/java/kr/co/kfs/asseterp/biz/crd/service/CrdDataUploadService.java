@@ -109,7 +109,7 @@ public class CrdDataUploadService {
                 l.paymentMethod = str(row, col.get("060"));
                 if (col.get("070") != null) {
                     Long v = longCell(row.getCell(col.get("070")));
-                    l.monthlyPayments = v == null ? 0L : v;
+                    l.monthlyPayments = v == null ? Long.valueOf(0L) : v;
                 }
                 l.approvalNo = str(row, col.get("080"));
                 if (col.get("090") != null) {
@@ -164,7 +164,7 @@ public class CrdDataUploadService {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -178,7 +178,7 @@ public class CrdDataUploadService {
     // ===== 셀 읽기 (ExcelUpload 도우미) =====
 
     private static Long negative(Long v) {
-        return v != null && v > 0 ? -v : v;
+        return v != null && v > 0 ? Long.valueOf(-v) : v; // -v 만 쓰면 삼항이 long 이 되어 v==null 에서 NPE
     }
 
     private static String str(Row row, Integer index) {

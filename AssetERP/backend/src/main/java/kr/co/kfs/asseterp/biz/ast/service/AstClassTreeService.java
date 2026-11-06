@@ -41,7 +41,7 @@ public class AstClassTreeService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
      */
     public List<AstItemTreeRes> searchItemTree(UserPrincipal user, String assetType) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String asset = assetType == null || assetType.isEmpty() ? "%" : assetType;
         return mapper.selectItemTree(new AstItemTreeCond(user.getCompanyId(), user.getUserId(), orgId, "%", asset));
     }
@@ -269,7 +269,7 @@ public class AstClassTreeService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. 국내외 '%'는 조건 없음
      */
     public List<AstTrCodeTreeRes> searchByTrCode(UserPrincipal user, String trCode, String itemLClass, String abroType, String assetType) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String code = trCode == null || trCode.isEmpty() ? null : trCode;
         if (code != null) {
             String group = mapper.selectItemClassGroupCode(user.getCompanyId(), code);
@@ -311,7 +311,7 @@ public class AstClassTreeService {
                         new AstManagerSaveReq(null, newId, "2", orgId, null, "false", "ast01_class_tree_id"));
             }
         } else {
-            Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+            Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
             managerMapper.insertManager(managerMapper.selectNextId(), companyId, newId,
                     new AstManagerSaveReq(null, newId, "1", orgId, user.getUserId(), "true", "ast01_class_tree_id"));
         }

@@ -69,7 +69,7 @@ public class AstTrService {
     /** Ast06_Tr.update4Insure — 금액은 네 보험 납부금액의 합(contAmt도 같은 값) */
     @Transactional
     public Long save4Insure(UserPrincipal user, Tr4InsureSaveReq r) {
-        Long settleAmt = r.settleAmt() == null ? 0L : r.settleAmt();
+        Long settleAmt = r.settleAmt() == null ? Long.valueOf(0L) : r.settleAmt();
         Long trId = saveTr(user, r.trId(), r.date(), r.trCode(), settleAmt, settleAmt, r.settleMngYn(), r.note(), r.depositId(), r.astClassTreeId());
         Long insureId = mapper.select4InsureId(trId);
         if (insureId == null) {

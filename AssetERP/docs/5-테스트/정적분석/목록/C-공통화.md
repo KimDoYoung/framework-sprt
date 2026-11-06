@@ -2,7 +2,7 @@
 CPD 중복 블록. 점수 = 줄 수 × (출현-1) × (도메인 간이면 2). 한 후보씩, 사용자 승인 뒤 진행:
 util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영향 API 를 `yunhee api` 로 확인.
 
-## CH-cpd-8d8576d6 — 엑셀 · 도메인 간 · 29줄×6곳 (점수 290)
+## CH-cpd-39c030d6 — 엑셀 · 도메인 간 · 29줄×6곳 (점수 290)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, crd, fnd, pay
@@ -18,7 +18,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -28,7 +28,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
      * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
 ```
 
-## CH-cpd-43a80ac5 — 엑셀 · 도메인 간 · 31줄×4곳 (점수 186)
+## CH-cpd-9b7956e4 — 엑셀 · 도메인 간 · 31줄×4곳 (점수 186)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd, pay
@@ -45,7 +45,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -155,7 +155,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
             } catch (ParseException e) {
 ```
 
-## CH-cpd-dc41b526 — 엑셀 · 도메인 간 · 71줄×2곳 (점수 142)
+## CH-cpd-564adef0 — 엑셀 · 도메인 간 · 71줄×2곳 (점수 142)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
@@ -177,7 +177,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 ```
 
-## CH-cpd-3d53b1b3 — 엑셀 · 도메인 간 · 22줄×4곳 (점수 132)
+## CH-cpd-df76c1cc — 엑셀 · 도메인 간 · 22줄×4곳 (점수 132)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, car, crd, fnd
@@ -194,7 +194,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -229,12 +229,12 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: pay
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayDeductTableController.java:25-49`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayOtherSetupController.java:24-48`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayPersonDeductController.java:24-48`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PaySimpleTaxController.java:26-50`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayTaxCalcController.java:24-48`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayTaxDeductController.java:26-50`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayDeductTableController.java:32-56`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayOtherSetupController.java:31-55`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayPersonDeductController.java:31-55`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PaySimpleTaxController.java:33-57`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayTaxCalcController.java:31-55`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/pay/controller/PayTaxDeductController.java:33-57`
 
 ```java
     private final PayDeductTableService service;
@@ -251,7 +251,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         service.createDate(principal, req.startDate());
 ```
 
-## CH-cpd-be59f304 — 엑셀 · 도메인 간 · 24줄×3곳 (점수 96)
+## CH-cpd-84d35326 — 엑셀 · 도메인 간 · 24줄×3곳 (점수 96)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, ics, pay
@@ -267,7 +267,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -369,7 +369,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                             tdEmpty( 1, 1, 0) +
 ```
 
-## CH-cpd-c72b771a — 엑셀 · 도메인 간 · 41줄×2곳 (점수 82)
+## CH-cpd-86d8bdd3 — 엑셀 · 도메인 간 · 41줄×2곳 (점수 82)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
@@ -384,7 +384,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -529,7 +529,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 기준일은 필수입력입니다.");
 ```
 
-## CH-cpd-f61e0e2c — 엑셀 · 도메인 간 · 19줄×3곳 (점수 76)
+## CH-cpd-a991ac6c — 엑셀 · 도메인 간 · 19줄×3곳 (점수 76)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, kfs, sch
@@ -542,7 +542,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -556,8 +556,8 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: adv, fnd
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/controller/AdvBookExtrController.java:28-63`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/controller/FndBookExtrController.java:28-63`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/controller/AdvBookExtrController.java:35-70`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/controller/FndBookExtrController.java:35-70`
 
 ```java
     private final AdvBookExtrService service;
@@ -574,7 +574,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
     @GetMapping("/recent-std-date")
 ```
 
-## CH-cpd-48062768 — 엑셀 · 도메인 간 · 35줄×2곳 (점수 70)
+## CH-cpd-07e00484 — 엑셀 · 도메인 간 · 35줄×2곳 (점수 70)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
@@ -589,14 +589,14 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
     /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
 ```
 
-## CH-cpd-5da58e41 — 엑셀 · 도메인 간 · 35줄×2곳 (점수 70)
+## CH-cpd-b8225ce4 — 엑셀 · 도메인 간 · 35줄×2곳 (점수 70)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, crd
@@ -611,7 +611,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -823,7 +823,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         requireSysAdmin(user);
 ```
 
-## CH-cpd-0428797c — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
+## CH-cpd-b9b676cb — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, pay
@@ -835,7 +835,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -845,7 +845,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
      * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
 ```
 
-## CH-cpd-9b778083 — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
+## CH-cpd-8d5c40c8 — 엑셀 · 도메인 간 · 31줄×2곳 (점수 62)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, crd
@@ -859,7 +859,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -867,7 +867,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
      * 첫 시트 2번째 행부터 한 행이 한 계좌: 관리코드(0)·계좌명(1)·계좌번호(2)·증권사명(3)·최초설정일(4)·해지일(5).
 ```
 
-## CH-cpd-4b487a5a — 엑셀 · 도메인 간 · 30줄×2곳 (점수 60)
+## CH-cpd-6e59060b — 엑셀 · 도메인 간 · 30줄×2곳 (점수 60)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, fnd
@@ -879,7 +879,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -889,7 +889,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
      * 한 행이라도 오류면 전체 롤백. 등록한 건수를 돌려준다.
 ```
 
-## CH-cpd-54f260f2 — 엑셀 · 도메인 간 · 29줄×2곳 (점수 58)
+## CH-cpd-08cf3fb1 — 엑셀 · 도메인 간 · 29줄×2곳 (점수 58)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: pay, sch
@@ -897,7 +897,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/sch/service/SchIpoService.java:267-295`
 
 ```java
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년도를 입력해주세요");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년도를 입력해주세요", e);
         }
     }
 
@@ -979,7 +979,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         Session session = Session.getInstance(properties, new Authenticator() {
 ```
 
-## CH-cpd-cfe8eddc — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
+## CH-cpd-c122ad00 — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, sch
@@ -994,14 +994,14 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
     /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 / 없는 칸은 null */
 ```
 
-## CH-cpd-4ef7e37b — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
+## CH-cpd-e402aeb6 — 엑셀 · 도메인 간 · 25줄×2곳 (점수 50)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, sch
@@ -1016,7 +1016,7 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -1157,7 +1157,7 @@ public interface AdvBookExtrMapper {
             return (long) cell.getNumericCellValue();
 ```
 
-## CH-cpd-56c9af94 — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
+## CH-cpd-869ae24e — 엑셀 · 도메인 간 · 22줄×2곳 (점수 44)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: adv, ics
@@ -1169,7 +1169,7 @@ public interface AdvBookExtrMapper {
         try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.", e);
         }
     }
 
@@ -1382,7 +1382,7 @@ public interface AdvBookExtrMapper {
 
 ```
 
-## CH-cpd-8788720e — 엑셀 · 도메인 간 · 19줄×2곳 (점수 38)
+## CH-cpd-b2a80c97 — 엑셀 · 도메인 간 · 19줄×2곳 (점수 38)
 
 - 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
 - 도메인: fnd, kfs
@@ -1394,7 +1394,7 @@ public interface AdvBookExtrMapper {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 
@@ -1519,8 +1519,8 @@ public interface AdvBookExtrMapper {
 - 권고: 파일 저장/읽기 공통 서비스로
 - 도메인: biz, sys
 - 관련 있을 수 있는 기존 common 부품: UploadProperties
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/biz/controller/BizFeeChargeController.java:155-169`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/sys/controller/SysFileController.java:132-146`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/biz/controller/BizFeeChargeController.java:171-185`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/sys/controller/SysFileController.java:139-153`
 
 ```java
         StreamingResponseBody body = out -> {
@@ -1695,8 +1695,8 @@ public interface AdvBookExtrMapper {
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: icr, ics
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/icr/controller/IcrClassTreeController.java:37-50`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsLawController.java:48-61`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/icr/controller/IcrClassTreeController.java:45-58`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsLawController.java:55-68`
 
 ```java
     public ApiResponse<PageRes<IcrClassTreeLookupRes>> searchLookup(@AuthenticationPrincipal UserPrincipal principal,
@@ -2349,7 +2349,7 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
                 }
 ```
 
-## CH-cpd-95df7fda — 날짜·숫자 포맷 · 같은 도메인 · 14줄×2곳 (점수 14)
+## CH-cpd-5bdd6248 — 날짜·숫자 포맷 · 같은 도메인 · 14줄×2곳 (점수 14)
 
 - 권고: common.util 순수 함수(포맷·파싱·반올림)로
 - 도메인: batch
@@ -2367,7 +2367,7 @@ async function downloadBlob(path: string, params: object, fileName: string): Pro
                 stdDate = LocalDate.parse(req.stdDate());
             } catch (DateTimeParseException e) {
                 // AS-IS는 파싱 실패를 삼키고 null로 진행한다(원본-이상한점 #214)
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate());
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate(), e);
             }
 ```
 
@@ -2442,7 +2442,7 @@ public record FundRes(
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: apr
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprRelateStampController.java:57-68`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprStampDocController.java:126-137`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprStampDocController.java:134-145`
 
 ```java
     public ApiResponse<String> rdPrint(@AuthenticationPrincipal UserPrincipal principal,
@@ -2463,7 +2463,7 @@ public record FundRes(
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: ics
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:34-44`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:39-49`
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:52-62`
 
 ```java
@@ -2506,7 +2506,7 @@ public record FundRes(
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: apr
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprRelateStampController.java:81-91`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprStampDocController.java:150-160`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/apr/controller/AprStampDocController.java:158-168`
 
 ```java
     public ApiResponse<List<AprRelateStampCheckRes>> searchStampCheck(@AuthenticationPrincipal UserPrincipal principal,
@@ -2564,7 +2564,7 @@ public record FundRes(
 
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: ics
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:44-52`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:49-57`
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:62-70`
 
 ```java
@@ -2598,6 +2598,26 @@ public record FundRes(
         return ApiResponse.ok(service.search(principal, holdDate, searchText, investAssetType, holdYn,
 ```
 
+## CH-cpd-b3999259 — 파일·업로드 · 같은 도메인 · 9줄×2곳 (점수 9)
+
+- 권고: 파일 저장/읽기 공통 서비스로
+- 도메인: scm
+- 관련 있을 수 있는 기존 common 부품: UploadProperties
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/scm/service/ScmDevProgramService.java:80-88`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/scm/service/ScmProgramService.java:80-88`
+
+```java
+    public int multiUpload(UserPrincipal user, Long devId, boolean deployTgtYn, String systemCd, String programType, List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT, "업로드 파일 없음");
+        int count = 0;
+        for (MultipartFile file : files) {
+            String name = file == null ? null : file.getOriginalFilename();
+            if (file == null || file.isEmpty() || name == null) continue;
+            int dot = name.lastIndexOf('.');
+            String programCd = dot < 0 ? name : name.substring(0, dot);
+            long programId = mapper.selectNextId();
+```
+
 ## CH-cpd-f6a83cb9 — 그리드 CUD 저장 · 같은 파일 · 9줄×2곳 (점수 9)
 
 - 권고: AS-IS Grid* 저장 흐름(C/U/D 분기 루프) 공통 헬퍼로
@@ -2615,26 +2635,6 @@ public record FundRes(
             Long id = isNew ? mapper.selectNextId() : req.trCodeId();
             if (isNew) {
                 mapper.insert(id, user.getCompanyId(), req);
-```
-
-## CH-cpd-e401d139 — 파일·업로드 · 같은 도메인 · 9줄×2곳 (점수 9)
-
-- 권고: 파일 저장/읽기 공통 서비스로
-- 도메인: scm
-- 관련 있을 수 있는 기존 common 부품: UploadProperties
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/scm/service/ScmDevProgramService.java:80-88`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/scm/service/ScmProgramService.java:80-88`
-
-```java
-    public int multiUpload(UserPrincipal user, Long devId, boolean deployTgtYn, String systemCd, String programType, List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT, "업로드 파일 없음");
-        int count = 0;
-        for (MultipartFile file : files) {
-            if (file == null || file.isEmpty() || file.getOriginalFilename() == null) continue;
-            String name = file.getOriginalFilename();
-            int dot = name.lastIndexOf('.');
-            String programCd = dot < 0 ? name : name.substring(0, dot);
-            long programId = mapper.selectNextId();
 ```
 
 ## CH-cpd-70f49e36 — 기타 로직 · 같은 파일 · 8줄×2곳 (점수 8)

@@ -42,7 +42,7 @@ public class FndFundService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 (P09와 같음). 검색어는 서버가 %…%로, 펀드유형은 비면 %
      */
     public List<FundSingleRes> searchSingle(UserPrincipal user, boolean planYn, String fundType, String searchText, boolean closeYn, boolean classYn) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectBySearchText(user.getCompanyId(), orgId, String.valueOf(closeYn), String.valueOf(planYn),
                 fundType == null || fundType.isBlank() ? "%" : fundType, "%" + (searchText == null ? "" : searchText) + "%",
                 String.valueOf(classYn));
@@ -54,7 +54,7 @@ public class FndFundService {
      */
     public List<FundMultiRes> searchMultiOrg(UserPrincipal user, boolean planYn, String fundType, String searchText, boolean closeYn, boolean classYn,
                                              List<Long> excludeIds) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectBySearchTextMulti(user.getCompanyId(), orgId, String.valueOf(closeYn), String.valueOf(planYn),
                 fundType == null || fundType.isBlank() ? "%" : fundType, "%" + (searchText == null ? "" : searchText) + "%",
                 String.valueOf(classYn), excludeIds == null ? List.of() : excludeIds);

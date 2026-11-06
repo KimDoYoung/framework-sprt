@@ -43,7 +43,7 @@ public class AstSettleService {
 
     /** LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     private Long orgId(UserPrincipal user) {
-        return user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
     }
 
     private static String orAll(String v) {
@@ -117,7 +117,7 @@ public class AstSettleService {
         long settleId = mapper.selectNextId();
         boolean fx = r.forAmt() != null;   // 외화 결제(X08)
         double forAmt = fx ? r.forAmt() : amtOf(r).doubleValue();
-        mapper.insertSettle(settleId, byExpense ? 0L : r.trId(), r.expenseId(), r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(),
+        mapper.insertSettle(settleId, byExpense ? Long.valueOf(0L) : r.trId(), r.expenseId(), r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(),
                 user.getUserId(), fx ? nz(r.forSettleAmt()) : r.settleAmt().doubleValue(), fx ? nz(r.fxRate()) : 1.0, amtOf(r), forAmt);
 
         finishSettle(user.getCompanyId(), user.getUserId(), settleId, orgId, orgAmt, orgForAmt, forAmt, r.trCode());
@@ -198,7 +198,7 @@ public class AstSettleService {
             if ("9913".equals(row.trCode()) || "9923".equals(row.trCode())) trCode = "9002";   // 펀드운용·사무관리보수 유보처리(자동)
 
             long settleId = mapper.selectNextId();
-            mapper.insertSettleMulti(settleId, expense ? 0L : row.trId(), expense ? row.trId() : null, req.settleDate(), settleAmt, forSettleAmt,
+            mapper.insertSettleMulti(settleId, expense ? Long.valueOf(0L) : row.trId(), expense ? row.trId() : null, req.settleDate(), settleAmt, forSettleAmt,
                     row.note(), req.depositId(), trCode, user.getUserId());
             createJournal("P", companyId, user.getUserId(), settleId, trCode);
         }
@@ -217,7 +217,7 @@ public class AstSettleService {
             } catch (BusinessException e) {
                 throw e;
             } catch (RuntimeException e) {
-                throw fail("update fail : \n" + e.getMessage());
+                throw fail("update fail : \n" + e.getMessage()).causedBy(e);
             }
         }
         for (Long settleId : settleIds) mapper.deleteSettle(settleId);
@@ -229,7 +229,7 @@ public class AstSettleService {
         try {
             msg = journalMapper.createJournal(procType, companyId, personId, trCode, settleId, true);
         } catch (RuntimeException e) {
-            throw fail("update fail : \n" + e.getMessage());
+            throw fail("update fail : \n" + e.getMessage()).causedBy(e);
         }
         if (!"Y".equals(msg)) throw fail(msg);
     }

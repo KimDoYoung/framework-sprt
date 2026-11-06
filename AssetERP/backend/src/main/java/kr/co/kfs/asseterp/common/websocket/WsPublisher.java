@@ -41,7 +41,7 @@ public class WsPublisher {
             redisTemplate.convertAndSend(properties.redisChannel(), json);
         } catch (DataAccessException e) {
             log.error("WebSocket 메시지 발행 실패 (Redis) - type: {}, cause: {}", message.type(), e.getMessage());
-            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE);
+            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE, e);
         }
         log.debug("WebSocket 메시지 발행 - route: {}, type: {}, id: {}", route.target(), message.type(), message.id());
     }

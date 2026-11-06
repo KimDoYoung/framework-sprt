@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -84,7 +86,7 @@ final class PromoHtml {
             long sum = 0;
             for (BizCardHtmlRow c : titleList) {
                 sum += c.cardPrice() == null ? 0 : c.cardPrice();
-                t.append(row(td(8, 1, 1, "left", 14, checkNull(c.cardName())), td(4, 1, 1, "right", 14, checkLong(c.cardPrice())), td(8, 1, 1, "center", 14, "")));
+                t.append(row(td(8, 1, 1, "left", 14, checkNull(Html.esc(c.cardName()))), td(4, 1, 1, "right", 14, checkLong(c.cardPrice())), td(8, 1, 1, "center", 14, "")));
             }
             t.append(row(tdStrong(8, 1, 1, "center", 14, "합계"), tdStrong(4, 1, 1, "right", 14, checkLong(sum)), td(8, 1, 1, "center", 14, " ")));
         }
@@ -99,7 +101,7 @@ final class PromoHtml {
             long sum = 0;
             for (AccountRow a : promoList) {
                 sum += a.approvalAmount();
-                t.append(row(td(8, 1, 1, "left", 14, checkNull(a.accountName())), td(4, 1, 1, "right", 14, checkLong(a.approvalAmount())), td(8, 1, 1, "center", 14, " ")));
+                t.append(row(td(8, 1, 1, "left", 14, checkNull(Html.esc(a.accountName()))), td(4, 1, 1, "right", 14, checkLong(a.approvalAmount())), td(8, 1, 1, "center", 14, " ")));
             }
             t.append(row(tdStrong(8, 1, 1, "center", 14, "합계"), tdStrong(4, 1, 1, "right", 14, checkLong(sum)), td(8, 1, 1, "center", 14, " ")));
         }

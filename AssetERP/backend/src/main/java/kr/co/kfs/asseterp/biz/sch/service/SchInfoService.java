@@ -57,7 +57,7 @@ public class SchInfoService {
      */
     public List<Sch01PeriodRes> searchByPeriod(UserPrincipal user, LocalDate startDate, LocalDate endDate, Long classId, String shareType,
                                                String cycleCode, boolean dailyYn, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByCloseDate(new Sch01PeriodSearchCond(user.getCompanyId(), user.getUserId(), orgId, startDate, endDate, classId,
                 shareType == null || shareType.isEmpty() ? "%" : shareType, cycleCode == null || cycleCode.isEmpty() ? "%" : cycleCode,
                 String.valueOf(dailyYn), "%" + (searchText == null ? "" : searchText) + "%"));

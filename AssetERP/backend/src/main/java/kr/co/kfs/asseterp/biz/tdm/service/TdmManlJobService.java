@@ -118,7 +118,7 @@ public class TdmManlJobService {
             resultYn = mapper.createDirectManl(actionName, user.getCompanyId(), manlJobId, user.getName());
         } catch (DataAccessException e) {
             log.warn("createDirectManl 실패 manlJobId={} actionName={}: {}", manlJobId, actionName, e.getMessage());
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "매뉴얼 생성 실패. 관리자에게 문의하여 주십시오");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "매뉴얼 생성 실패. 관리자에게 문의하여 주십시오", e);
         }
         if (!"Y".equals(resultYn)) {
             // AS-IS result.fail(-1, resultYn): DB 함수가 돌려준 메시지를 그대로 보여 준다

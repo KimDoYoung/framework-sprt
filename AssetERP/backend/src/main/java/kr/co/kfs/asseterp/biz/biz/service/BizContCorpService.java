@@ -56,7 +56,7 @@ public class BizContCorpService {
         try {
             return Long.parseLong(s.trim());
         } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "거래종료 개월은 숫자로 입력해주세요.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "거래종료 개월은 숫자로 입력해주세요.", e);
         }
     }
 

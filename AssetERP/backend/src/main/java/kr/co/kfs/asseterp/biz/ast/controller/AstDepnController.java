@@ -56,7 +56,7 @@ public class AstDepnController {
     @PutMapping("/{trId}/cost")
     public ApiResponse<Void> updateCost(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long trId,
                                         @RequestBody DepnCostReq req) {
-        service.updateDepnCost(principal, trId, req.depnCost() == null ? 0L : req.depnCost());
+        service.updateDepnCost(principal, trId, req.depnCost() == null ? Long.valueOf(0L) : req.depnCost());
         return ApiResponse.ok(null);
     }
 }

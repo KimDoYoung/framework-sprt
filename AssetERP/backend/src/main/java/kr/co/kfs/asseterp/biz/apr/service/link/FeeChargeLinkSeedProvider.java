@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -61,7 +63,7 @@ public class FeeChargeLinkSeedProvider implements AprLinkSeedProvider {
                     .append("<tr>").append(empty(5)).append(none(10, "center", 14, "-  아   래  -")).append(empty(5)).append("</tr>")
                     .append("<tr>").append(empty(20)).append("</tr>")
                     .append("<tr>").append(empty(2)).append(none(18, "left", 14, "1. 청구 대상자산 및 기간")).append("</tr>")
-                    .append("<tr>").append(empty(3)).append(none(17, "left", 14, "가. 대상 자산 : " + r.corpNm() + " 펀드")).append("</tr>")
+                    .append("<tr>").append(empty(3)).append(none(17, "left", 14, "가. 대상 자산 : " + Html.esc(r.corpNm()) + " 펀드")).append("</tr>")
                     .append("<tr>").append(empty(3)).append(none(17, "left", 14, "나. 대상 기간 : " + DOT_DATE.format(r.occStartDate()) + " ~ " + DOT_DATE.format(r.occCloseDate()))).append("</tr>")
                     .append("<tr>").append(empty(3)).append(none(17, "left", 13, "※ 보수율은 계약서의 상품유형별 보수율표 참조")).append("</tr>");
         }
@@ -70,7 +72,7 @@ public class FeeChargeLinkSeedProvider implements AprLinkSeedProvider {
                 .append("<tr>").append(empty(3)).append(none(17, "left", 14, "나. 최저 보수 : " + num(nf, model.minFee()))).append("</tr>")
                 .append("<tr>").append(empty(3)).append(none(17, "left", 14, "※ 청구금액 = 최저보수(총 보수 금액) - 기본보수(펀드발생보수)")).append("</tr>");
         for (BizFeeChargeApprRes r : list) {
-            t.append("<tr>").append(empty(2)).append(none(18, "left", 14, "3. 입금계좌 : " + r.bankNm() + " " + r.accountNo() + " (" + r.accountNm() + ")")).append("</tr>");
+            t.append("<tr>").append(empty(2)).append(none(18, "left", 14, "3. 입금계좌 : " + Html.esc(r.bankNm()) + " " + Html.esc(r.accountNo()) + " (" + Html.esc(r.accountNm()) + ")")).append("</tr>");
         }
         t.append("<tr>").append(empty(2)).append(none(18, "left", 14, "4. 입금기한 : 청구일로부터 10일 이내. 끝.")).append("</tr>");
         return t.append("</tbody></table>").toString();

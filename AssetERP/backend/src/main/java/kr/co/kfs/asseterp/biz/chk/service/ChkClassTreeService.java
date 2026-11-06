@@ -50,7 +50,7 @@ public class ChkClassTreeService {
     /** AS-IS Chk01_ClassTree.selectByCompanyId (E07): 기준 분류(기본 0)의 아래 전체를 getChildByCompanyId 되풀이로 → 전위 평평한 목록(depth) */
     public List<ChkClassTreeRes> searchTreeByCompany(UserPrincipal user, Long parentTreeId) {
         List<ChkClassTreeRes> out = new ArrayList<>();
-        addCompanyChildren(out, user.getCompanyId(), parentTreeId == null ? 0L : parentTreeId, 0, new HashSet<>());
+        addCompanyChildren(out, user.getCompanyId(), parentTreeId == null ? Long.valueOf(0L) : parentTreeId, 0, new HashSet<>());
         return out;
     }
 

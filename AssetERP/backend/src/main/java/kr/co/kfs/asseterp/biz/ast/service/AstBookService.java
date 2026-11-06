@@ -152,7 +152,7 @@ public class AstBookService {
         try {
             msg = mapper.createDepositBook(user.getCompanyId(), stdDate);
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "update fail : \n" + e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "update fail : \n" + e.getMessage(), e);
         }
         if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
     }

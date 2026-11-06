@@ -79,7 +79,7 @@ public class AssetErpFundSync {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, step + " / " + e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, step + " / " + e.getMessage(), e);
         }
     }
 

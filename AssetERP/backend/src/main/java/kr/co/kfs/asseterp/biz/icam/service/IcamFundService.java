@@ -50,7 +50,7 @@ public class IcamFundService {
         try {
             return Long.valueOf(companyId);
         } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT);
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e);
         }
     }
 

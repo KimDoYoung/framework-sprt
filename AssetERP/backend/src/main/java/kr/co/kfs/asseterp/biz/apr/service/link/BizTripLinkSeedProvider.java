@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.date;
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.str;
 
@@ -45,14 +47,14 @@ public class BizTripLinkSeedProvider implements AprLinkSeedProvider {
                 : t.bizTripName() + " 승인 요청의 건 - " + t.destination();
 
         Map<String, String> mapping = new HashMap<>();
-        mapping.put("소속", str(t.orgName()));
-        mapping.put("성명", str(t.personName()));
-        mapping.put("출장인원", str(t.num()));
-        mapping.put("동반인", str(t.companion()));
-        mapping.put("출장지", str(t.destination()));
+        mapping.put("소속", str(Html.esc(t.orgName())));
+        mapping.put("성명", str(Html.esc(t.personName())));
+        mapping.put("출장인원", str(Html.esc(t.num())));
+        mapping.put("동반인", str(Html.esc(t.companion())));
+        mapping.put("출장지", str(Html.esc(t.destination())));
         String start = date(t.startDate(), false);
         mapping.put("출장기간", start.equals(date(t.closeDate(), false)) ? start : start + " ~ " + date(t.closeDate(), false));
-        mapping.put("출장목적", str(t.purpose()));
+        mapping.put("출장목적", str(Html.esc(t.purpose())));
 
         return new Seed(title, support.fill(user.getCompanyId(), linkCode, mapping), null, false, true);
     }

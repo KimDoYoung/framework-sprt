@@ -108,7 +108,7 @@ public class EmpDeductService {
     public List<AddDeductRes> updateAddDeducts(Long deductId, List<AddDeductSaveReq> rows) {
         for (AddDeductSaveReq row : rows) {
             empDeductMapper.updateAddDeduct(
-                    new AddDeductSaveReq(row.addDeductId(), row.addDeductCnt() == null ? 0L : row.addDeductCnt()));
+                    new AddDeductSaveReq(row.addDeductId(), row.addDeductCnt() == null ? Long.valueOf(0L) : row.addDeductCnt()));
         }
         return empDeductMapper.selectAddDeducts(deductId);
     }

@@ -160,10 +160,10 @@ public class AstFinanceOprService {
     }
 
     private static Double nz(Double v) {
-        return v == null ? 0.0 : v;
+        return v == null ? Double.valueOf(0.0) : v;
     }
 
     private static Long nz(Long v) {
-        return v == null ? 0L : v;
+        return v == null ? Long.valueOf(0L) : v;
     }
 }

@@ -28,7 +28,7 @@ public class DcrDocListService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. 검색어는 서비스가 %…%로 만든다(빈 글자면 %%)
      */
     public List<DcrDocFileRes> searchFiles(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectFiles(new DcrDocFileCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
                 "%" + (searchText == null ? "" : searchText) + "%", "%"));
@@ -36,7 +36,7 @@ public class DcrDocListService {
 
     /** AS-IS Dcr00_DocList.getAppr L222 (F09). 조건·권한은 getFile과 같다. 검색어는 상신제목/등록자/부서명/비고 */
     public List<DcrDocApprRes> searchApprs(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectApprs(new DcrDocFileCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
                 "%" + (searchText == null ? "" : searchText) + "%", "%"));

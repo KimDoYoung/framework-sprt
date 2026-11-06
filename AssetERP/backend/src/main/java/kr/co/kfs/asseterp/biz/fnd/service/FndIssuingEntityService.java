@@ -86,7 +86,7 @@ public class FndIssuingEntityService {
         } catch (BusinessException e) {
             throw e;
         } catch (IOException | RuntimeException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, UPLOAD_FAIL + "(Exception)");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, UPLOAD_FAIL + "(Exception)", e);
         }
     }
 

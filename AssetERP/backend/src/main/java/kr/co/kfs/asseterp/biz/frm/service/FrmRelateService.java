@@ -29,7 +29,7 @@ public class FrmRelateService {
     private final EmpTransInfoService transInfoService;
 
     private Long orgOf(UserPrincipal user) {
-        return user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
     }
 
     private static LocalDate dateOr(LocalDate d) {

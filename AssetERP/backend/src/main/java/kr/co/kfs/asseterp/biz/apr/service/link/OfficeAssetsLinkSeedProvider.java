@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -53,7 +55,7 @@ public class OfficeAssetsLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일 정보가 없습니다.", e);
         }
         if ("A29".equals(linkCode)) {
             return new Seed("감가상각대장_" + std.format(DATE), depnHtml(std, mapper.selectDepnDate2Group(user.getCompanyId(), std)), LocalDate.now(), false, false);
@@ -100,7 +102,7 @@ public class OfficeAssetsLinkSeedProvider implements AprLinkSeedProvider {
             acm += b.acmDepnCost() == null ? 0L : b.acmDepnCost();
             rem += b.remDepnCost() == null ? 0L : b.remDepnCost();
             sb.append("<tr>")
-                    .append(tdColor(4, "center", b.itemType() == null ? " " : b.itemType()))
+                    .append(tdColor(4, "center", b.itemType() == null ? " " : Html.esc(b.itemType())))
                     .append(tdColor(4, "right", num(b.purAmt())))
                     .append(tdColor(4, "right", num(b.depnCost())))
                     .append(tdColor(4, "right", num(b.acmDepnCost())))
@@ -131,7 +133,7 @@ public class OfficeAssetsLinkSeedProvider implements AprLinkSeedProvider {
         for (OfficeAssetGroupRes b : list) {
             pur += b.purAmt() == null ? 0L : b.purAmt();
             sb.append("<tr>")
-                    .append(tdColor(7, "center", b.itemType() == null ? " " : b.itemType()))
+                    .append(tdColor(7, "center", b.itemType() == null ? " " : Html.esc(b.itemType())))
                     .append(tdColor(7, "right", num(b.purAmt())))
                     .append(tdEmpty(6))
                     .append("</tr>");

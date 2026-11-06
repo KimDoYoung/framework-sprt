@@ -58,7 +58,7 @@ public class EmpMyLeaveService {
 
     /** AS-IS Emp20_Edit_Leave.chkReward → emp.Emp22_EtcLeave.selectByEtcLeaveId */
     public EtcLeaveCheckRes getEtcLeaveCheck(UserPrincipal user, Long etcLeaveId, Long leaveId) {
-        EtcLeaveCheckRes row = mapper.selectEtcLeaveCheck(user.getCompanyId(), user.getUserId(), etcLeaveId, leaveId == null ? 0L : leaveId);
+        EtcLeaveCheckRes row = mapper.selectEtcLeaveCheck(user.getCompanyId(), user.getUserId(), etcLeaveId, leaveId == null ? Long.valueOf(0L) : leaveId);
         if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         return row;
     }

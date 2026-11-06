@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -199,8 +201,8 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
         for (BizFundPriceModiLinkRow m : list) {
             text.append(TR_START)
                     .append(td(1, 1, 1, "center", 12, i + ""))
-                    .append(td(6, 1, 1, "left", 12, checkNull(m.amCorpName())))
-                    .append(td(7, 1, 1, "left", 12, checkNull(m.fundName())))
+                    .append(td(6, 1, 1, "left", 12, checkNull(Html.esc(m.amCorpName()))))
+                    .append(td(7, 1, 1, "left", 12, checkNull(Html.esc(m.fundName()))))
                     .append(td(3, 1, 1, "center", 12, checkDate(m.priceStdDate())))
                     .append(td(3, 1, 1, "center", 12, checkDate(m.modiDate())))
                     .append(TR_CLOSE);
@@ -222,7 +224,7 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
     /** 평일(결산유무 칸 4줄 병합) 4줄 / 결산 4줄 — 두 보고서 공통 */
     private static void priceRows(StringBuilder t, BizFundPriceModiLinkRow m) {
         t.append(TR_START)
-                .append(td(3, 4, 1, "center", 14, checkBoolean(m.fundCloseYn())))
+                .append(td(3, 4, 1, "center", 14, checkBoolean(Html.esc(m.fundCloseYn()))))
                 .append(td(3, 4, 1, "center", 14, "평일"))
                 .append(td(4, 1, 1, "center", 14, "기준가"))
                 .append(td(4, 1, 1, "right", 14, checkDouble(m.befPrice())))
@@ -233,7 +235,7 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
         t.append(diffRow("과표기준가", m.befTaxPrice(), m.aftTaxPrice()));
         t.append(diffRow("FULL과표기준가", m.befFullTaxPrice(), m.aftFullTaxPrice()));
         t.append(TR_START)
-                .append(td(3, 4, 1, "center", 14, checkBoolean(m.fundCloseYn())))
+                .append(td(3, 4, 1, "center", 14, checkBoolean(Html.esc(m.fundCloseYn()))))
                 .append(td(3, 4, 1, "center", 14, "결산"))
                 .append(td(4, 1, 1, "center", 14, "기준가"))
                 .append(td(4, 1, 1, "right", 14, checkDouble(m.befClosePrice())))
@@ -252,9 +254,9 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
         t.append(TR_START).append(tdEmpty(22, 1, 0)).append(TR_CLOSE);
         t.append(TR_START)
                 .append(td(4, 1, 1, "center", 14, "운용사명", HEAD))
-                .append(td(7, 1, 1, "center", 14, checkNull(m.amCorpName())))
+                .append(td(7, 1, 1, "center", 14, checkNull(Html.esc(m.amCorpName()))))
                 .append(td(4, 1, 1, "center", 14, "펀드명", HEAD))
-                .append(td(7, 1, 1, "center", 14, checkNull(m.fundName())))
+                .append(td(7, 1, 1, "center", 14, checkNull(Html.esc(m.fundName()))))
                 .append(TR_CLOSE);
         t.append(TR_START)
                 .append(td(4, 1, 1, "center", 14, "기준가 산출일", HEAD))
@@ -274,9 +276,9 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
         priceRows(t, m);
         t.append(TR_START)
                 .append(td(3, 1, 1, "center", 14, "최초발견자", HEAD))
-                .append(td(3, 1, 1, "center", 14, checkNull(m.firstPersonName())))
+                .append(td(3, 1, 1, "center", 14, checkNull(Html.esc(m.firstPersonName()))))
                 .append(td(4, 1, 1, "center", 14, "발견 경위", HEAD))
-                .append(td(12, 1, 1, "center", 14, checkNull(m.discCause())))
+                .append(td(12, 1, 1, "center", 14, checkNull(Html.esc(m.discCause()))))
                 .append(TR_CLOSE);
     }
 
@@ -293,14 +295,14 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
     static String content01(BizFundPriceModiLinkRow m) {
         StringBuilder t = new StringBuilder();
         head(t, m, "기준가격 오류 발생 보고서");
-        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 기준가 변경사유<br>" + checkNull(m.modiReason()))).append(TR_CLOSE);
-        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 재발 방지 대책<br>" + checkNull(m.prevPlan()))).append(TR_CLOSE);
+        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 기준가 변경사유<br>" + checkNull(Html.esc(m.modiReason())))).append(TR_CLOSE);
+        t.append(TR_START).append(td(22, 1, 1, "left", 14, 90, "- 재발 방지 대책<br>" + checkNull(Html.esc(m.prevPlan())))).append(TR_CLOSE);
         t.append(TR_START).append(td(22, 1, 1, "left", 14, "- 기준가 변경 공시 유무 ")).append(TR_CLOSE);
         t.append(TR_START)
                 .append(td(3, 1, 1, "center", 14, "예탁원", HEAD))
-                .append(td(3, 1, 1, "center", 14, checkBoolean(m.ksdNoticeYn())))
+                .append(td(3, 1, 1, "center", 14, checkBoolean(Html.esc(m.ksdNoticeYn()))))
                 .append(td(4, 1, 1, "center", 14, "금융투자협회", HEAD))
-                .append(td(4, 1, 1, "center", 14, checkBoolean(m.kofiaNoticeYn())))
+                .append(td(4, 1, 1, "center", 14, checkBoolean(Html.esc(m.kofiaNoticeYn()))))
                 .append(td(4, 1, 1, "center", 14, "배상금액", HEAD))
                 .append(td(4, 1, 1, "right", 14, checkDouble(m.cmpsAmt())))
                 .append(TR_CLOSE);
@@ -312,13 +314,13 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
     static String content02(BizFundPriceModiLinkRow m) {
         StringBuilder t = new StringBuilder();
         head(t, m, "기준가격 변경 발생 보고서");
-        t.append(TR_START).append(td(22, 1, 1, "left", 14, 180, "- 기준가 변경사유<br>" + checkNull(m.modiReason()))).append(TR_CLOSE);
+        t.append(TR_START).append(td(22, 1, 1, "left", 14, 180, "- 기준가 변경사유<br>" + checkNull(Html.esc(m.modiReason())))).append(TR_CLOSE);
         t.append(TR_START).append(td(22, 1, 1, "left", 14, "- 기준가 변경 공시 유무 ")).append(TR_CLOSE);
         t.append(TR_START)
                 .append(td(3, 1, 1, "center", 14, "예탁원", HEAD))
-                .append(td(3, 1, 1, "center", 14, checkBoolean(m.ksdNoticeYn())))
+                .append(td(3, 1, 1, "center", 14, checkBoolean(Html.esc(m.ksdNoticeYn()))))
                 .append(td(4, 1, 1, "center", 14, "금융투자협회", HEAD))
-                .append(td(12, 1, 1, "center", 14, checkBoolean(m.kofiaNoticeYn())))
+                .append(td(12, 1, 1, "center", 14, checkBoolean(Html.esc(m.kofiaNoticeYn()))))
                 .append(TR_CLOSE);
         fileRow(t, m);
         return t.toString();

@@ -108,7 +108,7 @@ public class AstFxEvalService {
                 try {
                     backMsg = evalMapper.createBackJournal(trId);
                 } catch (RuntimeException e) {
-                    throw invalid("update fail : \n" + e.getMessage());
+                    throw invalid("update fail : \n" + e.getMessage()).causedBy(e);
                 }
                 if (!"Y".equals(backMsg)) throw invalid(backMsg);
             }

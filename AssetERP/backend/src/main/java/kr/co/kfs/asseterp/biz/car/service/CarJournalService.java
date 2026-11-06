@@ -58,7 +58,7 @@ public class CarJournalService {
         if (!month.isEmpty() && Boolean.TRUE.equals(month.get(0).fixYn())) return new CarJournalDateCheckRes("해당월의 운행일지는 확정이 되어 등록하실 수 없습니다", null);
         if (mapper.countByDate(companyId, infoId, date) > 0) return new CarJournalDateCheckRes("해당 사용일자의 운행일지는 이미 등록되어있습니다", null);
         CarJournalRes before = mapper.selectByDate(companyId, infoId, date);
-        return new CarJournalDateCheckRes(null, before == null ? 0L : before.afterMileage());
+        return new CarJournalDateCheckRes(null, before == null ? Long.valueOf(0L) : before.afterMileage());
     }
 
     /** AS-IS modelUpdate (UpdateDataModel) → 저장된 행. 신규는 journalId가 null */

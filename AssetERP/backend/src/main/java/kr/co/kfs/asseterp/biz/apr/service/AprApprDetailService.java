@@ -55,7 +55,7 @@ public class AprApprDetailService {
         LocalDate regDate = doc.regDate().toLocalDate();
         List<AprApprStepRow> rows = mapper.selectSteps(apprId);
         List<AprApprStepRes> out = new ArrayList<>();
-        Long firstOrgId = rows.isEmpty() ? 0L : rows.get(0).orgCodeId();
+        Long firstOrgId = rows.isEmpty() ? Long.valueOf(0L) : rows.get(0).orgCodeId();
         for (AprApprStepRow r : rows) {
             AprAltRow alt = mapper.selectAltCount(r.stepEmpId()) != 1
                     ? mapper.selectAltByOrg(r.stepEmpId(), firstOrgId)

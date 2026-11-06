@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityRes;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsExtrActivityMapper;
@@ -42,16 +44,16 @@ public class ExtrActivityLinkSeedProvider implements AprLinkSeedProvider {
                 + a.personNm() + "(" + a.activityCorp() + ")";
 
         Map<String, String> mapping = new HashMap<>();
-        mapping.put("성명", s(a.personNm()));
-        mapping.put("사번", s(a.personNo()));
-        mapping.put("부서명", s(a.orgNm()));
-        mapping.put("직책", s(a.titleNm()));
+        mapping.put("성명", s(Html.esc(a.personNm())));
+        mapping.put("사번", s(Html.esc(a.personNo())));
+        mapping.put("부서명", s(Html.esc(a.orgNm())));
+        mapping.put("직책", s(Html.esc(a.titleNm())));
         mapping.put("신청일자", d(a.regDate()));
-        mapping.put("활동처", s(a.activityCorp()));
-        mapping.put("활동대상", s(a.activityTgtNm2()));
-        mapping.put("활동기간", s(a.activityPeriod()));
+        mapping.put("활동처", s(Html.esc(a.activityCorp())));
+        mapping.put("활동대상", s(Html.esc(a.activityTgtNm2())));
+        mapping.put("활동기간", s(Html.esc(a.activityPeriod())));
         mapping.put("활동내용", h(a.activityDesc()));
-        mapping.put("활동보수", s(a.activityPay()));
+        mapping.put("활동보수", s(Html.esc(a.activityPay())));
         if (apply) {
             mapping.put("첨부자료", s(a.fileStr()));  // 결과보고(createResultMapping)에는 없다
         }
@@ -65,7 +67,7 @@ public class ExtrActivityLinkSeedProvider implements AprLinkSeedProvider {
 
     /** checkStringHtml — 줄바꿈을 br로 */
     private static String h(String text) {
-        return text == null ? " " : text.replace("\n", "<br>");
+        return text == null ? " " : Html.esc(text).replace("\n", "<br>"); // escape 먼저, 그다음 줄바꿈 → <br>
     }
 
     /** checkDateNull — yyyy-MM-dd, 없으면 "- " */

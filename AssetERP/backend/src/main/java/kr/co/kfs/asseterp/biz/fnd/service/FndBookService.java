@@ -30,7 +30,7 @@ public class FndBookService {
 
     /** AS-IS selectByRelateFnd L28 (P10). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     public List<BookRelateFndRes> searchRelateFnd(UserPrincipal user, Long astClassTreeId, LocalDate stdDate) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByRelateFnd(user.getCompanyId(), orgId, astClassTreeId, stdDate);
     }
 

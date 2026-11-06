@@ -52,7 +52,7 @@ public class ExtrFundHoldItemAction implements BatchAction {
                 sendDate = LocalDate.parse(req.sendDate());
             } catch (DateTimeParseException e) {
                 // AS-IS는 파싱 실패를 삼키고 null로 NPE가 난다(원본-이상한점 #211)
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "sendDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.sendDate());
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "sendDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.sendDate(), e);
             }
         }
         String send = sendDate.format(YMD);
@@ -65,7 +65,7 @@ public class ExtrFundHoldItemAction implements BatchAction {
             // flt09 insert
             extrMapper.insertFundItems(companyId, ifCode, send, ITEM_TYPE);
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "extrFundHoldItem 작업완료..commit";
     }

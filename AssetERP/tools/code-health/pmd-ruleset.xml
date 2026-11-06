@@ -15,7 +15,10 @@
     <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
 
     <!-- 예외·로그 -->
-    <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+        <!-- 이유를 주석으로 적은 빈 catch 는 의도한 것 -->
+        <properties><property name="allowCommentedBlocks" value="true"/></properties>
+    </rule>
     <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
     <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
     <rule ref="category/java/bestpractices.xml/SystemPrintln"/>

@@ -240,10 +240,10 @@ public class AuthService {
             if (tokenProvider.isTokenType(e.getClaims(), TokenType.REFRESH)) {
                 auditRefreshRejected(Long.parseLong(e.getClaims().getSubject()), ErrorCode.REFRESH_EXPIRED);
             }
-            throw new BusinessException(ErrorCode.REFRESH_EXPIRED);
+            throw new BusinessException(ErrorCode.REFRESH_EXPIRED, e);
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("유효하지 않은 Refresh Token: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, e);
         }
 
         Long userId = Long.parseLong(claims.getSubject());

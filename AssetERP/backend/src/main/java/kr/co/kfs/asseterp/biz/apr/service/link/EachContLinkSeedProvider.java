@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.str;
 
 import java.time.LocalDate;
@@ -43,14 +45,14 @@ public class EachContLinkSeedProvider implements AprLinkSeedProvider {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "개별계약서를 찾을 수 없습니다.");
         }
         Map<String, String> mapping = new LinkedHashMap<>();
-        mapping.put("계약회사명", str(r.contCorpName()));
-        mapping.put("계약회사주소", str(r.address()));
-        mapping.put("계약회사대표이사", str(r.ceo() + "       (인)"));   // AS-IS: getCeo() + "       (인)" — 대표이사가 비면 "null       (인)"
-        mapping.put("펀드명", str(r.fundName()));
-        mapping.put("보수율", str(r.fundFee()));
+        mapping.put("계약회사명", str(Html.esc(r.contCorpName())));
+        mapping.put("계약회사주소", str(Html.esc(r.address())));
+        mapping.put("계약회사대표이사", str(Html.esc(r.ceo()) + "       (인)"));   // AS-IS: getCeo() + "       (인)" — 대표이사가 비면 "null       (인)"
+        mapping.put("펀드명", str(Html.esc(r.fundName())));
+        mapping.put("보수율", str(Html.esc(r.fundFee())));
         mapping.put("계약일", date(r.contDate(), KOR_DATE));
         mapping.put("설정일", date(r.fundStartDate(), null));
-        mapping.put("비고", str(r.note()));
+        mapping.put("비고", str(Html.esc(r.note())));
         String title = r.contCorpName() + "(주) 일반사무관리 업무위탁 개별계약의 건";
         return Seed.of(title, formSupport.fill(user.getCompanyId(), "C01", mapping));
     }

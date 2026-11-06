@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -80,12 +82,12 @@ final class TdmLinkHtml {
         int i = 0;
         while (i < list.size()) {
             TdmLinkTaskDetailRow current = list.get(i);
-            String taskName = checkNullPlain(current.taskName());
+            String taskName = checkNullPlain(Html.esc(current.taskName()));
 
             // 같은 taskName이 몇 개 연속되는지 확인
             int rowspanCount = 1;
             int j = i + 1;
-            while (j < list.size() && taskName.equals(checkNullPlain(list.get(j).taskName()))) {
+            while (j < list.size() && taskName.equals(checkNullPlain(Html.esc(list.get(j).taskName())))) {
                 rowspanCount++;
                 j++;
             }
@@ -94,7 +96,7 @@ final class TdmLinkHtml {
             text.append(TR_START)
                     .append(a90TdEmpty(1, 1, 0))
                     .append(a90TdStColor(9, rowspanCount, 1, "left", 12, taskName, "#FFFFFF"))
-                    .append(a90TdStColor(9, 1, 1, "left", 12, checkNullPlain(current.content()), "#FFFFFF"))
+                    .append(a90TdStColor(9, 1, 1, "left", 12, checkNullPlain(Html.esc(current.content())), "#FFFFFF"))
                     .append(a90TdEmpty(1, 1, 0))
                     .append(TR_CLOSE);
 
@@ -102,7 +104,7 @@ final class TdmLinkHtml {
             for (int k = i + 1; k < j; k++) {
                 text.append(TR_START)
                         .append(a90TdEmpty(1, 1, 0))
-                        .append(a90TdStColor(9, 1, 1, "left", 12, checkNullPlain(list.get(k).content()), "#FFFFFF"))
+                        .append(a90TdStColor(9, 1, 1, "left", 12, checkNullPlain(Html.esc(list.get(k).content())), "#FFFFFF"))
                         .append(a90TdEmpty(1, 1, 0))
                         .append(TR_CLOSE);
             }
@@ -150,7 +152,7 @@ final class TdmLinkHtml {
         text.append(tableStart(0)).append("<tbody>")
                 .append(TR_START).append(tdCreate(20, 1, 0, "left", 13, "「금융회사의 지배구조에 관한 법률」에 의거하여 작성한 책무기술서 승인을 요청드립니다.")).append(TR_CLOSE)
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
-                .append(TR_START).append(tdCreate(20, 1, 0, "left", 13, "1. 임원 : " + first.personName())).append(TR_CLOSE)
+                .append(TR_START).append(tdCreate(20, 1, 0, "left", 13, "1. 임원 : " + Html.esc(first.personName()))).append(TR_CLOSE)
                 .append(TR_START).append(tdCreate(20, 1, 0, "left", 13, "2. 직책별 책무")).append(TR_CLOSE)
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
                 .append(TR_START)
@@ -178,10 +180,10 @@ final class TdmLinkHtml {
                 TdmLinkRoleDescTaskRow row = list.get(i + k);
                 text.append(TR_START);
                 if (k == 0) {
-                    text.append(tdCreate(5, rowspan, 1, "center", 13, checkNullNbsp(row.roleName())));
+                    text.append(tdCreate(5, rowspan, 1, "center", 13, checkNullNbsp(Html.esc(row.roleName()))));
                     text.append(tdCreate(3, rowspan, 1, "center", 13, checkBooleanNull(row.addTitleYn())));
                 }
-                text.append(tdCreate(12, 1, 1, "left", 13, checkNullNbsp(row.taskName())));
+                text.append(tdCreate(12, 1, 1, "left", 13, checkNullNbsp(Html.esc(row.taskName()))));
                 text.append(TR_CLOSE);
             }
             i += rowspan;
@@ -204,9 +206,9 @@ final class TdmLinkHtml {
                 .append(TR_CLOSE);
         for (TdmLinkRoleDigmRow row : list) {
             text.append(TR_START)
-                    .append(tdCreate(6, 1, 1, "left", 13, checkNullNbsp(row.roleName())))
-                    .append(tdCreate(3, 1, 1, "center", 13, checkNullNbsp(row.personName())))
-                    .append(tdCreate(3, 1, 1, "center", 13, checkNullNbsp(row.posName())))
+                    .append(tdCreate(6, 1, 1, "left", 13, checkNullNbsp(Html.esc(row.roleName()))))
+                    .append(tdCreate(3, 1, 1, "center", 13, checkNullNbsp(Html.esc(row.personName()))))
+                    .append(tdCreate(3, 1, 1, "center", 13, checkNullNbsp(Html.esc(row.posName()))))
                     .append(tdCreate(3, 1, 1, "center", 13, checkBooleanNull(row.addTitleYn())))
                     .append(tdEmpty(5, 1, 0))
                     .append(TR_CLOSE);
@@ -296,15 +298,15 @@ final class TdmLinkHtml {
             seq5 += checkLong(m.insuffUndoneCnt());
             seq6 += checkLong(m.insuffDoneCnt());
             text.append(TR_START)
-                    .append(a94TdColor(23, 1, 1, "left", 13, checkNullPlain(m.roleName()), "none"))
-                    .append(a94TdColor(13, 1, 1, "center", 13, checkNullPlain(m.exctName()), "none"))
+                    .append(a94TdColor(23, 1, 1, "left", 13, checkNullPlain(Html.esc(m.roleName())), "none"))
+                    .append(a94TdColor(13, 1, 1, "center", 13, checkNullPlain(Html.esc(m.exctName())), "none"))
                     .append(a94TdColor(9, 1, 1, "right", 13, checkLongNull(m.monthManlCnt()) + "&nbsp", "none"))
                     .append(a94TdColor(8, 1, 1, "right", 13, checkLongNull(m.monthCheck1Cnt()) + "&nbsp", "none"))
                     .append(a94TdColor(8, 1, 1, "right", 13, checkLongNull(m.monthCheck2Cnt()) + "&nbsp", "none"))
                     .append(a94TdColor(8, 1, 1, "right", 13, checkLongNull(m.monthCheck9Cnt()) + "&nbsp", "none"))
                     .append(a94TdColor(8, 1, 1, "right", 13, checkLongNull(m.insuffUndoneCnt()) + "&nbsp", "none"))
                     .append(a94TdColor(8, 1, 1, "right", 13, checkLongNull(m.insuffDoneCnt()) + "&nbsp", "none"))
-                    .append(a94TdColor(15, 1, 1, "center", 13, checkNullPlain(m.checkStatusCode()), "none"))
+                    .append(a94TdColor(15, 1, 1, "center", 13, checkNullPlain(Html.esc(m.checkStatusCode())), "none"))
                     .append(TR_CLOSE);
         }
 

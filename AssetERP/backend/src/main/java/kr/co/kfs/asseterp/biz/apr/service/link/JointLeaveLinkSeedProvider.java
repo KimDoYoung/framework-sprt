@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +97,7 @@ public class JointLeaveLinkSeedProvider implements AprLinkSeedProvider {
             t.append("<tr>")
                     .append(tdColor(3, 1, 1, "center", 14, date(m.startDate()), "none"))
                     .append(tdColor(3, 1, 1, "center", 14, date(m.closeDate()), "none"))
-                    .append(tdColor(14, 1, 1, "left", 14, m.reason() == null ? "null" : m.reason(), "none"))
+                    .append(tdColor(14, 1, 1, "left", 14, m.reason() == null ? "null" : Html.esc(m.reason()), "none"))
                     .append("</tr>");
         }
         return t.append("</tbody></table>").toString();

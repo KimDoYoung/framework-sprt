@@ -65,7 +65,7 @@ public class CardMgmtLinkSeedProvider implements AprLinkSeedProvider {
             if (r.accountName() == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "계정과목이 연결되지 않은 법인카드내역이 포함되어있습니다");
             }
-            byAccount.merge(r.accountName(), r.approvalAmount() == null ? 0L : r.approvalAmount(), Long::sum);
+            byAccount.merge(r.accountName(), r.approvalAmount() == null ? Long.valueOf(0L) : r.approvalAmount(), Long::sum);
         }
         List<PromoHtml.AccountRow> accounts = new ArrayList<>();
         byAccount.forEach((name, sum) -> accounts.add(new PromoHtml.AccountRow(name, sum)));

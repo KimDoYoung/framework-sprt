@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -47,7 +49,7 @@ public class IcamUserStopLinkSeedProvider implements AprLinkSeedProvider {
         try {
             close = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.", e);
         }
         // getStdDate(): 분기 첫날(1·4·7·10월 1일) ~ 마지막 날
         LocalDate start = LocalDate.of(close.getYear(), ((close.getMonthValue() - 1) / 3) * 3 + 1, 1);
@@ -102,11 +104,11 @@ public class IcamUserStopLinkSeedProvider implements AprLinkSeedProvider {
         sb.append("</tr>");
         for (IcamStopRes m : list) {
             sb.append("<tr>")
-                    .append(td(4, 1, "left", nz(m.companyName()), "none"))
-                    .append(td(4, 1, "left", nz(m.userId()), "none"))
-                    .append(td(4, 1, "left", nz(m.userName()), "none"))
-                    .append(td(4, 1, "left", nz(m.email()), "none"))
-                    .append(td(4, 1, "left", nz(m.note()), "none"))
+                    .append(td(4, 1, "left", nz(Html.esc(m.companyName())), "none"))
+                    .append(td(4, 1, "left", nz(Html.esc(m.userId())), "none"))
+                    .append(td(4, 1, "left", nz(Html.esc(m.userName())), "none"))
+                    .append(td(4, 1, "left", nz(Html.esc(m.email())), "none"))
+                    .append(td(4, 1, "left", nz(Html.esc(m.note())), "none"))
                     .append("</tr>");
         }
         return sb.append("</tbody></table>").toString();

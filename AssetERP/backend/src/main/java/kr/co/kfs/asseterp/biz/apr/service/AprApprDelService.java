@@ -44,7 +44,7 @@ public class AprApprDelService {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "폐기문서 복구 중 문제가 발생했습니다. 관리자에게 문의하세요");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "폐기문서 복구 중 문제가 발생했습니다. 관리자에게 문의하세요", e);
         }
     }
 }

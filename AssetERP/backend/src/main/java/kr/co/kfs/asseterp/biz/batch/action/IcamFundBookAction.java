@@ -59,7 +59,7 @@ public class IcamFundBookAction implements BatchAction {
                 closeDate = LocalDate.parse(req.closeDate());
             } catch (DateTimeParseException | NullPointerException e) {
                 // AS-IS는 파싱 실패를 삼키고 null로 NPE가 난다(원본-이상한점 #212)
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "startDate·closeDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.startDate() + " ~ " + req.closeDate());
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "startDate·closeDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.startDate() + " ~ " + req.closeDate(), e);
             }
         }
         String companyId = "ALL".equals(req.companyId()) ? "%" : req.companyId();
@@ -97,7 +97,7 @@ public class IcamFundBookAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "펀드원장 작업완료..commit";
     }

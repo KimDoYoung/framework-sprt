@@ -54,7 +54,7 @@ public class IcamTodayListItemAction implements BatchAction {
                         r.getString("icam20_item_nm"), null, r.getString("icam20_isin"), null, null, null, null, req.worker()));
             }
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "작업완료..commit";
     }

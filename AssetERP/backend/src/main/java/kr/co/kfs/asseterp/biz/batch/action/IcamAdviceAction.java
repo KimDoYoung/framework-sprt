@@ -98,7 +98,7 @@ public class IcamAdviceAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "icamAdvice 작업완료..commit";
     }

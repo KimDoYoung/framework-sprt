@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -49,7 +51,7 @@ public class BookDepnLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.", e);
         }
         List<BookDepnGroupRow> list = mapper.selectOfficeAssetsGroup(user.getCompanyId(), std);
         if (list.isEmpty()) {
@@ -105,7 +107,7 @@ public class BookDepnLinkSeedProvider implements AprLinkSeedProvider {
         long purAmt = 0;
         for (BookDepnGroupRow m : list) {
             purAmt += m.purAmt() == null ? 0 : m.purAmt();
-            t.append("<tr>").append(tdColor(7, 1, 1, "center", 12, checkNull(m.itemType()), "none"))
+            t.append("<tr>").append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.itemType())), "none"))
                     .append(tdColor(7, 1, 1, "right", 12, checkLongNull(m.purAmt()), "none"))
                     .append(tdEmpty(6, 1, 0)).append("</tr>");
         }

@@ -118,7 +118,7 @@ public class MktHistoryService {
 
     private static Long orgId(UserPrincipal user) {
         try {
-            return user.getDeptId() == null ? -1L : Long.valueOf(user.getDeptId());
+            return user.getDeptId() == null ? Long.valueOf(-1L) : Long.valueOf(user.getDeptId());
         } catch (NumberFormatException e) {
             return -1L;
         }

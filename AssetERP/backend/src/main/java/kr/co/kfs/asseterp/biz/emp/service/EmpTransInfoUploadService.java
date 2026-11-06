@@ -63,7 +63,7 @@ public class EmpTransInfoUploadService {
             if (e instanceof BusinessException be) {
                 throw be;
             }
-            throw invalid("엑셀 파일을 읽을 수 없습니다.");
+            throw invalid("엑셀 파일을 읽을 수 없습니다.").causedBy(e);
         }
     }
 

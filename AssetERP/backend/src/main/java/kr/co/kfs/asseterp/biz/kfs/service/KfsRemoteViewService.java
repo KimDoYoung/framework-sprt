@@ -94,7 +94,7 @@ public class KfsRemoteViewService {
                     mapper.excelInsert(user.getCompanyId(), personName, LocalDate.parse(dateTime.substring(0, 10)),
                             dateTime.substring(11, 16), closeTime.substring(11, 16));
                 } catch (DateTimeParseException | StringIndexOutOfBoundsException e) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 일시를 읽을 수 없습니다. (yyyy-MM-dd HH:mm)");
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 일시를 읽을 수 없습니다. (yyyy-MM-dd HH:mm)", e);
                 }
                 count++;
             }
@@ -103,7 +103,7 @@ public class KfsRemoteViewService {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
     }
 

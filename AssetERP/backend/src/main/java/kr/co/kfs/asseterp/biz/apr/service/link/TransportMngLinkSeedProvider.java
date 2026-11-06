@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -56,7 +58,7 @@ public class TransportMngLinkSeedProvider implements AprLinkSeedProvider {
         try {
             ym = YearMonth.parse(yyyymm == null ? "" : yyyymm.trim().replace('.', '-'));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년월 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준년월 정보가 없습니다.", e);
         }
         List<RelateApprRes> list = mapper.selectByCompanyId(user.getCompanyId(), yyyymm.trim());
         if (list.isEmpty()) {
@@ -153,10 +155,10 @@ public class TransportMngLinkSeedProvider implements AprLinkSeedProvider {
         for (RelateApprRes m : list) {
             t.append("<tr>")
                     .append(tdEmpty(5, 1, 0))
-                    .append(tdColor(12, 1, 1, "center", 13, checkNull(m.regNo()), "none"))
-                    .append(tdColor(24, 1, 1, "left", 13, "&nbsp;" + checkNull(m.orgName()), "none"))
-                    .append(tdColor(16, 1, 1, "center", 13, checkNull(m.posName()), "none"))
-                    .append(tdColor(16, 1, 1, "center", 13, checkNull(m.personName()), "none"))
+                    .append(tdColor(12, 1, 1, "center", 13, checkNull(Html.esc(m.regNo())), "none"))
+                    .append(tdColor(24, 1, 1, "left", 13, "&nbsp;" + checkNull(Html.esc(m.orgName())), "none"))
+                    .append(tdColor(16, 1, 1, "center", 13, checkNull(Html.esc(m.posName())), "none"))
+                    .append(tdColor(16, 1, 1, "center", 13, checkNull(Html.esc(m.personName())), "none"))
                     .append(tdColor(18, 1, 1, "right", 13, checkLongNull(m.regAmt()) + "&nbsp;", "none"))
                     .append(tdEmpty(5, 1, 0))
                     .append("</tr>");

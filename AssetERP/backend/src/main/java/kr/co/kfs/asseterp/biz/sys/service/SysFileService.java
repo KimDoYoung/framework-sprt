@@ -113,10 +113,10 @@ public class SysFileService {
      */
     @Transactional
     public FileRes upload(UserPrincipal user, Long parentId, String mode, String fileYn, MultipartFile upload) {
-        if (upload == null || upload.isEmpty() || upload.getOriginalFilename() == null) {
+        String fileNm = upload == null ? null : upload.getOriginalFilename();
+        if (upload == null || upload.isEmpty() || fileNm == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
         }
-        String fileNm = upload.getOriginalFilename();
         int dot = fileNm.lastIndexOf('.');
         String ext = dot > -1 ? fileNm.substring(dot + 1) : ""; // FileUpload.getExtension
         checkAllowedType(user, fileNm, ext);
@@ -132,7 +132,7 @@ public class SysFileService {
             upload.transferTo(target);
         } catch (IOException e) {
             log.error("파일 생성시 오류발생 fileId={}", fileId, e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 업로드 중 오류가 발생하였습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 업로드 중 오류가 발생하였습니다.", e);
         }
 
         try {
@@ -314,7 +314,7 @@ public class SysFileService {
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.error("파일 복사시 오류발생 fileId={}", fileId, e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 복사 중 오류가 발생하였습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 복사 중 오류가 발생하였습니다.", e);
         }
         try {
             sysFileMapper.insertFile(newFileId, newParentId, newFileNm != null ? newFileNm : src.fileNm(), serverPath, (double) (target.length() / 1024), src.fileExt(), src.fileYn());

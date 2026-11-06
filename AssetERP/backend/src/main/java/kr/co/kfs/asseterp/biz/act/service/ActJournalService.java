@@ -27,7 +27,7 @@ public class ActJournalService {
         try {
             msg = mapper.createJournal(procType, user.getCompanyId(), user.getUserId(), trCode, trId, exceptYn);
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "update fail : \n" + e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "update fail : \n" + e.getMessage(), e);
         }
         if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
     }

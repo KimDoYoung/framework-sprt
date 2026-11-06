@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -93,7 +95,7 @@ public class EtcLeaveLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
                 .append(TR_START).append(tdNoneSlim(20, 1, "center", 12, "- 아 래 -")).append(TR_CLOSE)
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
-                .append(tdNoneSlim(20, 1, "left", 14, "- 사유 : " + model.reason()))
+                .append(tdNoneSlim(20, 1, "left", 14, "- 사유 : " + Html.esc(model.reason())))
                 .append(TR_START)
                 .append(tdNoneSlim(20, 1, "left", 14, "- 사용기간 : " + dash(model.startDate()) + " ~ " + dash(model.closeDate())))
                 .append(TR_CLOSE)
@@ -110,8 +112,8 @@ public class EtcLeaveLinkSeedProvider implements AprLinkSeedProvider {
         for (EtcLeavePersonRes p : list) {
             text.append(TR_START)
                     .append(tdEmpty(5, 1, 0))
-                    .append(tdColor(5, 1, 1, "center", 14, p.orgName(), "none"))
-                    .append(tdColor(5, 1, 1, "center", 14, p.personName(), "none"))
+                    .append(tdColor(5, 1, 1, "center", 14, Html.esc(p.orgName()), "none"))
+                    .append(tdColor(5, 1, 1, "center", 14, Html.esc(p.personName()), "none"))
                     .append(tdEmpty(5, 1, 0))
                     .append(TR_CLOSE);
         }

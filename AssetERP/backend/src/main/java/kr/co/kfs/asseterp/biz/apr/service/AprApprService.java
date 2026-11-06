@@ -77,7 +77,7 @@ public class AprApprService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. searchText는 서비스가 %…%로 만든다(빈 글자면 %%)
      */
     public List<AprDocRes> searchDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByClassTreeId2(new AprDocListCond(classTreeId, orgId, user.getUserId(), startDate, endDate, like(searchText)));
     }
 
@@ -114,7 +114,7 @@ public class AprApprService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. searchText는 서비스가 %…%로 만든다(빈 글자면 %%)
      */
     public List<AprIcsDocRes> searchIcsDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByIcsClassTreeId(new AprIcsDocListCond(classTreeId, user.getCompanyId(), orgId, startDate, endDate, like(searchText)));
     }
 
@@ -124,7 +124,7 @@ public class AprApprService {
      */
     public List<AprDocSearchRes> searchDocText(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText,
                                                String receiveName, String statusCode, String inoutCode) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByText2(new AprDocSearchCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
                 like(searchText), like(receiveName), blankToAny(statusCode), blankToAny(inoutCode), "%"));
@@ -135,7 +135,7 @@ public class AprApprService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
      */
     public List<AprFundDocRes> searchFundDocList(UserPrincipal user, Long fundCodeId) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByFundDocList(new AprFundDocListCond(fundCodeId, orgId, user.getUserId()));
     }
 
@@ -144,7 +144,7 @@ public class AprApprService {
      * 완료(30)이고 내 조직이 열람할 수 있거나 내가 결재선·열람자인 문서. 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
      */
     public List<AprItemDocRes> searchItemDocList(UserPrincipal user, Long astClassTreeId, String searchType, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByItemDocList(new AprItemDocListCond(astClassTreeId, user.getCompanyId(), orgId, user.getUserId(),
                 "2".equals(searchType) ? "2" : "1", nvl(searchText)));
     }
@@ -177,7 +177,7 @@ public class AprApprService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 
@@ -221,7 +221,7 @@ public class AprApprService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 
@@ -281,7 +281,7 @@ public class AprApprService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 
@@ -324,7 +324,7 @@ public class AprApprService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 
@@ -374,7 +374,7 @@ public class AprApprService {
      * 아니면 [찾기](selectBySearch, 서비스가 %…%로). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
      */
     public List<AprLoadDocRes> searchLoadDocs(UserPrincipal user, Long classTreeId, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         if (searchText == null) {
             return mapper.selectLoadDocByClassTreeId(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), null));
         }

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -118,13 +120,13 @@ public class TransportLinkSeedProvider implements AprLinkSeedProvider {
             amtSum += m.amt() == null ? 0L : m.amt();
             t.append("<tr>")
                     .append(tdColor(11, 1, 1, "center", 12, m.date() == null ? "" : m.date().format(DATE), "none"))
-                    .append(tdColor(18, 1, 1, "center", 12, checkNull(m.startPoint()), "none"))
-                    .append(tdColor(18, 1, 1, "center", 12, checkNull(m.closePoint()), "none"))
-                    .append(tdColor(8, 1, 1, "center", 12, checkNull(m.startTime()), "none"))
-                    .append(tdColor(8, 1, 1, "center", 12, checkNull(m.closeTime()), "none"))
+                    .append(tdColor(18, 1, 1, "center", 12, checkNull(Html.esc(m.startPoint())), "none"))
+                    .append(tdColor(18, 1, 1, "center", 12, checkNull(Html.esc(m.closePoint())), "none"))
+                    .append(tdColor(8, 1, 1, "center", 12, checkNull(Html.esc(m.startTime())), "none"))
+                    .append(tdColor(8, 1, 1, "center", 12, checkNull(Html.esc(m.closeTime())), "none"))
                     .append(tdColor(13, 1, 1, "right", 12, checkLongNull(m.amt()) + "&nbsp;", "none"))
-                    .append(tdColor(11, 1, 1, "center", 12, checkNull(m.transportName()), "none"))
-                    .append(tdColor(13, 1, 1, "left", 12, checkNull(m.note()), "none"))
+                    .append(tdColor(11, 1, 1, "center", 12, checkNull(Html.esc(m.transportName())), "none"))
+                    .append(tdColor(13, 1, 1, "left", 12, checkNull(Html.esc(m.note())), "none"))
                     .append("</tr>");
         }
         TransportLinkRow first = list.get(0);
@@ -138,8 +140,8 @@ public class TransportLinkSeedProvider implements AprLinkSeedProvider {
                 // 여기서부터 AS-IS는 <tr>를 여닫는 위치가 어긋나 있다(#87) — 순서 그대로
                 .append(tdEmpty(100, 1, 0)).append("<tr>").append("</tr>")
                 .append(tdEmpty(100, 1, 0)).append("<tr>").append("</tr>")
-                .append(tdStNone(100, 1, "center", 13, "사용자 &nbsp;<span style=\"font-size:15px;\"><strong> " + first.orgName() + "</strong></span> "
-                        + "<span style=\"font-size:15px;\"><strong>" + first.personName() + "</strong></span> &nbsp;(전자결재)"))
+                .append(tdStNone(100, 1, "center", 13, "사용자 &nbsp;<span style=\"font-size:15px;\"><strong> " + Html.esc(first.orgName()) + "</strong></span> "
+                        + "<span style=\"font-size:15px;\"><strong>" + Html.esc(first.personName()) + "</strong></span> &nbsp;(전자결재)"))
                 .append("<tr>").append("</tr>")
                 .append("</tbody></table>");
         return t.toString();

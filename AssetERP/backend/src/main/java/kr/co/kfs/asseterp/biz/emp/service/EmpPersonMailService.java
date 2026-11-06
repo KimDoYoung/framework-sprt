@@ -94,7 +94,7 @@ public class EmpPersonMailService {
             multipart.addBodyPart(body);
             message.setContent(multipart);
         } catch (MessagingException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "메일주소가 올바르지 않습니다");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "메일주소가 올바르지 않습니다", e);
         }
         try {
             transport.send(message);

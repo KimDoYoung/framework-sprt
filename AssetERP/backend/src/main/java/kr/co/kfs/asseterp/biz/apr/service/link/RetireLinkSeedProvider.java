@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -110,15 +112,15 @@ public class RetireLinkSeedProvider implements AprLinkSeedProvider {
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
                 .append(TR_START)
                 .append(tdColor(5, 1, 1, "center", 14, "퇴직자", "#EAEFF4"))
-                .append(tdColor(5, 1, 1, "center", 14, checkNull(model.personName()), "none"))
+                .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(model.personName())), "none"))
                 .append(tdColor(5, 1, 1, "center", 14, "퇴직일", "#EAEFF4"))
                 .append(tdColor(5, 1, 1, "center", 14, checkNull(retireDate), "none"))
                 .append(TR_CLOSE)
                 .append(TR_START)
                 .append(tdColor(5, 1, 1, "center", 14, "소 속", "#EAEFF4"))
-                .append(tdColor(5, 1, 1, "center", 14, checkNull(model.orgName()), "none"))
+                .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(model.orgName())), "none"))
                 .append(tdColor(5, 1, 1, "center", 14, "직 위", "#EAEFF4"))
-                .append(tdColor(5, 1, 1, "center", 14, checkNull(model.posName()), "none"))
+                .append(tdColor(5, 1, 1, "center", 14, checkNull(Html.esc(model.posName())), "none"))
                 .append(TR_CLOSE)
                 .append(TR_START).append(tdEmpty(20, 1, 0)).append(TR_CLOSE)
                 .append(TR_START).append(tdColor(20, 1, 1, "center", 14, "세 부 내 역", "#EAEFF4")).append(TR_CLOSE)
@@ -129,7 +131,7 @@ public class RetireLinkSeedProvider implements AprLinkSeedProvider {
         for (PayItemAmtRow r : list1) {
             paySum += r.itemAmt();
             text.append(TR_START)
-                    .append(tdColor(4, 1, 1, "center", 14, checkNull(r.itemName()), "#EAEFF4"))
+                    .append(tdColor(4, 1, 1, "center", 14, checkNull(Html.esc(r.itemName())), "#EAEFF4"))
                     .append(tdColor(5, 1, 1, "right", 14, checkLongNull(r.itemAmt()), "none"))
                     .append(TR_CLOSE);
         }
@@ -141,7 +143,7 @@ public class RetireLinkSeedProvider implements AprLinkSeedProvider {
         for (PayItemAmtRow r : list2) {
             deductSum += r.itemAmt();
             text.append(TR_START)
-                    .append(tdColor(4, 1, 1, "center", 14, checkNull(r.itemName()), "#EAEFF4"))
+                    .append(tdColor(4, 1, 1, "center", 14, checkNull(Html.esc(r.itemName())), "#EAEFF4"))
                     .append(tdColor(5, 1, 1, "right", 14, checkLongNull(r.itemAmt()), "none"))
                     .append(TR_CLOSE);
         }

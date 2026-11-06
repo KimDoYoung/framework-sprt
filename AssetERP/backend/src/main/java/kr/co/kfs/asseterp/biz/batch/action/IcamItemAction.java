@@ -60,7 +60,7 @@ public class IcamItemAction implements BatchAction {
                 stdDate = LocalDate.parse(req.stdDate());
             } catch (DateTimeParseException e) {
                 // AS-IS는 파싱 실패를 삼키고 null로 진행한다(원본-이상한점 #213)
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate());
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate(), e);
             }
         }
         String companyId = "ALL".equals(req.companyId()) ? "%" : req.companyId();
@@ -106,7 +106,7 @@ public class IcamItemAction implements BatchAction {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "ITEM 작업완료..commit";
     }

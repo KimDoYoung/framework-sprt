@@ -93,7 +93,7 @@ public class AprStampService {
         Long orgId = 0L;
         if (user.getUserId() != null && user.getUserId() > 0) {
             Long org = mapper.selectOrgCodeId(user.getUserId());
-            orgId = org == null ? 0L : org;
+            orgId = org == null ? Long.valueOf(0L) : org;
         }
         return orgId;
     }

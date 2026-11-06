@@ -29,7 +29,7 @@ public class AdvOrgAuthService {
      * 회사관리자(userId &lt; 0)는 조직이 없어 0 → 비어 나온다. LIKE '%검색어%'는 서버가 만든다
      */
     public PageRes<AccountRes> searchByOrgAuth(UserPrincipal user, String searchText, int offset, int limit) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         AccountOrgAuthSearchParam param = new AccountOrgAuthSearchParam(user.getCompanyId(), orgId, like, Math.max(offset, 0), limit > 0 ? limit : 500);
         return new PageRes<>(mapper.selectByOrgAuthPagingTotal(param), mapper.selectByOrgAuthPaging(param));

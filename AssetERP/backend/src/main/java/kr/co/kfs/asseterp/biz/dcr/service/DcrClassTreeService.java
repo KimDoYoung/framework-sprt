@@ -89,7 +89,7 @@ public class DcrClassTreeService {
 
     /** AS-IS selectByOrgIdRoleWrite (F02): 로그인 사용자의 조직이 작성권한을 가진 분류 트리(전위 순서 평평한 목록). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     public List<DcrWriteTreeRes> searchWriteTree(UserPrincipal user) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectWriteTree(user.getCompanyId(), orgId, user.getUserId());
     }
 
@@ -98,7 +98,7 @@ public class DcrClassTreeService {
      * 조직(LoginUser.getOrgCodeId())의 문서분류 수정권한이 있으면(첫 행 update_yn 'true') true, 행이 없거나 아니면 false. 관리자는 검사하지 않으므로 화면이 부르지 않는다
      */
     public boolean hasUpdateAuth(UserPrincipal user, Long classTreeId) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         List<String> yn = mapper.selectOrgAuthUpdateYn(orgId, classTreeId);
         return !yn.isEmpty() && "true".equals(yn.get(0));
     }
@@ -109,7 +109,7 @@ public class DcrClassTreeService {
      * 루트 조회만 사원 권한(empId)을 보고 아래 단계는 조직 권한만 본다(AS-IS 그대로). 전위 순서 평평한 목록 + depth
      */
     public List<DcrResearchTreeRes> searchResearchTree(UserPrincipal user) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         List<DcrResearchTreeRes> out = new ArrayList<>();
         for (DcrResearchTreeRes root : mapper.selectResearchChildren(user.getCompanyId(), user.getUserId(), orgId, 0L)) {
             List<DcrResearchTreeRes> sub = new ArrayList<>();

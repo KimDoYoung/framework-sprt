@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -103,13 +105,13 @@ public class EvalLinkSeedProvider implements AprLinkSeedProvider {
     private static void reasons(StringBuilder t, List<EvalAdminRes> list) {
         for (EvalAdminRes m : list) {
             if (m.firstEvalReason() != null) {
-                t.append("<tr>").append(tdStNone(100, 1, "left", 13, " - <b>" + m.personNm() + "</b>(1차 평가등급 " + m.firstEvalGrade()
-                        + " - 평가자 " + m.firstPersonNm() + ")<br>&nbsp; : " + m.firstEvalReason()))
+                t.append("<tr>").append(tdStNone(100, 1, "left", 13, " - <b>" + Html.esc(m.personNm()) + "</b>(1차 평가등급 " + Html.esc(m.firstEvalGrade())
+                        + " - 평가자 " + Html.esc(m.firstPersonNm()) + ")<br>&nbsp; : " + Html.esc(m.firstEvalReason())))
                         .append("</tr><tr>").append(tdEmpty(100, 1, 0)).append("</tr>");
             }
             if (m.secondEvalReason() != null) {
-                t.append("<tr>").append(tdStNone(100, 1, "left", 13, " - <b>" + m.personNm() + "</b>(2차 평가등급 " + m.secondEvalGrade()
-                        + " - 평가자 " + m.secondPersonNm() + ")<br>&nbsp; : " + m.secondEvalReason()))
+                t.append("<tr>").append(tdStNone(100, 1, "left", 13, " - <b>" + Html.esc(m.personNm()) + "</b>(2차 평가등급 " + Html.esc(m.secondEvalGrade())
+                        + " - 평가자 " + Html.esc(m.secondPersonNm()) + ")<br>&nbsp; : " + Html.esc(m.secondEvalReason())))
                         .append("</tr><tr>").append(tdEmpty(100, 1, 0)).append("</tr>");
             }
         }
@@ -142,17 +144,17 @@ public class EvalLinkSeedProvider implements AprLinkSeedProvider {
                 .append("</tr>");
         for (EvalAdminRes m : list) {
             t.append("<tr>")
-                    .append(tdColor(25, 1, 1, "left", 12, checkNull(m.orgNm()), "none"))
-                    .append(tdColor(10, 1, 1, "center", 12, checkNull(m.personNm()), "none"))
+                    .append(tdColor(25, 1, 1, "left", 12, checkNull(Html.esc(m.orgNm())), "none"))
+                    .append(tdColor(10, 1, 1, "center", 12, checkNull(Html.esc(m.personNm())), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkDoubleNull(m.firstEvalScore()), "none"))
-                    .append(tdColor(7, 1, 1, "center", 12, checkNull(m.firstEvalGrade()), "none"))
+                    .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.firstEvalGrade())), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkDoubleNull(m.secondEvalScore()), "none"))
-                    .append(tdColor(7, 1, 1, "center", 12, checkNull(m.secondEvalGrade()), "none"))
+                    .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.secondEvalGrade())), "none"))
                     .append(tdColor(6, 1, 1, "center", 12, checkLongNull(m.plusScore()), "none"))
                     .append(tdColor(6, 1, 1, "center", 12, checkLongNull(m.minusScore()), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkLongNull(m.reasonAdjustScore()), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkDoubleNull(m.adjustEvalScore()), "none"))
-                    .append(tdColor(7, 1, 1, "center", 12, checkNull(m.adjustEvalGrade()), "none"))
+                    .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.adjustEvalGrade())), "none"))
                     .append("</tr>");
         }
         t.append("<tr>").append(tdStNone(100, 1, "left", 12, "* 자세한 내역은 [경영관리 > 인사평가 > 인사평가 결과조회] 메뉴에서 조회하실 수 있습니다"))
@@ -185,16 +187,16 @@ public class EvalLinkSeedProvider implements AprLinkSeedProvider {
                 .append("</tr>");
         for (EvalAdminRes m : list) {
             t.append("<tr>")
-                    .append(tdColor(21, 1, 1, "left", 12, checkNull(m.orgNm()), "none"))
-                    .append(tdColor(13, 1, 1, "center", 12, checkNull(m.personNm()), "none"))
-                    .append(tdColor(13, 1, 1, "center", 12, checkNull(m.posNm()), "none"))
-                    .append(tdColor(13, 1, 1, "center", 12, checkNull(m.orgHeadNm()), "none"))
+                    .append(tdColor(21, 1, 1, "left", 12, checkNull(Html.esc(m.orgNm())), "none"))
+                    .append(tdColor(13, 1, 1, "center", 12, checkNull(Html.esc(m.personNm())), "none"))
+                    .append(tdColor(13, 1, 1, "center", 12, checkNull(Html.esc(m.posNm())), "none"))
+                    .append(tdColor(13, 1, 1, "center", 12, checkNull(Html.esc(m.orgHeadNm())), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkDoubleNull(m.adjustEvalScore()), "none"))
-                    .append(tdColor(7, 1, 1, "center", 12, checkNull(m.adjustEvalGrade()), "none"))
+                    .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.adjustEvalGrade())), "none"))
                     .append(tdColor(10, 1, 1, "center", 12, checkLongNull(nz(m.ceoEvalBonus()) + nz(m.ceoEvalPenalty())), "none"))
                     .append(tdColor(8, 1, 1, "center", 12, checkDoubleNull(m.finalEvalScore()), "none"))
                     // AS-IS는 최종 평가결과의 등급 칸에 getFirstEvalGrade()를 쓴다 (#89)
-                    .append(tdColor(7, 1, 1, "center", 12, checkNull(m.firstEvalGrade()), "none"))
+                    .append(tdColor(7, 1, 1, "center", 12, checkNull(Html.esc(m.firstEvalGrade())), "none"))
                     .append("</tr>");
         }
         t.append("<tr>").append(tdStNone(100, 1, "left", 12, "* 자세한 내역은 [경영관리 > 인사평가 > 인사평가 결과조회] 메뉴에서 조회하실 수 있습니다"))

@@ -35,7 +35,7 @@ public class AstTrDepositService {
 
     /** ast06_tr.selectDepositTr — 조직은 LoginUser.getOrgCodeId(), 회사관리자(userId < 0)는 0. 계좌 0은 조건 없음 */
     public List<TrDepositRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, Long accountId, String abroType) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectDepositTr(new TrDepositSearchCond(user.getCompanyId(), user.getUserId(), orgId, startDate, closeDate,
                 accountId == null || accountId == 0 ? null : accountId, abroType == null ? "1" : abroType));
     }
@@ -126,7 +126,7 @@ public class AstTrDepositService {
             try {
                 msg = bookMapper.createDepositBook(user.getCompanyId(), tr.date());
             } catch (RuntimeException e) {
-                throw invalid("update fail : \n" + e.getMessage());
+                throw invalid("update fail : \n" + e.getMessage()).causedBy(e);
             }
             if (!"Y".equals(msg)) throw invalid(msg);
         }

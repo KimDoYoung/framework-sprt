@@ -148,7 +148,7 @@ public class RedisTokenService {
             return action.get();
         } catch (DataAccessException e) {
             log.error("Redis 접근 실패: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE);
+            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE, e);
         }
     }
 }

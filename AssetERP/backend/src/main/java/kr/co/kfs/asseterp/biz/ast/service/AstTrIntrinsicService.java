@@ -131,7 +131,7 @@ public class AstTrIntrinsicService {
     }
 
     private Long orgId(UserPrincipal user) {
-        return user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
     }
 
     private static boolean isDepnTarget(String itemLClassCode) {

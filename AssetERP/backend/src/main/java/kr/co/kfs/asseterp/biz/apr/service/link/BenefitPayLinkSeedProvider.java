@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.TABLE_START;
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.checkDateNull;
 import static kr.co.kfs.asseterp.biz.apr.service.link.ExpenseLinkSeedProvider.checkLongNull;
@@ -131,10 +133,10 @@ public class BenefitPayLinkSeedProvider implements AprLinkSeedProvider {
         for (BenefitPayLinkRow m : list) {
             amtSum += nz(m.issueAmt());
             t.append(tr(tdEmpty(5, 1, 0),
-                    tdColor(15, 1, 1, "center", 13, checkNull(m.personName()), "none"),
+                    tdColor(15, 1, 1, "center", 13, checkNull(Html.esc(m.personName())), "none"),
                     tdColor(15, 1, 1, "right", 13, checkLongNull(m.issueAmt()) + "&nbsp;", "none"),
                     tdColor(15, 1, 1, "center", 13, checkDateNull(m.occDate()), "none"),
-                    tdColor(30, 1, 1, "left", 13, checkNull(m.benefitDetail()), "none"),
+                    tdColor(30, 1, 1, "left", 13, checkNull(Html.esc(m.benefitDetail())), "none"),
                     tdEmpty(20, 1, 0)));
         }
         t.append(tr(tdEmpty(5, 1, 0),

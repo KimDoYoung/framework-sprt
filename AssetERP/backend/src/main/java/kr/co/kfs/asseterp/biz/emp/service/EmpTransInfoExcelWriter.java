@@ -75,7 +75,7 @@ final class EmpTransInfoExcelWriter {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 

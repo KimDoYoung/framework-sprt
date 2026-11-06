@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
@@ -142,7 +144,7 @@ public class ErpFeeChargeLinkSeedProvider implements AprLinkSeedProvider {
                         tdColor(59, 1, 1, "left", 13, "총 사용자 : " + checkLongNull(c.userCount()) + "명 (추가사용 " + addUserCount + "명)", "none")))
                 .append(tr(tdColor(21, 1, 1, "center", 13, "기타금액", "none"),
                         tdColor(20, 1, 1, "right", 13, checkLongNull(c.etcAmt()), "none"),
-                        tdColor(59, 1, 1, "left", 13, checkNull(c.etcDesc()), "none")))
+                        tdColor(59, 1, 1, "left", 13, checkNull(Html.esc(c.etcDesc())), "none")))
                 .append(tr(tdColorStrong(21, 1, 1, "center", 13, "AssetERP사용료", "#E0E0E0"),
                         tdColorStrong(20, 1, 1, "right", 13, checkLongNull(c.totalAmt()), "#E0E0E0"),
                         tdColorStrong(59, 3, 1, "left", 13, "", "#E0E0E0")))
@@ -159,12 +161,12 @@ public class ErpFeeChargeLinkSeedProvider implements AprLinkSeedProvider {
                     + "1건당 " + checkLongNull(fee.smsAddPrice()) + "원 추가")));
         }
         if (Boolean.TRUE.equals(c.addFeeUserYn())) {
-            t.append(tr(tdStNone(100, 1, "left", 13, "* " + checkNull(fee.userCountStdStr()) + " 기준 User " + checkLongNull(fee.userBaseCount()) + "명을 초과하는 경우 User "
+            t.append(tr(tdStNone(100, 1, "left", 13, "* " + checkNull(Html.esc(fee.userCountStdStr())) + " 기준 User " + checkLongNull(fee.userBaseCount()) + "명을 초과하는 경우 User "
                     + "1인당 월  " + checkLongNull(fee.userAddPrice()) + "원 추가징수")));
         }
         t.append(tr(tdStNone(100, 1, "left", 13, "* 한국펀드서비스 사무수탁시스템(ICAM)을 사용하는 조건으로 상기 사용료를 적용한다.")))
                 .append(tr(tdEmpty(100, 1, 0)))
-                .append(tr(tdStNone(100, 1, "left", 13, "3. 입금기한 : " + checkNull(c.depositDueDay()))));
+                .append(tr(tdStNone(100, 1, "left", 13, "3. 입금기한 : " + checkNull(Html.esc(c.depositDueDay())))));
         return t.append("</tbody></table>").toString();
     }
 }

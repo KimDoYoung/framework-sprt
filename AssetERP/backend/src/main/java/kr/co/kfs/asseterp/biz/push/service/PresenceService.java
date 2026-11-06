@@ -134,7 +134,7 @@ public class PresenceService {
             items.sort(Comparator.comparing(PresenceItemRes::connectedAt));
             return items;
         } catch (DataAccessException e) {
-            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE);
+            throw new BusinessException(ErrorCode.SESSION_STORE_UNAVAILABLE, e);
         }
     }
 

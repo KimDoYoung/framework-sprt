@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import static kr.co.kfs.asseterp.biz.apr.service.link.FormMappingLinkSeedSupport.str;
 
 import java.text.DecimalFormat;
@@ -62,16 +64,16 @@ public class BenefitLinkSeedProvider implements AprLinkSeedProvider {
 
         // createMapping L386-402
         Map<String, String> mapping = new HashMap<>();
-        mapping.put("부서", str(s == null ? null : s.orgName()));
-        mapping.put("성명", str(user.getName()));
-        mapping.put("직위", str(s == null ? null : s.posName()));
-        mapping.put("직책", str(s == null ? null : s.titleName()));
+        mapping.put("부서", str(s == null ? null : Html.esc(s.orgName())));
+        mapping.put("성명", str(Html.esc(user.getName())));
+        mapping.put("직위", str(s == null ? null : Html.esc(s.posName())));
+        mapping.put("직책", str(s == null ? null : Html.esc(s.titleName())));
         LocalDate today = LocalDate.now();
         mapping.put("상신일", today.getYear() + "년 " + String.format("%02d", today.getMonthValue()) + "월 " + String.format("%02d", today.getDayOfMonth()) + "일");
-        mapping.put("내용", str(b.benefitDetail()));
+        mapping.put("내용", str(Html.esc(b.benefitDetail())));
         mapping.put("신청금액", b.issueAmt() == null ? "- " : new DecimalFormat("###,###,###").format(b.issueAmt()));
         mapping.put("신청금액_한글", str(toKorean(b.issueAmt())));
-        mapping.put("전화번호", str(s == null ? null : s.mobileTelNo()));
+        mapping.put("전화번호", str(s == null ? null : Html.esc(s.mobileTelNo())));
         mapping.put("발생일자", b.occDate() == null ? "- " : b.occDate().toString());
         mapping.put("발생년월", year + "년 " + month + "월");
 

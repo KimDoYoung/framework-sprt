@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.biz.service;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDtlRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRes;
 
@@ -113,7 +115,7 @@ final class FeeChargeHtml {
     /** 그 밖의 운영구분 — 일별 보수현황 */
     static String content2(BizFeeChargeRes model, List<BizFeeChargeDtlRes> list) {
         StringBuilder t = new StringBuilder(TABLE_START).append(TBODY_START).append(widthRow());
-        t.append(TR).append(stNone(20, "center", 14, nul(model.corpNm()) + " 일별 보수현황")).append(TR_CLOSE);
+        t.append(TR).append(stNone(20, "center", 14, nul(Html.esc(model.corpNm())) + " 일별 보수현황")).append(TR_CLOSE);
         t.append(TR)
                 .append(empty(5))
                 .append(none(10, "center", 12, (model.chargeDate() == null ? "" : model.chargeDate().format(KOR)) + "현재"))
@@ -147,7 +149,7 @@ final class FeeChargeHtml {
             totalSum += nz(d.occFee());
             t.append(TR)
                     .append(color(2, "center", 12, date(d.occDate()), "#FFFFFF"))
-                    .append(color(3, "center", 12, nul(d.feeTypeName()), "#FFFFFF"))
+                    .append(color(3, "center", 12, nul(Html.esc(d.feeTypeName())), "#FFFFFF"))
                     .append(color(2, "center", 12, num(d.targetAccountCnt()), "#FFFFFF"))
                     .append(color(2, "center", 12, num(d.changeAccountCnt()), "#FFFFFF"))
                     .append(color(4, "right", 12, num(d.totalNetAsset()), "#FFFFFF"))
@@ -161,7 +163,7 @@ final class FeeChargeHtml {
         t.append(TR).append(stColor(15, "right", 12, yearText + "." + monthText + "월 합계", "#E6E6FA"))
                 .append(stColor(3, "right", 12, num(sum), "#E6E6FA"))
                 .append(stColor(2, "center", 12, " ", "#E6E6FA")).append(TR_CLOSE);
-        t.append(TR).append(stColor(15, "center", 12, model.corpNm() + " 청구 보수금액 합계", "#FFCF9C"))
+        t.append(TR).append(stColor(15, "center", 12, Html.esc(model.corpNm()) + " 청구 보수금액 합계", "#FFCF9C"))
                 .append(stColor(3, "right", 12, num(totalSum), "#FFCF9C"))
                 .append(stColor(2, "center", 12, " ", "#FFCF9C")).append(TR_CLOSE);
         return t.append(TBODY_CLOSE).append(TABLE_CLOSE).toString();

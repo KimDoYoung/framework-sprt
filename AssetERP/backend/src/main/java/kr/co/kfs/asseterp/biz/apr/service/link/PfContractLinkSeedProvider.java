@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,12 +50,12 @@ public class PfContractLinkSeedProvider implements AprLinkSeedProvider {
         String title = (plan ? "용역수행 계획서 (" : "용역 결과보고서 (") + m.projectSiteName() + ")";
 
         Map<String, String> mapping = new LinkedHashMap<>();
-        mapping.put("용역수행회사", FormMappingLinkSeedSupport.str(m.borrower()));
-        mapping.put("사업장명", FormMappingLinkSeedSupport.str(m.projectSiteName()));
-        mapping.put("사업장 주소지", FormMappingLinkSeedSupport.str(m.projectSiteAddr()));
-        mapping.put("수수료명", FormMappingLinkSeedSupport.str(m.feeName()));
+        mapping.put("용역수행회사", FormMappingLinkSeedSupport.str(Html.esc(m.borrower())));
+        mapping.put("사업장명", FormMappingLinkSeedSupport.str(Html.esc(m.projectSiteName())));
+        mapping.put("사업장 주소지", FormMappingLinkSeedSupport.str(Html.esc(m.projectSiteAddr())));
+        mapping.put("수수료명", FormMappingLinkSeedSupport.str(Html.esc(m.feeName())));
         mapping.put("용역 수행기간", FormMappingLinkSeedSupport.date(m.startDate(), false) + " ~ " + FormMappingLinkSeedSupport.date(m.closeDate(), false));
-        mapping.put("문의처", FormMappingLinkSeedSupport.str(m.managerInfo()));
+        mapping.put("문의처", FormMappingLinkSeedSupport.str(Html.esc(m.managerInfo())));
         if (plan) {
             mapping.put("용역 수행계획", FormMappingLinkSeedSupport.str(m.plan()));
             mapping.put("첨부파일", FormMappingLinkSeedSupport.str(m.fileListHtml()));
@@ -77,9 +79,9 @@ public class PfContractLinkSeedProvider implements AprLinkSeedProvider {
             sb.append("<tr>");
             sb.append("<td>").append(index++).append("</td>");
             sb.append("<td>").append(FormMappingLinkSeedSupport.date(h.startDate(), false)).append(" ~ ").append(FormMappingLinkSeedSupport.date(h.closeDate(), false)).append("</td>");
-            sb.append("<td>").append(h.content()).append("</td>");
-            sb.append("<td>").append(h.detail()).append("</td>");
-            sb.append("<td>").append(h.orgName()).append("</td>");
+            sb.append("<td>").append(Html.esc(h.content())).append("</td>");
+            sb.append("<td>").append(Html.esc(h.detail())).append("</td>");
+            sb.append("<td>").append(Html.esc(h.orgName())).append("</td>");
             sb.append("</tr>");
         }
         sb.append("</tbody></table>");

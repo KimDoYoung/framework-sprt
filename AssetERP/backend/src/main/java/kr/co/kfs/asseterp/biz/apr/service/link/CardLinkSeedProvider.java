@@ -35,7 +35,7 @@ public class CardLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 형식이 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 형식이 올바르지 않습니다.", e);
         }
         String title = "법인카드 사용내역 보고 (" + std.format(DateTimeFormatter.ofPattern("yyyy.MM")) + ")";
         String content = std.format(DateTimeFormatter.ofPattern("yyyy년MM월")) + " 법인카드 사용내역을 보고합니다.";

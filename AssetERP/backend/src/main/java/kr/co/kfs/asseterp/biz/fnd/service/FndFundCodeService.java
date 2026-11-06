@@ -47,7 +47,7 @@ public class FndFundCodeService {
      */
     public List<FundCodeRes> searchByOrgAuth(UserPrincipal user, boolean closeYn, boolean classFundExceptYn, String fundName,
                                              String fundTypeCode, String classTypeCode) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByFundOrgAuth(new FundCodeCond(user.getCompanyId(), orgId, user.getUserId(), admin, String.valueOf(closeYn),
                 String.valueOf(classFundExceptYn), "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode), blankToAny(classTypeCode)));
@@ -86,7 +86,7 @@ public class FndFundCodeService {
      * admin = 회사관리자(LoginUser.getIsManager)면 조직 조건 없이, 아니면 내 조직(회사관리자는 0)이 권한을 가진 임시펀드만
      */
     public List<FundPlanListRes> searchPlanFunds(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByPlan(user.getCompanyId(), orgId, admin, String.valueOf(closeYn),
                 "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode));
@@ -111,7 +111,7 @@ public class FndFundCodeService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드명은 필수입력항목입니다.");
         }
         boolean isNew = req.fundCodeId() == null || req.fundCodeId() <= 0;
-        if (mapper.countFundCodeCheck(isNew ? 0L : req.fundCodeId(), req.fundCode(), "true") > 0) {
+        if (mapper.countFundCodeCheck(isNew ? Long.valueOf(0L) : req.fundCodeId(), req.fundCode(), "true") > 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "동일 펀드코드가 존재합니다.");
         }
         Long fundCodeId = req.fundCodeId();
@@ -179,7 +179,7 @@ public class FndFundCodeService {
      * fundType은 콤보 코드를 그대로(원본은 "전체"도 넘기므로 그때는 ICAM 조건에 걸려 목록이 비는 것까지 같다)
      */
     public List<FundRelateRes> searchRelate(UserPrincipal user, LocalDate stdDate, String fundType, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByCompanyId(new FundRelateCond(user.getCompanyId(), orgId, stdDate, fundType, searchText == null ? "" : searchText));
     }
 
@@ -227,7 +227,7 @@ public class FndFundCodeService {
         if (req.fundName() == null || req.fundName().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드명은 필수입력항목입니다.");
         }
-        if (mapper.countFundCodeCheck(isNew ? 0L : req.fundCodeId(), req.fundCode(), "false") > 0) {
+        if (mapper.countFundCodeCheck(isNew ? Long.valueOf(0L) : req.fundCodeId(), req.fundCode(), "false") > 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "동일 펀드코드가 존재합니다.");
         }
         Long fundCodeId = req.fundCodeId();

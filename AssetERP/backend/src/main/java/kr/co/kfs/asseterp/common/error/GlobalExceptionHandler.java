@@ -16,7 +16,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
-        log.warn("업무 예외: code={}, message={}", e.getErrorCode(), e.getMessage());
+        if (e.getCause() != null) {
+            // catch 에서 감싼 예외: 원인 스택을 남긴다(응답은 같다)
+            log.warn("업무 예외: code={}, message={}", e.getErrorCode(), e.getMessage(), e.getCause());
+        } else {
+            log.warn("업무 예외: code={}, message={}", e.getErrorCode(), e.getMessage());
+        }
         return toResponse(e.getErrorCode(), e.getMessage());
     }
 

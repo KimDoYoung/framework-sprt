@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -52,7 +54,7 @@ public class FinanceBookLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "보유일자 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "보유일자 정보가 없습니다.", e);
         }
         List<FinanceGroupRes> list = mapper.selectFinanceGroup(user.getCompanyId(), std);
         return new Seed("금융상품 보유내역_" + std.format(DATE), html(std, list), LocalDate.now(), false, false);
@@ -101,7 +103,7 @@ public class FinanceBookLinkSeedProvider implements AprLinkSeedProvider {
             eval += nz(b.evalAmt());
             pl += nz(b.evalPl());
             sb.append("<tr>")
-                    .append(tdColor(4, "center", b.astClassName() == null ? " " : b.astClassName()))
+                    .append(tdColor(4, "center", b.astClassName() == null ? " " : Html.esc(b.astClassName())))
                     .append(tdColor(4, "right", num(b.purAmt())))
                     .append(tdColor(4, "right", num(b.bookAmt())))
                     .append(tdColor(4, "right", num(b.evalAmt())))

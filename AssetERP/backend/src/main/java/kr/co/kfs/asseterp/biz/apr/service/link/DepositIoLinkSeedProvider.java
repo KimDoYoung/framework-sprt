@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service.link;
 
+import kr.co.kfs.asseterp.common.util.Html;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -59,7 +61,7 @@ public class DepositIoLinkSeedProvider implements AprLinkSeedProvider {
         try {
             std = LocalDate.parse(args.getOrDefault("stdDate", ""));
         } catch (DateTimeParseException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준일자 정보가 없습니다.", e);
         }
         List<DepositIoPrintRow> list = mapper.selectDepositIoPrint(user.getCompanyId(), refId);
         String content = "1. " + std.format(KOR) + " 일일자금현황<br>" + html(list);
@@ -104,8 +106,8 @@ public class DepositIoLinkSeedProvider implements AprLinkSeedProvider {
 
     private static String row(DepositIoPrintRow m) {
         return TR_START
-                + tdColor(3, 1, 1, "center", 12, checkNull(m.className()), "none")
-                + tdColor(3, 1, 1, "center", 12, checkNull(m.accountName()), "none")
+                + tdColor(3, 1, 1, "center", 12, checkNull(Html.esc(m.className())), "none")
+                + tdColor(3, 1, 1, "center", 12, checkNull(Html.esc(m.accountName())), "none")
                 + tdColor(2, 1, 1, "right", 12, checkDoubleNull(m.preDayAmt()), "none")
                 + tdColor(2, 1, 1, "right", 12, checkDoubleNull(m.inAmt()), "none")
                 + tdColor(2, 1, 1, "right", 12, checkDoubleNull(m.outAmt()), "none")

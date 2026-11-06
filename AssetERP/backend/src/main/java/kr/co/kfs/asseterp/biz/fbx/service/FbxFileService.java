@@ -113,6 +113,6 @@ public class FbxFileService {
 
     /** LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     private Long orgIdOf(UserPrincipal user) {
-        return user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
     }
 }

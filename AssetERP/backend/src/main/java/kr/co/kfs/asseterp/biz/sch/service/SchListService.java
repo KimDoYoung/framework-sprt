@@ -46,7 +46,7 @@ public class SchListService {
      */
     public List<Sch04ListRes> searchIcs(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn, String scheduleCode,
                                         String cycleCode, String searchText, boolean advisYn) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return select(user, orgId, false, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn);
     }
 
@@ -89,7 +89,7 @@ public class SchListService {
      */
     public List<Sch04TodoRes> searchTodo(UserPrincipal user, boolean manageCheck, LocalDate startDate, boolean exceptYn, boolean cancelYn,
                                          String statusCode, Long classId) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByManagerId(new Sch04TodoSearchCond(user.getCompanyId(), user.getUserId(), orgId, String.valueOf(manageCheck), startDate, startDate,
                 "1", String.valueOf(exceptYn), String.valueOf(cancelYn), blankToAny(statusCode), classId, "%"));
     }
@@ -126,7 +126,7 @@ public class SchListService {
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. 검색어는 서비스가 %…%로 만든다
      */
     public List<Sch04DailyCheckRes> searchDailyCheck(UserPrincipal user, LocalDate startDate, Long classId, String searchText) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByDailyCheck(new Sch04TodoSearchCond(user.getCompanyId(), user.getUserId(), orgId, "true", startDate, startDate,
                 "1", "false", "true", "%", classId, searchText == null || searchText.isEmpty() ? "%" : "%" + searchText + "%"));
     }
@@ -233,7 +233,7 @@ public class SchListService {
             wb.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
         }
     }
 

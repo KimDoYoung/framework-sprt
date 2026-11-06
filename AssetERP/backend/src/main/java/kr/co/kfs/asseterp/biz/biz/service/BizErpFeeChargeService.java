@@ -157,7 +157,7 @@ public class BizErpFeeChargeService {
         try {
             return YearMonth.parse(dataYm.trim().replace('.', '-'));
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "청구년월을 확인해주세요.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "청구년월을 확인해주세요.", e);
         }
     }
 }

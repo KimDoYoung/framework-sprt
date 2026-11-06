@@ -63,7 +63,7 @@ public class IcamPriceAction implements BatchAction {
                 stdDate = LocalDate.parse(req.stdDate());
             } catch (DateTimeParseException e) {
                 // AS-IS는 파싱 실패를 삼키고 null로 format하다 NPE로 서블릿이 죽는다(원본-이상한점 #215)
-                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate());
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "stdDate 형식이 맞지 않습니다(yyyy-MM-dd): " + req.stdDate(), e);
             }
         }
         if (stdDate == null) {
@@ -98,7 +98,7 @@ public class IcamPriceAction implements BatchAction {
                 priceMapper.insertPrice(toPrice(r, TYPE_FUND, req.worker()));
             }
         } catch (RuntimeException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
         return "시세 작업완료..commit";
     }

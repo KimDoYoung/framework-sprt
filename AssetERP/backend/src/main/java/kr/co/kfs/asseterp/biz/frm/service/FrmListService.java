@@ -25,7 +25,7 @@ public class FrmListService {
 
     /** AS-IS getNoticeCnt: 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     public FrmNoticeCntRes getNoticeCnt(UserPrincipal user) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectNoticeCnt(user.getCompanyId(), user.getUserId(), orgId);
     }
 
@@ -34,13 +34,13 @@ public class FrmListService {
      * (orgCodeLevel도 넘기지만 SQL이 쓰지 않는다)
      */
     public List<FrmIcsNoticeRes> searchIcsNotice(UserPrincipal user, LocalDate selectDate) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectIcsNotice(user.getCompanyId(), user.getUserId(), orgId, selectDate != null ? selectDate : LocalDate.now());
     }
 
     /** AS-IS selectToDoList: selectIcsNotice와 같은 파라미터(orgCd = 현재 조직, 회사관리자는 0), selectDate가 없으면 오늘 */
     public List<FrmToDoRes> searchToDo(UserPrincipal user, LocalDate selectDate) {
-        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        Long orgId = user.getUserId() < 0 ? Long.valueOf(0L) : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectToDoList(user.getCompanyId(), user.getUserId(), orgId, selectDate != null ? selectDate : LocalDate.now());
     }
 
