@@ -176,22 +176,22 @@ public class IcsChecklistService {
                 if (isEmpty(row.getCell(0))) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 대분류는 필수입력입니다.");
                 }
-                Long lClassId = mapper.selectLClassIdByName(companyId, cellString(row.getCell(0)).replaceAll("\\s", ""));
+                Long lClassId = mapper.selectLClassIdByName(companyId, ExcelCells.string(row.getCell(0)).replaceAll("\\s", ""));
                 if (lClassId == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 대분류는 존재하지 않는 값입니다. [" + cellString(row.getCell(0)) + "]");
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 대분류는 존재하지 않는 값입니다. [" + ExcelCells.string(row.getCell(0)) + "]");
                 }
                 if (isEmpty(row.getCell(1))) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 중분류는 필수입력입니다.");
                 }
-                Long mClassId = mapper.selectMClassIdByName(companyId, lClassId, cellString(row.getCell(1)).replaceAll("\\s", ""));
+                Long mClassId = mapper.selectMClassIdByName(companyId, lClassId, ExcelCells.string(row.getCell(1)).replaceAll("\\s", ""));
                 if (mClassId == null) {
-                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 중분류는 존재하지 않는 값입니다. [" + cellString(row.getCell(1)) + "]");
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 중분류는 존재하지 않는 값입니다. [" + ExcelCells.string(row.getCell(1)) + "]");
                 }
                 if (isEmpty(row.getCell(2))) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러 : " + line + "행) 체크대상은 필수입력입니다.");
                 }
-                String content = cellString(row.getCell(2));
-                String criterion = isEmpty(row.getCell(3)) ? null : cellString(row.getCell(3));
+                String content = ExcelCells.string(row.getCell(2));
+                String criterion = isEmpty(row.getCell(3)) ? null : ExcelCells.string(row.getCell(3));
                 Long seq = isEmpty(row.getCell(4)) ? null : cellLong(row.getCell(4));
                 mapper.insert(companyId, new IcsChecklistSaveReq(mapper.selectNextId(), content, criterion, "true", mClassId, seq));
                 count++;
@@ -208,15 +208,6 @@ public class IcsChecklistService {
     private static boolean isEmpty(Cell cell) {
         return cell == null || cell.getCellType() == CellType.BLANK
                 || (cell.getCellType() == CellType.STRING && cell.getStringCellValue().trim().isEmpty());
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
     }
 
     /** ExcelUpload.getLongCellData */

@@ -1,4 +1,4 @@
-# C 공통화 후보 (2026-11-06, 74건)
+# C 공통화 후보 (2026-11-06, 72건)
 CPD 중복 블록. 점수 = 줄 수 × (출현-1) × (도메인 간이면 2). 한 후보씩, 사용자 승인 뒤 진행:
 util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영향 API 를 `yunhee api` 로 확인.
 
@@ -28,13 +28,13 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         service.createDate(principal, req.startDate());
 ```
 
-## CH-cpd-4a995513 — 파일·업로드 · 도메인 간 · 57줄×2곳 (점수 114)
+## CH-cpd-1391aa30 — 파일·업로드 · 도메인 간 · 57줄×2곳 (점수 114)
 
 - 권고: 파일 저장/읽기 공통 서비스로
 - 도메인: adv, fnd
 - 관련 있을 수 있는 기존 common 부품: UploadProperties
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:37-93`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:37-93`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:31-87`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:31-87`
 
 ```java
     private final AdvBookExtrMapper mapper;
@@ -49,30 +49,6 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
         return mapper.selectRecentStdDate(user.getCompanyId(), stdDate);
     }
 
-```
-
-## CH-cpd-dd366f08 — 엑셀 · 도메인 간 · 28줄×3곳 (점수 112)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, crd, fnd
-- 관련 있을 수 있는 기존 common 부품: ExcelCells
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:108-135`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/crd/service/CrdCardUploadService.java:55-82`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:108-135`
-
-```java
-            mapper.excelInsert(companyId, stdDate, manageCode, manageName, itemCode, itemName, ITEM_TYPE_STOCK);
-        });
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
 ```
 
 ## CH-cpd-fa7ff7bb **[보류(결재 링크 HTML 칸 도우미 — AS-IS 문서마다 폭·스타일이 달라 같은 이름에 본문이 10가지. 합치면 이름만 늘고 출력은 AS-IS 와 같아야 함)]** — 기타 로직 · 같은 파일 · 29줄×4곳 (점수 87)
@@ -191,29 +167,6 @@ util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영�
     }
 
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수. 회사 조건을 더했다 */
-```
-
-## CH-cpd-e1363b6a — 엑셀 · 도메인 간 · 28줄×2곳 (점수 56)
-
-- 권고: 엑셀 읽기/쓰기 빌더로 (common 에 엑셀 부품)
-- 도메인: adv, fnd
-- 관련 있을 수 있는 기존 common 부품: ExcelCells
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/adv/service/AdvBookExtrService.java:108-135`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/fnd/service/FndBookExtrService.java:108-135`
-
-```java
-            mapper.excelInsert(companyId, stdDate, manageCode, manageName, itemCode, itemName, ITEM_TYPE_STOCK);
-        });
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
 ```
 
 ## CH-cpd-6f39d84a — 기타 로직 · 도메인 간 · 25줄×2곳 (점수 50)

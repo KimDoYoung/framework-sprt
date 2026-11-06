@@ -5,17 +5,11 @@ import kr.co.kfs.asseterp.biz.crd.mapper.CrdCardMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
 /** AS-IS server/utils/file/ExcelUpload.cardUpload L3620-3713 (U13 [엑셀업로드]) + ./excelTemplete/Template_카드업로드.xlsx ([템플릿]) */
@@ -43,40 +37,16 @@ public class CrdCardUploadService {
             if (row.getCell(0) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 시작일자는 필수입력입니다.");
             }
-            LocalDate startDate = cellDate(row.getCell(0));
-            String cardName = row.getCell(1) == null ? "" : cellString(row.getCell(1));
+            LocalDate startDate = ExcelCells.date(row.getCell(0));
+            String cardName = row.getCell(1) == null ? "" : ExcelCells.string(row.getCell(1));
             if (row.getCell(2) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 카드번호는 필수입력입니다.");
             }
-            String cardNoSlip = cellString(row.getCell(2));
-            String cardNo = row.getCell(3) == null ? cellString(row.getCell(2)) : cellString(row.getCell(3));
-            String bankCode = row.getCell(4) == null ? "" : cellString(row.getCell(4));
-            String note = row.getCell(5) == null ? "" : cellString(row.getCell(5));
+            String cardNoSlip = ExcelCells.string(row.getCell(2));
+            String cardNo = row.getCell(3) == null ? ExcelCells.string(row.getCell(2)) : ExcelCells.string(row.getCell(3));
+            String bankCode = row.getCell(4) == null ? "" : ExcelCells.string(row.getCell(4));
+            String note = row.getCell(5) == null ? "" : ExcelCells.string(row.getCell(5));
             mapper.excelInsertCard(mapper.selectNextId(), companyId, bankCode, cardName, cardNoSlip, cardNo, startDate, note);
         });
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

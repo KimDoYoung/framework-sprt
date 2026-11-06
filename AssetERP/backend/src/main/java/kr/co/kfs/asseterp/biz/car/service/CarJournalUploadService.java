@@ -67,8 +67,8 @@ public class CarJournalUploadService {
                 long commute = row.getCell(1) == null ? 0L : cellLong(row.getCell(1));
                 long biz = row.getCell(2) == null ? 0L : cellLong(row.getCell(2));
                 long unBiz = row.getCell(3) == null ? 0L : cellLong(row.getCell(3));
-                String destination = row.getCell(4) == null ? "" : cellString(row.getCell(4));
-                String reason = row.getCell(5) == null ? "" : cellString(row.getCell(5));
+                String destination = row.getCell(4) == null ? "" : ExcelCells.string(row.getCell(4));
+                String reason = row.getCell(5) == null ? "" : ExcelCells.string(row.getCell(5));
                 CarJournalSaveReq req = new CarJournalSaveReq(null, infoId, date, personId, commute + biz + unBiz, commute, unBiz, unBiz,
                         destination, reason, null, null);
                 mapper.insert(companyId, mapper.selectNextId(), req);
@@ -80,15 +80,6 @@ public class CarJournalUploadService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage(), e);
         }
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
     }
 
     /** ExcelUpload.getLongCellData — 숫자는 정수로 자르고, 글자는 쉼표를 빼고 숫자일 때만. 읽을 수 없으면 오류(원본은 null 계산 NPE) */

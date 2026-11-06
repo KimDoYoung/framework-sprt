@@ -7,17 +7,11 @@ import kr.co.kfs.asseterp.biz.fnd.mapper.FndBookExtrMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import kr.co.kfs.asseterp.common.excel.ExcelCells;
 
@@ -88,48 +82,24 @@ public class FndBookExtrService {
             if (row.getCell(0) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 기준일은 필수입력입니다.");
             }
-            LocalDate stdDate = cellDate(row.getCell(0));
+            LocalDate stdDate = ExcelCells.date(row.getCell(0));
             if (row.getCell(1) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 펀드코드는 필수입력입니다.");
             }
-            String fundCode = cellString(row.getCell(1));
+            String fundCode = ExcelCells.string(row.getCell(1));
             if (row.getCell(2) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 펀드명은 필수입력입니다.");
             }
-            String fundName = cellString(row.getCell(2));
+            String fundName = ExcelCells.string(row.getCell(2));
             if (row.getCell(3) == null) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) 종목코드는 필수입력입니다.");
             }
-            String itemCode = cellString(row.getCell(3));
-            String itemName = row.getCell(4) == null ? "" : cellString(row.getCell(4));
+            String itemCode = ExcelCells.string(row.getCell(3));
+            String itemName = row.getCell(4) == null ? "" : ExcelCells.string(row.getCell(4));
             if (itemCode.length() != 12) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT, "(에러) [" + fundName + "] 펀드의 종목코드가 12자리가 아닙니다.");
             }
             mapper.excelInsert(companyId, stdDate, fundCode, fundName, itemCode, itemName, ITEM_TYPE_STOCK);
         });
-    }
-
-    /** ExcelUpload.getStringCellData — 숫자는 정수면 정수 글자, 아니면 소수 글자 */
-    private static String cellString(Cell cell) {
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double value = cell.getNumericCellValue();
-            return (value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value)).trim();
-        }
-        return cell.getStringCellValue().trim();
-    }
-
-    /** ExcelUpload.getCellDate — 글자는 [.-]를 빼고 yyyyMMdd로 읽고(못 읽으면 null), 그 밖은 날짜 값 */
-    private static LocalDate cellDate(Cell cell) {
-        Date date;
-        if (cell.getCellType() == CellType.STRING) {
-            try {
-                date = new SimpleDateFormat("yyyyMMdd").parse(cell.getStringCellValue().replaceAll("[.-]", "").trim());
-            } catch (ParseException e) {
-                return null;
-            }
-        } else {
-            date = cell.getDateCellValue();
-        }
-        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }
