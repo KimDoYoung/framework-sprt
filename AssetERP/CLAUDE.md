@@ -52,6 +52,10 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
   yunhee index-src -t AssetERP/docs/as-is/src      # 원본은 YUNHEE_ASIS_SRC_DIR
   yunhee sql-check --src-index AssetERP/docs/as-is/src -t AssetERP/docs/as-is/sql-check.md
   ```
+- `data/` 폴더 (AssetERP/data):
+  - `data/samples/` — 업로드·다운로드에 쓸 **자료 파일을 사용자가 가져다 놓은 폴더**. 업로드·다운로드 시험 등 **파일 데이터가 필요할 때** 거기서 파일을 골라 **복사해 이름을 바꾼(rename) 뒤** 쓴다: 업로드는 복사본을 올리고, 다운로드는 복사본을 업로드 대상 폴더에 놓아 내려받는다(원본은 건드리지 않는다). 사용자 관리, git-ignored. 폴더가 없으면 사용자에게 물어본다(임의로 만들지 않는다).
+  - `data/icam-simulator/` — ICAM 시뮬레이터 CSV (규칙은 그 폴더 README).
+  - `data/backup/` — `tools/db_dump_backup.sh` 덤프. git-ignored.
 - 패키지·네이밍: `../docs/TOBE-Framework.md` (`kr.co.kfs.asseterp`).
 - 세션 하나에 ID 최대 3개(묶음 세션). ID마다 끝까지 마치고 목록의 상태를 갱신한 뒤 다음 ID로 간다. 묶음이 끝나면 세션을 끝낸다(`/clear`).
 
