@@ -12,10 +12,10 @@ import { Checkbox, Input, message, Select } from 'antd';
 import dayjs from 'dayjs';
 import { rptWeekApi, rptWeekConfirmApi } from '@/api/rpt';
 import { orgApi } from '@/api/emp';
+import { aprApi } from '@/api/apr';
 import { rdApi } from '@/api/rd';
 import { errorMessage } from '@/api/client';
 import { RptWeekCode, RptWeekConfirm } from '@/types/rpt';
-import { useLoginUser } from '@/hooks/useLoginUser';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { LookupInput } from '@/components/lookup/LookupInput';
@@ -27,7 +27,6 @@ const gb = gbFor<RptWeekConfirm>();
 const DATE = 'YYYY-MM-DD';
 
 export const Rpt04_Tab_WeekConfirm: React.FC = () => {
-  const user = useLoginUser();
   const [rows, setRows] = useState<RptWeekConfirm[]>([]);
   const [target, setTarget] = useState<RptWeekConfirm | null>(null);
   const [rdUrl, setRdUrl] = useState<string | null>(null);
@@ -42,7 +41,8 @@ export const Rpt04_Tab_WeekConfirm: React.FC = () => {
   const [weekText, setWeekText] = useState<string | undefined>(undefined);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [closeDate, setCloseDate] = useState<string | null>(null);
-  const [orgCodeId, setOrgCodeId] = useState<number | null>(user.deptId ? Number(user.deptId) : null);
+  // 로그인 사원의 조직(AS-IS LoginUser.getOrgCodeId()) — 화면이 열릴 때 서버에서 읽는다. user.deptId 는 아직 설정값("D101" 같은 글자)이라 숫자로 못 쓴다
+  const [orgCodeId, setOrgCodeId] = useState<number | null>(null);
   const [orgName, setOrgName] = useState('');
 
   // retrieve() L189-217: 서비스 rpt.Rpt03_Week.selectByCompanyId(companyId는 서버, startDate, orgCodeId, confirmYn = 미확인건만)
@@ -68,10 +68,17 @@ export const Rpt04_Tab_WeekConfirm: React.FC = () => {
   useEffect(() => {
     void (async () => {
       await loadWeeks(year, month);
+      // 회사관리자 등 조직이 없으면(0) 부서 없이 전체를 조회한다
+      let myOrg: number | null = null;
+      try {
+        const id = await aprApi.getMyOrgCodeId();
+        myOrg = id > 0 ? id : null;
+      } catch { /* 부서 없이 전체 */ }
+      setOrgCodeId(myOrg);
       // settings() L149-153: 부서 칸 = 로그인 사원 조직의 이름
       try {
         const orgs = await orgApi.searchOrgInfos('', dayjs().format(DATE));
-        const mine = orgs.find(o => o.orgCodeId === orgCodeId);
+        const mine = orgs.find(o => o.orgCodeId === myOrg);
         if (mine) setOrgName(mine.korNm ?? '');
       } catch { /* 이름만 비워 둔다 */ }
       try {
@@ -80,7 +87,7 @@ export const Rpt04_Tab_WeekConfirm: React.FC = () => {
         setCloseDate(days.closeDate);
         setWeekCode(`${days.startDate}|${days.closeDate}`);
         setWeekText(`${days.weekNumber}주차 (${days.startDate} ~ ${days.closeDate})`);
-        await retrieveWeek(days.startDate, orgCodeId, false);
+        await retrieveWeek(days.startDate, myOrg, false);
       } catch {
         message.warning('날짜를 가져올 수 없습니다.');
       }
