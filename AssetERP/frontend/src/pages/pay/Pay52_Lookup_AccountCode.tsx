@@ -4,7 +4,7 @@
  * open(isManager, callback) L74-121: 모달 820×500 "계정코드", 툴바(계정속성 콤보 · 검색 200 "계정코드/계정과목" · 모든 계정과목 · [조회] + 관리자는 [추가][제거])
  *   + 체크박스 단일 그리드(속성 80 · 계정코드 100 · 계정과목 450 · 조회순서 100 편집, 관리자만), [저장](관리자) [확인][취소]
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, message, Space } from 'antd';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
@@ -67,6 +67,9 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
     deleteConfirm: '선택한 계정과목을 제거하시겠습니까?',
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
   // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { clear: crudClear } = crud;
 
@@ -86,8 +89,7 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
     setOpenSeq(n => n + 1);
   }, [open, crudClear]);
   useEffect(() => {
-    if (openSeq > 0) void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (openSeq > 0) void crudRef.current.retrieve();
   }, [openSeq]);
 
   // [E1] grid.CellDoubleClick (L113) / [E9] oKButton[확인].Select (L178) → confirm() L231-242: 선택이 없으면 "선택된 계정과목이 없습니다."

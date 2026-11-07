@@ -4,7 +4,7 @@
  * 레이아웃 L60-92: 모달 700×600 "{카드사명} 매핑", 위 = 툴바 [조회][등록][저장][삭제], 아래 = 셀 편집 그리드(행번호, 체크박스 다중:
  *   업로드 구분코드 200(콤보 CreditCardExcelCode) · 위치(세로줄) 100 · 비고 280), 아래 가운데 [닫기]
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { crdApi } from '@/api/crd';
@@ -67,6 +67,9 @@ export const Crd11_Lookup_ExcelCodeAdmin: React.FC<Props> = ({ excelCompany, onC
       return undefined;
     },
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   useEffect(() => {
     sysApi.searchCodes('CreditCardExcelCode').then(setExcelCodes).catch(() => {});
@@ -74,8 +77,7 @@ export const Crd11_Lookup_ExcelCodeAdmin: React.FC<Props> = ({ excelCompany, onC
 
   // open() L60-92: show(), retrieve()
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) void crudRef.current.retrieve();
   }, [open]);
 
   return (

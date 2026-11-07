@@ -55,14 +55,15 @@ export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, spec
     // deleteRow() L153-174 → [E7] msgBox.DialogHide [YES] (L156) → sys.Sys52_SpecificMenuLink.delete (useGridCrud 안)
     deleteConfirm: '해당 정보를 삭제하시겠습니까?',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   const columnDefs = useMemo(() => buildGrid(links), [links]);
 
   useEffect(() => { sysApi.searchCodes('LinkCode').then(setLinks).catch(() => setLinks([])); }, []);
 
   // open() L53-80 마지막 줄: this.retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (open) crud.retrieve(); else crud.clear(); }, [open, companyId, specificWorkCd]);
+  useEffect(() => { if (open) crudRetrieve(); else crudClear(); }, [open, companyId, specificWorkCd, crudRetrieve, crudClear]);
 
   return (
     <LookupModal

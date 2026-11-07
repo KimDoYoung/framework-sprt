@@ -4,7 +4,7 @@
  * 레이아웃 L46-78: 툴바(메뉴명 콤보 · 검색 · 조회 · 저장) + 그리드(행번호, 체크박스 다중, 화면안내 셀 편집)
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 저장 = 저장(n)(UX-03)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Select } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -50,11 +50,13 @@ export const Sys06_Tab_MenuGuide: React.FC = () => {
     remove: async () => 0,
     newRow: useCallback(() => NEW_ROW, []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L46-78) → settings(), retrieve()
   useEffect(() => {
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    crudRef.current.retrieve();
   }, []);
 
   const menuOptions = useMemo(() => [{ value: ALL, label: '전체' }, ...menus.map(m => ({ value: m.code, label: m.name }))], [menus]);

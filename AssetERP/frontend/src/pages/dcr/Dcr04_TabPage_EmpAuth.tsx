@@ -4,7 +4,7 @@
  * 레이아웃 생성자 L62-87: 테두리 박스 = 툴바 50(검색 · 입력 200 · [조회][등록][저장][삭제] · [사원별 권한현황]) + 그리드(부서 300 · 성명 100 · 직위 100 · 사원구분 100 · 비고 500, 체크 다중)
  * 부모가 고른 문서분류를 prop으로 받는다(AS-IS retrieve(classTreeModel)). 고르지 않았거나 문서분류(C)면 [조회][등록][저장][삭제]가 꺼지고 그리드가 빈다
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Input, message, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { dcrEmpAuthApi } from '@/api/dcr';
@@ -45,9 +45,12 @@ export const Dcr04_TabPage_EmpAuth: React.FC<Props> = ({ classTree }) => {
     deleteConfirm: n => `${n}건을 삭제하시겠습니까?`,
     newRow: () => ({}),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 생성자 L62-87 → retrieve() — 부모가 문서분류를 바꿀 때마다 다시 조회
-  useEffect(() => { void crud.retrieve(); }, [classTree?.classTreeId, classTree?.typeCode]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, [classTree?.classTreeId, classTree?.typeCode]);
 
   // [E3] insertButton[등록].Select (L106) → insertRow() L216-254: 사원찾기(다중, 오늘) → 고른 사원마다 한 줄(문서조회여부 false). 값은 addChange라 변경으로 친다
   const insertRow = () => {

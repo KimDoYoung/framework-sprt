@@ -5,7 +5,7 @@
  * 결재요청 아이콘의 전자결재(Apr01_Edit_ApprDoc, link A80)·분류선택(Dcr01_Lookup_Class)은 V31에서 연결했다
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 2개 콤보 → 초기화는 전체·전체, 자동 조회 없음), 저장 = 저장(n)(UX-03). 1410과 같은 패턴
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';
 import { sysApi } from '@/api/sys';
 import { dcrApi } from '@/api/dcr';
@@ -72,6 +72,9 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
     // deleteChk() L297-326 → [E7] messageBox.DialogHide [YES] (L311) → deleteRow() L328-337
     deleteConfirm: '선택한 내용을 삭제하시겠습니까?',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E6] actionCell (ImageCell).callbackOnCreate (L161) → 인라인 L161-166
   // 결재요청 아이콘 (buildGrid L131-173): 특정업무가 없으면 막는다. apr.Apr01_Appr.selectById 결과에 따라
@@ -139,8 +142,7 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
   }, []);
 
   // [E0] 화면 열림 (생성자 L67-95) → settings(), retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>

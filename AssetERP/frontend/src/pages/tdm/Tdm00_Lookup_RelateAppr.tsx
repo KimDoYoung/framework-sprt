@@ -60,14 +60,15 @@ export const Tdm00_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
     },
     onChanged: () => changedRef.current?.(),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
   const crudRef = useRef(crud);
   crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L50-73) / retrieve() L150-154 → retrieveExtrEvid()
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, keyTableId]);
+    if (open) void crudRetrieve();
+  }, [open, keyTableId, crudRetrieve]);
 
   // [E5] messageBox.DialogHide (L224) — 삭제 확인은 useGridCrud.deleteConfirm
   const columnDefs = useMemo(() => {

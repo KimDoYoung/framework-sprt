@@ -102,6 +102,8 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
     deleteConfirm: '선택한 정보를 삭제하시겠습니까?',
     onChanged: updateTransInfoGrid,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   // lookupOrgCode() L162-179: 발령일 기준 조직찾기(openFixDate)
   const lookupOrgCode = useCallback((r: Trans) => {
@@ -120,8 +122,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
   }, []);
 
   // retrieve(param) ← Emp00_Tab_TransInfo.retrieveTabpage (사원 선택·탭 전환) / init(): 비운다
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (personId) crud.retrieve(); else crud.clear(); }, [personId]);
+  useEffect(() => { if (personId) crudRetrieve(); else crudClear(); }, [personId, crudRetrieve, crudClear]);
 
   // [E3] searchBarBuilder[등록].Insert (L79) → insertRow() L276-323
   const insertRow = async () => {

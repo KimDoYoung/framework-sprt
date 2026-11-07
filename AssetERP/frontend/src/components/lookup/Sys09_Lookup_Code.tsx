@@ -72,6 +72,8 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
     }), [kind, user.companyId]),
     firstEditField: 'code',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // edit() L76-112: sys.Sys08_CodeKind.selectByKindCode → setting() → show(), retrieve()
   useEffect(() => {
@@ -81,11 +83,10 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
     sysApi.getCodeKindByCode(codeKind).then(k => {
       if (!alive) return;
       setKind(k);
-      void crud.retrieve();
+      void crudRetrieve();
     }).catch(err => message.error(errorMessage(err, '코드구분 조회 실패')));
     return () => { alive = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, codeKind]);
+  }, [open, codeKind, crudRetrieve]);
 
   const selectedRows = () => crud.gridRef.current?.api.getSelectedRows() ?? [];
 

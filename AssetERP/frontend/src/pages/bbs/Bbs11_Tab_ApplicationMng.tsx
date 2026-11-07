@@ -54,13 +54,15 @@ export const Bbs11_Tab_ApplicationMng: React.FC = () => {
     remove: async () => 0,
     newRow: useCallback(() => ({}), []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L85-159) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
+    void crudRef.current.retrieve();
     // buildGrid() L245: 신청상태 콤보 = ComboBoxField("ApplicationStatusCode")
     sysApi.searchCodes('ApplicationStatusCode').then(setStatuses).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 다시 조회하면 그리드 선택이 풀리므로 편집기도 비운다

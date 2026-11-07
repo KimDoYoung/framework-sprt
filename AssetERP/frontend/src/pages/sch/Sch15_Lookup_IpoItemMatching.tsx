@@ -5,7 +5,7 @@
  *   종목코드 100 · 유효한 종목코드 100 · 종목명 300), 아래 가운데 [닫기]
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { schApi } from '@/api/sch';
 import { Sch15IpoItemMatching } from '@/types/sch';
@@ -37,14 +37,16 @@ export const Sch15_Lookup_IpoItemMatching: React.FC<Props> = ({ open, onClose })
     newRow: useCallback(() => ({}), []),
     firstEditField: 'itemCode',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L57-123) → open() L53-55: retrieve(), show()
   useEffect(() => {
     if (open) {
       setSearchText('');
-      void crud.retrieve();
+      void crudRef.current.retrieve();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // buildGrid() L125-136

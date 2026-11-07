@@ -56,6 +56,9 @@ export const Flt13_Lookup_BookInit: React.FC<Props> = ({ open, onClose }) => {
     newRow: () => ({}),
     firstEditField: 'itemTypeName',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
   // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { retrieve: crudRetrieve } = crud;
 
@@ -224,13 +227,12 @@ export const Flt13_Lookup_BookInit: React.FC<Props> = ({ open, onClose }) => {
   const pickItemType = useCallback((row: FltBookInit, name: string | null) => {
     const code = itemTypes.find(c => c.name === name);
     if (!code) return;
-    crud.updateRow(row.bookInitId, {
+    crudRef.current.updateRow(row.bookInitId, {
       itemType: code.code,
       itemTypeName: code.name,
       stkPriceYn: code.stkPriceYn,
       ...(code.code === '99' ? { itemName: code.name } : {}),
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemTypes]);
 
   // [E15] lookupItemInfo.TriggerClick (L351) → 종목유형을 안 골랐으면 안내, 주식시세적용이면 lookupStkItem() L400-423(상장주식종목), 아니면 lookupItem() L388-398

@@ -73,6 +73,8 @@ export const Dcr30_Lookup_Link: React.FC<Props> = ({ open, linkCodeList, onClose
     remove: useCallback(async () => 0, []),
     newRow: useCallback(() => ({}), []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (open L60-88, 생성자 L90-143) → insertCheck() L229-241: dcr.Dcr30_Link.insertCheck(kindCode LinkCode) 뒤 retrieve()
   useEffect(() => {
@@ -81,9 +83,8 @@ export const Dcr30_Lookup_Link: React.FC<Props> = ({ open, linkCodeList, onClose
     setSearchText('');
     dcrApi.linkCheckCompany()
       .catch(err => message.error(errorMessage(err, '조회 실패')))
-      .finally(() => { void crud.retrieve(); });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, linkCodeList]);
+      .finally(() => { void crudRetrieve(); });
+  }, [open, linkCodeList, crudRetrieve]);
 
   // [E2] retrieveButton[조회].Select (L106), [E1] searchText.KeyPress [Enter] (L98) → retrieveSearch() L278-290: dcr.Dcr30_Link.selectBySearchId
   const retrieveSearch = async () => {

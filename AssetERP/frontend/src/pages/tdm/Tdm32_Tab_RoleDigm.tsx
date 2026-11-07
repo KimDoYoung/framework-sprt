@@ -118,6 +118,9 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
     deleteConfirm: false,
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
   const api = () => crud.gridRef.current?.api;
 
   // [E1] notPeriodYn[전체보기].ValueChange (L146) → 기간 칸 사용 여부 + retrieve(), [E2] notEndYn[미처리건만 조회].Change (L162) → retrieve()
@@ -126,8 +129,7 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
     return crud.retrieve();
   };
   // [E0] 생성자 끝의 retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E6] deleteButton[삭제].Select (L187) → deleteChk() L484-516: 상신 중·완료가 하나라도 있으면 안내, 없으면 "n건을 삭제하시겠습니까?" → [YES] [E12] deleteRow()
   const deleteChk = () => {

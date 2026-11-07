@@ -5,7 +5,7 @@
  * API는 종목유형관리(E08, Flt05_Tab_ItemTypeAdmin)의 `flt/item-types`를 그대로 쓴다. 이 창만 저장 전 검사와 삭제 전 사용 검사(selectUseCount)가 있다.
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 조회창 UX-05
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';
 import { fltApi } from '@/api/flt';
 import { FltItemType } from '@/types/flt';
@@ -71,13 +71,15 @@ export const Flt05_Lookup_ItemType: React.FC<Props> = ({ open, onClose }) => {
     validate,
     deleteConfirm: (n: number) => `${n}건의 정보를 삭제하시겠습니까?`,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // 화면 열림 (open() L64-94) → settings(), show(), retrieve() — 원본 이벤트 목록에 E0 없음
   useEffect(() => {
     if (!open) return;
     setSearchText('');
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    crudRef.current.retrieve();
   }, [open]);
 
   // [E5] deleteButton[삭제].Select [YES] (L124): 선택이 없으면 알린다 → [E6] msgBox.DialogHide [YES] (L133) → delete()

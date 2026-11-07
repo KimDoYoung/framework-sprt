@@ -48,13 +48,14 @@ export const Dcr06_Lookup_Form: React.FC<Props> = ({ classTreeId, onChanged, onC
     remove: dcrApi.deleteRelateDocTypes,
     newRow: useCallback(() => ({ classTreeId: classTreeId ?? 0 }), [classTreeId]),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L65-127) → show() / open() L60-63 → retrieve()
   useEffect(() => {
     if (classTreeId == null) return;
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classTreeId]);
+    void crudRetrieve();
+  }, [classTreeId, crudRetrieve]);
 
   // [E2] insertButton[행 추가].Select (L80) → insertRow() L139-164: Dcr05_Lookup_DocType에서 고른 양식마다 행을 더한다 (양식ID·제목·대표양식 false를 addChange)
   const insertRow = (list: DcrDocType[]) => {

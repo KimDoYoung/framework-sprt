@@ -6,7 +6,7 @@
  *        잠금의 파일 생성(RD 리포트 PDF)은 E13처럼 서버 ManlOrgPdfMaker 기본 구현이 거절한다 — 연동이 서면 같은 흐름이 그대로 동작한다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = count(UX-03)
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, Modal, message } from 'antd';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
@@ -53,8 +53,11 @@ export const Tdm42_Tab_ManlOrgAppr: React.FC = () => {
     newRow: () => ({}),
     reloadAfterSave: true,                                            // update() L395-403: GridUpdate 뒤 retrieve()
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
-  useEffect(() => { void crud.retrieve(); }, []);                     // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E1] searchText.KeyPress [Enter] (L127)·[E2] retrieveButton[조회].Select (L138) → retrieve()
   const retrieve = () => crud.retrieve();

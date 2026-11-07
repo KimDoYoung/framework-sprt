@@ -58,6 +58,8 @@ export const Pay21_TabPage_Rate = forwardRef<PayTabPageHandle>((_props, ref) => 
     firstEditField: 'rateName',
     deleteConfirm: '선택한 정보를 삭제하시겠습니까?',  // deleteRow() L192-207
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   useImperativeHandle(ref, () => ({ retrieve: crud.retrieve }));
 
@@ -66,8 +68,7 @@ export const Pay21_TabPage_Rate = forwardRef<PayTabPageHandle>((_props, ref) => 
   }, []);
 
   // [E0] 열 때 조회 + [E1] RateComboBox.callbackOnCreate (L78) + [E2] RateComboBox[RateCode].Collapse (L88) → retrieve(): 율 구분을 고르면 바로 조회
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { crud.retrieve(); }, [rateCode]);
+  useEffect(() => { crudRetrieve(); }, [rateCode, crudRetrieve]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>

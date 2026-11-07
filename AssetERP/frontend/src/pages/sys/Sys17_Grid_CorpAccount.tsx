@@ -61,6 +61,8 @@ export const Sys17_Grid_CorpAccount = forwardRef<CorpAccountHandle, Props>(({ co
     newRow: useCallback(() => ({ corpId: corpId ?? undefined, mainAccountYn: 'false' }), [corpId]),
     firstEditField: 'bankName',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   // [E4] bankCodeComboBox[BankCode].Collapse (L94) → bankCode·bankName을 함께 바꾼다 (buildGrid의 valueSetter)
   // retrieve(corpId) L193-210: corpId가 null이면 store를 비운다 / reset() L138-142: deleteList도 비운다.
@@ -68,9 +70,8 @@ export const Sys17_Grid_CorpAccount = forwardRef<CorpAccountHandle, Props>(({ co
   const lastCorpId = useRef<number | null>(null);
   useEffect(() => {
     if (lastCorpId.current !== corpId) { deleteList.current = []; lastCorpId.current = corpId; }
-    if (corpId) void crud.retrieve(); else crud.clear();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corpId, corp]);
+    if (corpId) void crudRetrieve(); else crudClear();
+  }, [corpId, corp, crudRetrieve, crudClear]);
 
   // [E1] anchor.MouseDown (L56) → retrieve() L134-136 (삭제 대기 목록은 그대로 둔다 — AS-IS는 deleteList를 비우지 않는다)
   const retrieve = () => { if (corpId) void crud.retrieve(); else crud.clear(); };

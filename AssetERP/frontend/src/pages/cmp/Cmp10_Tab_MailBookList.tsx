@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/cmp/Cmp10_Tab_MailBookList.java (215줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L51-64: 툴바 ["사원정보 " 라벨][조회][등록][저장][삭제] + 그리드(체크박스 다중, 행번호, 4열: 조직 160 · 직책 100 · 사번 80 · 성명 80)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';
 import { cmpMailBookApi } from '@/api/cmp';
 import { CmpMailRole } from '@/types/cmp';
@@ -41,11 +41,13 @@ export const Cmp10_Tab_MailBookList: React.FC<Props> = ({ mailBookId }) => {
     // 행 추가는 [등록]이 사원찾기를 거쳐 addRows로 넣는다 — 빈 행은 만들지 않는다
     newRow: useCallback(() => ({}), []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L51-64) → settings(), retrieve(). 공용메일이 바뀔 때마다 retrieve(mailBookId)
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, [mailBookId]);
 
   // [E2] insertButton[등록].Select (L73) → insertRow() L140-168: 사원찾기(Emp01_Lookup_PersonModel)

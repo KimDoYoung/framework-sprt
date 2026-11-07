@@ -61,13 +61,14 @@ export const Dcr20_Lookup_Ics: React.FC<Props> = ({ dcrClassTreeId, onChanged, o
     remove: dcrApi.deleteRelateIcs,
     newRow: useCallback(() => ({ dcrClassTreeId: dcrClassTreeId ?? 0 }), [dcrClassTreeId]),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L69-135) → show(), retrieve()
   useEffect(() => {
     if (dcrClassTreeId == null) return;
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dcrClassTreeId]);
+    void crudRetrieve();
+  }, [dcrClassTreeId, crudRetrieve]);
 
   // [E2] insertButton[행 추가].Select (L85) → insertRow() L154-182: Ics01_Lookup_SelectMulti("classTree")에서 고른 법규마다 행을 더한다 (법규ID·법규명·분류코드를 addChange)
   const insertRow = (list: IcsLawLookup[]) => {

@@ -45,12 +45,13 @@ export const Emp93_Lookup_SmsNoticeTarget: React.FC<Props> = ({ smsNoticeCode, o
     // deleteChk() L174-192: "{n}건을 삭제하시겠습니까?"
     deleteConfirm: n => `${n}건을 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (open L54-57) → retrieve()
   useEffect(() => {
-    if (smsNoticeCode) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [smsNoticeCode]);
+    if (smsNoticeCode) void crudRetrieve();
+  }, [smsNoticeCode, crudRetrieve]);
 
   // [E2] insertButton[등록].Select (L93) → insertRow() L147-172: Emp00_Lookup_SelectMulti(오늘, 겸직 포함) → 고른 사원마다 새 행
   const insertRows = (list: TransInfo[]) => {

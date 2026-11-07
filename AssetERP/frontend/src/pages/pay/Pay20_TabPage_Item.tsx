@@ -5,7 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 초기화 버튼이 없어 onReset(UX-02)은 넣지 않는다
  * 부모(Pay20_Tab_DeductAdmin)가 forwardRef 핸들로 retrieve()를 부른다(탭을 고를 때 retrieveTabpage)
  */
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, useRef } from 'react';
 import { payApi } from '@/api/pay';
 import { sysApi } from '@/api/sys';
 import { PayItem } from '@/types/pay';
@@ -73,6 +73,9 @@ export const Pay20_TabPage_Item = forwardRef<PayTabPageHandle>((_props, ref) => 
     firstEditField: 'itemTypeName',
     deleteConfirm: '선택한 정보를 삭제하시겠습니까?',  // deleteRow() L219-234
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   useImperativeHandle(ref, () => ({ retrieve: crud.retrieve }));
 
@@ -82,8 +85,7 @@ export const Pay20_TabPage_Item = forwardRef<PayTabPageHandle>((_props, ref) => 
   }, []);
 
   // [E0] 열 때 조회 + [E1] itemTypeComboBox.callbackOnCreate (L82) + [E2] itemTypeComboBox[PayItemType].Collapse (L92) → retrieve(): 항목구분을 고르면 바로 조회
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { crud.retrieve(); }, [itemType]);
+  useEffect(() => { crudRef.current.retrieve(); }, [itemType]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>

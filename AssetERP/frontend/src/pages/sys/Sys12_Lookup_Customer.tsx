@@ -48,12 +48,13 @@ export const Sys12_Lookup_Customer: React.FC<Props> = ({ open, calendar, onClose
     remove: async () => 0,
     newRow: useCallback(() => NEW_ROW, []),
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // open() L51-78: 열면 조회
   useEffect(() => {
-    if (open) crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, calendar]);
+    if (open) crudRetrieve();
+  }, [open, calendar, crudRetrieve]);
 
   // [E3] copyButton[Admin(관리자)정보로 고객사 변경].Select (L93) → 선택 확인 → [E4] msgBox.DialogHide [YES] (L103) → updateList → retrieve()
   const copy = () => {

@@ -48,10 +48,12 @@ export const Sys13_Lookup_CodeGroup: React.FC<Props> = ({ open, codeKind, onClos
     // deleteRow() L178-199
     deleteConfirm: '해당 정보를 삭제하시겠습니까?',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // open() L56-90: 열자마자 retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (open) crud.retrieve(); }, [open]);
+  useEffect(() => { if (open) crudRef.current.retrieve(); }, [open]);
 
   return (
     <LookupModal

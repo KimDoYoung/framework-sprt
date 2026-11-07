@@ -55,10 +55,12 @@ export const Tdm43_Tab_RelateFormFileUpload: React.FC = () => {
     newRow: useCallback(() => ({}), []),              // 행 추가 단추 없음 — 올리기는 [파일업로드]
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L71-116) → settings(), retrieve() / [E1] typeComboBox.callbackOnCreate (L58) → "전체" 뒤 retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // checkFileDelete() L246-271: 연결만 지움(1) → 다시 조회 / 사용 중(2) → 서버 문구 / 지워도 됨(3) → FileDelete
   // [E2] fileDeleteForm.SubmitComplete (L76) → retrieve()

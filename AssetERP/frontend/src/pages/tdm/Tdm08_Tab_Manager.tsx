@@ -92,12 +92,13 @@ export const Tdm08_Tab_Manager: React.FC = () => {
     reloadAfterSave: true,
     deleteConfirm: n => `${n}건의 정보를 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   // [E7] grid.SelectionChanged (L169) → 고른 행이 있으면 retrieve(selectModel), 없으면 manageGrid 가림
   useEffect(() => {
-    if (selected) void crud.retrieve(); else crud.clear();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected]);
+    if (selected) void crudRetrieve(); else crudClear();
+  }, [selected, crudRetrieve, crudClear]);
 
   // [E8] lookupEmpInfo.TriggerClick (L202) → openLookupEmpInfo() L327-354
   const crudRows = useRef<TdmManagerInfo[]>([]);

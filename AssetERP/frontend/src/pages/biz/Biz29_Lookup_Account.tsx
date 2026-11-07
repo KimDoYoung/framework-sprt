@@ -6,7 +6,7 @@
  * 저장 update() L228-259: 바뀐 행마다 운용사·은행명·계좌번호·예금주명이 비었으면 안내 후 중단. 삭제 deleteRow() L269-290: "선택한 정보를 삭제하시겠습니까?"(폭 400)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장(n) UX-03, 변경 표시 UX-07, 날짜 컬럼 폭 UX-08, 조회창 UX-05
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button as AntButton } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { bizFeeAccountApi } from '@/api/bizFee';
@@ -75,11 +75,13 @@ export const Biz29_Lookup_Account: React.FC<Props> = ({ open, onClose }) => {
     }, []),
     deleteConfirm: '선택한 정보를 삭제하시겠습니까?',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L74-144) → show() · open() L70-72 → retrieve()
   useEffect(() => {
-    if (open) { setSearchText(''); void crud.retrieve(); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) { setSearchText(''); void crudRef.current.retrieve(); }
   }, [open]);
 
   // 조회창 트리거 열: [E7] lookupCorp.TriggerClick (L151) → lookupCorp() L186-197 · [E8] lookupAst.TriggerClick (L158) → lookupAst() L199-212

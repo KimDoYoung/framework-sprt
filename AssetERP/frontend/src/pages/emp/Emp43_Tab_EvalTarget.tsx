@@ -91,6 +91,9 @@ export const Emp43_Tab_EvalTarget: React.FC = () => {
     deleteConfirm: '삭제하시겠습니까?',  // deleteChk L652-683 "삭제하시겠습니까?"
     validate: validateRows,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
   rowsRef.current = crud.rows;
 
   // checkFinalApprStatus() L515-549: 결재 행이 없거나 최종 결재가 완료(30)가 아니면 [저장][등록][삭제] 활성
@@ -106,10 +109,9 @@ export const Emp43_Tab_EvalTarget: React.FC = () => {
 
   // [E4] retrieveButton[조회].Select (L199) → retrieve() L494-513
   const retrieve = useCallback(async () => {
-    await crud.retrieve();
+    await crudRef.current.retrieve();
     await checkFinalApprStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [crud.retrieve, checkFinalApprStatus]);
+  }, [checkFinalApprStatus]);
 
   // [E0] 화면 열림 (생성자 L97-127) → settings(): 서비스 sys.Sys01_Company.selectById(회사 평가기간 설정) → retrieve().
   //   원본은 설정 응답을 기다리지 않고 조회해 반기별 회사의 처음 조회가 기간코드 "10"으로 나갈 수 있다 — 설정을 읽은 뒤 조회한다(작업기록 결정)

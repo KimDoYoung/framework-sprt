@@ -4,7 +4,7 @@
  * 레이아웃 L55-85: 툴바(년도 · 월 · 조회·저장·생성·휴일관리, 관리자 회사만 고객사반영) + 그리드(행번호, 체크박스 단일, 영업일 체크 + 휴일사유·비고 편집). 여백 20, 최대 폭 1000
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 저장 = 저장(n)(UX-03)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import { message, Modal } from 'antd';
 import { sysApi } from '@/api/sys';
@@ -51,11 +51,13 @@ export const Sys12_Tab_Calendar: React.FC = () => {
     remove: async () => 0,
     newRow: useCallback(() => NEW_ROW, []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L55-85) → settings(), retrieve()
   useEffect(() => {
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    crudRef.current.retrieve();
   }, []);
 
   // [E5] insertButton[생성].Select [YES] (L119) → 확인 → [E6] msgBox.DialogHide [YES] (L124) → insertAuto() L174-197

@@ -92,12 +92,21 @@ export const Pay13_TabPage_RetireTax = forwardRef<RetireTabHandle>((_props, ref)
     remove: async () => 0,
   });
   const crud1 = useGridCrud<PayRetireTaxItem>(itemCrud('incomes', '1'));
+  // 오래 사는 콜백이 최신 crud1 를 부르게 한다 (crud1 는 rows 가 바뀔 때마다 새 객체)
+  const crud1Ref = useRef(crud1);
+  crud1Ref.current = crud1;
   // crud1 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { clear: crud1Clear } = crud1;
   const crud4 = useGridCrud<PayRetireTaxItem>(itemCrud('deducts', '3'));
+  // 오래 사는 콜백이 최신 crud4 를 부르게 한다 (crud4 는 rows 가 바뀔 때마다 새 객체)
+  const crud4Ref = useRef(crud4);
+  crud4Ref.current = crud4;
   // crud4 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { clear: crud4Clear } = crud4;
   const crud7 = useGridCrud<PayRetireTaxItem>(itemCrud('credits', '4'));
+  // 오래 사는 콜백이 최신 crud7 를 부르게 한다 (crud7 는 rows 가 바뀔 때마다 새 객체)
+  const crud7Ref = useRef(crud7);
+  crud7Ref.current = crud7;
   // crud7 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { clear: crud7Clear } = crud7;
   const crud9 = useGridCrud<PayRetireTaxOffice>({
@@ -107,6 +116,9 @@ export const Pay13_TabPage_RetireTax = forwardRef<RetireTabHandle>((_props, ref)
     save: async rows => rows,
     remove: async () => 0,
   });
+  // 오래 사는 콜백이 최신 crud9 를 부르게 한다 (crud9 는 rows 가 바뀔 때마다 새 객체)
+  const crud9Ref = useRef(crud9);
+  crud9Ref.current = crud9;
   // crud9 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
   const { clear: crud9Clear } = crud9;
 
@@ -133,8 +145,7 @@ export const Pay13_TabPage_RetireTax = forwardRef<RetireTabHandle>((_props, ref)
       10: { cur: t.settleTax ?? null, py: t.pySettleTax ?? null },
     });
     setDeleteIds({ '1': [], '3': [], '4': [] });
-    await Promise.all([crud1.retrieve(), crud4.retrieve(), crud7.retrieve(), crud9.retrieve()]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    await Promise.all([crud1Ref.current.retrieve(), crud4Ref.current.retrieve(), crud7Ref.current.retrieve(), crud9Ref.current.retrieve()]);
   }, []);
 
   // retrieve(param) L840-869: getRetireInfo(personId)

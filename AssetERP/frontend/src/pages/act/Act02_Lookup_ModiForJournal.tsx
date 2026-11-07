@@ -73,13 +73,15 @@ export const Act02_Lookup_ModiForJournal: React.FC<Props> = ({ journalId, onSave
     newRow: () => ({ seq: null, drcrType: null, drcrTypeName: null, realAccountCode: null, realAccountName: null, reprAccountCode: null, accountMap: null, amt: 0, forAmt: 0, depositId: null, depositName: null, note: null }),
     firstEditField: 'realAccountCode',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L123-143, open L145-180) → editDriver.edit(jnlModel), retrieveJnl()
   useEffect(() => {
     headLoaded.current = false;
     setHead(null);
-    if (journalId != null) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (journalId != null) void crudRef.current.retrieve();
   }, [journalId]);
 
   // setDiffAmt() L387-409: 대차차액 = 대변 합계 − 차변 합계

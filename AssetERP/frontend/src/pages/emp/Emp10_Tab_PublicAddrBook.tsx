@@ -4,7 +4,7 @@
  * 레이아웃 생성자 L51-78: center=vlc(테두리, 여백 20) — 툴바 [검색 칸(빈칸 안내 "담당자명/회사이름/비고")][조회][등록][저장][삭제][그룹설정] + 셀 편집 그리드(체크박스 다중,
  *   8열: G11의 7열 + 등록자 100). G11 주소록 관리와 같은 모양, 공용(publicYn=true)·로그인 회사 전체를 다룬다
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Modal, message } from 'antd';
 import { empAddrBookApi } from '@/api/emp';
 import { EmpAddrBook } from '@/types/emp';
@@ -37,11 +37,13 @@ export const Emp10_Tab_PublicAddrBook: React.FC = () => {
     // [E3] insertButton[등록].Select (L97) → insertRow() L160-166: GridInsertRow, 등록자 = 나, 공용 true
     newRow: useCallback(() => ({ publicYn: 'true', personId: user.userId }), [user.userId]),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L51-78) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, []);
 
   // [E5] deleteButton[삭제].Select (L109) → deleteChk() L168-186: "삭제"/"n건의 주소록을 삭제하시겠습니까?"(폭 300) → [E7] msgBox.DialogHide [YES] (L171) → deleteRow() L188-198:

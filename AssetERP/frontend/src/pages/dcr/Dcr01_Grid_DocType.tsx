@@ -4,7 +4,7 @@
  * 생성자 L95-161: 위 툴바(검색 200 "구분코드/문서구분명" + [조회]) + 체크박스 단일 셀 편집 그리드, 아래 가운데 [삭제][등록][저장] — 문서분류를 고르기 전에는 모두 꺼져 있다
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button as AntButton, message, Modal, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColDef } from 'ag-grid-community';
@@ -81,6 +81,9 @@ export const Dcr01_Grid_DocType: React.FC<Props> = ({ classTree }) => {
     },
     reloadAfterSave: false,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E6 생략] docItemComboBox[DocItemTypeCode].Collapse (L165) — 상품분류 컬럼이 원본에서 주석 처리라 화면에 없다
   // [E9 생략] sealName.KeyDown (L187) — 입력 막기: 인감종류 칸은 아이콘으로만 고른다(읽기 전용 표시)
@@ -92,8 +95,7 @@ export const Dcr01_Grid_DocType: React.FC<Props> = ({ classTree }) => {
   // 왼쪽 트리에서 문서분류를 고르면 다시 읽는다 (Dcr01_Tab_ClassTree.retrievePage → gridDocType.retrieve(classTreeModel))
   useEffect(() => {
     if (parentId == null) return;
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, [parentId]);
 
   // [E2] retrieveButton[조회].Select (L108) · [E1] searchText.KeyPress [Enter] (L100) → retrieve(classTreeModel)

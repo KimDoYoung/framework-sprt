@@ -5,7 +5,7 @@
  * 레이아웃 L106-135: 툴바(수탁은행명 300 "전체" · 사용여부 체크 · 조회 · 등록 · 저장 · 삭제 · 가져오기(ICAM)) + 그리드(행번호, 체크박스 단일,
  *   수탁은행코드·수탁은행명·사용여부·비고·신한아이타스~스카이 편집). 여백 20, 폭 100%
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, message } from 'antd';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
@@ -52,11 +52,13 @@ export const Fnd09_Tab_TrustBank: React.FC = () => {
     newRow: useCallback(() => NEW_ROW, []),
     firstEditField: 'trustBankCode',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L61-137) → retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, []);
 
   // importIcam() L247-263: 실패(status -1)면 메시지 상자, 아니면 retrieve()

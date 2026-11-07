@@ -60,6 +60,8 @@ export const Sys05_Page_UserRole: React.FC<Props> = ({ roleId }) => {
     // deleteChk() L213-231
     deleteConfirm: '선택한 사원을 삭제하시겠습니까?',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   // lookupOrgInfo() L92-107: 조직찾기 open(new Date()) → authOrgId·authOrgName만 바꾼다(보이는 권한조직 칸은 그대로 — 원본 그대로)
   const lookupOrgInfo = useCallback((r: UserRole) => setOrgTarget(r), []);
@@ -67,8 +69,7 @@ export const Sys05_Page_UserRole: React.FC<Props> = ({ roleId }) => {
   const columnDefs = useMemo(() => buildGrid(lookupOrgInfo), [lookupOrgInfo]);
 
   // Sys05_Tab_UserRole.retrieveUserRole() → retrieve(roleId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (roleId) crud.retrieve(); else crud.clear(); }, [roleId]);
+  useEffect(() => { if (roleId) crudRetrieve(); else crudClear(); }, [roleId, crudRetrieve, crudClear]);
 
   // insertRow() L158-206 콜백: 고른 사원마다 행 추가. 초기 권한조직은 본인 부서
   const onPersons = (persons: TransPerson[]) => {

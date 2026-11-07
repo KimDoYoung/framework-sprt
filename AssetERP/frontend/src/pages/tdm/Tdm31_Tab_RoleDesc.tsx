@@ -89,6 +89,9 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
     deleteConfirm: false,
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
   const api = () => crud.gridRef.current?.api;
 
   // [E1] notPeriodYn[전체보기].ValueChange (L150) → 기간 칸 사용 여부 + retrieve(), [E2] notEndYn[미처리건만 조회].Change (L166) → retrieve()
@@ -97,8 +100,7 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
     return crud.retrieve();
   };
   // [E0] 생성자 끝의 retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E5] insertButton[등록].Select (L190) → insertRow() L379-424: 임원선택 조회창에서 고른 임원마다 행을 만든다(생성일 오늘, 생성사유는 일괄 적용값 또는 "(선택하세요)")
   const insertRow = ({ rows, reasonCode, reasonName }: RoleDescPick) => {

@@ -83,6 +83,8 @@ export const Crd11_Lookup_ExcelCode: React.FC<Props> = ({ open, bankCode, bankNa
       }, 0);
     },
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   useEffect(() => {
     sysApi.searchCodes('CreditCardExcelCode').then(setExcelCodes).catch(() => {});
@@ -90,9 +92,8 @@ export const Crd11_Lookup_ExcelCode: React.FC<Props> = ({ open, bankCode, bankNa
 
   // open() L66-108: show(), excelCodeChk()
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, bankCode]);
+    if (open) void crudRetrieve();
+  }, [open, bankCode, crudRetrieve]);
 
   // [E5] customSetButton[커스텀 설정].Select (L136) → customChk() L229-246: 이 회사 맵핑이 이미 있으면 "이미 커스텀 설정이 되어있습니다."
   //   → copyData() L248-267: crd.Crd11_ExcelCode.copyData(화면에 보이는 기본 맵핑 전체) 뒤 excelCodeChk()

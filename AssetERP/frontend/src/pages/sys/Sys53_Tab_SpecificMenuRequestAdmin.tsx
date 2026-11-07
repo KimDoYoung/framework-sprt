@@ -5,7 +5,7 @@
  * UX보강(10) 시범(B11): 툴바 = SearchBar(UX-01 조회 로딩·UX-02 초기화), 저장 = 저장(n)(UX-03)
  * 문서보기 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)는 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';
 import { sysApi } from '@/api/sys';
 import { Code, SpecificMenuRequestAdmin } from '@/types/sys';
@@ -57,6 +57,9 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
     remove: async () => 0,   // 원본에 삭제·등록 단추가 없다
     newRow: () => ({}),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // 문서보기 아이콘 (buildGrid L121-148): apr.Apr01_Appr.selectById(apprId) → 없으면 '연관문서가 존재하지않습니다',
   // 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false). 전자결재는 다른 도메인이라 아직 없음
@@ -73,14 +76,13 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
   // [E0] 화면 열림 (생성자 L56-75) → settings(), retrieve()
   useEffect(() => {
     sysApi.searchCodes('SpecificStateCode').then(setStates).catch(() => setStates([]));
-    void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, []);
 
   // [E1] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L99) → retrieve()
   // 콤보를 바꾸면 바뀐 값으로 조회해야 하므로 값이 바뀐 다음 조회한다
   const [pending, setPending] = useState(false);
-  useEffect(() => { if (pending) { setPending(false); void crud.retrieve(); } }, [pending]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (pending) { setPending(false); void crudRef.current.retrieve(); } }, [pending]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box' }}>

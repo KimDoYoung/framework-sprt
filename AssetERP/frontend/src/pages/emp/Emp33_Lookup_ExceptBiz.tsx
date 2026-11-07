@@ -4,7 +4,7 @@
  * 레이아웃 L58-89: 모달 1200×600 "예외사원 등록", 위 = 툴바 [조회][등록][저장][삭제], 아래 = 셀 편집 그리드(행번호, 체크박스 단일:
  *   사원명 250 · 예외시작일 100 · 예외종료일 100 · 예외사유 350 · 보고서에서 제거 250), 아래 가운데 [닫기]
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
@@ -46,11 +46,13 @@ export const Emp33_Lookup_ExceptBiz: React.FC<Props> = ({ exceptBizCode, onClose
     // update() L152-167: 수정한 행마다 예외시작일이 없으면 "예외시작일을 입력하세요"
     validate: changed => (changed.some(m => !m.startDate) ? '예외시작일을 입력하세요' : undefined),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L58-64) → open() L66-89: show(), retrieve()
   useEffect(() => {
-    if (open) void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) void crudRef.current.retrieve();
   }, [open]);
 
   // [E2] insertButton[등록].Select (L98) → insertRow() L169-196: 사원찾기(Emp00_Lookup_SelectSingle.open(오늘, true, …)) → 고른 사원으로 새 행(사원명 "이름(조직명)", 보고서에서 제거 false)

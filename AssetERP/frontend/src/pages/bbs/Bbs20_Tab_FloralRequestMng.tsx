@@ -7,7 +7,7 @@
  * 스타일: SGP (page-style — 조회 툴바 + 그리드 하나 + 편집 팝업)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화는 원본 버튼이 셋 붙어 넣지 않음), 저장 = 저장(n)(UX-03), 그리드 날짜 폭(UX-08)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { bbsFloralApi } from '@/api/bbs';
@@ -65,13 +65,15 @@ export const Bbs20_Tab_FloralRequestMng: React.FC = () => {
     newRow: useCallback(() => ({}), []),
     validate,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L62-91) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
+    void crudRef.current.retrieve();
     // buildGrid() L132-137: 신청상태 콤보 = sys.Sys00_Common.selectByKindGroupCode(코드그룹 ApplicationStatusCode001)
     sysApi.searchCodesByKindGroup('ApplicationStatusCode001').then(setStatuses).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // buildGrid() L131-200

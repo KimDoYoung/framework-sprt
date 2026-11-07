@@ -128,8 +128,11 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
     },
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
-  useEffect(() => { void crud.retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
   useEffect(() => { void sysApi.searchCodes('PayMethodCode').then(setPayMethods).catch(() => setPayMethods([])); }, []);
 
   const checkedRows = (): PayExpenseSettle[] => crud.gridRef.current?.api.getSelectedRows() ?? [];

@@ -5,7 +5,7 @@
  * 레이아웃 L46-60: 위 툴바(SearchBarBuilder — [조회][저장][등록][삭제], 입력칸 없음) + 셀 편집 그리드(체크박스 단일)
  * UX보강(10): 툴바 = SearchBar(UX-01). 저장(n)은 UX-03
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Button as AntButton } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -54,12 +54,14 @@ export const Fnd20_TabPage_Plan: React.FC<Props> = ({ target }) => {
     // update() L158-174: 바꾼 행 중 만든 사람(managerId)이 로그인 사용자가 아닌 것이 있으면 저장하지 않는다
     validate: changed => (changed.some(r => r.managerId !== user.userId) ? '해당 내용을 생성한 자만 수정가능합니다' : undefined),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L46-60) → 툴바 [조회][저장][등록][삭제] + 기획일정 그리드. 열 때 조회하지 않고, 위 그리드에서 펀드를 고르면 읽는다
   // [E1] searchBarBuilder[조회].Retrieve (L48) → retrieve() — 위 그리드 행을 누르면(Fnd20_Tab_Plan E3) retrieve(fundId)
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, [target]);
 
   // [E3] searchBarBuilder[등록].Insert (L50) → insertRow() L134-155: 문서구분 조회창 → 고른 문서구분마다 새 행(시작일 오늘, 관리자 = 로그인 사용자). GridInsertRow — 변경으로 치지 않는다

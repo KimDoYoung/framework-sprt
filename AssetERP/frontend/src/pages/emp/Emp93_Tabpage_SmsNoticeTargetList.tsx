@@ -44,12 +44,13 @@ export const Emp93_Tabpage_SmsNoticeTargetList: React.FC<Props> = ({ smsNoticeCo
     // deleteChk() L155-173: "{n}건을 삭제하시겠습니까?"
     deleteConfirm: n => `${n}건을 삭제하시겠습니까?`,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // 왼쪽 구분이 바뀔 때마다 retrieve(smsNoticeCode) (부모 grid RowClick L87-96)
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [smsNoticeCode]);
+    void crudRetrieve();
+  }, [smsNoticeCode, crudRetrieve]);
 
   // [E2] insertButton[등록].Select (L73) → insertRow() L122-153: 구분이 없으면 안내, 있으면 Emp00_Lookup_SelectMulti(오늘, 겸직 포함) → 고른 사원마다 새 행
   const insertRow = () => {

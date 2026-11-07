@@ -53,12 +53,13 @@ export const Sys51_Lookup_SpecificMenuPerson: React.FC<Props> = ({ companyId, sp
     // deleteRow() L192-213 → [E7] msgBox.DialogHide [YES] (L195) → sys.Sys51_SpecificMenuPerson.delete (useGridCrud 안)
     deleteConfirm: '해당 정보를 삭제하시겠습니까?',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   const columnDefs = useMemo(buildGrid, []);
 
   // open() L64-101 마지막 줄: this.retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (open) crud.retrieve(); else crud.clear(); }, [open, companyId, specificMenuId, specificWorkCd]);
+  useEffect(() => { if (open) crudRetrieve(); else crudClear(); }, [open, companyId, specificMenuId, specificWorkCd, crudRetrieve, crudClear]);
 
   // insertRow() L164-190 콜백: 고른 사원마다 행 추가 + addChange(specificMenuId, personName, personId, useYn=true, specificWorkCode)
   const onEmployees = (list: TransInfo[]) => {

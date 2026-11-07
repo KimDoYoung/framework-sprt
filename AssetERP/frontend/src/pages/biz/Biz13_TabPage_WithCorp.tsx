@@ -55,12 +55,13 @@ export const Biz13_TabPage_WithCorp: React.FC<Props> = ({ corp, nonce, onCorpCha
     validate: (_changed, all) => (all.some(r => !r.manageType) ? '운영구분은 필수선택 항목입니다' : undefined),
     onChanged: onCorpChanged,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear, retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L65-81) → setting() — 위 그리드 행을 누르거나 탭을 열면 retrieve()
   useEffect(() => {
-    if (contCorpId == null) crud.clear(); else void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contCorpId, nonce]);
+    if (contCorpId == null) crudClear(); else void crudRetrieve();
+  }, [contCorpId, nonce, crudClear, crudRetrieve]);
 
   // [E1] insertButton[등록].Select (L84) → insertRow() L235-262: 계약사가 없으면 "계약사를 먼저 선택해주세요", 아니면 Sys15_Lookup_Corp.open(true, cb) → 고른 운용사로 새 행 (GridInsertRow — 변경으로 치지 않는다)
   const insertRow = () => {

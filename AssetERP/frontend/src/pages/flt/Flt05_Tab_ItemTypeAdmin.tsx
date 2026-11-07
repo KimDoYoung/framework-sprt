@@ -5,7 +5,7 @@
  *   동쪽(오른쪽, 분할) = 툴바(고객사 150 · 조회 · 등록 · 등록(복사) · 저장 · 삭제) + 고른 고객사 종목유형 셀 편집 그리드(행번호, 체크박스 없음 — 한 행 선택)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Splitter } from 'antd';
 import { fltApi } from '@/api/flt';
 import { errorMessage } from '@/api/client';
@@ -71,6 +71,9 @@ export const Flt05_Tab_ItemTypeAdmin: React.FC = () => {
     firstEditField: 'itemTypeCode',
     deleteConfirm,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   const tgtCrud = useGridCrud<FltItemType>({
     idField: 'itemTypeId',
@@ -83,17 +86,17 @@ export const Flt05_Tab_ItemTypeAdmin: React.FC = () => {
     firstEditField: 'itemTypeCode',
     deleteConfirm,
   });
+  // tgtCrud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: tgtCrudClear, retrieve: tgtCrudRetrieve } = tgtCrud;
 
   // [E0] 화면 열림 (생성자 L75-123) → settings(), retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { crud.retrieve(); }, []);
+  useEffect(() => { crudRef.current.retrieve(); }, []);
 
   // [E2] companyField.TriggerClick [result != null] (L138) → Sys01_Lookup_Company.open(): 고른 고객사로 retrieveCompany(), 선택안함이면 칸을 비우고 오른쪽 그리드를 비운다
   useEffect(() => {
-    if (companyId == null) tgtCrud.clear();
-    else tgtCrud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId]);
+    if (companyId == null) tgtCrudClear();
+    else tgtCrudRetrieve();
+  }, [companyId, tgtCrudClear, tgtCrudRetrieve]);
 
   /** 고객사를 안 골랐으면 알리고 막는다 (AS-IS retrieveCompany·insertRowCompany·initData L339·L381·L296) */
   const needCompany = () => {

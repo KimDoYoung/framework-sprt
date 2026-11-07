@@ -63,6 +63,9 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
     firstEditField: 'seq',
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 함수만 꺼내 쓴다
   const { retrieve: crudRetrieve } = crud;
@@ -80,13 +83,12 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
       setSearchText('');
       deleteList.current = [];
       setSelectedRows([]);
-      crud.retrieve();
+      crudRef.current.retrieve();
     } else {
-      crud.clear();
+      crudRef.current.clear();
       deleteList.current = [];
       setSelectedRows([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // [E3] cancleButton[닫기].Select (L112) → hide()

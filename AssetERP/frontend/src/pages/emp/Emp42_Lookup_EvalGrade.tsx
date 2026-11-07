@@ -64,6 +64,8 @@ export const Emp42_Lookup_EvalGrade: React.FC<Props> = ({ target, onClose }) => 
     newRow: useCallback(() => ({ evalListStdId }), [evalListStdId]),
     firstEditField: 'grade',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] open() L57-86: 코드 로드 + 열 때 retrieve()
   useEffect(() => {
@@ -71,9 +73,8 @@ export const Emp42_Lookup_EvalGrade: React.FC<Props> = ({ target, onClose }) => 
     sysApi.searchCodes('CompareCode').then(setCompareCodes).catch(() => {});
     deleteList.current = [];
     setPendingDeletes(0);
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, evalListStdId]);
+    void crudRetrieve();
+  }, [open, evalListStdId, crudRetrieve]);
 
   // [E1] retrieveButton[조회].Select (L89) → retrieve(): 삭제대기는 그대로 둔다(원본 retrieve는 deleteList를 비우지 않음)
   const retrieve = () => crud.retrieve();

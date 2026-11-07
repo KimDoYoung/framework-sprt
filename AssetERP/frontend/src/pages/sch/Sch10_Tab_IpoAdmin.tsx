@@ -95,10 +95,12 @@ export const Sch10_Tab_IpoAdmin: React.FC = () => {
     newRow: useCallback(() => ({ cancelYn: 'false' }), []),
     firstEditField: 'marketName',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L89-143) → settings(), retrieve()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void crud.retrieve(); }, []);
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E5] deleteButton[삭제].Select (L193) → deleteRow() L358-389: 고른 행이 없으면 "삭제대상을 선택해주세요", 일정공유된 공모주가 있으면 막는다
   const deleteRow = () => {

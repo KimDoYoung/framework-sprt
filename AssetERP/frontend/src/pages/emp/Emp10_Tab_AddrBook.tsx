@@ -4,7 +4,7 @@
  * 레이아웃 생성자 L53-80: center=vlc(테두리, 여백 20) — 툴바 [담당자명 칸][조회][등록][저장][삭제][그룹설정] + 셀 편집 그리드(체크박스 다중, 7열: 담당자명 100 · 이메일 220 ·
  *   핸드폰 번호 120 · 사무실 번호 120 · 회사이름 180 · 직위 100 · 비고 500). [그룹설정]은 그룹설정 창(Emp57_Lookup_Insert)을 연다
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { empAddrBookApi } from '@/api/emp';
 import { EmpAddrBook } from '@/types/emp';
 import { Button } from '@/components/button';
@@ -34,11 +34,13 @@ export const Emp10_Tab_AddrBook: React.FC = () => {
     // [E3] insertButton[등록].Select (L98) → insertRow() L178-184: GridInsertRow, 등록자 = 나(서버), 공용 false
     newRow: useCallback(() => ({ publicYn: 'false' }), []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L53-80) → settings(), retrieve()
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, []);
 
   // buildGrid() L125-154

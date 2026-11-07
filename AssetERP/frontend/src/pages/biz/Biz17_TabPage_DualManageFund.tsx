@@ -52,12 +52,13 @@ export const Biz17_TabPage_DualManageFund: React.FC<Props> = ({ corp, nonce, onC
     validate: (_changed, all) => (all.some(r => !r.fundCd) ? '펀드는 필수선택 항목입니다' : undefined),
     onChanged: onCorpChanged,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear, retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L58-69) → 초기화 — 위 그리드 행을 누르거나 탭을 열면 retrieve()
   useEffect(() => {
-    if (contCorpId == null) crud.clear(); else void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contCorpId, nonce]);
+    if (contCorpId == null) crudClear(); else void crudRetrieve();
+  }, [contCorpId, nonce, crudClear, crudRetrieve]);
 
   // [E1] searchBarBuilder[등록].Insert (L63) → insertRow() L198-207: GridInsertRow (맨 아래 빈 행)
   const insertRow = () => {

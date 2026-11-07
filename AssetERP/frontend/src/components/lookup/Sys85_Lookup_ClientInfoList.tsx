@@ -4,7 +4,7 @@
  * 레이아웃 L55-86: 모달 900×500 "고객사 정보", 툴바(검색 + 조회·저장·등록·삭제 + 안내문) + 셀 편집 그리드(체크박스 다중), 하단 확인·닫기
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Space, Typography } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
@@ -51,13 +51,15 @@ export const Sys85_Lookup_ClientInfoList: React.FC<Props> = ({ open, onResult, o
     // delete() L172-176: 확인 창 없이 GridDeleteData
     deleteConfirm: false,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L55-86) → settings(), show(), retrieve()
   useEffect(() => {
     if (!open) return;
     setSearchText('');
-    crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    crudRef.current.retrieve();
   }, [open]);
 
   // [E5] confirmButton[확인].Select [선택>0] (L115) → callback.execute(선택 목록), hide()

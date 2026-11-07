@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L1-337: 툴바(구분 콤보·조회·저장·등록·삭제·요청이력) + 셀 편집 그리드(행번호, 체크박스 없음)
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 1개(구분 콤보)라 초기화(UX-02) 없음
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Button as AntButton } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { CustomCellRendererProps } from 'ag-grid-react';
@@ -90,6 +90,9 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
     // deleteRow() L294-315 → [E8] msgBox.DialogHide [YES] (L297) → sys.Sys50_SpecificMenu.delete (useGridCrud 안)
     deleteConfirm: '해당 정보를 삭제하시겠습니까?',
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E5] historyButton[요청이력].Select (L93) → openHistory() L240-248: 회사가 없으면 막는다
   const openHistory = () => {
@@ -152,8 +155,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
   useEffect(() => { sysApi.searchCodes('SpecificWorkCode').then(setWorks).catch(() => setWorks([])); }, []);
 
   // [E0] 화면 열림 / retrieve(param) L318-321 → retrieve(companyId) L235-238 ← Sys01_Tab_Company.retrieveTabpage (회사 선택·탭 전환)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId != null) crud.retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) crudRef.current.retrieve(); else crudRef.current.clear(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>

@@ -59,12 +59,13 @@ export const Sys17_Lookup_Account: React.FC<Props> = ({ open, corpId, onResult, 
     newRow: useCallback(() => ({ corpId: corpId ?? undefined, mainAccountYn: 'false' }), [corpId]),
     firstEditField: 'bankName',
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] open() L57-78 → settings(), show(), retrieve()
   useEffect(() => {
-    if (open) void crud.retrieve();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, corpId]);
+    if (open) void crudRetrieve();
+  }, [open, corpId, crudRetrieve]);
 
   // [E2] updateButton[저장].Select (L94) → update() L163-202: 대표계좌가 둘 이상이면 "대표계좌는 1개만 지정가능합니다"
   const update = async () => {

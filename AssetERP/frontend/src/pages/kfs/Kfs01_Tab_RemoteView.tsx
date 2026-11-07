@@ -48,9 +48,12 @@ export const Kfs01_Tab_RemoteView: React.FC = () => {
     deleteConfirm: '선택한 정보를 삭제하시겠습니까?',
     newRow: useCallback(() => ({}), []),   // 원본에 [등록] 버튼이 없다(addRow를 쓰지 않음)
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L76-124) → settings(), retrieve()
-  useEffect(() => { void crud.retrieve(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E6] excelUploadButton[엑셀업로드].Select (L186) → excelUpload() L279-295: 파일을 고르면 ExcelUpload?uploadType=remoteViewUpload
   // [E8] fileUploadField.Change (L287) → uploadExcelForm.submit() · [E7] uploadExcelForm.SubmitComplete (L195) → retrieve()

@@ -7,7 +7,7 @@
  *   RDViewer.openEmp31(구분 콤보 선임/해임·[조회]·[상신하기])을 연다 — 창은 V41에서 Emp31_Lookup_RdDirector로 만들었고 [상신하기]는 전자결재 편집창(A44·A62)을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03)
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Checkbox, message } from 'antd';
 import { empDirectorApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -60,6 +60,9 @@ export const Emp31_Tab_Director: React.FC = () => {
     newRow: useCallback(() => ({}), []),       // 행 추가 버튼이 없다
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E4] dcrLinkButton[문서분류지정].Select (L135) → Dcr30_Lookup_Link.open("LinkCode0005", callback{}) (B15)
   const [linkOpen, setLinkOpen] = useState(false);
@@ -87,7 +90,7 @@ export const Emp31_Tab_Director: React.FC = () => {
   };
 
   // [E0] 화면 열림 (생성자 L71-107) → settings(), retrieve()
-  useEffect(() => { void crud.retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20 }}>

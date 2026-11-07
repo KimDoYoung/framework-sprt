@@ -59,6 +59,9 @@ export const Pay50_Lookup_ExpenseUnJournal: React.FC<Props> = ({ open, onCreated
     newRow: () => ({} as PayExpenseNew),
     reloadAfterSave: true,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L73-81, open L83-114) → 열자마자 조회(구분 콤보 생성 콜백 [E1] → retrieve()). 열 때마다 새 창이므로 조건을 처음 값으로
   useEffect(() => {
@@ -67,8 +70,8 @@ export const Pay50_Lookup_ExpenseUnJournal: React.FC<Props> = ({ open, onCreated
     setSearchText('');
     setOneJournalYn(false);
     condRef.current = { expenseCode: '%', searchText: '' };
-    void crud.retrieve();
-  }, [open]);  // eslint-disable-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
+  }, [open]);
 
   const checkedRows = (): PayExpenseNew[] => crud.gridRef.current?.api.getSelectedRows() ?? [];
 

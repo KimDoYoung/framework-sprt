@@ -8,7 +8,7 @@
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = count(UX-03)
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, Modal, message } from 'antd';
 import dayjs from 'dayjs';
 import { errorMessage } from '@/api/client';
@@ -65,8 +65,11 @@ export const Tdm42_Tab_ManlManager: React.FC = () => {
     newRow: () => ({}),
     reloadAfterSave: true,                                            // update() L586-594: GridUpdate 뒤 retrieve()
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
-  useEffect(() => { void crud.retrieve(); }, []);                     // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void crudRef.current.retrieve(); }, []);
 
   // [E2] searchText.KeyPress [Enter] (L164)·[E3] retrieveButton[조회].Select (L175) → retrieve()
   const retrieve = () => crud.retrieve();

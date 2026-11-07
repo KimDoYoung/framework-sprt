@@ -57,13 +57,14 @@ export const Dcr07_Lookup_ClassDetail: React.FC<Props> = ({ model, onChanged, on
     },
     onChanged,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L60-113) → show() / open() L54-58 → retrieve()
   useEffect(() => {
     if (classTreeId == null) return;
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classTreeId]);
+    void crudRetrieve();
+  }, [classTreeId, crudRetrieve]);
 
   return (
     <LookupModal

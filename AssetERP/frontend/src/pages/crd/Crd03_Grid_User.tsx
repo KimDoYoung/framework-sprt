@@ -5,7 +5,7 @@
  * 카드를 고르지 않았거나 아직 저장하지 않은 새 카드(임시 ID)면 쓸 수 없다(AS-IS는 카드 ID 없는 행이 저장될 수 있어 막았다 — 작업방법)
  * UX보강(10): 저장(n)(UX-03), 변경 표시(UX-07), 날짜 편집 열 폭 120(UX-08)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button as AntButton, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { crdApi } from '@/api/crd';
@@ -73,11 +73,13 @@ export const Crd03_Grid_User: React.FC<Props> = ({ cardId }) => {
     firstEditField: 'frDt',
     validate,
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L56-91) — 카드가 바뀔 때마다 그 카드의 사용자를 읽는다(Crd01_Tab_Card.userGrid.retrieve(cardId))
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, [cardId]);
 
   // [E2] insertButton[등록].Select (L65) → insertRow() L245-266: 종료일자가 없는 행이 있으면 "종료일자를 입력 후 등록이 가능합니다."

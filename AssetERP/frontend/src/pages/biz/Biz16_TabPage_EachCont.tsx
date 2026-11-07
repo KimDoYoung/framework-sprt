@@ -72,12 +72,13 @@ export const Biz16_TabPage_EachCont: React.FC<Props> = ({ corp, nonce, onCorpCha
     },
     onChanged: onCorpChanged,
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { clear: crudClear, retrieve: crudRetrieve } = crud;
 
   // [E0] 화면 열림 (생성자 L67-95) → 초기화 — 위 그리드 행을 누르거나 탭을 열면 retrieve()
   useEffect(() => {
-    if (contCorpId == null) crud.clear(); else void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contCorpId, nonce]);
+    if (contCorpId == null) crudClear(); else void crudRetrieve();
+  }, [contCorpId, nonce, crudClear, crudRetrieve]);
 
   const selectedRow = () => crud.gridRef.current?.api?.getSelectedRows()[0];
 

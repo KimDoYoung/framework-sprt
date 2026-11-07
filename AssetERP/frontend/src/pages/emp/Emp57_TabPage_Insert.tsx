@@ -4,7 +4,7 @@
  * 레이아웃 생성자 L46-61: 툴바 [등록][저장][삭제] + 셀 편집 그리드(체크박스 다중, 5열: 구분 50 · 담당자/사원명 250 · 이메일 220 · 핸드폰 번호 120 · 비고 500 편집).
  *   그룹을 고르기 전(parentId 없음)에는 mask()로 가려진다 (L164-170)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';
 import { empAddrBookApi } from '@/api/emp';
 import { EmpAddrBookMember } from '@/types/emp';
@@ -40,11 +40,13 @@ export const Emp57_TabPage_Insert: React.FC<Props> = ({ parentId }) => {
     // 행 추가는 [등록]이 주소록 선택창을 거쳐 addRows로 넣는다 — 빈 행은 만들지 않는다
     newRow: useCallback(() => ({}), []),
   });
+  // 오래 사는 콜백이 최신 crud 를 부르게 한다 (crud 는 rows 가 바뀔 때마다 새 객체)
+  const crudRef = useRef(crud);
+  crudRef.current = crud;
 
   // [E0] 화면 열림 (생성자 L46-61) → settings(): 그룹을 고르기 전에는 mask(). 그룹이 바뀔 때마다 retrieve(parentId)
   useEffect(() => {
-    void crud.retrieve();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void crudRef.current.retrieve();
   }, [parentId]);
 
   // [E1] insertButton[등록].Select (L66) → insertRow() L99-134

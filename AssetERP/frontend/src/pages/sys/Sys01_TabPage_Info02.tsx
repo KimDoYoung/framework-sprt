@@ -44,12 +44,13 @@ export const Sys01_TabPage_Info02: React.FC<CompanyTabProps> = ({ companyId }) =
     remove: async () => undefined, // 이 탭에는 삭제가 없다
     newRow: () => ({}), // 이 탭에는 행추가가 없다
   });
+  // crud 는 rows 가 바뀔 때마다 새 객체라 의존성에는 안정된 것만 꺼내 쓴다
+  const { retrieve: crudRetrieve, clear: crudClear } = crud;
 
   const columnDefs = useMemo(() => buildGrid(), []);
 
   // [E0] 화면 열림 (생성자 L38-55) / retrieve(param) L122-125 ← Sys01_Tab_Company.retrieveTabpage (회사 선택·탭 전환)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId != null) crud.retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) crudRetrieve(); else crudClear(); }, [companyId, crudRetrieve, crudClear]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
