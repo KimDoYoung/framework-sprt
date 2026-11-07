@@ -4,6 +4,7 @@
  *   단일 체크 그리드(내규 510 · 주기 80 · 마감일 100 · 설정 80), 푸터 [저장][닫기]. 서버 apr.Apr22_RelateIcr.selectByApprId·check·deleteList, 내규 조회창 Icr01_Lookup_SelectMulti("deadline"),
  *   설정 창 Apr22_Lookup_RelateIcr. 변경이 있으면 상신자에게 "상신문서 연관내규 변동알림"이 간다(서버).
  * ※ 호출처 Apr01_Edit_ApprDoc.icrEdit() L1367은 AS-IS에서 단추가 없어(makeIcrEditButton 없음) 아무도 부르지 않는다 — 창만 만들고 연결하지 않았다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { Apr20_Lookup_RelateIcsList } from './Apr20_Lookup_RelateIcsList';

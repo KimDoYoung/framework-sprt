@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sch/Sch01_Lookup_ManagerModi.java (241줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L71-98: 모달 900×650 "담당자 변경", 위 툴바 50(담당자 100 조회창 트리거 · 분류 150 · 검색 150 "스케줄명/보고처" · [조회][변경]),
  *   그리드(체크 다중: 분류 150 · 스케줄명 400 · 보고처 200), 아래 가운데 [닫기]. 담당자 칸은 관리자 역할이 있는 사용자만 바꿀 수 있다(L106-115)
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, Select, message } from 'antd';

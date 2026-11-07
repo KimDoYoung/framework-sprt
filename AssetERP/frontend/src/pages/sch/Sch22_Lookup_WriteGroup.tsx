@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sch/Sch22_Lookup_WriteGroup.java (295줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L81-110): 모달 1200×400, 왼쪽 = 툴바 50([조회][등록][저장][삭제]) + 작성그룹 그리드(체크박스 단일: 작성그룹명 300 편집 · 확인자 100 사원 조회창 트리거),
  *   오른쪽 700 = 공유 페이지(Sch02_Page_Share), 아래 가운데 [확인][작성그룹없음][닫기]. edit() L67: [확인][작성그룹없음]을 감추고 제목 "그룹 관리", open() L73: 제목 "그룹 일괄지정"
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal, Space } from 'antd';

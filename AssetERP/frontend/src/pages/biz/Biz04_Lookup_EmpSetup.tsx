@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz04_Lookup_EmpSetup.java — 창 780x500(크기 고정), 제목 "이익제공(수령) 내용별 직원 자동등록 설정"
  * 레이아웃 L53-83: 위 = 툴바 [조회], 아래 = 왼쪽 290 목적 그리드(행번호, 이익제공(수령) 목적 200) | 오른쪽 내용 그리드(행번호, 이익제공(수령) 내용 250 · 자동등록 80 체크박스)
  * 창 아래 버튼(가운데): [저장] [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Space } from 'antd';

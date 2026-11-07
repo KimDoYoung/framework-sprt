@@ -5,6 +5,7 @@
  * buildGrid() L104-142: 헤더 묶음 운용보수(456EA6)·자문보수(B36D3D)·일임보수(258A65)·병행보수(404040) + getSumGrid("합계", 1, 3, 23, "4,9,14,19,20") — 합계 행은 구간일수와
  *   각 보수의 계산구간 열만 더한다(청구기간 최저보수·병행적용여부·청구기간 병행보수 제외)
  * [엑셀다운로드] L84-95: ExcelDownload?actionCode=biz22List — 서버가 HSSF 시트를 만들어 내려 준다(EE33). 엑셀 머리는 운용·자문·병행 묶음뿐이다(AS-IS 그대로, 일임보수 열 없음)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

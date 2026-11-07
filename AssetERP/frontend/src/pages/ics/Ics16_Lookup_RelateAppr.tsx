@@ -5,6 +5,7 @@
  * 1단계: 조회·상신 전 검사(건수 일치, 결재상태 안내). V19: [결재요청]의 문서분류 선택 → 결재 편집창(A27) → 상신 연결 기록(updateApprId, 이전 문서 폐기)과 [문서보기](결재 편집창)를 연결했다.
  * 남은 것(다음 단계): [미리보기](RD)와 createRd()의 RD 첨부 PDF 만들기 — TOBE에는 RD 리포트·PDF 엔진이 없다. AS-IS도 파일 저장 경로가 없는 환경(개발계)에서는
  * PDF 없이 바로 결재 편집창을 여는데(createRd L462-463) TOBE는 그 경로만 간다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

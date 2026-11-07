@@ -4,6 +4,7 @@
  * 생성자 L84-123: 300×430 모달(크기 고정), 머리말 = 오늘 상태명(미출근·정상·지각 …), 큰 시계 HH:mm:ss(1초 갱신, getClock L262-273),
  *   출근/퇴근 안내 줄(🕒 00:00 출근 전 → HH:mm 출근완료 → HH:mm 퇴근완료), [출근][퇴근], [외근 후 퇴근], [연장근무신청], [오후근무신청]
  * 오후근무신청(Att05_Lookup_PmWork)은 EE72, 연장근무신청(Att03_Lookup_OvertimeReq)은 EE73에서 연결했다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, message } from 'antd';

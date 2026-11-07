@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast30_Lookup_FeeDetail.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(corpId, fundCode, stdDate) L47-55: 모달 "증감액 상세" 500×350, 위 툴바(검색 200 "적요" · [조회]), 아래 그리드(4열, 체크박스 없음), 가운데 [닫기]. 열자마자 retrieve()
  * 열 폭 합계 50+200+50+120 = 420 (+행번호 약 60 + 여백 130 = 610) → 620 (AS-IS 500보다 커야 스크롤이 없다, 03 원칙 21)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';

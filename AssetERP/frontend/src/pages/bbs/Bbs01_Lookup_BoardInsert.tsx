@@ -5,6 +5,7 @@
  * 호출처(Bbs01_Tab_Board.insertRow L170)가 새 글 번호를 먼저 받아(DBUtil.setSeq) 모델을 만들어 넘긴다 — 파일을 글 저장 전에 그 번호로 올리려는 것. 이 창이 번호를 받는다
  * [E2] [저장] → update() L131: bbs.Bbs01_Board.update(UpdateDataModel — 새 글이면 INSERT) 뒤 닫기
  * 호출처 자유게시판(Bbs01_Tab_Board)은 메뉴가 없고 어디서도 열리지 않는다(AS-IS 사장 화면) — TOBE에서 여는 곳이 없다(작업기록)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

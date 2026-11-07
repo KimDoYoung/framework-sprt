@@ -2,6 +2,7 @@
  * 일일업무 확인자 비고 창 (Z09) — Rpt01_Tab_DailyConfirm의 수정 칸에서 연다
  * AS-IS: myApp/client/vi/rpt/Rpt01_Edit_DailyConfirm.java (127줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit() L44-51: 제목 "등록", 업무내용은 읽기 전용(L58) / 생성자 L53-83: 700×470, 라벨 폭 75, 업무내용(높이 230) · 비고(높이 150), 아래 가운데 저장·닫기
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space, Typography } from 'antd';

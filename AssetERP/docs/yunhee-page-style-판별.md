@@ -207,3 +207,18 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 - `yunhee page-style --compare`가 TOBE 머리 주석 선언과 판별을 비교해 불일치를 보고한다.
 - §2-1의 쌍(IN↔DSBRD, IN↔TP, GO↔SG, STP↔TP)이 구분된다.
 - 새 SID 5개(SGHF·TO·GO·DSBRD·IN)는 규칙이 확정이 아니다. 같은 SID로 묶은 화면을 실제로 맞추면서 규칙을 다시 조정한다.
+
+## 7. 모달 SID 판별 (2026-11-08 제안)
+
+`*_Edit_*`·`*_Lookup_*`·`*_Popup_*`(모달)도 자기 SID(MF·MG·MFG·MH)를 가진다 — `page-style.md` "모달 스타일". 지금 판별기는 모달을 Tab 기준으로 읽어 폼 모달을 `DSBRD`·`GO`로 잘못 판별한다(2026-11-08 585개 중 DSBRD 213, GO 92, 미분류 36).
+
+| SID | 판별 기준(제안) |
+|:---|:---|
+| MH | `HtmlView`·`HtmlEditor` 사용 |
+| MFG | 그리드(`SingleGrid`·`MultiGrid`·`CellEditGrid`) + 입력 폼(`Input`·`Select`·`DatePicker`·`Field`·`TextArea`) 모두 있고 조회 줄(`SearchBar`·`SearchPanel`) 없음 |
+| MG | 그리드가 있고 위 MFG·MH가 아님(조회 줄·트리·파일 목록 곁들임 포함) |
+| MF | 그리드 없음 |
+
+- 파일 이름 접미(Edit/Lookup/Popup)로 판별하지 않는다(폼 모달이 세 이름에 걸쳐 있다).
+- 기대: 견본 4개(`Att02_Edit_CheckOutTime`=MF, `Tdm01_Lookup_SelectSingle`=MG, `Act01_Edit_AccountCode`=MFG, `Sys55_Lookup_Content`=MH)가 기대 SID로 나온다.
+- 조회 줄 + 그리드 + 폼이 함께 있는 모달(Lookup 약 42개)은 MG로 볼지 MFG로 볼지 견본 확정 때 정한다.

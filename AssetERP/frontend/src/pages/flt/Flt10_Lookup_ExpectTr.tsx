@@ -5,6 +5,7 @@
  *   그리드(체크박스 단일 선택), [선택][닫기]. 제목은 trType 10I면 "매수 사전신고내역", 아니면 "매도 사전신고내역"
  * 열 폭 합계가 1120을 넘어(03 원칙 21) 모달을 AS-IS 폭(1200)에 두고 가로 스크롤을 허용한다
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창 UX-05·06
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

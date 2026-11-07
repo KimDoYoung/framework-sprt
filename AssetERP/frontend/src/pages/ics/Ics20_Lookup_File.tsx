@@ -2,6 +2,7 @@
  * 개정내역 첨부파일 창 (E01) — Ics20_Lookup_RevisionHistory 그리드의 첨부파일 [보기] 아이콘에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics20_Lookup_File.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L38-65: 모달 680×300 "첨부파일", 그리드(첨부파일명 440·다운로드 80·미리보기 80, 체크박스 단일), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

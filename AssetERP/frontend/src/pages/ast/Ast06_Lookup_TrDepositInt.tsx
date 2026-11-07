@@ -4,6 +4,7 @@
  * openNew() L87-104 / open() L106-140: 모달 550×450 "거래등록"(NEW)·"거래변경"(MODI), getEditor() L229-273: 라벨 폭 100,
  *   한 줄에 칸 하나(거래일자 · 계좌 · 이자금액 · 법인세 · 지방세 · 실수령액 · 적요) + 분개 안내(MODI만), 아래 가운데 [저장][분개재생성](MODI만)[닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬. 원본은 칸마다 테두리가 없어 박스를 두지 않는다(12 원칙 2)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

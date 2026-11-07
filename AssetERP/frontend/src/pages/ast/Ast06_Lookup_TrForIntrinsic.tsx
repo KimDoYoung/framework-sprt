@@ -6,6 +6,7 @@
  *   아래 가운데 [저장][분개재생성](MODI만)[닫기]. 국내 판(Ast06_Lookup_TrIntrinsic, X03)과 달리 [거래 불러오기]·세금·보유자산·감가상각(원장 반영 거래 잠금)이 없다
  * MODI는 거래일자·거래유형·거래처·종목을 막는다(open() L150-163)
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬. 줄 사이 간격은 규격(gap 10)을 따른다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Select, Space } from 'antd';

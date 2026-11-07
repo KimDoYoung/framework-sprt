@@ -5,6 +5,7 @@
  * getEditor() L253-308: 라벨 폭 120, 이관구분 · 이관일자 · 운용사(코드 210 + 이름 300) · 펀드(코드 210 + 이름 300) · 통화 · 외화미수보수 · 원화미수보수 · 적요(높이 50) · 파란 안내 · 빨간 경고, 아래 가운데 저장·닫기
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
  * [E1] fundTransName.Collapse (L156) — MODI에서는 이관구분 콤보가 비활성이라 일어나지 않아 만들지 않는다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

@@ -4,6 +4,7 @@
  * 생성자 L92-113: 모달 850×400 "계약사", 검색 줄 = 검색 [200] [조회] / 그리드(체크 단일 8열) / [확인][닫기]
  * 열 때 retrieve() L139-155: biz.Biz10_ContCorp.selectByText(companyId, 검색어, check false, stdYear "none", statusCode "%", statusCheck false) — EE20 계약사 조회 API 그대로
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

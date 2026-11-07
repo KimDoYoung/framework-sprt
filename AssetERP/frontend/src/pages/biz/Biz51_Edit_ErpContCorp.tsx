@@ -5,6 +5,7 @@
  *   계약사명(조회창) / 계약상태(ContStatusCode03 그룹)·서비스 종류(ErpServiceType) / 최초계약일·서브 도메인(회사 조회창) / (재)계약일·시스템 사용시작일 / 계약종료일·시스템 사용종료일
  *   / 사용료(읽기 전용, 클릭하면 사용료 창) / 담당자·연락처 / 이메일 / 대표이사 / 주소 / 비고(높이 100), 아래 가운데 [저장][닫기]
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

@@ -4,6 +4,7 @@
  * 생성자 L74-97: 600×280 모달 "보수변동/착오정정 등록", 라벨 폭 90 — 사원(조회창 칸 "선택") · 신고일 / 신청대상(전체·국민연금·건강보험·고용보험 체크) /
  *   신고구분(InsureApplyCode002 콤보 "선택") · 변경적용월(YYYY.MM) / 보수월액 + 아래 가운데 [생성][닫기]
  * [E7] insertButton[생성].Select → insert() L249-301: 필수 검사 6개 → pay.Pay31_InsureApply.insert1(npsInitPayYn false, 변경적용월 '-'→'.') → 끝나면 callback.execute() + hide()
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Checkbox, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

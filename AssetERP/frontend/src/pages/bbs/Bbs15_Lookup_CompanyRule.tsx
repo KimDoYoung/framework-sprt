@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs15_Lookup_CompanyRule.java (158줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L44-49 · open() L56-78: 700×500 모달 "내부규정", 툴바(검색 · 입력 200 · [조회]) + 체크박스 다중 그리드(내규코드 100 · 내규 500) + [확인][닫기]
  * tdmOpen(taskId, callback) L51-54: 그 직무에 이미 연결된 내규(연결구분 '2')는 목록에서 뺀다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

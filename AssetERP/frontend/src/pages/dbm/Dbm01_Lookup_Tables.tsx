@@ -4,6 +4,7 @@
  * open(callback) L44-108: 모달 800×500 "Table Finder...", 검색 줄(Name 40/250 · 조회) + 체크 그리드(Table Name 160 · Comments 250 · Table Type 90 · Tablespace Name 110)
  *   + 확인 · 취소. 열면 바로 조회.
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

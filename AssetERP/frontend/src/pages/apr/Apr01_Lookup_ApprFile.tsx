@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Lookup_ApprFile.java (276줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L60-137: 700×300 모달 "파일목록", 위 [저장][파일업로드] + 안내 글(파랑), 단일 체크 그리드(첨부파일 500 · 인감날인본 70 · 삭제 50), 푸터 [닫기]
  * 올린 파일은 `fileYn=true`(확정문서 여부)로 저장된다 — 이 창은 그 파일만 보여 준다(sys.Sys10_File.selectByFileYn).
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

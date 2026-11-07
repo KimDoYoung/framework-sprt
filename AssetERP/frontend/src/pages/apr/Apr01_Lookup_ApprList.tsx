@@ -6,6 +6,7 @@
  * [E1] 라디오 변경 · [E2] 조회 · [E3] Enter → retrieve() L160-182, [E4] 확인 → updateChk() L184-203("기존 결재선 정보는 삭제됩니다. 진행하시겠습니까?") [E6] → update() L205-225,
  * [E5] 닫기 → callback(null), hide()
  * 12 원칙: 머리 아래 선·푸터 위 선(LookupModal). 문서분류 열은 "문서분류별" 보기에서만 보인다(L164-170 setHidden). 7일 보기는 제목 검색어를 원본도 쓰지 않는다(이상한점 #23).
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message, Modal, Radio, Space } from 'antd';

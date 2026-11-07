@@ -5,6 +5,7 @@
  *   평가등급 100 · 등급가중치 100 · 등급기준점수 120 · 이상/미만 120(콤보 CompareCode) · 평정사유 필수 140(체크)),
  *   아래 가운데 (확정 전만) [저장] + [닫기]
  * 삭제는 서버를 부르지 않고 삭제대기에 모았다가 [저장]에서 모든 행과 함께 보낸다 (L112-120·L206-238)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

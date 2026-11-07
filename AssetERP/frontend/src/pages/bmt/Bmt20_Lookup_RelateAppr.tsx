@@ -4,6 +4,7 @@
  * 생성자 L86-105: 모달 550×500 "연관문서", 위 툴바 45([조회][등록][삭제]) + 그리드(상신일 100 · 상신명 300 · 상세보기 80), 아래 가운데 [닫기]
  * [등록]은 Apr05_Lookup_LoadDoc(불러오기)으로 고른 문서를 연결하고, 상세보기는 Apr01_Edit_ApprDoc(문서 읽기)을 연다
  * 03 원칙 21: 열 폭 합계 480 + 60 + 130 = 670
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

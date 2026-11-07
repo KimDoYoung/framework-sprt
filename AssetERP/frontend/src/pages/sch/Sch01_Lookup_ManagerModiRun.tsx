@@ -2,6 +2,7 @@
  * 담당자 변경 처리 창 (O01) — Sch01_Lookup_ManagerModi의 [변경]에서 연다
  * AS-IS: myApp/client/vi/sch/Sch01_Lookup_ManagerModiRun.java (223줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃: 변경 전 담당자(읽기 전용 100) · 변경 후 담당자(사원 조회창 트리거 100, 빈 문구 "선택하세요") · 처리구분 라디오 이동(기본)/복사, 아래 가운데 [변경하기][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, Radio, message, Space } from 'antd';

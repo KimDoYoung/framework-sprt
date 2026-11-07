@@ -2,6 +2,7 @@
  * 운용사별 문서분류 반영 창 (E16) — Dcr01_Tab_ClassTree의 [문서분류복사]에서 연다 (관리자 회사만)
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_DcrCopyAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * Dcr01_Lookup_DcrCopyAdmin() L61-67·open() L69-114: 모달 900×700 "운용사별 문서분류 반영", 왼쪽 55% (문서분류 + 검색 250 + [찾기] / 트리), 오른쪽 45% ([문서분류복사] / 체크 그리드 운용사 200 · " " 100), 아래 가운데 [닫기]
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Space, Tree } from 'antd';

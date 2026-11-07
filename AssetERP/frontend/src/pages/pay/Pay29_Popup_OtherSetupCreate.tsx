@@ -2,6 +2,7 @@
  * 기타설정 적용일 생성 창 (E22-3) — Pay29_TabPage_OtherSetupDate [등록]에서 연다.
  * AS-IS: myApp/client/vi/pay/Pay29_Popup_OtherSetupCreate.java (109줄, 새 원본 IDMS-IC)
  * show() L42-71: 모달 250×150 "생성", 적용일 날짜칸(라벨 폭 60), 아래 가운데 [생성][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

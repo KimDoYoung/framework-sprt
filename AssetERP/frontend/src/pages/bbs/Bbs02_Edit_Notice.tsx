@@ -6,6 +6,7 @@
  *   아래 가운데 [저장][삭제][닫기][첨부파일 등록(n)][예약알람설정(n)][미리보기]
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
  * 연결: Emp01_Lookup_PersonModel(대상자 [등록]) · Emp57_Lookup_List(대상자 [그룹]) · Bbs02_Lookup_LoadBbs · Bbs02_Lookup_File.open(관리자용 = Bbs15_Lookup_File과 같은 창) · Sch06_Lookup_AlarmSetup · Bbs02_Popup_NoticeAdmin(미리보기)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, Modal, Select, Space, Typography, message } from 'antd';

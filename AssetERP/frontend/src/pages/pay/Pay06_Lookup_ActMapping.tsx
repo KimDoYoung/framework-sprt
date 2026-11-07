@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay06_Lookup_ActMapping.java (177줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L67-108: 950×880 모달 "계약서 양식 & 태그", 왼쪽 안내 글(CE4242) + ( 참 고 ) + CKEditor, 오른쪽 150 태그 목록(TempData.getActMappingList), 아래 가운데 [저장][닫기].
  * 편집기는 AS-IS CKEditor 대신 HtmlEditor(Tiptap, 05 §5). [저장]은 서버에 쓰지 않고 내용을 부르는 쪽에 돌려준다 — 최종 저장은 Pay06_Lookup_ActList의 [저장]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useState } from 'react';
 import { message, Space } from 'antd';

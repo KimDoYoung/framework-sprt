@@ -2,6 +2,7 @@
  * 근태정책 설정 창 (T06) — Att02_Tab_CommuteAdmin의 [근태정책설정]이 연다
  * AS-IS: myApp/client/vi/att/Att01_Lookup_WorkPolicy.java (314줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L65-90: 툴바 50 = [조회][저장][등록][삭제], 셀 편집 그리드 11열(체크 없음 — 한 행 선택 삭제). open() L61-63: retrieve()
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Modal, message, Space } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act01_Lookup_CopyAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L67-73·open() L75-124: 모달 1100×700 "고객사별 계정과목 반영", 왼쪽(65%, 분할) = 툴바(기준고객사 150 · [조회] · 계정과목 · [찾기]) + 계정과목 트리(계정코드 100 · 계정과목 500 · 전표생성 80),
  * 오른쪽(35%) = 툴바 [계정과목복사] + 고객사 체크박스 그리드(고객사 200 · " " 100), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Space, Splitter } from 'antd';

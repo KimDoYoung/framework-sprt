@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Lookup_ExpenseOfficeAssets.java (181줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L52-58: 모달 750×500 "지출결의서 선택", 툴바(발생일자 100 ~ 100 · 검색 200 "지출내역/지출처" · 조회) + 체크박스 단일 그리드 4열, [선택][닫기]. open L60-89: 열자마자 retrieve()
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06). 폭: 열 합계 670 + 60 + 130 = 860 (03 원칙 21, AS-IS 750보다 크게)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

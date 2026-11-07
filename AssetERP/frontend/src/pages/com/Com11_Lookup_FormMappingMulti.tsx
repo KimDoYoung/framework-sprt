@@ -4,6 +4,7 @@
  * open() L67-89: linkCode별 태그 목록(오른쪽) + 양식 편집기(왼쪽). 목록이 없으면 안내 후 닫는다. 950×880 모달 "양식 & 태그"
  * Com10_Lookup_CommonMapping과 같은 모양이지만 양식 번호·linkId가 아니라 (종류코드, 상세코드, 연결코드)로 찾은 양식을 저장한다.
  * 편집기는 AS-IS CKEditor 대신 HtmlEditor(Tiptap, 05 §5)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

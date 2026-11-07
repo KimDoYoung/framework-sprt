@@ -5,6 +5,7 @@
  *   세액·지급요청계좌 / 합계·계정과목, 오른쪽: 승인자(관리자만)·증빙자료 / 결의자·처리상태 / 반려사유 / 비고 92), 아래 가운데 [저장]
  * 상신된 건(expenseApprStatusCode 있음)은 모두 읽기 전용이고 [저장]이 꺼진다(disabled L661-693). 행이 없으면 폼 전체가 꺼진다(setEnabled)
  * 공급가액 KeyUp·Change(E10~E13)는 한 곳(setAmt)에서 처리한다 — 면세구분이 과세(2)면 세액을 10%로 다시 계산한다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message } from 'antd';

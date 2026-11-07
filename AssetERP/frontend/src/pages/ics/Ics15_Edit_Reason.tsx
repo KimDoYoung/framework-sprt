@@ -2,6 +2,7 @@
  * 사유 창 (K05) — Ics15_Tab_ChecklistWrite 그리드의 수정 아이콘에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics15_Edit_Reason.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L50-70: 모달 "사유", 사유 입력(700×300), 아래 가운데 [저장]·[닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -4,6 +4,7 @@
  * 열 합계(250+100+450+행번호·선택 60+여백 130 = 990): 검색줄(기준일 + [조회]) + 체크박스 다중 그리드 + [확인][닫기]
  * 조회는 roleId를 넘긴다 — 기준일에 그 직책에 이미 연결된 회의체는 뺀다 (L125-138)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

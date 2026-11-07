@@ -1,6 +1,7 @@
 /**
  * 기본 항목 조회/관리 모달 (R09) — Ast02_Lookup_Detail
  * AS-IS: myApp/client/vi/ast/Ast02_Lookup_Detail.java (232줄)
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message } from 'antd';

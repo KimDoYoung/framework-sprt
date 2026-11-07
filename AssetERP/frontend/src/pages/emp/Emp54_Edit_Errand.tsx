@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp54_Edit_Errand.java (575줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L121-138: 모달 530×630 "반복등록", getEditor() L213-309: 라벨 폭 90, 외출일자 · 구분 · 외출시간 ~ · 사유 · 장소 · 주최자 · 반복주기(숫자 + 콤보) ·
  *   반복종료일 + 휴일제외 · 주기(주) 월~금 라디오 · 주기(월) 라디오 3개, 아래 가운데 [저장][닫기]. EditModal 규격(11 §4a).
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Checkbox, Input, InputNumber, message, Modal, Radio, Select, Space, Typography } from 'antd';

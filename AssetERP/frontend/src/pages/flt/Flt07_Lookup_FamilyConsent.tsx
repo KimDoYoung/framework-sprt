@@ -4,6 +4,7 @@
  * 생성자 L42-68: 모달 600×300 "가족 금융거래정보 이용동의서", 그리드(체크 단일 선택: 첨부파일 400 · 보기 50 · 받기 50) + [닫기]. open(personId) L70-73: retrieve()
  * 서비스 sys.Sys10_File.selectByFamilyConsentId(personId). 보기 = Sys10_Lookup_FileViewer(파일보기), 받기 = FileDownload
  * UX보강(10): 조회창 UX-05·06
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

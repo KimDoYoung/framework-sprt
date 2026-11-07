@@ -4,6 +4,7 @@
  * 생성자 L116-175: 모달 590×490, 라벨 폭 105, 시작일자 · 장비명(조회창 칸) / 설치일자 · 호스트명 / 내부IP · MAC주소 / 기타사항(높이 200) / 비고(100), 아래 가운데 [저장][닫기]
  * insert(callback) L60-70 = "신규등록"(빈 모델 — 장비는 조회창으로, W19) / insert(infoId, name) L72-89 = "신규등록"(시작일자 오늘) / add(row) L91-102 = "추가등록"(행을 복사, ID 비움, 장비명 못 바꿈) / edit(row) L104-114 = "정보수정"(장비명 못 바꿈)
  * 편집창 규격: 11 §4a. 스크롤을 피하려 폭 680·위에서 20만 띄운다(12 원칙)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';

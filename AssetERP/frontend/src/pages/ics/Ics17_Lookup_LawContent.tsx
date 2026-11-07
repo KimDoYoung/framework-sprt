@@ -2,6 +2,7 @@
  * 법규내용 조회창 (E09) — Ics17_Edit_UserRequestAdmin의 "법규내용 :"을 눌러 연다
  * AS-IS: myApp/client/vi/ics/Ics17_Lookup_LawContent.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L39-80: 모달 1000×500 "법규내용", 본문 = 법규내용 텍스트 영역, 하단 가운데 [저장](userType "user"만)·[닫기]. "admin"이면 읽기 전용
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

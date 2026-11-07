@@ -5,6 +5,7 @@
  *   (거래일자 · 거래유형 · 종목(자산구분)+[종목 생성하기] · 보관계좌+계좌명 / 청약수량·공모단가·청약금액·청약수수료·결제금액 | 상장일자·보유의무확약·매도제한일 / 결제구분 · 적요) + 분개 안내(MODI만),
  *   아래 가운데 [저장][분개재생성](MODI만)[닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

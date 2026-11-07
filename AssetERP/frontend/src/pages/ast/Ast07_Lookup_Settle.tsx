@@ -6,6 +6,7 @@
  * X03(Ast07_Grid_Settle): 거래(ast06) 기준 openNew(trId, …) L102-135(최신 거래를 다시 읽어 미결제액·적요로 채움, 거래 코드는 수령 9002·지급 9003, 펀드보수 유보처리 9913·9923은 9002)
  *   와 결제변경 open(settleModel, trCode, rcvPayCode, "MODI", …) L176-199("미수/미지급 결제변경", 거래코드가 9007이면 정리(결제없음) 체크)를 `target`으로 더했다.
  *   MODI의 [닫기]는 callback(settleModel)이라 부르는 쪽이 분개를 다시 읽는다(onDone), NEW의 [닫기]는 callback(null)이라 아무것도 하지 않는다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, Modal, Space, Typography, message } from 'antd';

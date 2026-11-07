@@ -4,6 +4,7 @@
  * 생성자 L60-98: 모달 1080×400(닫기 X 없음), 위 툴바 50([조회]) + 체크 다중 그리드(신청일자 100 · 신청자 80 · 제공처 300 · 목적 300 · 법인인감증명서 신청매수 100 · 법인등기부등본 신청매수 100), 푸터 [확인][닫기]
  * 조회창 규격(11a): LookupModal, 열 때 바로 조회(open L53-58)
  * 호출처 Apr17_Tab_CorpDoc은 TOBE에 없다 — 창만 만들고 연결하지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

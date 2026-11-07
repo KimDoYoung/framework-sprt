@@ -4,6 +4,7 @@
  * 생성자 L56-69: 420×300, 머리말 "비밀번호 재설정", [로그인 ID][휴대폰 번호][인증 번호 + 전송 + 남은 시간] + 안내 2줄, 푸터 [비밀번호 변경]
  * setting() L71-109: 처음엔 [전송] 켜짐 · 인증번호 칸·[비밀번호 변경] 꺼짐. 빈 칸 옆에는 빨간 느낌표
  * ※ 인증번호는 서버가 들고 있고 비교도 서버가 한다(AS-IS는 번호를 화면에 내려보내 비교). 문자 발송 연동이 없으면 [전송]이 거절된다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, Space, message } from 'antd';

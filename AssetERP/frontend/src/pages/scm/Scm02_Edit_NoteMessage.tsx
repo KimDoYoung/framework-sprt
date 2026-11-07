@@ -4,6 +4,7 @@
  * 생성자 L67-79: 모달 450×250, 제목 = 결재의견 | 반려사유(open L36-65), 본문 = 그 TextArea 하나, 아래 가운데 [저장][닫기]
  * [저장]은 실결재자(apprEmpId = 로그인 사원)에게만 보인다(open L44-50). 저장은 두 칸(결재의견·반려사유)을 모두 보낸다(editDriver.flush)
  * EditModal 규격(11 §4a)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

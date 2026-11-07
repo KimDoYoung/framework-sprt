@@ -4,6 +4,7 @@
  * 생성자 L76-99: 600×280 모달 "자격취득 등록", 라벨 폭 90 — 사원(조회창 칸 "선택") · 신고일 / 신청대상(전체·국민연금·건강보험·고용보험 체크) /
  *   신고구분(InsureApplyCode001 콤보 "선택") · 취득일 / 보수월액 · 국민연금 입사월 납부여부 체크 + 아래 가운데 [생성][닫기]
  * [E7] insertButton[생성].Select → insert() L260-312: 필수 검사 6개 → pay.Pay31_InsureApply.insert1 → 끝나면 callback.execute() + hide() (성공 여부를 보지 않는다)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Checkbox, InputNumber, message, Modal, Space, Typography } from 'antd';

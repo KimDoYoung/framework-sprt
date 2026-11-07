@@ -6,6 +6,7 @@
  *   · 월청구일 80(콤보 DateCode) · 입금기한일 80(콤보 DateCode) · VAT 70(콤보 VatCode)
  * [저장] L126-131: update() 와 updateNote() 를 이어서 부른다(둘 다 기다리지 않음). 메모만 고쳐도 저장되도록 저장(n)에 메모 변경을 1건으로 센다(UX-03)
  * UX보강(10): 저장(n) UX-03, 변경 표시 UX-07, 날짜 컬럼 폭 UX-08(편집 120), 조회창 UX-05
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Space } from 'antd';

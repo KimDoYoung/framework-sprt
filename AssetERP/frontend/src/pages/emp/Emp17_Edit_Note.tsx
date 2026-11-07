@@ -2,6 +2,7 @@
  * 알림 등록 창 (U05) — Emp17_Tab_BenefitManager의 위 그리드 [알림] 아이콘에서 연다
  * AS-IS: myApp/client/vi/emp/Emp17_Edit_Note.java (139줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L46-63: 모달 450×250 "알림 등록", getEditor() L86-95: 라벨 폭 10, 알림 내용 TextArea 한 칸, 아래 가운데 [저장][문자발송][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

@@ -4,6 +4,7 @@
  * openNew() L104-122 / open() L124-181: 모달 680×540 "거래등록"(NEW)·"거래변경"(MODI), getEditor() L348-418: 라벨 폭 145, 박스 3개
  *   (거래일자 · 거래유형 / 소득세예수금 · 선급부가세 · 지방세예수금 · 예수부가세 · 기타원천징수예수금 / 납부(환급)금액 · 결제구분(미수/미지급·예금 + 계좌) · 적요) + 분개 안내(MODI만), 아래 가운데 [저장][분개재생성](MODI만)[닫기] — 결재 상태가 있으면 [닫기]만
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

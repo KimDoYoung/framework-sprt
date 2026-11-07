@@ -7,6 +7,7 @@
  * EE34: `Apr05_Lookup_LoadDoc2("MULTI", true, cb)`(증빙자료 연결 Com01_Lookup_RelateAppr) — `multi`면 체크박스 다중 선택(setChecked(MULTI), 행 클릭으로도 선택)이고 [확인]은 고른 문서 목록을 `onSelectedList`로 준다.
  *   tdm52 호출(`selectNoAuthByText`·[연결된 문서분류만 조회])은 보류 — 그 SQL의 DB 함수 f_get_apprDcrAuth가 asseterpdb에 없다(2026-11-05, 13-누락대장 2번)
  * [E0] 화면 열림 (생성자 L103-108) → init() · [E1] tdmRelateDcrYn.ValueChange (L215) · [E7] nullButton[선택안함].Select (L306) — tdm52 호출과 [선택안함] 호출에서만 쓰여 이 호출에는 없다
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

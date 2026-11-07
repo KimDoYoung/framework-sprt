@@ -4,6 +4,7 @@
  * 왼쪽(650) 발급 폼은 Emp15_Lookup_Cert와 같고, 오른쪽에 신청 내용(content, setHtmlTextViewWhenLoaded L470-494)을 보여 준다
  * 증명서종류는 신청구분으로 정한다: 10 → B01 재직증명서, 11 → B03 경력증명서, 12 → B04 징계내역확인서, 그 밖은 "등록되지 않는 시스템코드입니다. 관리자에게 문의바랍니다."
  * 1단계: [상신] 뒤 updateApprId() → updateApplication(요청상태 변경, bbs.Bbs11_Application.updateAppStatus)은 결재 문서 작성과 함께 다음 단계
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { message } from 'antd';

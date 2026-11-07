@@ -4,6 +4,7 @@
  * 창 380×400(원본) → 열(250+행번호·선택 60+여백 130) 기준 440: 툴바([행 추가][행 삭제] + 새로고침) + CellEditGrid(체크, 편집 열 없음) + [저장][닫기]
  * 조직은 기준일(부르는 쪽의 기준일)의 조직이다 (retrieve() L160-175, getOrg(companyId, stdDate)). [행 추가]는 Org00_Lookup_SelectTdm(오늘, 이 직책에 연결 안 된 조직, 다중)
  * UX보강(10): 조회창(UX-05·06은 Org00 안에서), 저장 버튼 UX-03
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space } from 'antd';

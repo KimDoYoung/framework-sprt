@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay26_Lookup_TaxCalcTable.java (89줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L36-55: 1100×450 모달 "산출세액표", 읽기 전용 그리드(초과 150 · 이하 150 · 기본세액 150 · 초과금액 적용세율(%) 200 · 비고 500) + [닫기]
  * retrieve() L80-84: pay.Pay26_TaxCalcTable.selectByMonthId(monthId) — 급여 지급일 이전 가장 최근 적용일의 표
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

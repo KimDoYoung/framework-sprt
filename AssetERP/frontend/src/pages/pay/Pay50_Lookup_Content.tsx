@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Lookup_Content.java (230줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L54-62: 모달 740×700 "내역상세"(크기 조절·최대화, X 없음), HTML 편집기 하나.
  *   open(content) L64-96 = 보기 전용 [닫기] / open(content, callback) L98-132 = [확인][닫기] / edit(expenseId, content, callback) L134-169 = [저장][닫기]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

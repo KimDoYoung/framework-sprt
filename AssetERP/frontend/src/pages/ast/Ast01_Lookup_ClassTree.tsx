@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast01_Lookup_ClassTree.java (235줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L94-115: 모달 500×700 "비품구분", 위 툴바 50(자산구분 · 검색 250 · [찾기]) + 트리(흰 배경, 한 번 눌러 열고 닫음), 아래 가운데 [확인][닫기]
  * retrieve() L176-188: ast.Ast01_ClassTree.selectByCompanyId(typeCode "%", assetType "1") → 전체 트리
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

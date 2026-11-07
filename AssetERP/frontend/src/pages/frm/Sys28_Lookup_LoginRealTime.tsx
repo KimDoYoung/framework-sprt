@@ -4,6 +4,7 @@
  * open() L33-58: 450×400, 머리말 "실시간 접속현황", 오른쪽 정렬 [새로고침] + 체크 다중 그리드 + [닫기]
  * buildGrid() L75-84: 접속시간 160 · IP정보 200
  * ※ AS-IS 호출처 Frm01_Lookup_CheckList L168·L182의 열기는 `//` 주석 처리라 AS-IS도 열 수 없다(도달 불가) — 화면 연결은 하지 않았다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';

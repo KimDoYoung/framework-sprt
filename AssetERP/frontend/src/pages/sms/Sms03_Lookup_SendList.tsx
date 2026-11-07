@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sms/Sms03_Lookup_SendList.java (235줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L68-94: 560×650 모달 "문자발송", 위 오른쪽 [추가][초기화], 그리드(조직 160 · 직책 100 · 사번 80 · 성명 80 · 삭제 70), 아래 글(MyTextArea 100), 푸터 [발송][취소]
  * 원본 그대로인 것: [추가]로 넣은 사원은 조직 칸이 비어 있다(Emp00_TransInfoModel의 orgKorName에 넣지만 그리드는 orgTitleName을 보여 준다) — 이상한점 #27.
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';

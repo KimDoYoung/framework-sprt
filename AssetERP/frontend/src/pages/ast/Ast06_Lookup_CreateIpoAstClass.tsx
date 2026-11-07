@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast06_Lookup_CreateIpoAstClass.java (117줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L35-54: 모달 380×160 "IPO 종목정보 생성", 종목명 입력 1칸(라벨 70) + 아래 가운데 [생성][닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

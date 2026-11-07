@@ -2,6 +2,7 @@
  * 출퇴근 개별수정 창 (T06) — Att02_Tab_CommuteAdmin 그리드의 수정 아이콘 열이 연다
  * AS-IS: myApp/client/vi/att/Att02_Edit_Commute.java (223줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L61-91: 400×210, 라벨 폭 130, 확정 출근시간 {HH:mm} {출근일(비활성)} · 확정 퇴근시간 {HH:mm} {퇴근일}, 아래 가운데 [저장][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, message, Space, Typography } from 'antd';

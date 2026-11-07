@@ -5,6 +5,7 @@
  *   오른쪽 = [등록][저장][삭제] + 세부항목 그리드(buildGrid02 L175-256: 이동 50(아이콘) · 게시물 세부항목명 200(편집) · 사용 50 · 전체공개 100 · 권한 50(아이콘) · 순서 50(숫자 편집)), 아래 가운데 [닫기]
  * 연결: Bbs30_Lookup_ParentTree(이동 아이콘) · Bbs33_Lookup_Role(권한 아이콘)
  * 두 그리드는 단일 선택(체크박스 없음)이고 삭제는 선택한 줄을 지운다 — useGridCrud의 삭제 체크를 쓰지 않고 removeRows로 뺀다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';

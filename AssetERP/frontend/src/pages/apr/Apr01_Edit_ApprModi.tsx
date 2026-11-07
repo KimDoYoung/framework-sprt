@@ -4,6 +4,7 @@
  * 생성자 L80-122: 800×880 모달 "오타수정"(닫기 X 없음), 위 상신제목 · 수신/참조 · 비고, 아래 상신내용(HTML 편집기 430) · 대외문서 대표회사명/대표서명란(50) · 변경사유(100), 푸터 [저장][닫기]
  * edit() L152-186 · open() L188-213(읽기 전용, 제목 "수정 전 내용", [닫기]만) · save() L293-346
  * 12-화면우선원칙: 스크롤이 생기지 않도록 편집기 높이를 창 높이에 맞춘다(AS-IS 고정 430).
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal } from 'antd';

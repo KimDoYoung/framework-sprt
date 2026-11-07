@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/pay30_Popup_BasicSetup.java (244줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L58-120: 모달 350×250 "급여공제 기본설정", getEditor() L122-147: 라벨 폭 110, 원천징수비율 · 건강보험(납부구분+분할회차) · 고용보험(납부구분+분할회차), 아래 가운데 저장·닫기
  * EditModal 규격(11 §4a): 머리말·푸터 선, 본문 12 간격, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Modal, Select, Space, Typography } from 'antd';

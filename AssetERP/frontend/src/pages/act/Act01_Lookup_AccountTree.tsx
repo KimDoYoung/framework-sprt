@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act01_Lookup_AccountTree.java (240줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L54-61·open() L63-91: 모달 800×600 "계정과목", 툴바(계정과목 200 · [찾기]) + 계정과목 트리(계정코드 100 · 계정과목 500 · LEVEL 100), 아래 가운데 [확인][닫기]. 열 때 retrieve()
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs02_Lookup_NoticeAdmin.java (195줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L43-105: 모달 920×400, 머리말 "공지사항 목록", 단일 그리드, 아래 가운데 [오늘 하루 이 창을 열지 않음] 체크 · [닫기]
  * buildGrid() L107-142: 핀 35 · 새 글 40 · 공지사항(HTML 제목) 630 · 등록일 90 · 보기 아이콘 50
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, Modal, Space, message } from 'antd';

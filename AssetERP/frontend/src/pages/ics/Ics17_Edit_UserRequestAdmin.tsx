@@ -4,6 +4,7 @@
  * 레이아웃 getEditor() L170-267: 라벨 100, 위 270(배경 #F7F8FC) = 요청일자·요청자·확인여부 / 법규명·법규내용(누르면 팝업)·보고주기 / 보고처·법규조항·서식파일 / [파일등록],
  *   아래 200 = 진행상태·완료일 / 처리내용·비고. 요청일자·요청자·법규명·법규내용·보고주기·보고처·법규조항은 읽기 전용(buttonSetting L147-154). 하단 가운데 [저장]
  * 행을 고르지 않으면 비활성(AS-IS editBoard.setEnabled(false))
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Tooltip } from 'antd';

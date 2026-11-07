@@ -2,6 +2,7 @@
  * 문서폐기 신청 (사유) 창 (V09) — 완료·반려된 내 문서의 [문서폐기 신청]. 사유를 쓰고 승인자를 정해 신청서를 제출한다.
  * AS-IS: myApp/client/vi/apr/Apr90_Lookup_DisposalList.java (163줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L63-81: 520×270 모달 "문서폐기 신청 (사유)", 사유 입력(510×210), 푸터 [제출][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp43_Lookup_SelectSingle.java (272줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L63-105: 모달 700×500 "사원찾기(조직/직무/성명)", 툴바(L84-92) 기준일 · 조직/직무/성명 · [조회], 그리드(체크박스 단일: 조직 200 · 직책 120 · 사번 80 · 성명 100 · 발령일 100),
  *   아래 가운데 [확인][미선택][닫기]. 열면 곧바로 조회(L104). 재직(transCode 100), 겸직은 재직으로 본다(isSeparateAddTitle false)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, DatePicker, Space } from 'antd';

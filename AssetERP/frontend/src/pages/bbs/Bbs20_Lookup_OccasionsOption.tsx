@@ -5,6 +5,7 @@
  *   아래 가운데 [확인][닫기]. [확인] L136-161: 10은 하나도 안 골랐으면 "신랑,신부는 필수선택값입니다.", 20은 상주 "상주는 필수입력값입니다."·발인일 "발인일은 필수선택값입니다." —
  *   결과 글자: 10 "신랑측" / "신부측" / "신랑측, 신부측", 20 "상주 : 이름 / 발인일 : yyyy-MM-dd". [닫기]는 결과 없이 닫는다(callback 안 부름)
  * 편집창 규격(11 §4a)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Space } from 'antd';

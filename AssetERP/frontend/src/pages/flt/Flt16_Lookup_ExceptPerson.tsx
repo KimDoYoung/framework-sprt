@@ -4,6 +4,7 @@
  * open() L56-84: 모달 910×550 "예외사원 : 정기보고 매매등록 시작일 별도 관리", 툴바(조회 · 등록 · 저장 · 삭제) + 셀 편집 그리드(체크박스 다중) + 하단 [닫기].
  * [등록]은 사원찾기(Emp00_Lookup_SelectSingle, 널 단추 "선택안함")에서 고른 사원으로 새 행을 만든다(사원명·부서명은 읽기 전용).
  * UX보강(10): 툴바 = SearchBar(UX-01, 조건 없음), 저장 = 저장(n)(UX-03), 조회창 UX-05, 날짜 편집 열 120(UX-08)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { message } from 'antd';

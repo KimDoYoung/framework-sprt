@@ -4,6 +4,7 @@
  * getEditor() L56-106: 제목(읽기 전용) / 구분 150·작성자·작성일(모두 읽기 전용) / 내용 / 파일(Sys10_Lookup_SelectMulti editYn "N" · 높이 100)
  * [E0] 화면 열림 (생성자 L48-54) → getEditor(). 목록에서 고른 글(retrieve L116)로 채우고, 고른 글이 없으면 비운다(init L135)
  * 내용 칸은 AS-IS가 HtmlEditor지만 저장 단추가 없는 보기용이라 HtmlView로 보여 준다.
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { Input } from 'antd';

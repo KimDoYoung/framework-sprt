@@ -5,6 +5,7 @@
  *   "결재선 등록" 줄([최근결재선 불러오기] 135·[참조등록] 105) + 결재선 그리드(구분 40·부서명 200·직책 80·성명 80·위로·아래로·삭제 70) 220, 푸터 가운데 [확인][닫기]
  * 12 원칙: 머리 아래 선·푸터 위 선(LookupModal), 스크롤은 그리드·트리 하나씩. 03 원칙 17: 추가는 항상 맨 아래(원본 GridInsertRow는 선택 행 아래).
  * 아이콘 열은 행을 선택하지 않으므로(11 §1) AS-IS가 "선택한 행"으로 처리하던 결재/합의/참조·위로/아래로/삭제는 누른 행으로 처리한다.
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Modal, Space, Tree } from 'antd';

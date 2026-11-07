@@ -2,6 +2,7 @@
  * 생성 구분 창 — 연차 탭(Emp21_TabPage_UnLeaveList1, S08)의 [생성]에서 연다.
  * AS-IS: myApp/client/vi/emp/Emp21_Lookup_Insert.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L45-103: 모달 600×250 "생성 구분", 기준년도(45) · 공지구분(150) + 통보기간 안내 글, 아래 가운데 [생성][닫기].
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message } from 'antd';

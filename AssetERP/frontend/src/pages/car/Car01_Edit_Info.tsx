@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/car/Car01_Edit_Info.java (172줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L91-130: 라벨 폭 150, 줄마다 여백 20, 칸 250/350/600/850(비고 높이 120), 아래 가운데 [저장](버튼줄 60)
  * 선택한 행이 없으면 폼 전체 비활성(Tab의 editForm.setEnabled)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, InputNumber, message } from 'antd';

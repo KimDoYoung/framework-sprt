@@ -8,6 +8,7 @@
  * 다음 단계: [신규문서 작성]의 전자결재 편집창(Apr01_Edit_ApprDoc.insertApproval) — 문서분류만 정하고 안내한다(Act80_Lookup_RelateAppr와 같음)
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 편집창 규격(11 §4a — 머리말 아래 선·푸터 위 선·라벨 오른쪽 정렬)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import type { GetRef } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

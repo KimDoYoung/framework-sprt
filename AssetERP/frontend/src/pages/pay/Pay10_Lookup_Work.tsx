@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay10_Lookup_Work.java (154줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L53-104: 300×400 모달 "근로시간", 사원명(읽기 전용)·근로일수·총 근로시간수(읽기 전용)·연장·야간·휴일 근로시간(소수 가능), 아래 가운데 [저장][닫기].
  * 03 원칙 16 / 11 §4a EditModal 규격: 머리말·푸터 선, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, message, Modal, Space } from 'antd';

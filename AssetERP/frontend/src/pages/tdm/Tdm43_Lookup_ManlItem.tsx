@@ -4,6 +4,7 @@
  * 생성자 L60-66: 모달 1600×800, 최대화·크기 조절 가능, 닫기 아이콘 없음. open() L68-105: 툴바(검색 · 사용여부 · [조회] · 잠금이 아니면 [등록][삭제]) + 점검항목 그리드(체크박스 단일)
  * 등록·수정·보기 창 Tdm43_Edit_Manl(+Tdm43_Page_Relate 등)은 E13-2에서 변환 — [등록]·점검항목 보기 아이콘에서 연다
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

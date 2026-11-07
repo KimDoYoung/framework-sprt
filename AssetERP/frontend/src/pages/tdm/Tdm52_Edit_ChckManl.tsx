@@ -7,6 +7,7 @@
  * [증빙자료(n건)]은 증빙자료 창(Tdm00_Lookup_RelateAppr "tdm52")을 연다(2026-11-05 연결, 13-누락대장 2번 — 창 안 [불러오기]는 보류, Com01_Lookup_RelateAppr 머리 참고).
  * 다음 단계: [AI] 점검의견 자동 작성(BotService 외부 AI 서버)은 안내만
  * UX보강(10): 해당 없음
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm01_Edit_SrRO.java (128줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * getEditor() L74-104: 라벨 100 · 처리상태(250) + 처리내용(805×140) / 완료예정일 / 완료일. settings() L67-72: 네 칸 모두 읽기 전용
  * 처리 내용은 KFS 개발 쪽(시스템 개발 관리, EE16)이 입력한다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { Input } from 'antd';

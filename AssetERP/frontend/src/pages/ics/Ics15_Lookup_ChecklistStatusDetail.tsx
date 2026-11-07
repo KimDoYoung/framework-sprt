@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics15_Lookup_ChecklistStatusDetail.java (205줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L79-103: 모달 1600×700, 툴바(미체크 보기 · 미확인 보기 · [조회]) / 그리드(그 체크리스트의 담당자별 내역) / [닫기].
  * 열릴 때 view() L55-77이 받은 기준년도·월(분기)·체크주기·체크리스트로 바로 조회한다. 체크박스는 값이 바뀌어도 조회하지 않고 [조회]를 눌러야 반영된다(원본 그대로).
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

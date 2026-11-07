@@ -5,6 +5,7 @@
  * open() L63-74: 댓글 작성자 본인에게만 [파일업로드]가 보인다. 파일의 parentId는 댓글 ID.
  * 공지사항 댓글 첨부 창(Bbs07_Lookup_FileList, H01)과 클래스 본문이 글자 그대로 같다(다른 것은 모델 이름뿐 — Bbs32_CommentModel·Bbs07_CommentModel이 같은 모양)
  * → 그 창을 그대로 쓴다. 첨부는 parentId(댓글 ID)로만 찾으므로 게시물 댓글에도 같은 파일 API가 맞는다.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import { Bbs07_Lookup_FileList } from './Bbs07_Lookup_FileList';
 

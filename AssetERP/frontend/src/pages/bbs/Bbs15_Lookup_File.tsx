@@ -2,6 +2,7 @@
  * 회사규정 첨부파일 조회창 (E10) — Bbs15_Edit_CompanyRuleManager의 [첨부파일(n건)]에서 연다
  * AS-IS: myApp/client/vi/bbs/Bbs15_Lookup_File.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L70-150: 모달 "첨부파일" 950×400, 툴바 [파일업로드] + 그리드(buildApprFileGrid L152-189: 체크박스 단일 선택, 첨부파일명 640 · 다운로드 80 · 삭제 80 · 미리보기 80), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

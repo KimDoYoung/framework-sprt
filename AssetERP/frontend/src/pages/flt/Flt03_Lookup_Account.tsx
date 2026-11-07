@@ -4,6 +4,7 @@
  * openNull(baseDate, callback) L46-58: [확인][전체][닫기] / open(baseDate, callback) L60-68: [확인][닫기] / openDateLock L70-78: 기준일 고정
  * 생성자 L80-136: 툴바 "기준일" + [조회], 그리드(주계좌 60 · 개설기관 100 · 계좌번호 200 · 계좌명 100 · 종목유형 130)
  * UX보강(10): 조회창 UX-05·06, 툴바 = SearchBar(UX-01)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

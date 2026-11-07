@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm35_Lookup_RoleAllcTask.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1260×550(원본): 왼쪽 책무 그리드(500) + 오른쪽 책무 세부내용 그리드 + [닫기]
  * UX보강(10): 조회창(UX-05)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

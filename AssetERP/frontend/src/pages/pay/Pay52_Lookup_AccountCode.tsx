@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay52_Lookup_AccountCode.java (310줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(isManager, callback) L74-121: 모달 820×500 "계정코드", 툴바(계정속성 콤보 · 검색 200 "계정코드/계정과목" · 모든 계정과목 · [조회] + 관리자는 [추가][제거])
  *   + 체크박스 단일 그리드(속성 80 · 계정코드 100 · 계정과목 450 · 조회순서 100 편집, 관리자만), [저장](관리자) [확인][취소]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, message, Space } from 'antd';

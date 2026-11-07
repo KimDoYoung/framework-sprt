@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/chk/Chk03_Edit_Reason.java (106줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L50-70: 모달 "점검결과", reason 입력(700×300, 여백 10), 아래 가운데 [저장]·[닫기]
  * EditModal 규격(11 §4a): 머리말 아래 선 · 푸터 위 선 · 본문 위아래 간격 12
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef, useState, useEffect } from 'react';
 import { Input, message, Modal, Space } from 'antd';

@@ -2,6 +2,7 @@
  * 추가가감 (T03) — Emp43_Tab_FirstAppr의 수정 아이콘에서 연다 (상점·벌점·평정사유가감 입력)
  * AS-IS: myApp/client/vi/emp/Emp43_Edit_Score.java (114줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit() L42-61: 모달 200×250 "추가가감"(X 없음), getEditor() L78-89: 라벨 폭 88, 추가 상점 · 추가 벌점 · 평정사유가감(LongField 170), 아래 가운데 저장·닫기
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, message, Modal, Space, Typography } from 'antd';

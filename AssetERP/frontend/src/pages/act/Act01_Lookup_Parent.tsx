@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act01_Lookup_Parent.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(callback) L53-92: 모달 800×500 "상위계정", 툴바(계정코드/명 · 계정속성 · 사용여부 · 조회) + 체크박스 단일 그리드(계정코드 100 · 계정과목 310 · 계정과목(보고서용) 310), [확인] [취소]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·02·04)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { message, Select, Space } from 'antd';

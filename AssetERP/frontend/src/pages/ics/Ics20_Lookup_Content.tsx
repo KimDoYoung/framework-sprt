@@ -2,6 +2,7 @@
  * 개정내역 내용 창 (E01) — Ics20_Lookup_RevisionHistory 그리드의 상세내용 [보기] 아이콘에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics20_Lookup_Content.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L39-80: 모달 1000×500 "내용", 내용 입력, 아래 가운데 [저장](userType이 "admin"일 때만)·[닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

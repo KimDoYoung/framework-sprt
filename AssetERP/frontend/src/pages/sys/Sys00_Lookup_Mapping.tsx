@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys00_Lookup_Mapping.java (79줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L31-49: 1200×400 모달 "Mapping", 탭 패널(탭은 "계약서" 하나 — "퇴직정산서" 탭은 AS-IS 주석 L42), 푸터 가운데 [저장][닫기]
  * open() L25-29: 탭을 조회. [저장] update() L66-74: 활성 탭의 updateCheck()
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef } from 'react';
 import { Space, Tabs } from 'antd';

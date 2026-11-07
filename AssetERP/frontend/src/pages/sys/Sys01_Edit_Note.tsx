@@ -1,6 +1,7 @@
 /**
  * 비고 팝업 (A15) — 관리정보 탭(Sys01_TabPage_Info01)의 비고 옆 [Edit]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Edit_Note.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

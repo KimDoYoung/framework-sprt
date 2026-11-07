@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp57_Lookup_Insert.java (216줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L50-79: 모달 1200×600 "그룹설정", 왼쪽 500 = 툴바 [등록][삭제] + 그룹 그리드(단일 선택, 4열: 수정 아이콘 40 · 그룹명 230 · 전체공개 70 · 등록자 100,
  *   테두리), 오른쪽 나머지 = 그룹 담당자 탭(Emp57_TabPage_Insert), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';

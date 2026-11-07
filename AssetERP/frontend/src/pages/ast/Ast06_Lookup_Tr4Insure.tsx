@@ -4,6 +4,7 @@
  * openNew() L144-163 / open() L165-218: 모달 870×750 "거래등록"(NEW)·"거래변경"(MODI), getEditor() L408-515: 라벨 폭 130, 박스 6개
  *   (거래일자 · 거래유형 / 국민연금 · 건강보험 · 고용보험 · 산재보험(예수금·회사부담금·납부금액, 기타금액·기타 적요) / 결제구분 · 적요) + 분개 안내(MODI만), 아래 가운데 [저장][분개재생성](MODI만)[닫기] — 결재 상태가 있으면 [닫기]만
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

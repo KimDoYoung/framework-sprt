@@ -5,6 +5,7 @@
  * 생성자 L115-142: 모달 1080×800, 라벨 60. 제목(920) + 비공개 체크 / 내용(HTML 편집기), 아래 가운데 [등록|저장][닫기][첨부파일 등록(n)]
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
  * 연결: Bbs15_Lookup_File(첨부파일 등록 — 관리자용 = Bbs02_Lookup_File.open과 같은 창)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, Input, Modal, Space, Typography, message } from 'antd';

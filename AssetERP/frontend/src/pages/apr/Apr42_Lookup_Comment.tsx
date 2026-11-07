@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr42_Lookup_Comment.java (269줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L85-101: 510×650 모달 "댓글 보기"(open L64-83), 위 오른쪽 [알림발송], 그리드(댓글 395 · 파일 50 · 삭제 25, 행 펼침 — 글이 모든 줄 아래에 펼쳐져 있다), 아래 글 입력(420×50) + [등 록]
  * 다른 점(12-화면우선원칙·사용자 설계): 행번호·펼침 단추 칸(GridExpandBuilder)은 두지 않고, 글은 처음부터 펼친 채 머리 아래 줄에 보인다.
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Modal } from 'antd';

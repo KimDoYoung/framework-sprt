@@ -4,6 +4,7 @@
  * 창 530×450(원본, 열 420+행번호·선택 60+여백 130 = 610이라 610): 검색줄(기준일 + 검색 + [조회]) + 단일 선택 그리드 + [확인]([전체])[닫기]
  * 만든 것은 open(callback)·openAll(stdDate, callback) 경로(selectByDate)와 openTarget(stdDate, personId, callback) 경로(selectCheckTargetRole, N23 — checkTarget). openAll(…, orgId)의 orgId는 쓰는 화면이 생길 때 추가
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

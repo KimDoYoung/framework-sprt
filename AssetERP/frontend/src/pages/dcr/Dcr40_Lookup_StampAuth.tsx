@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr40_Lookup_StampAuth.java (286줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * Dcr40_Lookup_StampAuth() L64-109: 모달 520×750 "문서분류", 위 툴바(검색 300 + [조회]) + 트리 그리드(문서분류 410 · 미사용 80),
  * 그 아래 안내문, 아래 가운데 [저장][닫기]. Dcr01_Lookup_UseYn(E16)과 같은 틀
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

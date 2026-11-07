@@ -2,6 +2,7 @@
  * 조직정보 편집 폼 (C02) — Org02_Lookup_OrgInfo 오른쪽에 들어간다(ContentPanel).
  * AS-IS: myApp/client/vi/org/Org02_Edit_Info.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 공개 메서드(editData·update·deleteCheck)는 ref로 부른다.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

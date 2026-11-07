@@ -4,6 +4,7 @@
  * 생성자 L39-60: 500×350 모달 "승인 및 반려사유", 여러 줄 입력(490×250), 아래 가운데 [저장][취소]
  * 두 가지로 연다 — open(statusCode, callback) L62-72: 25면 "승인사유", 30이면 "반려사유", [저장]이 쓴 글을 부른 쪽에 돌려줌 / edit(trModel, callback) L74-80: 거래의 추가확인사유를 고쳐 서버에 저장
  * 호출처 Flt10_Tab_PreApproveAdd는 TOBE에 없다 — 창만 만들고 연결하지 않는다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -5,6 +5,7 @@
  *   + 체크박스 다중 그리드(구분 80 · 규정 450 · 규정코드 100 · 종료일자 100) + [저장][닫기]. 구분은 열 때 호출한 아이콘대로 법규('1')·내규('2')가 골라져 있다.
  * [행 추가]는 구분에 따라 법규 고르기(Sys09_Lookup_CodeKind.tdmLawOpen)·내규 고르기(Bbs15_Lookup_CompanyRule.tdmOpen)를 열어 고른 만큼 새 줄을 더한다.
  * [행 삭제]는 줄을 화면에서만 빼 두었다가 [저장]에서 한꺼번에 지운다(deleteList). [닫기]는 변경이 남았으면 확인 뒤 닫고, callback(책무 한 건)을 불러 건수를 갱신하게 한다.
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';

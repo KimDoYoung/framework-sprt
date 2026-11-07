@@ -2,6 +2,7 @@
  * 문서분류 세부분류 창 (E16) — Dcr01_Grid_DocType의 "세부분류" 칸 아이콘에서 연다
  * AS-IS: myApp/client/vi/dcr/Dcr07_Lookup_ClassDetail.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L60-113: 모달 1280×500 (제목 "문서분류 : {문서분류 전체 경로}"), 위 툴바([조회][등록][저장][삭제]) + 셀 편집 그리드(세부분류 350 · 키워드 350 · 작성요령 270 · 조회순서 80 · 특정화면 연결여부 80 · 사용여부 80), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Space } from 'antd';

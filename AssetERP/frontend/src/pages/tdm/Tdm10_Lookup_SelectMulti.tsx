@@ -4,6 +4,7 @@
  * 열 합계(120+270+450+80+80+행번호·선택 60+여백 130 = 1190): 검색줄(기준일 · 책무구분 콤보 · 검색 · [조회]) + 체크박스 다중 그리드 + [확인][닫기]
  * 조회는 dedupYn=true — 기준일에 쓰이는 직책에 이미 연결된 책무(공통책무 제외)는 뺀다 (L162-177)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

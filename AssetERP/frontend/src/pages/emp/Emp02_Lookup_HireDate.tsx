@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp02_Lookup_HireDate.java (122줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, IDMS-IC)
  * 생성자(personId) L35-60: 모달 350×230 "기타 입사일 정보", 라벨 폭 150 — 그룹사 입사일 · 휴가계산용 입사일, 아래 [저장][닫기]. 편집창 규격(11 §4a)
  * 저장해도 창은 닫지 않고, 부른 화면도 다시 읽지 않는다(원본 그대로).
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Modal, Space, Typography } from 'antd';

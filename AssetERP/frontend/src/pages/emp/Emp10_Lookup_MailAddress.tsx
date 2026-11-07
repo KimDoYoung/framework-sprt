@@ -4,6 +4,7 @@
  * makeLayout() L115-146: 모달 "주소록" 710×490, 위 [검색어][검색][그룹], 탭 3개(개인 주소록 · 사내 주소록 · 공용 주소록) 체크 다중 그리드, 아래 가운데 [확인][닫기].
  *   열면서 세 목록을 모두 조회(open L64-70). [확인]은 세 그리드에서 고른 사람의 `이름 <메일>;`을 이어 붙여 돌려준다
  * UX보강(10): 행 클릭 선택(UX-06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

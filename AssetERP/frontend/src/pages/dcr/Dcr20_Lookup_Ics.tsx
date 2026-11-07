@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr20_Lookup_Ics.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L69-135: 모달 1200×500 "법규 연결", 위 툴바([행 추가][행 삭제] + 오른쪽 새로고침 아이콘) + 체크박스 다중 그리드(법규명 300 · 상세내용 400 · 제출처 150 · 주기 100 · 관련조문 200 · 분류코드 70), 아래 가운데 [저장][닫기]
  * open()/openUser() L56-67은 같은 일을 한다(openUser의 단추 숨김은 원본에서 주석 처리) — 관리자 연결의 전파는 서버가 한다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -4,6 +4,7 @@
  * 모달 1290×400 "진행상태": 위 [등록][저장] + 새로고침 아이콘 / 그리드(체크 단일) / [닫기]
  *   edit(devId) L70-75: 읽기 전용 단계·담당자(열 2·3) 숨김 · view(devId) L77-87: 버튼 줄과 편집 열(4·5)·비고·▲·▼(10~12) 숨김, 폭 1140
  *   열 buildApprStepGrid() L144-218: 단계(읽기) 100 · 담당자(읽기) 100 · 단계(콤보 DevStepCode) 100 · 담당자(조회창) 100 · 결과 100 · 확인일시 200 · 결과상세 400 · [보기] 30 · 비고 200 · ▲ 30 · ▼ 30 · 삭제 30
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message, Space } from 'antd';

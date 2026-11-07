@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp92_Lookup_SmsNotice.java (144줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L65-87: 540×450, 머리말 "알림설정", 오른쪽 정렬 [새로고침] + 셀 편집 그리드(체크 열) + 푸터 [저장][닫기]
  * buildGrid() L89-98: 항목 300 · 앱 60 · 문자 60 · 메일 60 (불리언 편집)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { empSmsNoticeApi } from '@/api/emp';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm01_Lookup_ResultContent.java (116줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(srModel) L36-61: 보기 — [닫기]만 / open(resultStr, srModel, callback) L63-94: 편집 — [확인]·[닫기] — 모달 1000×500 "처리내용", 본문은 글상자 하나
  * [E2] [확인] → update() L96-111: scm.Scm01_Sr.updateResultContent(처리내용) → callback(글) → 닫기
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

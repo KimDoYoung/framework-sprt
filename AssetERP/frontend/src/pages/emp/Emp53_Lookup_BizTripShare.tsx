@@ -5,6 +5,7 @@
  * settings() L68-117: 전체공유를 켜면 공유대상 칸을 비우고 막는다. 칸을 누르면 Emp56_Lookup_Share(출장 ID) → 고른 공유명을 칸에 보인다.
  * update() L135-148: emp.Emp53_BizTrip.updateShareInfo(bizTripId, publicYn) → 목록 행을 바뀐 행으로 바꾸고 닫는다.
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, message, Modal, Space } from 'antd';

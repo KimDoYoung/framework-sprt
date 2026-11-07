@@ -2,6 +2,7 @@
  * 출퇴근 사유 창 (T06) — Att02_Tab_CommuteAdmin 그리드의 사유 아이콘 열이 연다 (읽기 전용)
  * AS-IS: myApp/client/vi/att/Att02_Edit_InOutReason.java (89줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L43-71: 430×410, 사유(출근) · 사유(퇴근) 두 칸(각 360×120), 아래 가운데 [닫기]. open() L34-41: 출퇴근 행을 보여 준다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { Input, Modal, Space } from 'antd';

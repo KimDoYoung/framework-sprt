@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_Class.java (119줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L71-105: 620×150 모달 "문서분류", 읽기 전용 칸(빈칸="선택해주세요", 600) + 트리거 → Dcr30_Move_DcrClass(일반 사용자 열기), 푸터 [확인][닫기]
  * open(classTreeId, defaultModel, callback) L36-69: classTreeId가 있으면 dcr.Dcr01_ClassTree.selectById로 이름을 채운다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

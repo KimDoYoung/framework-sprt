@@ -6,6 +6,7 @@
  *   개요(편집기) / 비고(700) / 첨부파일(`Sys10_Lookup_SelectMulti` 패널 120) / 확인자(읽기 전용 200)[찾기] · 확인완료일자(읽기 전용)
  *   아래 가운데 [저장][승인요청|요청취소][승인][닫기]
  * retrieve() L126-146: 새 건(resrchId 없음)은 pln.Pln03_Resrch.selectDetailInit, 있으면 selectById
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, Space, message } from 'antd';

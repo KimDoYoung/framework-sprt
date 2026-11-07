@@ -6,6 +6,7 @@
  *   2. 연간투자한도 및 보고주기 설정 — [조회][등록][저장][삭제] + 체크박스 다중 셀 편집 그리드(적용시작일자 120 · 연간추가 투자한도 300 · 보고주기 120) + 안내 두 줄
  *   3. 가족 금융거래정보 이용동의서 — 안내 · [파일업로드] + 체크 단일 파일 그리드(첨부파일 690 · 보기 50 · 받기 50 · 삭제 50) + [닫기]
  * 서약서 상신은 전자결재 편집창(Apr01_Edit_ApprDoc)을 링크코드 A06으로 연다. 닫기는 callback.execute() 뒤 hide()
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';

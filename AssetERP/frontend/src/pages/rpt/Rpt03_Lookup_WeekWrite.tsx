@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/rpt/Rpt03_Lookup_WeekWrite.java (215줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * insert() L62-75: 새 글(순번 = 부른 쪽이 정함) / update() L77-85: 고른 행. 생성자 L87-126: 680×370 "주간업무보고", 라벨 폭 125,
  *   업무구분 콤보(250, "선택") + [업무구분 설정] + 굵게 · 업무내용(높이 90) · 일정(완료예정일) 350 · 비고(높이 90), 아래 가운데 저장·닫기
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, Input, message, Modal, Select, Space, Typography } from 'antd';

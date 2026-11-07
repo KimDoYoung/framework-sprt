@@ -2,6 +2,7 @@
  * 매뉴권한(관리자별 메뉴 권한) 조회창 (A15) — 고객별 관리자 탭(Sys02_Tab_User)의 [권한설정]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys82_Lookup_UserMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01), 저장 = 저장(n)(UX-03, 바뀐 행 수). 매뉴명 Enter는 조회가 아니라 트리 안 검색(search)이라 antd Input + allowClear(UX-04). 조건 1개라 초기화(UX-02) 없음
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Space } from 'antd';

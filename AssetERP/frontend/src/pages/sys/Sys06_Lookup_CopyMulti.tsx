@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys06_Lookup_CopyMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open() L69-117: 제목 "일괄복사", 1200×600, 모달, 닫기(X) 없음. 왼쪽 반 = 매뉴 검색 + grid01, 오른쪽 반 = 고객사 검색 + grid02, 아래 가운데 권한부여·권한삭제·닫기
  * UX보강(10) B12-1: 왼쪽·오른쪽 검색 줄 = SearchBar 2개(UX-01·04). 초기화(UX-02)는 조건이 2개(검색어·상품)인 오른쪽 줄만 — 왼쪽은 검색어 1개(체크는 조회 뒤 extra)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Space } from 'antd';

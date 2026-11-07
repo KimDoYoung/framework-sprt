@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Lookup_ExpenseRequestList.java (176줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L47-55: 모달 1300×450 "요청내역"(크기 조절·최대화, X 없음). open(callback) L57-79: 툴바(검색 [조회]) + 체크박스 다중 그리드, [선택][닫기], 열자마자 조회
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

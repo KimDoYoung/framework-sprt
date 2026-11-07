@@ -4,6 +4,7 @@
  * 레이아웃 L97-135·getEditor() L240-287: 모달 700×480 "법인서류 발급 및 사용매수 등록", 라벨 120 — 등록일 · 구분(콤보 250 + 인감/대표명의 칸 330) · 발급매수 · 사용매수 · 제출처 · 목적 · 비고 ·
  *   연관상신문서(조회 칸), 아래 가운데 [저장][닫기]. 연관상신문서 칸을 누르면 연결된 문서가 있을 때 [문서보기][문서연결][연결제거] 작은 창(SettingPopup)
  * 편집창 규격(11 §4a). [문서연결]은 Apr05_Lookup_LoadDoc2("SINGLE", 선택안함 있음), [문서보기]는 Apr01_Edit_ApprDoc을 연다(2026-11-05 연결, 13-누락대장 1·3번)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

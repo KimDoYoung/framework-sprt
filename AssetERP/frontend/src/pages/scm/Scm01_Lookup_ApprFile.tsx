@@ -5,6 +5,7 @@
  * retrieve() L147-156: sys.Sys10_File.selectByDevId(devId) — 개발에 올린 파일 + 진행단계에 올린 파일
  * [E1]·[E7] fileUpload.Change → FileUpload?parentId=devId → [E2] SubmitComplete → retrieve() / [E4] [파일업로드] → fileUpload.click()
  * [E6] messageBox("삭제", "선택한 파일을 삭제하시겠습니까?") YES → FileDelete?fileId= → [E3] SubmitComplete → retrieve()
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

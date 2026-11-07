@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr19_Lookup_RelateAppr.java (163줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L49-77: 모달 900×450 "연관문서", 위 툴바 50([새로고침]) + 단일 선택 그리드(제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70), 푸터 [닫기]
  * 호출처 Apr19_Tab_StampFileCheck(인감날인 확인)의 법인서류 쪽은 TOBE에 없다 — 창만 만들고 연결하지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

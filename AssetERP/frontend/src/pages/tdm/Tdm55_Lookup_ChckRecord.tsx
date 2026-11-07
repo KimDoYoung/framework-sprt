@@ -4,6 +4,7 @@
  * 창 1110×400(원본): 이력 그리드(행번호 숨김, 첫 열 번호 50) + 안내 글 "* 의견이 잘린 경우 해당 컬럼을 더블 클릭하여 확인하세요" + [닫기]
  * exceptionTable: TDM51(점검부서별 승인이력 — `chckOrgId`), NONE(연결 대상별 이력 selectByRelateId — `relateId`, N21), TDM54(미흡/개선 내역 이력 selectByInsuffId — `insuffId`, N23)
  * UX보강(10): 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

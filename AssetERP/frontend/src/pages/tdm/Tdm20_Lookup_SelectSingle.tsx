@@ -4,6 +4,7 @@
  * 창 1200×600(원본, 열 합계 1090+행번호·선택 60+여백 130 = 1280이라 원본 폭 유지): 검색줄(기준일 + 검색 + [조회]) + 단일 선택 그리드 + [확인]([전체])[닫기]
  * `roleModel`이 있으면(AS-IS open(roleType, roleModel, cb)) [확인]이 그 직책의 보고CEO를 서버에 저장한 뒤 돌려준다
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

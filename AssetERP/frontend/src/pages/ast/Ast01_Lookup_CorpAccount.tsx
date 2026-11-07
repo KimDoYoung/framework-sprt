@@ -4,6 +4,7 @@
  * open(stdDate, mode, callback) L74-108: 모달 650×400 "계좌선택"(선급이면 "선급거래처 선택"), 툴바(기준일자 100 · 검색 200 "보관처명/계좌명" · 조회) + 체크박스 단일 그리드(계좌구분 150 · 보관처 150 · 계좌 250),
  *   [확인] + ([선택안함] mode NOT / [전체]) + [닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

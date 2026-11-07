@@ -6,6 +6,7 @@
  *   예상프로그램 그리드(450×220) + 개발자 그리드(1200×220) / 맨 아래 가운데 [저장]
  * checkBox() L109-134: devTarget(1/0 다섯 글자)을 □로, 기타만 켜지면 기타 글상자를 켠다 · getDevTarget() L136-146: □를 다시 다섯 글자로
  * 요청사(corpName LookupTriggerField L209-225, Biz13_Lookup_WithCorp)는 필드만 있고 getEditor()에 붙지 않아 화면에 없다 → [E2 생략]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message } from 'antd';

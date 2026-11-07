@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys12_Lookup_Customer.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L51-78: 모달 1000×600 "고객사반영", 툴바(조회·저장·"Admin(관리자)정보로 고객사 변경") + 셀 편집 그리드(체크박스 다중), 하단 닫기
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 없어 초기화(UX-02) 없음
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { message, Modal, Space } from 'antd';

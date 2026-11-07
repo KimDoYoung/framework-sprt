@@ -5,6 +5,7 @@
  * [E2] [저장] → update() L144: bbs.Bbs01_Board.update 뒤 닫기
  * [E4] [삭제] → delete() L154: 확인 "삭제"/"선택한 내용을 삭제하시겠습니까?"(폭 300) → [E5] [예] (L157) bbs.Bbs01_Board.delete 뒤 닫기
  * 호출처 자유게시판(Bbs01_Tab_Board)은 메뉴가 없고 어디서도 열리지 않는다(AS-IS 사장 화면) — TOBE에서 여는 곳이 없다(작업기록)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Modal, message, Space } from 'antd';

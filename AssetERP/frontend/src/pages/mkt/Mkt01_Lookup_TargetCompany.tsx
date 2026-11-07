@@ -2,6 +2,7 @@
  * 활동처 및 이익제공처 추가·수정 창 (Z05) — Mkt01_Grid_TargetCompany의 [등록]·수정 아이콘, Mkt03_Lookup_History의 [활동처 바로가기]에서 연다
  * AS-IS: myApp/client/vi/mkt/Mkt01_Lookup_TargetCompany.java (470줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L97-116: 모달 "활동처 및 이익제공처 추가" 1260×650, 라벨 폭 110 — 활동처구분(콤보 "선택하세요")·활동처·주요사항(높이 67)·담당자(툴바 40 + 셀 편집 그리드 200)·업무활동공유(읽기 전용 + [설정])·안내 글·미사용, 아래 가운데 [저장][닫기]
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, Input, message, Space, Typography } from 'antd';

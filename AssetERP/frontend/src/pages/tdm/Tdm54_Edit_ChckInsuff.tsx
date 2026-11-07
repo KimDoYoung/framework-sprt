@@ -5,6 +5,7 @@
  * view(model) L75-78: 읽기 전용([저장] 숨김) / edit(stdDate, model) L80-84. open() L86-125: 점검항목의 조치계획(tdm54)이 있으면 읽고, 없으면 새 계획
  *   (등록일 오늘 · 조치예정자 = 점검자 · 상태 10 발생 · 발생년월/점검년월 = 점검년월 — 회사·직책·부서·상태는 서버가 점검항목에서 채운다)
  * UX보강(10): 조회창(UX-05·06)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';

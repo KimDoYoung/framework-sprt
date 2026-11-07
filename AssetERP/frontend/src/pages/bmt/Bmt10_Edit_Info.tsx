@@ -4,6 +4,7 @@
  * 생성자 L93-164: 모달 600×530, 라벨 폭 100, 장비명(조회창 칸) · 매입일자 / 폐기일자(빨간 라벨) · 취득금액(###,###,###) · 취득정보(높이 100) · 세부사양(150) · 비고(100), 아래 가운데 [저장][삭제][닫기]
  * insert() L68-79 = "전산장비(신규등록)" + [삭제] 숨김 / open() L81-91 = "전산장비(수정)" + [삭제] 보임
  * 편집창 규격: 11 §4a (머리 아래 선·푸터 위 선·라벨 오른쪽 정렬), 스크롤을 피하려 폭 640·위에서 20만 띄운다(12 원칙)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

@@ -5,6 +5,7 @@
  * [E3] insertButton[생성].Select (L141) → insertCheck() L156-180: 개별생성인데 사원이 없으면 "사원을 선택해주세요" → 확인(550) "기본 생성내역이 있는 경우 삭제 후 생성됩니다. 진행하시겠습니까?" [YES]
  *   → insert() L182-203: pay.Pay31_InsureApply.insert3(신고일 = (기준년도+1)-04-01) — 실패면 서버 문구, 성공이면 callback.execute() + hide()
  * [E4] closeButton[닫기].Select (L147) → callback.execute() + hide() (닫아도 목록을 다시 읽는다)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Modal, message, Radio, Space } from 'antd';

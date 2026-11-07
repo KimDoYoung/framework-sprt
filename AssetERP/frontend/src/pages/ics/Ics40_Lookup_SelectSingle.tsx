@@ -5,6 +5,7 @@
  *   검색줄(조회기간 시작 ~ 종료 · 검색 "내용/제공처" 200 · [조회]) + 단일 선택 그리드 + [확인][닫기]
  * open(callback) L47: 열 때 곧바로 retrieve() — ics.Ics40_DcrPreconfirm.selectByDate(statusCode "20" = 승인된 것만)
  * 호출처 Ics40_Edit_DcrPreconfirm(사전확인 신청창)의 과거심사필번호 칸 — 2026-11-05 연결(13-누락대장 4-1)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

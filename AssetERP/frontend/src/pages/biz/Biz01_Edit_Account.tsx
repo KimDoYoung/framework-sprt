@@ -5,6 +5,7 @@
  *   · 비품대장등록(400) · 과세구분(300, 파란 라벨) · 실사용자(300, 회사 설정 `cardRealUserYn`일 때만), 창 아래 가운데 [저장][증빙자료(n건)].
  *   고른 내역이 없으면 통째로 비활성, 마감이면 setButtonVisible(false) L307-337이 제공목적·제공내역·계정코드·계정과목·비품대장·과세구분을 잠근다(비고·실사용자는 그대로).
  * 비품대장등록 칸은 `Ast06_Lookup_TrBizCard`(ast 도메인)를 연다(EE41) — 저장하면 목록을 다시 읽어 '등록완료'가 보인다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message, Select, Space } from 'antd';

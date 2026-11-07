@@ -2,6 +2,7 @@
  * 기준 적용일 생성 창 (E05) — Ics30_Tab_Compliance의 [등록]에서 연다
  * AS-IS: myApp/client/vi/ics/Ics30_Lookup_Insert.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L60-91·getEditor L93-103: 모달 350×180 "생성", 적용월 [년 입력] 년 [월 콤보 MonthsCode], 아래 가운데 [생성][닫기]. 열릴 때 기본값은 지난달
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

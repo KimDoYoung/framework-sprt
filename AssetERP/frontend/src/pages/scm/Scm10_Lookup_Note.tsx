@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm10_Lookup_Note.java (168줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(note) L60-94: 보기(HTML), [닫기]만 / open(devModel, callback) L96-132: 편집(HTML 편집기), [확인]·[닫기] — 모달 1000×700 "개발내용"
  * [E2] [확인] → callback(편집한 HTML) → 닫기. 저장은 하지 않는다(개발자 그리드의 [저장]이 한다)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Space } from 'antd';

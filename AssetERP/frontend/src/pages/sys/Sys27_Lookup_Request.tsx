@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys27_Lookup_Request.java (134줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L42-74: 500×260, 머리말 "Asset-ERP 기기 등록요청", 닫기(X) 없음, [구 분(LoginPlaceCode 콤보)][사 유(글상자 100)], 푸터 [신청][취소]
  * ※ AS-IS 호출처 LoginPage.checkMacAddress()는 `@SuppressWarnings("unused")` 로 어디서도 부르지 않는다(도달 불가) — 창만 만들고 화면에는 연결하지 않았다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message } from 'antd';

@@ -4,6 +4,7 @@
  * 생성자 L43-85: 툴바 50 "문서분류" + [조회], 트리(한 번 눌러도 펼침), 선택하면 retrievePage() L163-166 → 하위 분류가 없는 분류일 때만 문서구분 목록(dcr.Dcr01_ClassTree.selectByClassTreeId)
  * 그리드 buildGrid() L41-56 (체크 다중): 구분코드 80 · 문서구분명 220 · 상품분류 100. getSelectList() = 고른 행들
  * 트리·목록은 문서구분 조회창(Dcr00_Lookup_FundPlan, P03)의 [문서분류] 탭과 같은 API를 쓴다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message, Tree } from 'antd';

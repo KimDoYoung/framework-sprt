@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics21_Lookup_CheckList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L81-114: 모달 1450×600 "분류관리", 왼쪽 반 = 툴바 [조회][등록][저장][삭제] + 대분류 셀 편집 그리드(체크박스 단일: 잠금 40 · 대분류명 200 · 순서 50 · 비고 150 ·
  *   사용여부 100 · 사용종료일 100), 오른쪽 반 = 중분류(Ics23_TabPage_CheckList), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

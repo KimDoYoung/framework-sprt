@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pln/Pln00_Popup_ClassTree.java (65줄) — 1000×600 모달 "문서구분", 안에 Pln00_Lookup_ClassTree, 아래 가운데 [확인][닫기]
  * open(baseDate, callback) L25-53 → [확인] confirm() L55-59: 고른 행들을 callback.execute(selectList) 뒤 hide()
  *   호출처(Pln02_TabPage_Plan L112·L151)는 list.get(0)를 쓰므로 고른 행이 없으면 AS-IS는 호출처에서 예외 → 아무 일 없이 창을 열어 둔다(Dcr00_Lookup_FundPlan과 같게)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef } from 'react';
 import { Space } from 'antd';

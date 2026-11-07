@@ -5,6 +5,7 @@
  *  - edit (L98-111): 책무구분(콤보 편집)·코드·명(편집)·사용 열, 확인 없음
  *  - view (L78-95): 책무구분·코드·명 열(읽기 전용), 책무구분 콤보는 정해져 있어 못 바꾼다, [확인](더블클릭)으로 고름 — 사용 중인 유형만 나온다
  * UX보강(10): 조회창(UX-05·06), 저장 버튼 UX-03
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message, Modal, Space } from 'antd';

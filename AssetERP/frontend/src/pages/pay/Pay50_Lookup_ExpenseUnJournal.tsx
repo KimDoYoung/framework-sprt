@@ -5,6 +5,7 @@
  * 생성자 L73-81: 모달 1350×550 "회계 미처리 내역"(크기 조절·최대화, X 없음). open(callback) L83-114: 툴바(구분 150 · 검색 "구분/지출내역/지출처" ·
  *   [조회][저장][일괄저장] · 하나의 전표로 생성하기 체크 · [전표생성]) + 체크박스 다중 그리드(계정과목 열은 조회 트리거 편집), [닫기], 열자마자 조회
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장(n)(UX-03), 조회창(UX-05). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';

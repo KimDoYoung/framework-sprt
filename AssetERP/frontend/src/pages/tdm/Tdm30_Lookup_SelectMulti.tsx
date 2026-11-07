@@ -4,6 +4,7 @@
  * 생성자 L66-96: 창 950×500 "임원선택", 위 = 툴바(기준일 · 검색 250 "임원/직책/겸직사항" · [조회] · ※ 생성사유 일괄적용 콤보) + 체크박스 다중 그리드, 아래 = [저장][닫기]
  * 열 폭 합계 790+행번호·선택 60+여백 130 = 980이라 원본 950보다 넓게 잡는다(03 원칙 21)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

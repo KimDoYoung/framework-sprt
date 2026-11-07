@@ -5,6 +5,7 @@
  * openMonthItem(callback) L44-47이 바로 조회한다. [취소]는 callback(null)을 부른다(항목 칸을 "전체"로 되돌리는 데 쓴다)
  * Pay20_Lookup_ItemList(E22, 전 항목)와 다른 창이다 — 지급·공제 항목만(pay20_item.getMonthItem)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

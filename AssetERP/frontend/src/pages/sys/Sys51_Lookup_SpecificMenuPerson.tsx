@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys51_Lookup_SpecificMenuPerson.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(companyId, specificMenuModel) L64-101: 제목 "사원권한설정", 900×350, 모달. 툴바 왼쪽 조회·등록·저장·삭제, 오른쪽 끝 [일괄 권한설정] + 체크(단일) 셀 편집 그리드
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal, Space } from 'antd';

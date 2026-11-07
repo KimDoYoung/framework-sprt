@@ -2,6 +2,7 @@
  * 책무이행점검항목 선택 창 (E01) — Ics01_Lookup_RelateTdm의 [점검항목연결]에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_SelectTdm.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L55-81: 모달 1500×800 "책무이행점검항목(기준회사:KFS)", 위 툴바(검색 · 검색칸 350 · [조회]) + 그리드(체크박스 다중, 직책·주요관리의무·점검항목·점검방법), 아래 가운데 [확인][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

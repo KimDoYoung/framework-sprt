@@ -4,6 +4,7 @@
  * 생성자 L55-77: 모달 400×210 "자금집행일 및 출금계좌 일괄저장", 자금집행일(250)·출금계좌(350, 조회 트리거) + [저장][닫기], 라벨 폭 100
  * open(callback) L79-82 → settings() L84-108: 자금집행일 = 오늘
  * UX보강(10): 조회창(UX-05)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useState } from 'react';
 import { DatePicker, Input, message, Space } from 'antd';

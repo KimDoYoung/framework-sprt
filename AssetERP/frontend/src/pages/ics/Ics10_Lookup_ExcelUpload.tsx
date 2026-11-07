@@ -2,6 +2,7 @@
  * 체크리스트 데이터 업로드 창 (K04) — Ics10_Tab_Checklist의 [기본설정] → [데이터업로드]에서 연다
  * AS-IS: myApp/client/vi/ics/Ics10_Lookup_ExcelUpload.java (127줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L43-62: 모달 270×150 "데이터 업로드"(닫기 X 없음), [템플릿][엑셀업로드], 아래 가운데 [닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef } from 'react';
 import { message, Modal } from 'antd';

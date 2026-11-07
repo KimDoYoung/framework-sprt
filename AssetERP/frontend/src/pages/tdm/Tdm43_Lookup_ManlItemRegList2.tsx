@@ -4,6 +4,7 @@
  * 생성자 L77-83·open() L85-145: 모달 1600×850, 제목 "**직책 (부서)** 점검항목 등록 - 복사대상 주요관리의무 선택", 툴바(기준일 · 전체보기 · 직책 · 책무 · 부서 · 검색 · [조회])
  *   + 위 그리드(원본 주요관리의무, 체크 다중) + 아래 그리드(고른 행의 점검항목, 보기용) + [확인][닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Space } from 'antd';

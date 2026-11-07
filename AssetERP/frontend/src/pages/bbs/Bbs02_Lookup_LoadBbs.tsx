@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs02_Lookup_LoadBbs.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L84-142: 모달 "불러오기" 1500×600, 왼쪽 900 = 툴바(공지구분 120 · 구분상세 200 · 검색 250 "제목" · [조회]) + 공지 그리드(체크박스 단일) + 페이징 50,
  *   가운데 = 선택한 공지의 내용(HTML), 아래 가운데 [확인][닫기]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Select, Space, message } from 'antd';

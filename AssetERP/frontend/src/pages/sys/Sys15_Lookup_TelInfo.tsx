@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys15_Lookup_TelInfo.java (80줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * view(model) L30-44: 모달 520×210 "거래처 연락처", 전화번호(270)·주소(470) 읽기 전용 + [닫기], 라벨 폭 110 (getEditor L61-72)
  * UX보강(10): 조회창(UX-05 — 입력칸이 모두 읽기 전용이라 포커스를 줄 곳이 없다)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 import { Input } from 'antd';

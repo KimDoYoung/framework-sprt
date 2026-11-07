@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm01_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 600×600(원본) → 열 폭 합계(100+150+250+행번호·선택 60+여백 130) 기준 700 (03 원칙 21): 검색줄(검색 + 임원명/직위/조직명 칸 200 + [조회]) + 단일 선택 그리드(임원명 100 가운데·직위 150·조직명 250) + [확인][닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

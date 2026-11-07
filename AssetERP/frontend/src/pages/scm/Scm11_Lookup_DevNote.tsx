@@ -5,6 +5,7 @@
  * open(devStepModel) L57-140: 모달 1000×700 "개발내용" · 위 [개발내용](HTML, 읽기 전용) 300 · 아래 왼쪽 단계 그리드 400 + 오른쪽 [결과](HTML) 588 · 아래 가운데 [닫기]
  * 그리드 buildApprStepGrid() L144-153 (체크 없음, 한 줄 선택, 정렬 없음): 구분 60 · 담당자 80 · 확인일시 140 · 결과 60
  * retrieve() L155-166: scm.Scm11_DevStep.selectByDevId(devId) — 처음에는 아무 줄도 고르지 않는다(오른쪽은 비어 있다)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

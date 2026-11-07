@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm12_Lookup_DevStepRule.java (229줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 모달 320×500 "진행단계 설정": 위 [등록] / 그리드(체크 단일: 구분 150(콤보 DevStepCode) · ▲ 30 · ▼ 30 · 삭제 30) / [저장][닫기]
  * 개발자를 처음 저장할 때 이 규칙대로 진행단계가 만들어진다(서버 Scm10_Dev.updateList)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

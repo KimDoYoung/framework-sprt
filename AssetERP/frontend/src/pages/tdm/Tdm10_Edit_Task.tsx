@@ -4,6 +4,7 @@
  * 창 630×380(원본): 책무구분(콤보) · 책무유형(조회창 칸) · 책무(100 높이) · 공통책무 | 사용시작일 · CEO책무 | 사용종료일 + [세부내용(n건)][연결규정(n건)][저장][닫기]
  * [연결규정(n건)]은 Tdm11_Lookup_TaskRelateRule(연결법규·내규, 구분 전체 "%")을 연다(2026-11-05 연결, 13-누락대장 2번)
  * UX보강(10): 조회창(UX-05·06은 Tdm14 안에서)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Space } from 'antd';

@@ -4,6 +4,7 @@
  * 창 1350×500(원본): 툴바(미적용건만 보기 / 조회기간 : 시작 ~ 종료 · 검색 200 "구분/임원명/비고" · [조회]) + 셀 편집 그리드(적용완료 체크·비고) + [저장][닫기]
  * 닫기는 원본이 callback.execute()를 부른다 → 부르는 쪽이 "미반영된 인사정보" 문구를 다시 읽는다 (onClose)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 조회창(UX-05)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Radio, Space } from 'antd';

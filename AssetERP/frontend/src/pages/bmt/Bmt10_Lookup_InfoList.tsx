@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bmt/Bmt10_Lookup_InfoList.java (197줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L54-83: 모달 1200×600 "전산장비", 위 툴바 45(기준일자 · 구분 콤보 · ☐폐기건 포함 · [조회]) + 단일 체크 그리드, 아래 가운데 [확인][취소]
  * 03 원칙 21: 열 폭 합계 1270 → AS-IS 1200보다 작게 하지 않고, 1120이 넘어 가로 스크롤을 허용한다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, DatePicker, message, Space } from 'antd';

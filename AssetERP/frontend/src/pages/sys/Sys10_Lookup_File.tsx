@@ -2,6 +2,7 @@
  * 첨부파일 창 — 그리드 행의 첨부자료 [보기] 아이콘에서 연다 (M01 Ics35_Tab_ExtrActivity가 처음 쓴다. 다른 도메인 crm·mkt도 같은 창)
  * AS-IS: myApp/client/vi/sys/Sys10_Lookup_File.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L45-77: 모달 450×350 "첨부파일", 그리드(첨부파일 270·보기 50·받기 50, 체크박스 단일), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

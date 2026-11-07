@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay10_Lookup_Journal.java (156줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L56-89: 툴바 50 = [조회], 체크 다중 그리드(차변: 계정코드 120 · 계정과목 200 · 금액 120 · 관리계좌 150 / 대변 같은 열) + 아래 [닫기].
  * open(payDate, payType) L49-54가 바로 조회한다(act.Act03_JournalDtl.selectPayMonth). 열 합계 1180+60+130이 약 1120을 넘어 가로 스크롤을 허용한다(03 원칙 21)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

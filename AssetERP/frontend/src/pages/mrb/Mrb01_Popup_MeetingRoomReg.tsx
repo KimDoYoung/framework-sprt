@@ -5,6 +5,7 @@
  * 열기 3가지: open(date) L247-277 [저장]만 / retrieve(model, checkYn) L292-302 [저장]은 checkYn일 때 / getList(model, checkYn) L304-314 [변경]은 checkYn일 때
  * userCheckYn: open은 true, retrieve·getList는 checkYn — false면 예약자 조회창과 첨부파일 올리기·삭제가 막힌다(E4·E5)
  * EditModal 규격(11 §4a). 저장은 이 창이 한다(update() L316-391)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

@@ -5,6 +5,7 @@
  * buildGrid() L146-184: 운용사 150(조회창 트리거) · 입금시작일 100(날짜 편집) · 은행명 120(콤보 BankCode — 고르면 은행코드도 바뀜) · 계좌번호 180 · 예금주명 120 · 연결계좌 150(조회창 트리거) · 비고 250
  * 저장 update() L228-259: 바뀐 행마다 운용사·은행명·계좌번호·예금주명이 비었으면 안내 후 중단. 삭제 deleteRow() L269-290: "선택한 정보를 삭제하시겠습니까?"(폭 400)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장(n) UX-03, 변경 표시 UX-07, 날짜 컬럼 폭 UX-08, 조회창 UX-05
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button as AntButton } from 'antd';

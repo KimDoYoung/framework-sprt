@@ -2,6 +2,7 @@
  * 경조구분별 문구등록 창 — Bbs20_Tab_FloralRequestMng [경조구분별 문구등록]에서 연다 (T21)
  * AS-IS: myApp/client/vi/bbs/Bbs22_Lookup_FloralMessage.java (97줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L37-61: 모달 560×400 "경조구분별 문구등록", 그리드(경조구분 100·문구 400 편집), 아래 가운데 [저장][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { message, Space } from 'antd';

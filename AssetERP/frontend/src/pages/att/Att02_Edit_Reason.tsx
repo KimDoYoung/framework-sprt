@@ -2,6 +2,7 @@
  * 지각·조기퇴근 사유 등록 창 (EE50) — Att02_Lookup_Commute가 지각·조기퇴근·외근 후 퇴근일 때 연다
  * AS-IS: myApp/client/vi/att/Att02_Edit_Reason.java (91줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L45-56: 400×200, 닫기(X) 없음, 사유 입력(TextArea) + 아래 가운데 [제출]. edit() L30-43: 머리말 "지각 사유등록" / "조기퇴근 / 외근 후 퇴근 사유등록"
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, message } from 'antd';

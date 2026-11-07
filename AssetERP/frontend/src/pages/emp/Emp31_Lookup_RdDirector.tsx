@@ -7,6 +7,7 @@
  *   [상신하기]는 기본 분류가 없으면 Dcr01_Lookup_Class로 고르고 Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A44"|"A62", {gridList}, …)을 연다.
  *   결재문서를 저장·결재요청하면(callback result != null) 이 창을 닫는다.
  * gridList(고른 임원 행)는 서버가 사원 ID(ids)로 다시 읽는다 — GET apr/apprs/link-seed.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Select, Space } from 'antd';

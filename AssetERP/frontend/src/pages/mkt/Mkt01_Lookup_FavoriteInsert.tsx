@@ -2,6 +2,7 @@
  * 업무활동처 및 이익제공처 (즐겨찾기 추가) 창 (Z05) — Mkt01_Lookup_Favorite의 [추가]에서 연다
  * AS-IS: myApp/client/vi/mkt/Mkt01_Lookup_FavoriteInsert.java (196줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L51-127: 모달 720×510, 위 = 검색(활동처/담당자 250)·[조회], 아래 = 체크 다중 그리드(활동처 250·담당자 100·직위 100·부서 200) + 페이징(100), 아래 가운데 [확인][취소]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Space, Spin } from 'antd';

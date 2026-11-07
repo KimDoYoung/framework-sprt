@@ -5,6 +5,7 @@
  * update() L83-141: 확인(450) "기준일(yyyy-MM-dd)의 C/F내역을 가져오겠습니까?" → YES → 회계마감 검사(act.Act04_GenLedger.checkClose) → ast.Ast06_Tr.insertByCf
  *   → "생성이 완료되었습니다." → callback → hide(). 실패는 서버 메시지를 그대로 보여 준다
  * 편집창 규격(11 §4a): 머리말 아래 선·푸터 위 선, 본문 위아래 12, 라벨 오른쪽 정렬
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Modal, Space, Typography } from 'antd';

@@ -4,6 +4,7 @@
  * 레이아웃 getEditor() L202-287: 라벨 폭 90, 네 칸 = 등록일·소관부처·의견제출일·시행일·법규반영일(200) | 법규명·조문(540×55)·[행 추가][행 삭제]·연결법규 그리드(540×120)
  *   | "내용 :" 글자(누르면 팝업)+내용 입력(545×140)·첨부파일 그리드(640×145) | [파일등록](120), 아래 가운데 [저장][삭제]
  * 부르는 쪽은 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve()의 editDriver.edit(model)).
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Tooltip, Typography } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr41_Lookup_OpenHistory.java (122줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L39-86: 650×840 모달 "열람기록", 위 오른쪽 새로고침 아이콘 + 그리드(열람일시 200 · 부서명 200 · 사원명 100 · 구분 100) + 페이징 툴바(20) + [닫기]
  * 12-화면우선원칙: 스크롤이 생기지 않도록 폭을 열 합계(행번호 30 포함)에 안쪽 여백을 더해 700으로 둔다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

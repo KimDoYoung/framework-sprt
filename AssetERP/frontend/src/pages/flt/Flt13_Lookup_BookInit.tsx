@@ -5,6 +5,7 @@
  *   검색(200, "계좌/종목/종목유형") · [조회] · ※ 최초원장 잔고기준일(영업일) 날짜(100) · [등록][저장][삭제] · [템플릿][엑셀업로드][종목유형코드]
  *   + 체크박스 다중 셀 편집 그리드(잔고기준일 100 · 계좌 250 · 종목유형 150 · 종목명 250 · 종목코드 120 · 보유수량<br>(입출금액) 100 · 보유금액 120, 맨 아래 합계 행 "계") + [닫기]
  * 등록·저장·삭제·엑셀업로드·잔고기준일 일괄 변경 전에는 checkPreTr()로 영업일·기준일 이전 실거래·정기보고 상신문서를 점검한다
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, DatePicker, Input, message, Modal } from 'antd';

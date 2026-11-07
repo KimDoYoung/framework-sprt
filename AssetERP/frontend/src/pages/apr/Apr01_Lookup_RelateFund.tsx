@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Lookup_RelateFund.java (209줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L56-145: 700×300 모달 "연관펀드", 위 [등록][확정][새로고침], 단일 체크 그리드(펀드유형 80 · 코드 90 · 연관펀드명 350 · 삭제 35 · 결재이후 70), 푸터 [닫기]
  * 열면 바로 조회한다(retrieve). 조회(apr03_relate_fund.selectByAfterYn)는 afterYn 조건이 없어 문서의 연관펀드 전부가 나온다(이상한점 #42).
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

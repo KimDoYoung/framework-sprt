@@ -5,6 +5,7 @@
  *   확인창 "메일 발송 안내" "새로운 메일 시스템을 테스트 중입니다. 해당 시스템으로 메일 발송을 진행하시겠습니까?"(폭 620)
  *   [예] → new AssetMailSend(…) — 외부 메일 시스템(SSO 토큰으로 작성창 새 창). 로컬에서 시험할 수 없어 안내만 한다(사용자 결정 2026-11-03)
  *   [아니오] → Dcr10_Lookup_MailSender_20261027 (앱 안 SMTP 발송창)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Modal, Space } from 'antd';

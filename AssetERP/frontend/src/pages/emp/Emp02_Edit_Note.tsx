@@ -2,6 +2,7 @@
  * 비고(시스템관리자전용) 편집 팝업 (C03) — Emp01_Tab_UserInfo 그리드의 Edit 칸에서 연다.
  * AS-IS: myApp/client/vi/emp/Emp02_Edit_Note.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L50-70): 710×390, 비고 TextArea 700×300(여백 10), 아래 가운데 저장·닫기
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

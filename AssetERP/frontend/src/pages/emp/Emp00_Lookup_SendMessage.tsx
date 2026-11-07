@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp00_Lookup_SendMessage.java (273줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L53-102: 700×530, 머리말 "알림발송", [기준일(오늘, 비활성)][조직/직무/성명][조회] + 체크 다중 그리드 250 + 알림내용 줄 + 입력칸 + [전송][닫기]
  * 접속 중인 사원만 나온다(AS-IS BroadcastWebsocket 접속자 → TOBE 접속자 현황). 알림은 받는 사람의 WebSocket 알림으로 간다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, Modal, Space, Typography, message } from 'antd';

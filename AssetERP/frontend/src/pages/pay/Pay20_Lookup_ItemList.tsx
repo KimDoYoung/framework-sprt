@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay20_Lookup_ItemList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L45-106: 모달 370×500 "급여항목", 위 툴바(항목명 100 · 조회) + 체크박스 다중 그리드(구분 140 · 항목명 150), 아래 가운데 [확인][취소]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -7,6 +7,7 @@
  * view(chckInsuffId) L131-149: 조치내역을 ID로 읽어 읽기 전용(승인·반려·취소·임시저장 숨김) / edit(model, stdDate, cb) L151-161. setButton() L478-494: 승인상태 10(대기)이면 승인·반려·임시저장을 켜고 취소는 끈다
  * 다음 단계: 조치기록의 증빙 보기 아이콘은 EE49의 Tdm00_Lookup_RelateAppr.view("tdm63")를 연다
  * UX보강(10): 해당 없음
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, Modal, Space, Typography, message } from 'antd';

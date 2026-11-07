@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/car/Car04_Edit_PublicJournalAdmin.java (385줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L85-102: 모달 780×480 "공용차량 운행일지 변경", 아래 가운데 [저장][닫기]. getEditor() L207-271: 라벨 폭 140, 줄 = 사용일시(날짜 읽기 전용 + 시:분 ~ 시:분) / 사용자·업무용 사용거리(읽기 전용) / (출퇴근용) / (일반업무용) / 주행거리(읽기 전용)·비업무용 / 행선지 / 목적 / 참석자
  * EditModal 규격(11 §4a). 저장은 이 창이 한다(update() L322-376)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

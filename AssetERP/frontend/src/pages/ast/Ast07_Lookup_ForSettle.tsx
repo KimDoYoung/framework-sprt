@@ -6,6 +6,7 @@
  * openNew(trId, …) L96-135: 최신 거래(ast.Ast06_Tr.selectById)로 새 결제를 채운다(일자 오늘, 외화금액 = 미결제액, 적용환율 0, 원화 0, 적요 = 거래 적요, 거래코드 수령 9002 · 지급 9003)
  * open(settleModel, "MODI", …) L137-150: "미수/미지급 결제변경". MODI의 [닫기]는 callback(settleModel)이라 부르는 쪽이 분개를 다시 읽는다(onDone), NEW의 [닫기]는 아무것도 하지 않는다
  * 편집창 규격(11 §4a): antd Modal + 머리말 아래 선·푸터 위 선
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Input, Modal, Select, Space, Typography, message } from 'antd';

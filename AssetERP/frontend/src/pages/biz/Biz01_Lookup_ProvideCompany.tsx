@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Lookup_ProvideCompany.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L51-77: 모달 330×500, 위 = 툴바(검색 · [조회]), 아래 = 거래상대방 한 열(270) 단일 그리드, 아래 가운데 [선택][닫기]
  * UX보강(10): 툴바 = SearchBar(UX-01), 행 클릭 선택(UX-06), 첫 입력칸 포커스(UX-05, LookupModal)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

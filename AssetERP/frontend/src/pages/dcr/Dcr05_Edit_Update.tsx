@@ -2,6 +2,7 @@
  * 문서양식 상세 보기·수정 창 (E16) — Dcr05_Lookup_DocType의 "수정" 칸에서 연다 (E16은 읽기 전용 retrieveReadOnly, 수정은 문서양식등록 화면)
  * AS-IS: myApp/client/vi/dcr/Dcr05_Edit_Update.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L71-98·getEditor() L122-157: 모달 836×880 "상세 보기", 구 분(콤보 DocFormClassCode) · 제 목 · 내 용(HTML 편집기) · 비 고(125), 아래 가운데 [수정][미리보기][닫기]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

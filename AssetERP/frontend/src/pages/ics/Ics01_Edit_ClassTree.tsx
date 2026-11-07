@@ -2,6 +2,7 @@
  * 법규분류 등록·수정 창 (E01) — Ics01_Tab_ClassTree의 [상위등록]·[하위등록]·트리 [수정]에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Edit_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L84-103: 분류코드(250)·조회순서(150) / 분류명(400) / 수시알림(325, 읽기 전용) + [설정]. 라벨 폭 70. 창 440×250
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

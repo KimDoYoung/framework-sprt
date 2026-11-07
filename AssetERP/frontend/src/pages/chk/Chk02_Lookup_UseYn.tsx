@@ -4,6 +4,7 @@
  * 레이아웃 L76-108: 모달 "일일점검내역 체크리스트", 툴바 50(분류 300 · 검색 250 "분류/점검내용" · [조회][저장][전체선택][전체해제]),
  *   그리드(분류명 300 · 점검내용 645 · 상세보기 60 · 사용여부 80 편집), 아래 가운데 [닫기]. 열릴 때 곧바로 조회한다(open L69-74)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 2개라 넣지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

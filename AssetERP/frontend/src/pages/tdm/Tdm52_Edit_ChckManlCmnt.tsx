@@ -6,6 +6,7 @@
  * view(model) L104-114: 읽기 전용(승인·반려·취소·임시저장 숨김) / edit(model, stdDate, cb) L116-125. setButton() L386-409: 상태 10(대기)이면 승인·반려·임시저장을 켜고 취소는 끈다
  * 다음 단계: [증빙자료(n건)] 증빙자료 창(Tdm00_Lookup_RelateAppr)은 안내만 (N22와 같다)
  * UX보강(10): 해당 없음
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, Modal, Space, Typography, message } from 'antd';

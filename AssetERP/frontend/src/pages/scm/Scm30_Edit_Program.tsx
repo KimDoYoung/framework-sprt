@@ -7,6 +7,7 @@
  * read(programModel, callback) L161-186 "프로그램": 시스템·구분·프로그램ID·소스·프로그램명·비고·사용여부 읽기 전용, [파일업로드][다운로드][삭제] 막음, [저장] 숨김, 버전 표시, 파일 조회
  * 모달 1000×800: 시스템·구분·사용여부 / 프로그램ID·버전 / 프로그램명·등록일시 / 소스 / 파일명 + 3버튼 / 비고 / [저장][닫기]
  * (modal-style: 헤더 아래 선·푸터 위 선, 라벨 오른쪽 정렬 — 11 §4a)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, Input, InputNumber, message, Space } from 'antd';

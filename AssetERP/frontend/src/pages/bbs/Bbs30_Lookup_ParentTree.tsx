@@ -2,6 +2,7 @@
  * 게시물 분류목록 조회창 (Z13) — Bbs30_Lookup_ClassTree 세부항목의 "이동" 아이콘이 연다
  * AS-IS: myApp/client/vi/bbs/Bbs30_Lookup_ParentTree.java (138줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L47-61: 모달 "게시물 분류목록" 330×600, 그리드(buildGrid01 L78-84: 체크 단일, 게시물 분류명 200 · 사용 50(✓)), 아래 가운데 [이동][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Space, message } from 'antd';

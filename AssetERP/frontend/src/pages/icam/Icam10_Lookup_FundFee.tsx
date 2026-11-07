@@ -4,6 +4,7 @@
  * open() L53-125: 모달 "펀드보수 발생내역 수정" 500×300, 라벨 폭 100, 운용사(코드·이름) · 펀드(코드·이름) · 적요 · 발생보수(통화 + 금액), 아래 가운데 저장·닫기
  * 운용사·펀드·적요·통화는 읽기 전용(L60-65), 금액만 고친다(포맷 #,###.######)
  * 편집창 규격: 11 §4a (EditModal)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, Input, message, Modal, Space, Typography } from 'antd';

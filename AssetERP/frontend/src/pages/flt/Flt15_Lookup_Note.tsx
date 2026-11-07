@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt15_Lookup_Note.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L41-62: 모달 710×390 "메모", 큰 글상자(700×300) + [저장][닫기]. open(empModel, callback) L64-82: 서비스 flt.Flt15_TrStatus.selectByPersonId(companyId, personId, stdDate=행의 noteDate) — 없으면 서버가 만든다
  * UX보강(10): 조회창 UX-05(열면 글상자에 커서)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

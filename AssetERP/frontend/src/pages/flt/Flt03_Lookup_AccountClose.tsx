@@ -2,6 +2,7 @@
  * 계좌폐쇄 창 (I02) — Flt03_Tab_AccountReport [계좌폐쇄]에서 확인 뒤 연다.
  * AS-IS: myApp/client/vi/flt/Flt03_Lookup_AccountClose.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L37-58: 260×160 모달, 폐쇄일(라벨 폭 70, 칸 220) + [저장][닫기]. open(list, callback) L60: 폐쇄할 계좌 목록
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

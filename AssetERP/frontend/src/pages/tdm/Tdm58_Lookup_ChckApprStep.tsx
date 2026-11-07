@@ -5,6 +5,7 @@
  * view(chckOrgId, stdDate) L68-81: "승인선 확인" — [등록][저장][삭제]와 위로·아래로 열을 감춘다. edit(…) L83-86: "승인선 변경"
  * 승인선 순서(apprSeq "01"…)는 저장할 때와 위로·아래로를 누를 때마다 목록 순서대로 다시 매긴다.
  * UX보강(10): 조회창(UX-05·06 — 삭제용 체크라 행 클릭 선택은 쓰지 않는다). 저장(n)(UX-03)·변경 표시(UX-07)는 `useGridCrud`를 쓰지 않아 넣지 않았다(원본도 변경이 없어도 저장은 눌린다)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Space, message } from 'antd';

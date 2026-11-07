@@ -5,6 +5,7 @@
  * setting() L95-160: 운용사가 정해져 있으면 운용사·운용사명 열(2,3)을 숨긴다. buildGrid() L162-181
  * 조회창이므로 모달은 LookupModal, 행 클릭 선택
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05·06
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -2,6 +2,7 @@
  * 회사규정 내용 조회창 (Z01) — Bbs15_Tab_CompanyRule의 "상세보기" 아이콘이 연다
  * AS-IS: myApp/client/vi/bbs/Bbs15_Lookup_Content.java (122줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L37-57: 모달 900×800, 머리글 "회사규정", 본문 = HTML(open L75-90 setHtmlText), 아래 가운데 [첨부파일(n건)] [닫기]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Space } from 'antd';

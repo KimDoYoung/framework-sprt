@@ -2,6 +2,7 @@
  * 공지 기록 창 (Z04) — Bbs02_Edit_NoticeAdmin 머리글의 "[기록]"을 누르면 연다 (저장할 때마다 남은 상태·변경 전 본문)
  * AS-IS: myApp/client/vi/bbs/Bbs09_Lookup_History.java (129줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(noticeId) L38-80: 모달 "기록" 600×700, 위 오른쪽 새로고침 아이콘, 그리드(buildGrid L82-105: 수정일시 200 · 구분 80 · 사원명 100 · 내용변경 80 · 상세보기 70), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

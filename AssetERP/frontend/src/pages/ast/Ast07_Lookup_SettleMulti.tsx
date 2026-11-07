@@ -2,6 +2,7 @@
  * 일괄 결제등록 창 (U11) — Pay50_Tab_ExpenseSettle의 [일괄 결제등록]에서 연다
  * AS-IS: myApp/client/vi/ast/Ast07_Lookup_SettleMulti.java (219줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L50-66: 모달 500×230 "미수/미지급 결제등록", getEditor() L112-123: 라벨 폭 120, 결제일자(250, 오늘) · 예금계좌(350, 조회 트리거), 아래 가운데 [저장][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';

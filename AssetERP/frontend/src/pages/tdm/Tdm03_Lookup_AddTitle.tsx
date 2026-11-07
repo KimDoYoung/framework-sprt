@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm03_Lookup_AddTitle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1000×600(원본) → 열 합계(사외 870+선택·행번호 60+여백 130) 기준 1060: 툴바([조회][등록][저장][삭제]) + 탭 사내(직무겸직 tdm03)·사외(경력 emp07, 대외겸직) + [닫기]
  * UX보강(10): 조회창(UX-05·06), 저장 버튼 UX-03
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Space, Tabs } from 'antd';

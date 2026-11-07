@@ -5,6 +5,7 @@
  *   (일자 100 · 정산보험료 150 · 납부방법 120(DivPayCode 콤보) · 분할납부회차 150 · 납부회차 150 · 납부금액 150 · 잔여금액 150). 체크 열이 없다 — 고른 한 행을 삭제
  * 열 때(open(monthModel) L69): 구분 = 건강보험, 기준년도 = 급여 지급일의 전년도, 그 뒤 바로 조회
  *   open(insurePayModel) L64 (S27 4대보험 정산내역의 [납부상세]): 구분·기준년도를 그 정산 행에서
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

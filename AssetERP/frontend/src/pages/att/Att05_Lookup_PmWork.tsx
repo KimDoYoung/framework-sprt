@@ -4,6 +4,7 @@
  * 생성자 L80-109: 800×300 모달(크기 고정), 머리말 "오후근무 신청", 툴바 50 = [근무일자 ◀ 날짜 ▶][조회][등록][저장][삭제] + 셀 편집 그리드(체크 없음) + [닫기]
  * 그리드 buildGrid L165-211: 근무일자 100 · 사유 450(편집) · 상태 100 · 상신(보기) 80(아이콘). open() L76: retrieve()
  * 상신(보기) 아이콘 L166-202: 변경이 있으면 "저장 후 진행가능합니다" → 상태 10·20·30이면 결재문서 보기, 아니면 insertLinkApproval()(링크코드 A73, 문서분류는 defaultCheck L147의 Dcr30_Link)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Space, message } from 'antd';

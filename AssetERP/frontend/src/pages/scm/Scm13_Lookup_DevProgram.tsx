@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm13_Lookup_DevProgram.java (93줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 모달 600×350 "변경프로그램": 그리드 buildApprStepGrid() L67-84 (구분 100 · 프로그램ID 310 · 배포순서 60 · 소스 30) + [닫기]
  * retrieve() L61-65: scm.Scm13_DevProgram.selectByDevId(devId). 소스 아이콘 → Scm13_Edit_DevProgram.open(상세보기)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

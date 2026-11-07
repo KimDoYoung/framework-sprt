@@ -2,6 +2,7 @@
  * 주계좌 설정 창 (I02) — Flt03_Tab_AccountReport [주계좌 설정]에서 연다.
  * AS-IS: myApp/client/vi/flt/Flt03_Lookup_MainAccount.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(callback) L37-57: 650×400 모달, 행번호 없는 그리드(개설기관·계좌번호·계좌명의·주 계좌 체크) + [저장][닫기]. 열 때 retrieve()
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';

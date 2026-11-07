@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys13_Lookup_CodeGroup.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(selectModel): 제목 "코드 그룹", 1100×600 모달, 왼쪽 반 그룹 그리드 / 오른쪽 반 Sys13_TabPage_Code, 아래 가운데 닫기.
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';

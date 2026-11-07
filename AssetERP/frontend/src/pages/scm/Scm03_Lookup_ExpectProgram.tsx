@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm03_Lookup_ExpectProgram.java (102줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 600×500 · 위 [새로고침] · 체크 다중 그리드(구분 80 · 프로그램코드 200 · 프로그램명 200) · [닫기]
  * [E0] 화면 열림 (생성자 L39-71) → open(srId) L33-37: retrieve() · scm.Scm03_ExpectProgram.selectBySrId L85-97
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

@@ -2,6 +2,7 @@
  * 공유지정 창 (Z05) — Mkt01_Lookup_TargetCompany·Mkt03_Lookup_History의 [설정]에서 연다
  * AS-IS: myApp/client/vi/mkt/Mkt05_Lookup_Share.java (319줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L77-107: 모달 "공유지정" 580×450, 위 = 직원/부서 라디오(기본 부서) + [행 추가][행 삭제] + 새로고침, 아래 = 체크 다중 그리드(구분 70·부서 250·성명 100), 아래 가운데 [저장][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Radio, Space } from 'antd';

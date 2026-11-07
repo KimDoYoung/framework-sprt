@@ -5,6 +5,7 @@
  *   / 전표 = 툴바([차변 행추가][대변 행추가][행 삭제] ⟳ … 대차차액) + 셀 편집 그리드 250(구분·계정코드·계정과목·금액·관리계좌·적요), 아래 가운데 [저장][닫기]
  * 편집창 규격(11 §4a, modal 원칙): antd Modal + 머리말 아래 선·푸터 위 선, 라벨 오른쪽 정렬
  * [E1 생략] corpName[거래처].TriggerClick (L174-187) → Sys15_Lookup_Corp — AS-IS는 corpName.setEnabled(false)라 누를 수 없다(죽은 코드). 칸을 막아 둔다
+ * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

@@ -1,6 +1,7 @@
 /**
  * 현금흐름표 일괄생성 모달 (R09) — Ast03_Lookup_CfAutoCreate
  * AS-IS: myApp/client/vi/ast/Ast03_Lookup_CfAutoCreate.java (291줄)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Col, Form, Input, InputNumber, message, Modal, Row } from 'antd';

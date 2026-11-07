@@ -4,6 +4,7 @@
  * open(apprId) L33-49: 510×600 모달 "댓글 보기", 그리드(댓글 420 · 파일 50, 머리·행번호 없음, 행 펼침 — 글이 모든 줄 아래에 펼쳐져 있다) 하나. 버튼·입력·삭제 없음(읽기 전용)
  * 댓글을 쓰고 지우는 창은 `Apr42_Lookup_Comment`(V04)이고 같은 조회·파일 창(`Apr42_Lookup_FileList`)을 쓴다.
  * 다른 점(12-화면우선원칙·Apr42_Lookup_Comment와 같게): 행 펼침 단추 칸(GridExpandBuilder)은 두지 않고 글은 처음부터 펼친 채 머리 아래 줄에 보인다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

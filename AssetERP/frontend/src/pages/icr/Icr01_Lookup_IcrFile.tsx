@@ -5,6 +5,7 @@
  * openPeriod()(L64-73, 기본): 삭제 열(5번)을 감추고 서식파일 열을 650으로, [등록]을 감춘다 → 보이는 것은 목록·다운로드·[닫기].
  * open()(L75-80, `admin`): 전부 보인다 — [등록]은 upLoadFile()(L185-214)로 파일을 골라 올리고(FileUpload?parentId=&fileYn=true&adminYn=true) 다시 조회,
  *   삭제 열은 sys.Sys10_File.delete(UpdateDataModel.deleteModel)로 sys10_file 행만 지운다. openUser()(다운로드 열 숨김)는 부르는 화면이 없어 만들지 않았다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -5,6 +5,7 @@
  * [E0] 화면 열림 (생성자 L121-180) → defaultCheck() L259-294(A01 문서분류·휴가기준), getEditor(), refreshCode01() L182-193(콤보 읽기)
  * 결재요청 = 전자결재 편집창 Apr01_Edit_ApprDoc 링크코드 A01 — updateRow() L438 → chkReward() L795 → 저장 → checkA() L494 → checkExcess() L516 → insertLinkApproval() L649 → updateApprId() L699
  * [대결자 지정] 단추(E5 L158-166) = Apr07_Lookup_AltAppr.open(leaveModel) — EE38에서 연결했다(editDriver.flush()처럼 폼의 현재 값을 넘긴다)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, Select, message } from 'antd';

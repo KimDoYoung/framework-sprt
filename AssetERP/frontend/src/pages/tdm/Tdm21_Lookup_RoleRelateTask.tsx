@@ -5,6 +5,7 @@
  * `viewOnly`(AS-IS view(roleId)): 행 추가·행 삭제·[저장]을 감춘다
  * 행 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에서 지운다 (update() L234-271: 저장 → 삭제 순서)
  * UX보강(10): 조회창(UX-05·06은 Tdm10 안에서), 저장 버튼 UX-03
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space } from 'antd';

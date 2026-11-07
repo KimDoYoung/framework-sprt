@@ -4,6 +4,7 @@
  * open(purTrId, header, callback) L53-59: 700×400, 위 툴바 50([조회][등록][삭제]) + 그리드(체크 다중, 편집: 적용일자 120 · 불공제세액(추가분) 120 · 비고 350) + 푸터 [저장][닫기]
  * 모달: 11a 조회창 규격(LookupModal) — 열 폭 합계 590 + 60 + 130 = 780 (03 원칙 21, AS-IS 700보다 작게 하지 않는다)
  * UX보강(10): [저장(n)] UX-03, 툴바 [조회] 중복 클릭 방지 UX-01
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { astApi } from '@/api/ast';

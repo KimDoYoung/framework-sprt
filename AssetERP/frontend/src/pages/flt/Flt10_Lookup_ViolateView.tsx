@@ -4,6 +4,7 @@
  * 생성자 L39-76: 모달 1300×500 "위반내역", 툴바 "기준일"(비활성) + [조회], 그리드 8열, [닫기]. open(personId, baseDate) L78-82: 기준일을 채우고 retrieve()
  * 서비스 flt.Flt10_Tr.selectViolate(companyId, personId, stdDate) — I10 위반내역조회 API 재사용
  * UX보강(10): 조회창 UX-05·06, 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message } from 'antd';

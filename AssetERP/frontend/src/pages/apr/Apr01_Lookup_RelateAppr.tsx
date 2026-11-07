@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Lookup_RelateAppr.java (173줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L53-115: 700×300 모달 "연관문서", 위 [등록][확정][새로고침], 단일 체크 그리드(구분 50 · 등록일 100 · 문서명 400 · 삭제 80), 푸터 [닫기]
  * 열면 바로 조회한다(retrieve). [확정]은 이 문서의 연관문서를 모두 지우고 창에 남은 줄을 넣는다.
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

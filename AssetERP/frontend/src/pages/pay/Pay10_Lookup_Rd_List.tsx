@@ -4,6 +4,7 @@
  *   `…/RDhtml/Pay10_Rd_List.html?companyId&dbName&dns&personId&payCode&payDate&fileName`를 폼 안에 끼워 넣는다 (payDate가 없으면 sample.html).
  * 주소는 서버가 만든다(`rdApi.buildUrl({kind:'page'})`, companyId·personId는 로그인 값). 이 부품은 받은 주소를 iframe으로 보일 뿐이다.
  * rdClear() L56-58 = url을 null로 비운다. 나머지 retrieve/update/insertRow/deleteRow(L61-74)는 빈 구현이다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React from 'react';
 

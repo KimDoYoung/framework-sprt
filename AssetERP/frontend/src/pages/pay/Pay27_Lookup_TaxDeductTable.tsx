@@ -4,6 +4,7 @@
  * 생성자 L42-71: 1100×700 모달 "산출기준", 위 "세액공제" 제목(50) + 그리드 250(초과 130 · 이하 130 · 기본공제 130 · 적용율(%) 130 · 비고 500) +
  *   "세액공제 한도" 제목(50) + 그리드(초과 130 · 이하 130 · 최소한도 130 · 최대한도 130 · 적용율(%) 130 · 비고 500) + [닫기]. 둘 다 읽기 전용
  * retrieve() L111-129: pay.Pay27_TaxDeductTable.selectByMonthId(monthId) · pay.Pay28_TaxDeductLimit.selectByMonthId(monthId) — 급여 지급일 이전 가장 최근 적용일의 표
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

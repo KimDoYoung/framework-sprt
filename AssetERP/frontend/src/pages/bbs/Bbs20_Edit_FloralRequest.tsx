@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs20_Edit_FloralRequest.java (762줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L387-504: 모달 660×860, 라벨 폭 105, 신청일/신청자 · 경조구분+추가정보 · 경조문구 · 신청사유 · [보내는 사람(리본인쇄)] 회사명/발신인 · [받는 사람]+[불러오기] 회사명 · 수신인/직위(직책) · 부서/연락처 · 요청사항 · 발송요청일(요일)/발송요청시간 · 배달장소 · 선 · 신청공유 [설정] 비공개 · 증빙자료(높이 180), 아래 가운데 [저장][닫기]
  * 모드: insert() L107-161 → NEW "화환신청 등록"(번호를 먼저 받는다), edit() L163-175 → EDIT "화환신청 수정"(신청자 본인이 아니거나 신청상태가 10이 아니면 VIEW), view() L189-192 → VIEW "화환신청 상세내용"(disabled() L659-680: 입력칸 읽기 전용, [불러오기]·[저장] 숨김, 증빙자료 삭제 열 숨김)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Divider, Input, message, Modal, Space, Typography } from 'antd';

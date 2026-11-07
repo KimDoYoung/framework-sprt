@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/frm/Frm01_Lookup_NoticeList.java (102줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L32-46: 750×400, 머리말 "공지사항", 단일 그리드. open(callback) L27-30 → retrieve()
  * buildGrid() L48-83: 새 글 표시(오늘·어제 등록이면 NEW) 40 · 공지번호 100 · 공지사항(HTML 제목) 420 · 등록일 90 · 보기 아이콘 50
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';

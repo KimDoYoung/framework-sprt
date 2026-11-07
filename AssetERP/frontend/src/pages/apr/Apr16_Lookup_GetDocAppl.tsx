@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr16_Lookup_GetDocAppl.java (183줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L60-81: 모달 1100×450 "신청내역"(창 닫기 X 없음), 툴바 [조회] + 체크박스 다중 그리드(신청일자 90 · 신청자 80 · 제공처 180 · 목적 180 · 구분 130 · 인감 및 대표명의 250 · 신청매수 70),
  *   아래 가운데 [확인][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

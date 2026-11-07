@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm01_Lookup_HrChangeInfo.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1380×600(원본) → 그대로 1380: 툴바([조회]) + 변동 전/후 비교 그리드(SingleGrid, 묶음 헤더 2개) + [적용][닫기]
  * UX보강(10): 조회창(UX-05·06)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Space, message } from 'antd';

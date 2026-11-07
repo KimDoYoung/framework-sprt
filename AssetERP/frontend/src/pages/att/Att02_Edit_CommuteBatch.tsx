@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/att/Att02_Edit_CommuteBatch.java (258줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L61-94: 라벨 폭 110, [체크] 확정 출근시간 {HH:mm} {출근일} · [체크] 확정 퇴근시간 {HH:mm} {퇴근일}, 아래 가운데 [적용][닫기]
  * open() L52-59: 고른 행들 + settings() + defaultInfo() L210-226 (사용 중인 근태정책이 한 건이면 그 출근·퇴근시각을 칸에 넣는다)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, Modal, message, Space, Typography } from 'antd';

@@ -4,7 +4,7 @@
 `docs/grid-style.md`(그리드), `docs/button-types.md`(버튼)와 같은 방식이다.
 
 - **SID** = 화면스타일-ID(Style ID). 이름 대신 짧게 부르는 약어다. 예: "이 화면은 SGVF".
-- 스타일은 **Tab 파일(화면 껍데기)** 에 붙인다. `*_Edit_*` 파일은 Tab 안에 붙는 폼 부품이며, 위치는 스타일이 정하고 폼 종류(읽기 전용/편집)는 SGVF·SGEF가 구분한다.
+- 스타일은 **Tab 파일(화면 껍데기)** 에 붙인다. 모달(`*_Edit_*`·`*_Lookup_*`·`*_Popup_*`)은 자기 SID(M으로 시작)를 따로 가진다 — 아래 "모달 스타일" 절.
 - Tab 파일 머리 주석에 `스타일: SGVF` 한 줄을 적는다.
 2-2-2
 > 상태: **견본 확정(2026-10-29)**. 아래 SID 19개 모두 `docs/page-style/{SID}/`에 견본이 있다. 견본은 사용자가 화면을 열어 확인·수정한 것이다. 판별기(`yunhee page-style`) 수정 의뢰는 `docs/yunhee-page-style-판별.md`. 나중에 들어온 SID(SGHF·TO·GO·DSBRD·GDP·IN)는 대표 화면 하나만 보고 정했으므로, 같은 SID로 묶은 다른 화면을 맞추다가 규칙이 바뀔 수 있다(그때 이 문서와 견본을 같이 고친다).
@@ -238,6 +238,23 @@
 견본: `docs/page-style/SR/` (`Emp01_Tab_InoutState.tsx` 기간별 입퇴사현황 1287 + RD 영역 `Emp01_Rd_InoutState.tsx`). 화면을 열어 확인했고 고칠 곳 없이 현재 모양 그대로 확정.
 - 위: `SearchBar`(조회기간 시작 ~ 끝 + [조회]), 아래: RD 보고서 `iframe`(남은 높이 전부). 그리드가 없어 `yunhee page-style`은 `미분류(그리드 없음)`로 판별한다(판별기에 SR 규칙이 없다 — yunhee 수정사항 제안). 점검 스크립트 `tools/page-style-check.py`에는 X22에서 SR 규칙을 추가했다(대상: `Act04_Tab_ReportFSS`).
 - RD 영역은 AS-IS `Emp01_Rd_*` 클래스(RD 주소 발급 + iframe)로 따로 두고 탭이 `retrieve(param)`을 부른다. 열 때 한 번 조회하는 화면(`Emp01_Tab_InoutState`)과 열 때 조회하지 않는 화면(탭 안 RD 페이지, TP)이 있다.
+
+## 모달 스타일 (초안, 2026-11-08)
+
+모달(`*_Edit_*`·`*_Lookup_*`·`*_Popup_*`, 약 585개)도 부모 Tab과 별개로 자기 SID를 가진다. 파일 이름(Edit/Lookup/Popup)은 모달의 성격과 무관하다 — 폼만 있는 모달이 세 이름에 걸쳐 약 220개다 — 그래서 **내용 구조**로 나눈다. SID는 `M`으로 시작한다. 너무 잘게 나누지 않으려고 4개만 둔다. 모달 헤더 주석에도 `스타일: MF` 한 줄을 적는다.
+
+| SID | 이름 | 구성 | 견본 |
+|:---|:---|:---|:---|
+| MF | ModalForm | 입력 폼 위주(그리드 없음). 편집창·입력 대화상자·안내/확인창 | `Att02_Edit_CheckOutTime` (미등록 근태 퇴근시간 입력) |
+| MG | ModalGrid | 그리드(읽기·셀 편집 모두) 중심. 조회 줄·트리·파일 목록이 곁들여도 주된 것이 그리드면 MG. 선택창·목록창 | `Tdm01_Lookup_SelectSingle` (조회 줄 + 그리드 선택창) |
+| MFG | ModalFormGrid | 폼 + 그리드를 함께 가진 모달(마스터 폼 + 하위 목록) | `Act01_Edit_AccountCode` (계정코드 편집) |
+| MH | ModalHtml | HTML 보기·편집(`HtmlView`·`HtmlEditor`) | `Sys55_Lookup_Content` (화면안내) |
+
+- 견본: `docs/page-style/{MF,MG,MFG,MH}/`. **초안이라 견본 확정 전이다** — 사용자가 열어 보고 고친 뒤 확정한다.
+- 트리 선택창·파일 첨부·탭이 있는 모달은 SID를 따로 두지 않고 주된 구조(보통 MG)로 적는다. 구분이 필요하면 헤더 주석에 적는다.
+- 모달을 감싸는 부품은 `EditModal`(36)·`LookupModal`(약 330)·`Modal`(약 100)로 섞여 있다. 편집 팝업은 EditModal 규격(`11-프론트부품.md` §4a)을 따르는 것이 원칙이나 지키지 않는 것이 많다. SID와는 별개로 맞춘다.
+- 판별기(`yunhee page-style`)는 모달을 아직 모른다(폼 모달을 DSBRD·GO로 판별). 수정 의뢰는 `docs/yunhee-page-style-판별.md`에 쓴다.
+- Tab 쪽 `SGP`는 "편집 팝업을 여는 화면"의 SID이고, 열리는 팝업 자신의 SID는 위 모달 SID다.
 
 ## 견본 사용법
 

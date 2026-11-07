@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay06_Lookup_ActList.java (314줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L84-169: 1200×400 모달 "계약서 Mapping"(닫기 X 없음), 위 툴바([행 추가][행 삭제][문서분류지정] + 새로고침 아이콘), 그리드(체크 다중 + 셀 편집:
  *   매뉴 150 · 사원구분 120(콤보 EmpKindCode) · 제목 400 · 내용 60(아이콘) · 비고 440), 아래 가운데 [저장][닫기]. 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에 보낸다(deleteList)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

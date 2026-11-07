@@ -4,6 +4,7 @@
  * open(srModel, callback) L53-135: 모달 700×700 "프로그램 List", 검색 줄 = 시스템(의뢰의 시스템, 막힘) 구분(콤보 ProgramType, "전체") 검색(100) [조회] /
  *   그리드(체크 다중: 구분 80 · 프로그램코드 200 · 프로그램명 200 · 비고 200) + 아래 페이징 툴바(100건) / [확인][취소]
  * 열 때 조회하지 않는다(파라미터가 없어 비어 있다). retrieve() L150-177: 시스템·구분·"%검색어%" → 1페이지 부터. confirm() L179-188: 고른 것이 없으면 "선택된 프로그램이 없습니다"
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useMemo, useState } from 'react';
 import { message, Space } from 'antd';

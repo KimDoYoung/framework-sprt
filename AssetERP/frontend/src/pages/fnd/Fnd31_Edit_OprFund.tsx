@@ -4,6 +4,7 @@
  * 생성자 L108-159: 모달 400×380, 펀드코드(조회창 트리거, 직접 입력 불가) · 펀드명(읽기 전용 여러 줄 400×70) · 배정수량 · 단가(읽기 전용) · 배정금액 · 수수료 · 납입금액(읽기 전용), 라벨 폭 105, 아래 가운데 [저장][닫기]
  * insert(oprId, cb) L78 "펀드별 배정" / edit(oprId, model, cb) L93 "펀드별 배정 수정" — 열릴 때 servicePublic() L297: 청약의 발행가·수수료율·총배정수량을 읽고, serviceInsert/serviceEdit() L317·L330: 배정수량 합계를 읽는다
  * 숨은 버튼 2개(fundButton[펀드선택]·accountButton[일임계좌선택])는 펀드코드를 누를 때 SettingPopup("펀드/일임계좌 선택")에 담겨 뜬다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, InputNumber, message, Space, Typography } from 'antd';

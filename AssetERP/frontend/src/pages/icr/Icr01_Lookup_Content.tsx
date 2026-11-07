@@ -4,6 +4,7 @@
  * AS-IS: myApp/client/vi/icr/Icr01_Lookup_Content.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 getEditor() L81-90: 모달 650×680, 상세내용 입력(640×590), 아래 가운데 [저장][닫기]. view() L38-45는 읽기 전용 "내규 상세내용"에 저장 버튼 없음,
  * open() L47-52는 "내규 상세내용 수정"
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

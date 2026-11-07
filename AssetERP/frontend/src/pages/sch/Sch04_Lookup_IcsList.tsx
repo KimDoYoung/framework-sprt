@@ -7,6 +7,7 @@
  *   gubunCode "3": apr.Apr20_RelateIcs.selectById(relateIcsId = infoId) → 그 법규(setIcs) + 원인문서(setAppr: apr.Apr01_Appr.selectById → 제목)
  * 원인문서 [E2] apprName.TriggerClick: 문서가 없으면 "원인문서가 없습니다", 있으면 전자결재 문서창(apprView)
  * 내규판 Sch04_Lookup_IcrList(EE79)와 쌍. TOBE에서는 MyPage Day List(`DayListBox`, EE106)와 법규 박스(`ComplianceGridBox`, EE105)가 연다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Typography } from 'antd';

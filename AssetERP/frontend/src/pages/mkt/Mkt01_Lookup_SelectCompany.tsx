@@ -2,6 +2,7 @@
  * 활동처 선택 창 (Z05) — Mkt01_Lookup_TargetCompany의 [활동처 변경]에서 연다 (고른 담당자들을 다른 활동처로 옮긴다)
  * AS-IS: myApp/client/vi/mkt/Mkt01_Lookup_SelectCompany.java (216줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L60-136: 모달 "활동처" 650×510, 위 = 검색(활동처 200)·[조회], 아래 = 단일 체크 그리드(활동처 270·주요사항 270) + 페이징(100), 아래 가운데 [확인][취소]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Space, Spin } from 'antd';

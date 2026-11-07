@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/rpt/Rpt05_Lookup_WeekBizClass.java (152줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L41-66: 모달 "주간업무구분 관리" 500×500, 툴바 50([조회][등록][저장]) + 그리드(행번호, 업무구분 250 · 미사용 80 편집), 아래 가운데 [닫기]
  * [등록]은 코드관리 창(Sys09_Lookup_Code, 코드구분 WeekBizType)을 연다 — 사원이 정하지 않은 구분은 미사용(true)으로 본다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

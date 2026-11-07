@@ -2,6 +2,7 @@
  * 서식파일등록 창 (E02) — Ics01_Tab_IcsFileUpload의 [파일업로드]에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_IcsFileMultiUpload.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L46-124: 모달 320×210 "서식파일등록", 법령구분 콤보(빈칸 "선택") · 내용(빈칸 "내용작성"), 아래 가운데 [업로드][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Lookup_CardManagement.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L60-98: 모달 500×360(크기 고정, 닫기 X 없음), 제목 "선택내역 관리정보 일괄반영"(파란 굵은 글씨), 폼(라벨 100) = 제공목적(300) · 제공내역(300) · 계정과목(450)
  *   · (menuName이 Biz01_Tab_Card가 아니면) 과세구분(300) · 비고(450×80), 창 아래 가운데 [저장][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Select, Space } from 'antd';

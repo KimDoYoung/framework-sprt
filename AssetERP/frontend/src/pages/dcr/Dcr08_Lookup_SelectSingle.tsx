@@ -2,6 +2,7 @@
  * 최근 사용한 문서분류 조회창 (F01) — 문서작성(Dcr01_Tab_DcrWrite)의 세부분류 옆 [불러오기]에서 연다.
  * AS-IS: myApp/client/vi/dcr/Dcr08_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L40-65: 모달 850×400 "최근사용한 문서분류 List", 위 툴바 [새로고침] + 체크박스 단일 선택 그리드(문서분류 400 · 세부분류 250 · 사용횟수 80), 아래 가운데 [확인][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

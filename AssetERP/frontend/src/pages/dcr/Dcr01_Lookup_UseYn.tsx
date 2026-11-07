@@ -2,6 +2,7 @@
  * 문서분류 사용여부 설정 창 (E16) — Dcr01_Tab_ClassTree의 [사용여부설정]에서 연다 (관리자 회사가 아니고 ERP 상품이 S1이 아닌 회사)
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_UseYn.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * Dcr01_Lookup_UseYn() L62-100: 모달 520×750 "문서분류", 위 툴바(검색 300 + [조회]) + 트리 그리드(문서분류 345 · 등록문서건수 75 · 사용여부 80), 아래 가운데 [저장][닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -7,6 +7,7 @@
  * [E6]·[E11] deleteButton[삭제] — 원본은 만들기만 하고 버튼 줄에 붙이지 않는다(L205 주석) → 화면에 없다. 서버 delete도 옮기지 않았다(작업기록)
  * 처리방안 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13). 형식을 바꾸는 확인은 key로 편집기를 다시 만든다.
  * 부르는 쪽은 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve()의 editDriver.edit(model)).
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Typography } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs11_Edit_Application.java (422줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L79-123: 모달 "기타신청서 작성" 830×650, 라벨 폭 80, 신청일(180)·신청자(180)·신청구분(나머지) · 비고 · 내용(HTML 편집기 450), 아래 가운데 [신청][신청취소] · [임시저장][닫기]
  * 편집창(EditModal) 규격: 11 §4a (머리말 아래 선·푸터 위 선·라벨 오른쪽 정렬)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';

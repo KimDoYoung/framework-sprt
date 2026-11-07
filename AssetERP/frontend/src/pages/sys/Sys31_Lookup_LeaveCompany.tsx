@@ -2,6 +2,7 @@
  * 휴가기준관리 창 — 휴가관리(Emp20_Tab_LeaveManager, S06)의 [기본설정]에서 연다 (AS-IS open()).
  * AS-IS: myApp/client/vi/sys/Sys31_Lookup_LeaveCompany.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L48-84: 모달 900×600 "휴가기준관리"(닫기 X 없음), 툴바(왼쪽 [조회][저장] · 오른쪽 [특별휴가 추가]), 셀 편집 그리드 5열(행번호만, 체크 없음), 아래 안내 글, 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';

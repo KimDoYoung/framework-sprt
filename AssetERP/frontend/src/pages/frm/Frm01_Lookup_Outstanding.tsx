@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/frm/Frm01_Lookup_Outstanding.java (99줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L35-50: 720×400, 머리말 "미결재건", 단일 그리드. open(callback) L30-33 → retrieve()
  * buildGrid() L52-78: 등록일 100 · 제목 240 · 상신자 100(가운데) · 상세보기 아이콘 80, 행번호 숨김
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';

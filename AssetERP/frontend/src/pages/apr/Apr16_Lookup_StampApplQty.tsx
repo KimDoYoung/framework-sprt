@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr16_Lookup_StampApplQty.java (240줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L51-91: 550×200 모달 "법인인감증명서 추가"/"법인등기부등본 추가"/"인감날인 추가", 인감(대표명의) 트리거 칸 + 신청매수(날인부수) + (인감날인만) 반출여부, 푸터 [저장]
  * 편집창 규격(11 §4a): 머리 아래·푸터 위 선, 라벨 오른쪽 정렬, 본문 위아래 12.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, InputNumber, message, Modal } from 'antd';

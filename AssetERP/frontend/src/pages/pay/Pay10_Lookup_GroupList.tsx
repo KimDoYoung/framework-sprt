@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay10_Lookup_GroupList.java (176줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L66-131: 280×400 모달 "구분", 위 툴바(구분 콤보 100 = 코드그룹 PayMonthGroup001 "%"/"전체" · [조회]) + 단일 선택 그리드(분류 220), 아래 가운데 [확인][닫기]
  * open(year, code?, callback) L51-64: 열면서 바로 조회
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

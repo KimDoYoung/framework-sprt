@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs20_Lookup_Message.java (196줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L63-87: 모달 700×500 "문자발송", 툴바(검색 300 "사원명/부서명/사원번호" · [조회]), 그리드(조직 200·직책 120·사번 80·성명 100·발령일 100, 체크 다중), 아래 가운데 [발송][닫기]
  * open(option, model) L53-61: option "02"면 검색칸을 신청자 이름으로 채우고 조회한다
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

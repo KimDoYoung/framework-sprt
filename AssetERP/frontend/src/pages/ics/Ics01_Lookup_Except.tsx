@@ -5,6 +5,7 @@
  *   + 그리드(아이콘 30 · 분류코드 100 가운데 · 분류명 780 · 주기 150 · 미사용 80 체크, 단일 선택), 아래 가운데 [닫기]
  * 열릴 때 조회한다(cycleComboBox 콜백 L69-74). 사용여부 콤보를 닫을 때·검색 Enter·[조회]도 조회.
  * UX보강(10): UX-05·06 LookupModal, 툴바 = SearchBar(UX-01·04), 저장(n)(UX-03).
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Select, message } from 'antd';

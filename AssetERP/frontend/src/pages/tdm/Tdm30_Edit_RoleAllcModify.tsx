@@ -4,6 +4,7 @@
  * 창 550×250(원본): 직책(수정 불가) · 담당임원(조회창) + 겸직여부 · 직책부여일 + 직책해제일 + [저장][닫기]
  * 저장해도 창은 닫히지 않는다(원본 update() L270-287은 hide()를 부르지 않는다) — 부르는 쪽이 받은 행으로 그리드 행만 바꾼다
  * UX보강(10): 조회창(UX-05)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Space } from 'antd';

@@ -4,6 +4,7 @@
  * 레이아웃 L225-330: 라벨 폭 120, 줄마다 여백 20·20·17·20, 칸 300(보수율 260 + "(bp)" 50), 아래 가운데 [저장](버튼줄 60)
  * 선택한 행이 없으면 폼 전체 비활성(Tab의 editFundCodeForm.setEnabled)
  * deleteRow() L439-448은 버튼·이벤트에 붙어 있지 않아 도달 불가 → 만들지 않는다
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message } from 'antd';

@@ -6,6 +6,7 @@
  * [E1] fileUpload.Change (L65) → FileUpload?mode=scm13&devId&deployTgtYn&systemCode&programType&personId (FileUploadMulti, 여러 파일)
  * [E2] fileUploadForm.SubmitComplete (L81) → hide() 뒤 callback.execute() (개발 프로그램 그리드 다시 조회)
  * [E4] closeButton[닫기].Select (L104) → hide()
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, message, Space } from 'antd';

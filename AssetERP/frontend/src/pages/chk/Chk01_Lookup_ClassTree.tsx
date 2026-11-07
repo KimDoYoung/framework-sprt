@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/chk/Chk01_Lookup_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L56-66: 570×700, [전체] 보임, [등록] 숨김, 수정 칸(index 3) 숨김 / edit() L68-77: 610×700, [전체] 숨김, [등록] 보임
  * 그리드: getTreeGrid(1) — 행번호 없음, 분류명 450(트리) · 순서 40 · 잠금 40(adminYn) · 수정 50
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

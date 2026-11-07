@@ -2,6 +2,7 @@
  * 고객사 선택 조회창 (A07) — Sys07_Tab_CompanyRoleMenu 회사명 트리거, LoginPage(admin 서브도메인) 회사 칸 트리거(AS-IS L222-241)에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

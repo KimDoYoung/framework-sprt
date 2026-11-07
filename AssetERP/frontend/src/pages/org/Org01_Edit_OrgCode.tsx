@@ -2,6 +2,7 @@
  * 조직상세 정보 팝업 (C02) — Org01_Tab_OrgCode [하위조직등록]에서 연다(insertData).
  * AS-IS: myApp/client/vi/org/Org01_Edit_OrgCode.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 수정 모드(삭제 버튼)는 원본에서도 이 화면에서 열리지 않지만(호출처는 insertData뿐) 원본대로 둔다.
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

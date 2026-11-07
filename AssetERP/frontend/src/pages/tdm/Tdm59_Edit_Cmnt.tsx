@@ -5,6 +5,7 @@
  * view(model) L80-90: 읽기 전용(등록·반려·등록취소 숨김) / edit(model, stdDate, checkYm, cb) L92-120: 반려된 점검항목이 있으면 [반려], 없으면 [등록]을 보인다
  * 점검항목이 0건인 SELF 행은 승인(반려) 의견 칸이 꺼진다 (L133-137). setButton() L299-328: 상태 10(대기)면 등록(반려)만 켜고 취소는 끈다
  * UX보강(10): 해당 없음
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, Space, Typography, message } from 'antd';

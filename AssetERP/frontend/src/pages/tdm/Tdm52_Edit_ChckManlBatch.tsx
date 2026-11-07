@@ -5,6 +5,7 @@
  * 열릴 때 임시 증빙 ID를 받고(getTmpFileParentId L77-87, 받은 뒤에 창을 보인다) [증빙자료]가 증빙자료 창(Tdm00_Lookup_RelateAppr "tdm52", 임시 ID)을 연다.
  *   [점검완료]는 임시 증빙을 모든 항목에 복사하고, [닫기](와 점검완료 뒤)는 임시 증빙을 지운 뒤 닫는다(close L208-225). 2026-11-05 연결(13-누락대장 2번) — 창 안 [불러오기]는 보류(Com01_Lookup_RelateAppr 머리)
  * UX보강(10): 해당 없음
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';

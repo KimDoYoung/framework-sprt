@@ -5,6 +5,7 @@
  * open(callback) L59-85: 모달 890×600 "특정직위 및 알림설정", 툴바(기준일 100 · [조회]) + 셀 편집 그리드, 아래 [저장][닫기]. 열 때 조회.
  * 저장 뒤 callback(일반발령 탭은 발령 목록 다시 조회, 개인설정은 없음) → 창은 열린 채 다시 조회.
  * UX보강(10): 검색 줄 = SearchBar(UX-01), [저장(n)] UX-03. 폭 = 열 합계 890 + 130(11a 모달 폭)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Space } from 'antd';

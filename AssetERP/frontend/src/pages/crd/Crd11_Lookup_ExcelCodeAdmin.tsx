@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/crd/Crd11_Lookup_ExcelCodeAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L60-92: 모달 700×600 "{카드사명} 매핑", 위 = 툴바 [조회][등록][저장][삭제], 아래 = 셀 편집 그리드(행번호, 체크박스 다중:
  *   업로드 구분코드 200(콤보 CreditCardExcelCode) · 위치(세로줄) 100 · 비고 280), 아래 가운데 [닫기]
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Space } from 'antd';

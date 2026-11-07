@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp91_Lookup_List.java (242줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L59-86: 520×550, 머리말 "화면안내", [검색(메뉴명)][조회] + [화면안내 전체 비활성화] 체크 + 단일 그리드 + 푸터 [닫기]
  * buildGrid() L163-206: 메뉴명 240 · 차단일자 100 · 해제 아이콘 60 · 보기 아이콘 60
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, Modal, message } from 'antd';

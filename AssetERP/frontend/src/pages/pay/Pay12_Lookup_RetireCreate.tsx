@@ -5,6 +5,7 @@
  *   (전년도분 4대보험정산 전인 경우 / 전년도분 연말정산 전인 경우) + [생성][닫기](가운데). actionCode는 "insert"만 쓴다(삭제는 창 없이 Pay10_Tab_Retire.delete)
  * [E1] createButton[생성].Select (L66) → create() L85-104: pay.Pay12_RetireInsure.getInsureRetire(personId, actionCode, insureCheckYn, taxCheckYn) — 성공이면 callback + hide, 아니면 서버 문구
  * [E2] closeButton[닫기].Select (L72) → hide()
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, message, Space } from 'antd';

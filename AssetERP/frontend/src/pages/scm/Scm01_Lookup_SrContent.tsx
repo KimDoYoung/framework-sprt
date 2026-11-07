@@ -4,6 +4,7 @@
  * open(srContent) L53-86: 읽기 전용 보기(HTML), [닫기]만 / open(srContent, EnabledYn, srModel, callback) L88-130: 편집(HTML 편집기),
  *   [확인](EnabledYn일 때만)·[닫기] — 모달 1000×700 "요청내용", 본문은 편집기 하나
  * [E2] [확인] → update() L132-147: scm.Scm01_Sr.updateContent(의뢰의 요청내용) → callback(편집한 HTML) → 닫기
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

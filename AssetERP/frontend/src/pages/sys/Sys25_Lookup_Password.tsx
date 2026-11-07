@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys25_Lookup_Password.java (353줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L76-90: 450×320, 머리말 "비밀번호 변경", [현재 비밀번호][변경 비밀번호] + 규칙 안내 + [비밀번호 확인], 각 칸 옆에 "[대문자]" 표시, 푸터 [확인][3개월 후 변경]
  * open/openNoExtension L58-74, setting() L92-164: init이면 현재 비밀번호 칸 비활성 + [3개월 후 변경] 감춤
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, Space, message } from 'antd';

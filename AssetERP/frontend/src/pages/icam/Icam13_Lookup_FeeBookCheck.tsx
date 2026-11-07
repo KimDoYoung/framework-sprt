@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/icam/Icam13_Lookup_FeeBookCheck.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(stdDate) L46-74: 모달 "펀드보수 월말잔액 대사" 1100×500, 위 = 툴바([잔액대사][조회] + 안내 라벨), 아래 = 결과 그리드(5열, 체크박스 없음), 가운데 [닫기]. 열자마자 retrieve()
  * 열 폭 합계 100+620+90+80+140 = 1030 (+행번호 약 60 + 여백 130) → 1100 (03 원칙 21: 1120 이하는 합계대로, AS-IS 1100보다 작게 하지 않는다)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message, Space } from 'antd';

@@ -6,6 +6,7 @@
  *   파란 라벨(0069B4)은 필수 항목. 부서번호·부서명·이용자명·과세유형·승인구분·승인방식은 줄에서 빠져(주석) 그려지지 않는다 → 만들지 않는다(값은 그대로 보존)
  * 선택한 내역이 없으면 폼 전체 비활성(Tab의 editForm.setEnabled)
  * UX보강(10): 저장 버튼 중복 클릭 방지(UX-01)
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, Modal, message } from 'antd';

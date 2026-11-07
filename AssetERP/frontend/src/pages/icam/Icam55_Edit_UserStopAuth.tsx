@@ -2,6 +2,7 @@
  * 미사용ID 기록관리 [변경] 편집 창 — Icam55_Tab_UserStopAuth의 행 [변경] 아이콘에서 연다 (EE32)
  * AS-IS: myApp/client/vi/icam/Icam55_Edit_UserStopAuth.java (160줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L53-97: 모달 500×250, 제목 "회사명 사용자(사용자ID)", 삭제일자 · 권한정지 해제일자 · 비고(높이 60), 아래 가운데 [저장][닫기]. EditModal 규격(11 §4a).
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Typography } from 'antd';

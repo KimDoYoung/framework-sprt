@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/rpt/Rpt10_Edit_WriteGuide.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * view()·edit() L57-77·getEditor() L79-117: 모달 700×550, 제목 "작성요령 및 변경이력 등록"/"… 수정",
  *   보고서코드 200 · 보고서명 480 / 제출주기(콤보 CycleCode001) 200 · 작성대상 480 / 작성요령(230) / 변경이력(150), 아래 가운데 [저장][닫기]
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

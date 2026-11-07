@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd01_Edit_FundSearch.java (344줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 getEditor() L212-325: 라벨 145, 줄 7개(여백 20·20·17·20), 칸 300(보수율 260 + "(bp)" 50), 모든 칸 읽기 전용, 설정액·순자산 `#,###`, 보수율 `#,###.######`. 버튼 없음
  * retrieve(param) L327-335 / init() L337-339: 목록에서 고른 행을 보여 주고, 고른 행이 없으면 빈 폼
+ * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 
 import React from 'react';

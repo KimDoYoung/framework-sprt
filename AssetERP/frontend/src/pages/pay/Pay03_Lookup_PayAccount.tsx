@@ -4,6 +4,7 @@
  * 생성자 L63-116: 툴바 50 = [조회][등록][저장][삭제], 단일 체크 셀 편집 그리드(출금시작일 120(날짜) · 계좌연결 150(조회창 트리거) · 은행명 150(콤보 BankCode)
  *   · 계좌번호 200 · 예금주명 150 · 비고 250) + 아래 [닫기]. 열 때 retrieve() L166-170 (pay.Pay03_Account.selectByCompanyId).
  * 계좌연결 칸은 Ast01_Lookup_Info.gridInsert("1")(자산 조회창)를 열고 고른 종목을 그 행에 넣는다(2026-11-05 연결, 13-누락대장 3번)
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button as AntButton, Space } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr10_Lookup_DocStamp.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L81-97(flag=true): 모달 580×550 "인감종류", 위 툴바(검색어 + 200 + [검색]) + 체크박스 단일 그리드(인감 80 이미지 · 인감이름 120 · 사용용도 200 · 부서 100),
  * 아래 가운데 [확인][해당사항 없음][닫기]. flag=true는 서비스 apr.Apr10_Stamp.selectBySearchText2
+ * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

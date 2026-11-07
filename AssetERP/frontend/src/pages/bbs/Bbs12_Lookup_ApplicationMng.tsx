@@ -4,6 +4,7 @@
  * 레이아웃 L76-135: 모달 1280×700 "신청구분 내용 양식", 위 안내문(※ 공개여부 …) + 오른쪽 새로고침 아이콘, 왼쪽 그리드 280(신청구분 155·공개여부 70, 단일 선택·공개여부 체크 편집)
  *   · 가운데 편집기 650(PC 양식) · 오른쪽 모바일 양식 350(텍스트 영역), 아래 가운데 [저장][닫기]
  * 편집창 규격(11 §4a): 머리말 아래 선·푸터 위 선·가운데 [저장][닫기]
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

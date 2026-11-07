@@ -4,6 +4,7 @@
  * open() L54-105: 모달 1465×700, 머리글 = 게시물 제목, 왼쪽 = 본문(HTML), 오른쪽 400 = 댓글 탭(Bbs32_TapPage_Comment),
  *   아래 가운데 [수정][삭제](작성자 본인만) [닫기] [첨부파일 확인(n)]
  * 연결: Bbs31_Edit_Content(수정) · Bbs02_Lookup_File.openUser(첨부파일 확인 — 사용자용 = Bbs15 조회창과 같은 읽기 창)
+ * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Space, message } from 'antd';
