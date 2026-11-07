@@ -4,6 +4,7 @@
  * 레이아웃 L62-95: center = 툴바(I/F구분 · 검색 · 조회 · 등록 · 삭제) + 그리드(행번호, 체크박스 단일, Local/Target 헤더 묶음),
  *   south = Ifi90_Edit_Config (편집 폼, 높이 270, 분할 조절 최대 900). 회사 구분 없는 공통 테이블이다.
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04, 조건 2개: I/F구분·검색)
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Modal, Splitter } from 'antd';

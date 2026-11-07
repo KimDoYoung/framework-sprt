@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys05_Tab_PersonRole.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L53-127): center = 툴바(높이 50) + 사원 그리드, south(40%, 분할, 최대 1000) = 권한 그리드 + 가운데 저장 버튼
  * UX보강(10) B12-1: 사원 툴바 = SearchBar(UX-01·02·04, 초기화 = 검색어 비움·재직), 저장 = 저장(n)(UX-03, 권한 칸이 바뀐 행 수)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Select, Splitter } from 'antd';

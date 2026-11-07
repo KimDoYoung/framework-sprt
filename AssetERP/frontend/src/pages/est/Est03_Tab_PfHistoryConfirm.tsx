@@ -5,6 +5,7 @@
  *   아래 330(여백 0,20,20,20, 테두리) = Est03_TabPage_PfHistoryConfirm(읽기 전용 상세 + 증빙)
  * 로그인 사용자가 승인자인 내역만 나온다(서버가 로그인 사용자로 건다). [승인] → 상태 20·승인일시, [취소] → 상태 10·승인일시 비움(결과보고서가 있으면 불가).
  * 검색칸 Enter 조회는 UX보강(UX-04)이다(원본은 [조회]만).
+ * 스타일: GO (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Radio, Space } from 'antd';

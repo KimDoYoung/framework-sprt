@@ -4,6 +4,7 @@
  * 레이아웃 L45-75: north(50, 여백 20 20 0 20) = 툴바(기준년도 [YYYY 50] 제공/수령 [콤보 100] [조회] [엑셀다운로드]), center(여백 0 20 20 20) = 탭 3개
  *   (인별 1회 초과건 · 인별 연간 초과건 · 회사별 연간 초과건). 탭 안은 각각 그리드 1개(Biz01_TabPage_*). overCheckBox("회사한도 초과건만 조회")는 툴바에 붙이지 않았고(L53 주석) SQL도 안 쓴다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 넣지 않는다 — 조건이 연도·콤보 둘이고 원본에 초기화가 없다
+ * 스타일: STP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Tabs } from 'antd';

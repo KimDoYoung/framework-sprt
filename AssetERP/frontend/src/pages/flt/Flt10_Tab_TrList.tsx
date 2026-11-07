@@ -4,6 +4,7 @@
  * 생성자 L69-113: vlc = 툴바(50: 조회기간 [시작] ~ [끝] · 입/출 · 매매구분 · 검색 · 사전신고 포함 · [조회][엑셀다운로드]) / 읽기 전용 그리드(단일 선택)
  * 원본 엑셀은 RD 리포트 서버(Flt10_Rd_TrList) → TOBE는 서버가 조회 결과를 xlsx로 만든다(E10·G03과 같은 방식)
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

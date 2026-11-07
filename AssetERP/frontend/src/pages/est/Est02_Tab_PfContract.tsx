@@ -4,6 +4,7 @@
  * 생성자 L67-92: BorderLayout 가운데(여백 20, 테두리) = 툴바 50(조회기준일 100 · 검색 300 "차주명/사업자명/수수료명" · [조회][등록][삭제]) + 그리드(행번호, 단일 선택)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 전자결재 상신(getClassTreeModel·insertLinkApproval·updateApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)과 문서보기(retrieveApproval)는 V21에서 연결했다 (링크코드 A60, 양식 치환 값은 서버가 만든다 `GET apr/apprs/link-seed`)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

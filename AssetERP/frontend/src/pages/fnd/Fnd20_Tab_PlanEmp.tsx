@@ -5,6 +5,7 @@
  * 레이아웃 L49-114: 위(40%, 여백 20·20·0·20) = 테두리 박스(툴바 50 + 기획펀드 그리드) / 아래(60%, 여백 20) = 펀드별 일정목록 탭(테두리)
  * 1단계: 아래 탭의 [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';

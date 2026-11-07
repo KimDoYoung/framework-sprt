@@ -5,6 +5,7 @@
  *   south(60%, 여백 0·20·20·20) = Tdm13_TabPage_TaskDuty(▼ 관리의무: [등록][저장][삭제] + 관리의무 CellEditGrid)
  * 함께: Tdm14_Lookup_TaskType(책무유형 고르기), Tdm95_Lookup_ChangeHistory(변경이력)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 버튼 UX-03
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal, Space, Splitter } from 'antd';

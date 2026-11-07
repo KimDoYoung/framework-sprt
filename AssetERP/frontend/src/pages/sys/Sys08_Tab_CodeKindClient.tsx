@@ -5,6 +5,7 @@
  *   center = Sys09_Grid_Code(isAdmin = false, retrieveCode(codeKind, companyId) — 항상 편집 가능, 여백 20/20/20/0, 분할)
  * 회사명 칸·코드복사 버튼은 로그인 회사가 0(admin)일 때만 (L103-124).
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 넣지 않는다 — 회사명(admin만) 바꾸면 오른쪽 코드 그리드가 자동 조회돼 "초기화 뒤 자동 조회 없음"이 깨진다. 줄바꿈 없이 가로 스크롤
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Splitter } from 'antd';

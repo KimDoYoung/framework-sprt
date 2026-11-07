@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp10_Tab_AddrBook.java (216줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L53-80: center=vlc(테두리, 여백 20) — 툴바 [담당자명 칸][조회][등록][저장][삭제][그룹설정] + 셀 편집 그리드(체크박스 다중, 7열: 담당자명 100 · 이메일 220 ·
  *   핸드폰 번호 120 · 사무실 번호 120 · 회사이름 180 · 직위 100 · 비고 500). [그룹설정]은 그룹설정 창(Emp57_Lookup_Insert)을 연다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { empAddrBookApi } from '@/api/emp';

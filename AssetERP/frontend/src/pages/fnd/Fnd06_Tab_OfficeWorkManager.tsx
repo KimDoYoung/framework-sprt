@@ -5,6 +5,7 @@
  *   사무수탁사명 표시만 · ICAM·협회코드·신한펀드·비고 편집, 사용여부는 체크 표시만). 행 추가·삭제 버튼은 원본에 없다. 여백 20, 최대 폭 1000
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 초기화 버튼이 없어 onReset(UX-02)은 넣지 않는다
  * 공통 회사(0) 전용 — 서버 SQL이 company = 0 AND company = 로그인 회사라 관리자 회사가 아니면 0행. ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절(작업기록 의존)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message } from 'antd';

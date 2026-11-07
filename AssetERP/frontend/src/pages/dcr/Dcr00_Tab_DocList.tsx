@@ -6,6 +6,7 @@
  *   Apr42_Lookup_CommentView는 EE39, Apr50_Lookup_ApprList(북마크 별 아이콘)는 EE40에서 연결했다(나머지 둘은 다른 도메인(apr)이라 다음 단계 — 지금은 안내만 띄운다).
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건이 길어 한 줄을 넘기므로 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

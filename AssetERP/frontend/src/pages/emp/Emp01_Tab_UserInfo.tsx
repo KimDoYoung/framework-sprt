@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp01_Tab_UserInfo.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 4개: 고객사·검색·사용고객만·퇴사자 제외 → 초기화는 '전체'·''·체크·체크, 자동 조회 없음)
  * 레이아웃(생성자 L62-107): 툴바(높이 50) = 고객사(트리거)·검색·사용고객만 보기·퇴사자 제외·조회·안내문 / 그리드 + 페이징 툴바(100행)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

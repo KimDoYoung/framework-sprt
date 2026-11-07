@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys02_Tab_User.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 선택한 회사의 관리자 계정(sys02_user). 셀 편집 + 단일 선택(체크박스 없음). 비밀번호는 저장 시 to_encrypts.
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space, Button as AntButton } from 'antd';

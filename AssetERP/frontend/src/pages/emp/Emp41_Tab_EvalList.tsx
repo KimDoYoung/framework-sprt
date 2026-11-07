@@ -7,6 +7,7 @@
  * 처음에는 [삭제]·[행 추가]·[행 삭제]·[저장]이 비활성 — 기준 적용일을 고르면(retrieveForm) 확정 전일 때만 활성
  * UX보강(10): 저장 = 저장(n)(UX-03, 삭제대기 포함). 검색 조건이 없어 SearchBar·초기화(UX-02)는 쓰지 않는다
  * 로그인 회사 전용(서비스가 LoginUser.getCompanyId()만 보낸다)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

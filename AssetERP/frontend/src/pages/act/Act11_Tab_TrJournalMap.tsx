@@ -4,6 +4,7 @@
  * 레이아웃 L85-126: 위(0.5) = 툴바(거래코드/명 200 · 분개그룹 120 · [조회][등록][저장][삭제] + 관리자 회사만 고객사 200(다중 선택) · [기초데이터생성]) + 거래맵핑 셀 편집 그리드(행번호, 체크박스 다중)
  *   / 아래(0.5) = 분개맵핑 그리드(Act11_Grid_TrJournalMap) — 위에서 행을 누르면 그 분개그룹을 읽는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 툴바가 두 줄로 넘어가 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message } from 'antd';

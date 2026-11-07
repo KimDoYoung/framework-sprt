@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics01_Tab_IcsFileUpload.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L61-108: 위 툴바(법령구분 콤보 120 "전체" · 검색칸 300 "내용/서식파일" · [조회][저장][파일업로드]) + 그리드
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

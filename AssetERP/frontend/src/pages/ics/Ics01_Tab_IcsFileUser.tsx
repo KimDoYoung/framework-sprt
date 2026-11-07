@@ -4,6 +4,7 @@
  * 레이아웃 L58-79: center=세로(툴바 49 + 그리드) — 검색 300 · [조회]. 그리드(체크박스 단일 선택): 법령구분 150 · 내용 150 · 등록일 100 · 서식파일 500 · 다운로드 80(아이콘)
  * 열 때 바로 조회한다(생성자 L78 retrieve()). 관리자용 짝은 `Ics01_Tab_IcsFileUpload`(E02, #1107)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건이 하나라 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

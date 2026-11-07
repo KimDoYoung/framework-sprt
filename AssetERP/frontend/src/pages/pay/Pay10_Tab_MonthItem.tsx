@@ -7,6 +7,7 @@
  * insert() L237-247(Pay10_Lookup_Insert 열기)은 호출처가 없어 만들지 않았다(툴바에 [생성]이 없다)
  * 출력 창은 공통 RdViewer가 맡는다(AS-IS RDViewer.viewer, mrd Pay10_Rd_MonthItem)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장(n) = UX-03
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

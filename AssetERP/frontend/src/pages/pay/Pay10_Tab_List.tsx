@@ -7,6 +7,7 @@
  *   [문서보기]의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval)를 연결했다. updateApprId 뒤에는 retrieve()로 상신 상태를 다시 읽는다(L609).
  *   계좌연결(Pay03_Lookup_PayAccount)의 자산 조회창(Ast01_Lookup_Info, 다른 도메인 ast)은 다음 단계.
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SR (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, message } from 'antd';

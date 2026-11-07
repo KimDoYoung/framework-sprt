@@ -6,6 +6,7 @@
  * 기본설정 팝업(SettingPopup)에 숨은 버튼 4개: 사용여부설정(Ics10_Lookup_UseYn) · 분류관리(Ics21_Lookup_CheckList) · 담당그룹관리(Sch22_Lookup_WriteGroup edit) · 데이터업로드(Ics10_Lookup_ExcelUpload)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
  * 출력/다운로드는 RD 리포트(Ics10_Rd_Checklist) 대신 서버가 한 시트 xlsx를 만든다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Select } from 'antd';

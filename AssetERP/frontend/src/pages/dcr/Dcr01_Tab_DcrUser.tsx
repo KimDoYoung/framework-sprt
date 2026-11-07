@@ -2,6 +2,7 @@
  * [1002] 문서작성 > 01. 문서작성 > 업무별 문서작성 (F02, 1단계)
  * AS-IS: myApp/client/vi/dcr/Dcr01_Tab_DcrUser.java (53줄) — Dcr01_Tab_DcrManager를 상속해 트리 조회만 바꾼다
  * 1단계(F01과 같은 사유): 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 조회창 Apr50_Lookup_ApprList·(메일 창 Dcr10_Lookup_MailSender는 Apr01_Grid_DocList가 EE35에서 연결)
+ * 스타일: TO (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useState } from 'react';
 import { dcrApi } from '@/api/dcr';

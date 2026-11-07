@@ -4,6 +4,7 @@
  * 생성자 L89-143: 위(90) = 툴바 1줄(조회일자 [콤보 100 · 시작 100 ~ 종료 100] · 시장구분 [콤보 100 "전체"] · 검색 250 "종목명/주간사/발행기관코드" · [조회][등록][저장][삭제] · [주식등록])
  *   + 툴바 2줄([템플릿][엑셀업로드][홈페이지 등록][미일치내역][종목코드매칭]), 아래 = 공모주 일정 셀 편집 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

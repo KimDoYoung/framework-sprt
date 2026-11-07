@@ -4,6 +4,7 @@
  * 생성자 L71-116: 테두리 박스(여백 20) = 툴바 높이 50(구분 200 · 검색 300 "파일명/비고" · [조회][저장][파일업로드]) + 양식 파일 CellEditGrid(체크박스 단일)
  * 함께: Tdm43_Lookup_RelateFormFileMultiUpload(양식 등록 창, 신규) / Sys10_Lookup_FileViewer(보기, 기존)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

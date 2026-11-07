@@ -4,6 +4,7 @@
  * 레이아웃 L81-157: 왼쪽 860(분할) = 툴바(분류 콤보 · 검색어 · 조회 · 저장 · 파일업로드 · 분류추가) + 셀 편집 그리드(행번호, 단일 선택),
  *   가운데 = Sys95_PDFViewer. 매뉴얼은 파일 업로드로만 만든다(파일마다 매뉴얼 행 + 첨부). 분류추가 = Sys09_Lookup_Code("ManualType").
  * UX보강(10): 툴바 = SearchBar(UX-01, 검색어 Enter·지우기=UX-04), 저장 = 저장(n)(UX-03). 조건이 둘이라 초기화(UX-02)를 둔다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Splitter, message } from 'antd';

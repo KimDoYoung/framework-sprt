@@ -5,6 +5,7 @@
  *   + 부서 점검현황 그리드(묶음 "점검결과"), center = 점검자의 점검항목 목록(Tdm52_TabPage_CheckManl)
  * 점검 창(Tdm52_Edit_ChckManl)·일괄점검 창·조치계획 창은 목록에서 연다. 다음 단계: 증빙자료 창(Tdm00_Lookup_RelateAppr)·[AI] 점검의견 — 목록/창 쪽 주석 참고
  * UX보강(10): 툴바 = Button(UX-01), 점검자 칸 = LookupInput, 조회창(UX-05·06)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, Modal, Splitter, message } from 'antd';

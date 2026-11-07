@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L50-130): west = 툴바(높이 50) + 코드구분 그리드 (폭 820, 최대 1000, 분할, 여백 20/-2/22/20),
  *   center = Sys09_Grid_Code(isAdmin = true, 여백 20/20/20/0, 분할)
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Splitter } from 'antd';

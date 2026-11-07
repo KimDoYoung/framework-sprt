@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L53-79, SG): 툴바(조회기간 · 검색 250 · [조회]) + 체크 다중 보기 그리드(MultiGrid).
  * 1단계(사용자 묶음 요청 2026-10-28): 이익수령 제외신청 아이콘의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval)는 다음 단계 — 문서 유무 검사까지만 한다.
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

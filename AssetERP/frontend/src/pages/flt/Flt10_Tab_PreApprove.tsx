@@ -7,6 +7,7 @@
  * 협의승인(회사 설정 sys01_flt_add_confirm_yn): 켜져 있을 때만 [협의승인자 지정] 버튼과 승인자·승인상태 열을 보인다(setInitData L693-742)
  * 펀드보유종목 확인(Fnd10_Lookup_RelateFund)은 EE47, 알림수신인 설정(Emp93_Lookup_SmsNoticeTarget "B01")은 EE44에서 연결
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal, Select } from 'antd';

@@ -5,6 +5,7 @@
  * 레이아웃 L73-118: 위(분할 가능, 여백 20·20·0·20) = 테두리 박스(툴바 50 + 그리드 + 페이징 툴바 500건) / 아래(150, 최대 900, 여백 20) = 편집 폼(Adv02_Edit_Account)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 도달 불가(원본): deleteSelectedRow()(E11) — deleteRow() 호출처가 없고 삭제 단추도 없다 → 만들지 않는다
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message, Splitter } from 'antd';

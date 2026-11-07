@@ -6,6 +6,7 @@
  * [최초원장 등록](createButton, E4)은 원본에서 툴바·컬럼에 연결되지 않은 버튼이라 화면에 없다 → Flt13_Lookup_BookInit도 이 화면에서는 쓰지 않는다
  * 원본 엑셀은 RD 리포트 서버(Flt11_Rd_BookList) → TOBE는 서버가 조회 결과를 xlsx로 만든다(E10·G03과 같은 방식)
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal, Typography } from 'antd';

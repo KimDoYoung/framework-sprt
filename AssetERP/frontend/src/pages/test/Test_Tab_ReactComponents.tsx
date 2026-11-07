@@ -4,6 +4,7 @@
  * 아래: CellEditGrid + useGridCrud + 저장(n)(UX-03)
  * 시스템공통코드 콤보: SystemCodeComboBox(B14) — 콤보만 실제 API(/api/v1/sys/codes), 그리드는 mock
  * 데이터: mock/reactComponents.ts (조회·저장 600ms 지연)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Select, Typography } from 'antd';

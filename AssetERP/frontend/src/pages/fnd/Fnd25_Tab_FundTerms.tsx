@@ -4,6 +4,7 @@
  * 생성자 L49-72: 여백 20 안의 테두리 박스 = 툴바(50: 구분 콤보 150 · 검색 230 "펀드규약명" · [조회]) + 규약 그리드(행번호, 체크 없음 — 보기 전용)
  * 내용보기 아이콘(viewContent L145-149)은 Fnd25_Lookup_Content(P07, 본문 + 개정 목록 + 첨부)를 연다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

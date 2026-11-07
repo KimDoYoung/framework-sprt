@@ -4,6 +4,7 @@
  * 생성자 L68-104: vlc = 툴바(50: 거래기간 [시작] ~ [끝] · 거래구분(전체) · 계좌(전체) · 검색 · [조회][등록][삭제]) / 권리행사 체크박스 다중 그리드(읽기 전용, 앞쪽 "변경" 아이콘)
  * [등록]·변경 아이콘은 등록·변경 창(Flt10_Lookup_RightsExercise)을 연다. 매매구분은 FloorTrCode0002 그룹
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

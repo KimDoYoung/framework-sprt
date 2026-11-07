@@ -5,6 +5,7 @@
  *   center = 고른 승인 행의 점검상세 · 미흡/개선 내역(Tdm59_TabPage_CheckAppr)
  * 승인(반려) 의견·보고의견·승인이력 창은 그리드 아이콘이, 하위·상위 부서 의견은 의견등록상태 칸 더블클릭이 연다. 다음 단계: 증빙자료 창(Tdm00_Lookup_RelateAppr)은 승인 창 안에서 안내만
  * UX보강(10): 툴바 = Button(UX-01), 직책 칸 = LookupInput, 조회창(UX-05·06)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Splitter, message } from 'antd';

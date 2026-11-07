@@ -4,6 +4,7 @@
  * 레이아웃 생성자 L66-95: center(테두리, 여백 20) — 툴바 [발신일자 시작~끝][메일구분 콤보 100][연관펀드 300][검색 200 빈칸 "제목"][조회] + 그리드(단일 선택, 행번호, 8열:
  *   보낸시간 150 · 발신자 100 · 발신 150 · 수신 300 · 참조 300 · 제목 300 · 내용 60 · 문서 60)
  * [문서] 아이콘은 전자결재 편집창 Apr01_Edit_ApprDoc, 연관펀드는 Fnd01_Lookup_SelectSingle.openNone을 연다(2026-11-05 연결, 13-누락대장 1·3번 — Dcr10_Tab_MailHistory_Manager와 같은 방식)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Select, message } from 'antd';

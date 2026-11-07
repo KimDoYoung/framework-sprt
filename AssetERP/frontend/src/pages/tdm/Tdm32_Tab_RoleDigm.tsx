@@ -7,6 +7,7 @@
  *        (알리고 그대로 상신)로 옮겼다 — 이미 있는 첨부는 지우지 않는다. 책무체계도 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E12 `Tdm32_Tab_RoleDigmAdmin`과 같다).
  *        사용자 파일 올리기·삭제(fileUpload·deleteRoleDigmFile)는 전자결재와 무관해 변환했다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

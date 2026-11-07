@@ -6,6 +6,7 @@
  * 맨 오른쪽 편집 아이콘은 메모 창(Flt15_Lookup_Note). 위반건수 조회창은 I10 위반내역조회 API를 재사용한다.
  * 원본 엑셀은 RD 리포트 서버(Flt02_Rd_EmpInfo / 연간투자한도 숨김이면 Flt02_Rd_EmpInfo2) → TOBE는 서버가 조회 결과를 xlsx로 만든다
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

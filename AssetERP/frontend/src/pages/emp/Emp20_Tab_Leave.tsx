@@ -6,6 +6,7 @@
  *   (연차휴가 총/사용/잔여/기간 · 포상휴가 총/사용/잔여 + 안내 아이콘) / 아래(260) = 편집 폼(Emp20_Edit_Leave)
  * 결재창 A01(휴가) 연결은 편집 폼의 [상신하기]가 한다 — 제공자는 기존 HrLinkSeedProvider.leave
  * 다음 단계: 편집 폼의 [대결자 지정](Apr07_Lookup_AltAppr)
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, Modal, Splitter, message } from 'antd';

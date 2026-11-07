@@ -5,6 +5,7 @@
  * 결재요청(dcrChk·insertLinkApproval·updateApprId)·문서보기(retrieveApproval)는 V21에서 전자결재 편집창에 연결했다 (링크코드 A93, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`).
  *        잠금의 파일 생성(RD 리포트 PDF)은 E13처럼 서버 ManlOrgPdfMaker 기본 구현이 거절한다 — 연동이 서면 같은 흐름이 그대로 동작한다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = count(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Checkbox, Modal, message } from 'antd';

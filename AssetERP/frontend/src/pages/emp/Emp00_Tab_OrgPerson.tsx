@@ -2,6 +2,7 @@
  * [1030] 경영관리 > 01. 조직 및 사원관리 > 조직별 사원조회 (S04)
  * AS-IS: myApp/client/vi/emp/Emp00_Tab_OrgPerson.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L77-154, SGT): 위 툴바(기준일·[조회]) / 왼쪽 조직 트리(Org01_Tree_OrgCode, 20%, 분할) / 가운데 사원 그리드
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Splitter, Tree } from 'antd';

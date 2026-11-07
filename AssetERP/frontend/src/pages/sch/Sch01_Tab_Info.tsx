@@ -5,6 +5,7 @@
  *   [데일리 체크리스트만 보기] · [사용스케줄만 보기](기본 켬) · [조회][등록][삭제], 오른쪽 끝 = [담당자 변경]. 그리드는 체크 다중
  * 연결: Sch01_Lookup_Info(등록·수정) · Sch01_Lookup_ManagerModi(+Run) · Sch01_Grid_RelateFile · Sch08_Lookup_Class · Sch06_Lookup_AlarmSetup · Sch03_Lookup_Short/Cycle(E01-1 재사용)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건 5개에 [등록][삭제]·오른쪽 [담당자 변경]까지 한 줄이라 줄바꿈 위험이 있어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Modal, Select, message } from 'antd';

@@ -4,6 +4,7 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L54-141: 위(분할 가능, 여백 20) = 테두리 박스(툴바 50 + 임시펀드 그리드) / 아래(310, 최대 900, 여백 0·20·20·20) = 편집 폼(Fnd01_Edit_FundPlan)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Splitter } from 'antd';

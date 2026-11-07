@@ -4,6 +4,7 @@
  * 레이아웃 L65-114: 툴바(고객사 콤보 · 검색 · 조회·개별전송·전체전송·개별로그아웃·전체로그아웃 · 남은 시간) + 그리드(행번호, 체크박스 다중) + 페이징 툴바(100). 여백 20
  * 이 화면은 **지금 WebSocket에 접속한 사원**만 보여 주고(AS-IS BroadcastWebsocket.getInfoList()), 알림을 보내거나 강제 로그아웃시킨다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 넣지 않는다 — 버튼이 많아 줄바꿈이 생긴다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Modal, Typography } from 'antd';

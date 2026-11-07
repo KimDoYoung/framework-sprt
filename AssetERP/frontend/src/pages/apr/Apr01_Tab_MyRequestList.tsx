@@ -6,6 +6,7 @@
  *   준감인의견 아이콘이 여는 Ics40_Edit_Msg, [메일보내기]는 Dcr10_Lookup_MailSender.open(apprId)(EE35). 준감인의견 Ics40_Edit_Msg 등은 다음 단계.
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc(13-누락대장 1번)·준감인의견 Ics40_Edit_Msg.editRegEmpMsg(3번)·[신청]의 사전확인 신청창 Ics40_Edit_DcrPreconfirm(4-1) 연결 완료.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

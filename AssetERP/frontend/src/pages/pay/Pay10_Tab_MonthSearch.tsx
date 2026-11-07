@@ -6,6 +6,7 @@
  * 조회기간 기본값 = 이번 달 1일 ~ 이번 달 말일. 항목 조회창 Pay20_Lookup_MonthItem은 S17 것을 재사용한다
  * 출력 창은 공통 RdViewer가 맡는다(AS-IS RDViewer.viewer, mrd Pay10_Rd_MonthSearch)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 지급일 폭 UX-08(90)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

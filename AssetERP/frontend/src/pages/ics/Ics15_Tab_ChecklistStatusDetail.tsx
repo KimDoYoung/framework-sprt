@@ -5,6 +5,7 @@
  * / 단일 선택 그리드 + 페이징(100). K06(확인)과 같은 목록이지만 확인자 조건이 없어 회사 전체를 보고, [확인]·[확인취소]·[상신]이 없으며 확인자 열이 있다.
  * 열 때 자동 조회는 없다(K06과 같게). [출력/다운로드]는 RD 뷰어 대신 xlsx를 받는다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, message, Select, Space } from 'antd';

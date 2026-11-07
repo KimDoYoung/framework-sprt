@@ -9,6 +9,7 @@
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 출력/다운로드는 RD 리포트(Sch04_Rd_IcsList) 대신 조회 결과를 그리드 열 순서로 xlsx에 쓴다(Apr01 목록 화면과 같은 방식).
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장(n)(UX-03). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건이 길어 줄바꿈 위험이라 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message } from 'antd';

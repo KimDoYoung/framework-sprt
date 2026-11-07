@@ -5,6 +5,7 @@
  *   + 툴바 2줄([관심종목 등록][관심종목 제거] · [공모주 달력] · 안내 2줄 4472C4 12px) + 공모주 일정 그리드(체크 다중, 1~3열 고정, 2단 헤더 수요예측일정·청약일정)
  * UX보강(10): 툴바 = SearchBar(UX-01), 읽기 전용 날짜 열 폭 90(UX-08, 원본 95·120)
  * 수요예측참여(E9) 아이콘은 Q05의 `Fnd30_Edit_DemandOpr`(insertWith)를, 청약운용지시(E10) 아이콘은 Q06의 `Fnd30_Edit_Opr`(insertWith)를 연다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

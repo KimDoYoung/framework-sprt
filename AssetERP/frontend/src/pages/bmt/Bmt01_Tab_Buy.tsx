@@ -6,6 +6,7 @@
  * 결재요청 아이콘(updateCheck L240-258 → checkAppr L260-289 → checkdcr L291-323 → insertLinkApproval L325-336 → updateApprId L338-355)의
  *   전자결재 편집창(Apr01_Edit_ApprDoc, link A04)·문서분류 조회창(Dcr01_Lookup_Class)은 V38에서 연결했다
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화는 원본 버튼이 넷 붙어 넣지 않음), 저장 = 저장(n)(UX-03), 그리드 날짜 폭(UX-08)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, DatePicker, message, Splitter } from 'antd';

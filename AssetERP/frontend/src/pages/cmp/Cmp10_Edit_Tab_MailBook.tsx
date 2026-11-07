@@ -2,6 +2,7 @@
  * 공용메일 등록·수정 창 — Cmp10_Tab_MailBook의 [등록]·수정 아이콘이 연다 (G13)
  * AS-IS: myApp/client/vi/cmp/Cmp10_Edit_Tab_MailBook.java (213줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L77-124: 모달 400×300 "신규등록"/"수정"(닫기 X 없음), 라벨 폭 105, 메일주소 · 비밀번호 · 비고(높이 120), 아래 가운데 [검증][닫기]
+ * 스타일: DSBRD (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, message, Space } from 'antd';

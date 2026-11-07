@@ -5,6 +5,7 @@
  * 레이아웃 L61-97: 위 툴바(50, 여백 20·20·-2·20, 테두리) / 왼쪽(0.5, 분할 가능, 최대 1000) = 임시펀드 그리드 / 가운데 = 조직 권한 트리(Fnd08_Page_OrgAuth)
  * 열 때 조회하지 않는다(생성자는 settings()만). 삭제 단추는 없고 deleteRow()는 호출처가 없어 만들지 않았다(E5 도달 불가)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건 4개 → 초기화(UX-02) 적용(값은 처음 연 상태로, 초기화 뒤 자동 조회 없음)
+ * 스타일: SGT (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';

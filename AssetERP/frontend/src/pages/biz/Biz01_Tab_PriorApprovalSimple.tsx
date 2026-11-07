@@ -5,6 +5,7 @@
  * L08 `Biz01_Tab_PriorApproval`의 간이판: 제공(수령)자 칸·합계 행·머리글 묶음이 없고, 조회구분 콤보는 전체/회사별 둘뿐이며 칸은 `Crm09_Lookup_SelectSingle`(영업 거래처)을 연다.
  *   서버는 한도초과(인당 경제적가치 > 기준) 내역만 준다(selectProvideListSimple). 열어도 자동 조회하지 않는다(생성자에 retrieve() 없음) — [조회]를 눌러야 읽는다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04, UX-02 초기화는 L08처럼 뺀다), 그리드 날짜 폭(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Select, Spin } from 'antd';

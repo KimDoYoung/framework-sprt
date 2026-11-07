@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys06_Tab_MenuGuide.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L46-78: 툴바(메뉴명 콤보 · 검색 · 조회 · 저장) + 그리드(행번호, 체크박스 다중, 화면안내 셀 편집)
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Select } from 'antd';

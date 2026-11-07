@@ -6,6 +6,7 @@
  * [보유원장 정리](arrangeButton)는 원본에서 주석 처리돼 화면에 없다.
  * 원본 엑셀은 RD 리포트 서버(Sys99_Print.insertRdBookListAdmin) → TOBE는 서버가 조회 결과를 xlsx로 만든다(I09와 같은 방식)
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Typography } from 'antd';

@@ -7,6 +7,7 @@
  *   lookupAppr() L256-300은 권한 검사를 주석 처리했고("모든 문서를 보기위한 화면") 안내 메시지는 없다.
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Select, message } from 'antd';

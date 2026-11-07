@@ -5,6 +5,7 @@
  *   + 휴가 그리드(체크 단일, 2단 헤더 "초과휴가") + 아래 요약 두 줄(유급휴가 총/사용/잔여/기간 · 포상휴가 총/사용/잔여 + 안내 아이콘)
  * 1단계(사용자 결정 2026-10-28): [휴가취소]의 결재문서 삭제(emp.Emp20_Leave.cancelUpdate → apr01_appr.insertApprDel/deleteAppr)와
  *   알림톡·메일·SMS 발송(emp92_sms_notice.*)은 다음 단계 — 원본의 선택·상태 검사와 확인창까지만 한다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, Modal, message } from 'antd';

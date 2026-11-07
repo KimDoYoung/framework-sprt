@@ -4,6 +4,7 @@
  * 레이아웃 L99-144: 왼쪽(455, 분할) = 툴바 2줄(내규분류 검색 · [찾기] / [펼치기][감추기][상위등록][하위등록]) + 내규분류 트리(분류명 250·분류코드 100·수정·이동),
  *   가운데 = 내규 그리드(Icr01_Grid_IcrType). 트리에서 분류를 고르면 그 분류와 모든 하위의 내규를 보여 준다
  * UX보강(10): 왼쪽 검색 줄 = SearchBar(UX-01·04). 조건이 하나라 초기화(UX-02)는 없다
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Splitter } from 'antd';

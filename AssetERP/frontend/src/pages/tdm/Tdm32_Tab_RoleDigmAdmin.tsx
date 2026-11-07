@@ -4,6 +4,7 @@
  * 생성자 L77-108: 가운데 = 툴바(고객사 200 · 조회기간 [시작 100 ~ 종료 100] · 전체보기 · [조회][재생성]) + 책무체계도 그리드(행번호, 체크박스 다중)
  * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(RoleDigmPdfMaker 기본 구현, docs/1-변환/work/E/E12-작업방법.md "다음 단계")
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

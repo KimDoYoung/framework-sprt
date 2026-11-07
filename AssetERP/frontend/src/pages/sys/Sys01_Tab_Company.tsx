@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys01_Tab_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L63-107): 가운데 = 툴바 + 고객 그리드, 아래 = 탭 6개(높이 450, 최대 900, 분할 조절)
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02·04, 조건 2개: 고객명·사용고객만 보기 → 초기화는 ''·체크)
+ * 스타일: SGTP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Splitter, Tabs } from 'antd';

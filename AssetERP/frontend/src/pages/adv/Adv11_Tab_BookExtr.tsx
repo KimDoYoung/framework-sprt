@@ -4,6 +4,7 @@
  * 생성자 L80-112: 툴바 1줄(기준일 100 · 검색 250 "관리계좌코드/관리계좌명/종목코드/종목명" · [조회][등록][저장][삭제] · [템플릿][엑셀업로드]) + 셀 편집 그리드(행번호, 체크박스 다중)
  * 열 때 기준일을 오늘 이전 가장 최근 기준일로 바꾸고 조회한다(setStdDate L314-330)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, DatePicker, message } from 'antd';

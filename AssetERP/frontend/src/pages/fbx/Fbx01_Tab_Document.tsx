@@ -5,6 +5,7 @@
  *   가운데 = 왼쪽 400(툴바 [문서분류 120][찾기][+][-] + 문서분류 트리) · 오른쪽 파일 목록(Fbx01_TabPage_DocList)
  * 함께 쓰는 클래스: Fbx02_Popup_History(기록), Fbx01_TabPage_DocList(파일 목록), Sys10_Lookup_FileViewer(미리보기, 파일 공통)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 초기화가 없어 UX-02는 넣지 않는다
+ * 스타일: TO (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Splitter, Tree, message } from 'antd';

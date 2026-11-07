@@ -4,6 +4,7 @@
  * 레이아웃 L26-37: 툴바(조회 · PDF 생성) + 그리드(등록일·시행일·문서분류·문서명·등록자·등록부서, 체크박스 단일 선택)
  * PDF 생성 = 서버 PDFCreate.createPDF7(전자결재 Apr10_StampPDF7) — 연동이 없어 서버가 만들지 않고 알린다(작업기록 의존)
  * UX보강(10): 툴바 = SearchBar(UX-01). 조건이 없어 초기화(UX-02) 없음
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

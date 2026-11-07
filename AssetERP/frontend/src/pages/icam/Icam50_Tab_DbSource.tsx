@@ -5,6 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01). 원본에 초기화 버튼이 없고 툴바가 이미 길어 onReset(UX-02)은 넣지 않는다
  * 버튼 type: 조회 `search`, ICAM DB소스 가져오기 = `download`(D07·D08과 같음).
  * 가져오기(Icam50_Source.insertIcamDbSource)는 외부 ICAM DB를 읽는 작업이라 서버가 거절한다 — 작업기록 의존
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Select, message } from 'antd';

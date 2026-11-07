@@ -4,6 +4,7 @@
  * 생성자 L62-95: vlc = 툴바(50: 조회기간 [시작] ~ [끝] · 계좌(전체) · 검색 · [조회][등록][삭제]) / 계좌대체 체크박스 다중 그리드(읽기 전용, 맨 끝 "변경" 아이콘)
  * [등록]·변경 아이콘은 등록·변경 창(Flt10_Lookup_AcntTransfer)을 연다. 매매구분은 FloorTrCode0003(30N)
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

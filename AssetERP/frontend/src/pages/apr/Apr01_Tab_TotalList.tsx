@@ -4,6 +4,7 @@
  * 레이아웃 L48-87: center=vlc01 — 툴바(조회기간 · 담당부서 · 담당자 · [조회]) + 담당자별 건수 그리드(단일 선택, 헤더 묶음 발생건수·처리건수·미처리건수, 맨 아래 합계 행 "계")
  * 건별명세 아이콘(L92-110)은 메뉴 #1011(Apr01_Tab_SubList, G17)을 열고 조회기간·담당자·담당부서를 넘긴다 — TempData + MenuOpener (utils/tempData.ts)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

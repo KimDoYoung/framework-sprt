@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr15_Tab_ReprCorp.java (240줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L53-73: center=vlc(테두리, 여백 20) — 툴바 [조회][등록][저장][삭제] + 셀 편집 그리드(체크박스 다중, 7열: 구분 100(콤보 ReprCorpType) · 대표회사 250 · 대표자 200 ·
  *   법인등기 80 · 인감 200(조회창 트리거) · 비고 250 · 사용 70). 조회창 Apr10_Lookup_Stamp(G06에서 변환)를 flag=true·checkflag=false로 다시 쓴다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as AntButton } from 'antd';

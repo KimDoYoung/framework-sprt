@@ -5,6 +5,7 @@
  * 체크주기가 월(M)이면 1~12월 열, 분기(Q)이면 1~4분기 열만 보인다(setColumnHidden L249-272). 열 때 자동 조회는 없다(원본 그대로).
  * '월'·'분기' 칸을 더블클릭하면 그 달(분기)의 상세 조회창(Ics15_Lookup_ChecklistStatusDetail)이 열린다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Select, Space, Typography } from 'antd';

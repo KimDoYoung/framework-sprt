@@ -7,6 +7,7 @@
  * [정기보고서 작성](월말 평가금액·전/후 보고·선택 검사 → 문서분류 Dcr01_Lookup_Class → 상신 창 Apr01_Edit_ApprDoc link A09 → updateApprId)과
  * [문서보기]·상세보기 셀(Flt14_Lookup_RelateAppr·Apr01_Edit_ApprDoc)은 V30에서 연결했다
  * UX보강(10): 저장 = 저장(n)(UX-03), 조회창 UX-05·06
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, Input, message, Modal, Radio, Select, Space, Spin, Splitter } from 'antd';

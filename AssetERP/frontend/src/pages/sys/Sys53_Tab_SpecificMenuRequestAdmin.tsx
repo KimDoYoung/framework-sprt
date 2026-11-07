@@ -4,6 +4,7 @@
  * 레이아웃 L56-75: 툴바(고객사·구분·특정업무구분 콤보·조회·저장) + 셀 편집 그리드(행번호, 체크박스 단일)
  * UX보강(10) 시범(B11): 툴바 = SearchBar(UX-01 조회 로딩·UX-02 초기화), 저장 = 저장(n)(UX-03)
  * 문서보기 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)는 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';

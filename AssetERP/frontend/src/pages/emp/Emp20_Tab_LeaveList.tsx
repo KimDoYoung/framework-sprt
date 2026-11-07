@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L65-84, 스타일 SG 견본 Tdm01_Tab_Hr): 툴바(조회기간 ~ · 사원명 · [조회][출력/다운로드]) + 휴가 그리드(체크 단일, 8열). 테두리 없음
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  * 다음 단계: [상세보기]의 열람권한 확인(apr.Apr01_Appr.permissionsCheck — TOBE에 아직 없음)은 결재창이 문서를 읽을 때의 검사에 맡긴다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

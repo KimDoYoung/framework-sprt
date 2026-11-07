@@ -4,6 +4,7 @@
  * 레이아웃 L67-119: north = 툴바(대분류 180 · 중분류 210 · 사용여부 100 · 검색 250 "대분류/중분류/체크내용/근거" · [조회][등록][삭제] · [분류관리]),
  *   center = 체크리스트 그리드(행번호, 체크박스 다중), east(500, 늘일 수 있음) = 선택한 체크리스트의 연관 내부통제(Sch05_Page_RelateIcs)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Select, Splitter } from 'antd';

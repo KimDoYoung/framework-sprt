@@ -4,6 +4,7 @@
  * 레이아웃 L76-126: north = 툴바 왼쪽(70%) [조회][등록][확정][확정취소][삭제] · [예외사원 등록], 오른쪽(30%) [행 추가][행 삭제][저장],
  *   center = 왼쪽(200) 기준 적용일 그리드(기준 적용일 100 · 확정 50) + 오른쪽 위(70%) 준수항목 셀 편집 그리드 / 아래(30%) 준수답변(Ics33_TabPage_ComplianceAnswer)
  * 확정된 기준 적용일이면 [삭제][행 추가][행 삭제][저장]과 준수답변 버튼이 꺼진다. 처음엔 [삭제][행 추가][행 삭제][저장]이 꺼져 있다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

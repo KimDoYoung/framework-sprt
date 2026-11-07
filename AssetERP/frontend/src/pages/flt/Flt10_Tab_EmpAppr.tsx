@@ -5,6 +5,7 @@
  * 열릴 때 조회(L82). 조회하면 첫 행을 고르고, 고른 사원이 바뀌면 오른쪽을 다시 읽는다(L138).
  * 오른쪽 상세보기가 여는 전자결재 편집창(Apr01_Edit_ApprDoc, 다른 도메인)은 다음 단계
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: GGH (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Splitter } from 'antd';

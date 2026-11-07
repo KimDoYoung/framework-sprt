@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys06_Tab_MenuView.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L47-80): 왼쪽(고정 500, 최소 500, 분할, 여백 20,0,20,20) = 툴바(높이 50) + 메뉴 트리, 가운데 = Sys04_Page_RoleView(여백 20,20,20,-2)
  * UX보강(10) B12-1: 트리 툴바 = SearchBar(검색 문구, UX-04). 초기화(UX-02)는 조건이 1개라 없음
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Splitter } from 'antd';

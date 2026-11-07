@@ -4,6 +4,7 @@
  * 레이아웃 L58-118: 위 38%(분할, 최대 1000) = 툴바(발생일 ~ · 회사명 · 완료여부 · 검색어 · 미완료건만 보기 · 미확인건만 보기 · 조회) + 법규등록요청 그리드(행번호, 체크박스 단일),
  *   아래 62%(분할, 최대 1100) = 편집 영역 Ics17_Edit_UserRequestAdmin
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Splitter } from 'antd';

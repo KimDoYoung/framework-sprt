@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp21_Tab_UnLeaveList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L13-29): 바깥 여백 20 + 테두리 박스 안에 탭 두 개 "연차"(Emp21_TabPage_UnLeaveList1) · "월차"(Emp21_TabPage_UnLeaveList2).
  * 1단계(사용자 결정 2026-10-28): 상신(결재문서 일괄 생성)·문자발송·상세보기(전자결재 편집창)는 다음 단계.
+ * 스타일: TP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React from 'react';
 import { Tabs } from 'antd';

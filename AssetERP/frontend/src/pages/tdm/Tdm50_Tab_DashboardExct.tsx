@@ -5,6 +5,7 @@
  *   + 직책별 진행현황(grid01)·부서별 진행현황(grid02) 가로 2분할 250 + 미흡 조치현황(grid03)·미점검 현황(grid04) 가로 2분할
  * [보기] 아이콘: grid03 → Tdm54_Lookup_ChckInsuffCmnt.view, grid04 → Tdm52_Edit_ChckManl.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail)
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90 — '조치완료(예정)일'은 제목이 잘려 110 유지)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

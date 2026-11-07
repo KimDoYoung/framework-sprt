@@ -5,6 +5,7 @@
  * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(ManlOrgPdfMaker 기본 구현, docs/1-변환/work/E/E13-작업방법.md "다음 단계")
  * 점검항목 조회창 Tdm43_Lookup_ManlItem까지 1단계 — 등록·수정창 Tdm43_Edit_Manl 등은 E13-2
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal } from 'antd';

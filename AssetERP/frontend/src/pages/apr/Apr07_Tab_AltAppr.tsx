@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr07_Tab_AltAppr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L67-112: 위 = 툴바 [대결자 등록 - (결재권한을 이관할 직원을 등록합니다.)] [조회][등록][저장][삭제], 아래 = 셀 편집 그리드(행번호, 체크박스 단일:
  *   성명 100(조회창 트리거) · 사번 80 · 부서명 200 · 직책 150 · 시작일 100 · 종료일 100 · 인감날인은(부)책임자가 대리 120 · 대결사유 500 · 비상연락망(비고) 300), 바깥 여백 20
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as AntButton } from 'antd';

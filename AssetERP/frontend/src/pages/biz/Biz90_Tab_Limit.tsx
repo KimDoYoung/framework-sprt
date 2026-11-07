@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz90_Tab_Limit.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L51-75: 위 = 툴바 [조회][등록][저장][삭제][직원 자동등록 설정], 아래 = 셀 편집 그리드(행번호, 체크박스 다중:
  *   적용시작일 100 · 제공/수령 150(콤보) · [편익 기준액] 일반 200 · 경조 200 · [편익상대방 한도액] 인별 1회 200 · 인별 연간 200 · 회사별 연간 200)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { bizLimitApi } from '@/api/biz';

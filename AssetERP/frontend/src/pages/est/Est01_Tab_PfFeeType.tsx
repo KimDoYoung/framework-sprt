@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/est/Est01_Tab_PfFeeType.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L65-86: 가운데(여백 20, 테두리) = 툴바 50([조회][등록][저장][삭제]) + 셀 편집 그리드(행번호, 체크박스 다중). 열자마자 조회
  * UX보강(10): 저장 = 저장(n)(UX-03), 편집 가능 날짜 열 120(UX-08). 툴바에 검색칸이 없어 SearchBar는 쓰지 않는다(조회 버튼만)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal } from 'antd';

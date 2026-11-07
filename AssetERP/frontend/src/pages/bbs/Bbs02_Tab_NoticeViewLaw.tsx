@@ -4,6 +4,7 @@
  * 레이아웃 L47-78: center=테두리 박스(여백 20) — 툴바(공지구분 120 · 검색 250 · [조회]) + 공지 그리드(단일 선택, 버튼바 50) + 페이징 툴바(100)
  * 연결: Bbs02_Popup_NoticeAdmin(상세보기 아이콘) + Bbs07_TapPage_Comment·Bbs07_Lookup_FileList(댓글)·Bbs02_Lookup_File(첨부파일)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Select, message } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp53_Tab_BizTripManager.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L65-81, SG): 툴바(조회기간 · 검색 230 · 완료건 제외 · [조회][저장]) + 체크 다중 셀 편집 그리드(2단 헤더 출장기간·출장품의·결과보고·결과보고서 면제).
  * 상세보기 아이콘: 원본의 문서 유무·상태 검사 뒤 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval, 닫으면 retrieve()).
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

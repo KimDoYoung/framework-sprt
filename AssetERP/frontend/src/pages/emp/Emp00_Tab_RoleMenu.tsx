@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp00_Tab_RoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 2개: 기준일·조직/직무/성명 → 초기화는 오늘·'', 자동 조회 없음)
  * 레이아웃(생성자 L44-80): west(55%, 분할, 최대 1000) = 툴바(높이 50) + 사원 그리드, center(45%) = 사원 메뉴 트리(Sys07_Tree_PersonRoleMenu)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Splitter } from 'antd';

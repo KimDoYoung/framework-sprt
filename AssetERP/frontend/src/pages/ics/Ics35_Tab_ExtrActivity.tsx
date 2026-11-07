@@ -6,6 +6,7 @@
  * 전자결재 상신(dcrChk·insertLinkApproval·updateApprId·updateResultApprId·viewAppr — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)은 V29에서 연결했다
  *   (링크코드 B15 활동신청·B16 결과보고, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`)
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

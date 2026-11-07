@@ -6,6 +6,7 @@
  * Flt10_Tab_ViolateUser(L5-8): 사원명 칸을 막고(setEnabled(false)) 열릴 때 retrieve() — 로그인 사용자 본인만. Flt10_Tab_Violate는 열릴 때 조회하지 않는다.
  * 원본 엑셀은 RD 리포트 서버(Flt10_Rd_Violate) → TOBE는 서버가 조회 결과를 xlsx로 만든다(E10·G03과 같은 방식)
  * UX보강(10): 툴바 = SearchBar(UX-01), 날짜 열 90(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

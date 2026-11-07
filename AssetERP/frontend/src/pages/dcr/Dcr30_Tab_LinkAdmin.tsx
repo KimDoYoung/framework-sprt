@@ -4,6 +4,7 @@
  * 레이아웃 L68-118: north = 툴바 [문서분류지정복사][양식복사] + 안내 라벨(높이 45), center(55%) = 툴바(검색 600 · 조회 · 저장) + Link 셀 편집 그리드(체크 다중),
  *   south(45%, 분할) = Dcr30_TabPage_Company(목적지 회사)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space, Splitter, Typography } from 'antd';

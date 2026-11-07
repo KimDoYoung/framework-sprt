@@ -6,6 +6,7 @@
  *   다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

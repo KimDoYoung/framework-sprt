@@ -4,6 +4,7 @@
  * 레이아웃(init() L87-182, SG): 가운데 테두리 박스 = 툴바(조회기간 · [조회][생성][삭제] · [문서분류지정](문서관리자만) · 신청내역 안내) + 증명서 그리드
  * 전자결재 상신(checkAppr·checkDcr·apprView·insertLinkApproval·updateApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)은 V22에서 연결했다
  * (링크코드 B01~B04, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 메일보내기는 완료된 문서만 Dcr10_Lookup_MailSender.certOpen(apprId, 사원 e-mail)(EE35)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

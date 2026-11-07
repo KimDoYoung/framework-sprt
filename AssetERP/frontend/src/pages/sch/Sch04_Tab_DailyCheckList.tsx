@@ -8,6 +8,7 @@
  * 1단계(F·I·M과 같은 방침)는 전자결재 편집창을 여는 [상신]·결재 문서 보기를 안내만 했다. V31(2026-10-31)에서 연결했다:
  *   [상신] → Apr01_Edit_ApprDoc.insertLinkApprovals("A31", 그리드 전체 행) → sch.Sch04_List.updateApprId, 결재 문서 보기 → retrieveApproval, 문서분류는 retrieveDoc(A31)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 많아 줄바꿈 위험이라 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Select, message } from 'antd';

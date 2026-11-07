@@ -4,6 +4,7 @@
  * 생성자 L82-119: 가운데 = 툴바(고객사 200 · 조회기간 [시작 100 ~ 종료 100] · 전체보기 · 검색 250 "직책/담당임원" · 상신건만 조회 · [조회][재생성]) + 책무기술서 그리드(행번호, 체크박스 다중)
  * 재생성은 RD 리포트 서버 PDF 생성이 TOBE에 없어 서버가 거절한다(RoleDescPdfMaker 기본 구현, docs/1-변환/work/E/E11-작업방법.md "다음 단계")
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

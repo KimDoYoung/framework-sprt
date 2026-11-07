@@ -8,6 +8,7 @@
  * 남은 것(다음 단계): createRd() L510-582의 RD 첨부 PDF 만들기 — TOBE에는 RD 리포트·PDF 엔진이 없다. AS-IS도 파일 저장 경로가 없는 환경(개발계)에서는 PDF 없이
  * insertRelateApprId()로 바로 간다(L537-538) — TOBE는 그 길만 간다. 본문의 "첨부파일을 참고하세요."는 그대로 나온다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message } from 'antd';

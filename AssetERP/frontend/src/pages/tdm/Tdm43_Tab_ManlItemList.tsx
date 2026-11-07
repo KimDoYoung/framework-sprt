@@ -5,6 +5,7 @@
  * 함께: Tdm45_TabPage_Relate·Tdm43_Lookup_RefBasis·Tdm43_Lookup_EtcModify(신규) / Tdm43_Edit_Manl(view)·Tdm43_Lookup_RelateFormFileList·Tdm43_Lookup_ExctDuty(기존)
  *   / Ics01_Lookup_SelectMulti·Icr01_Lookup_SelectMulti·Dcr01_Lookup_SelectMulti(다른 도메인, 기존)
  * UX보강(10): 툴바 = SearchBar(UX-01, 버튼이 많아 UX-02 초기화는 뺀다)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

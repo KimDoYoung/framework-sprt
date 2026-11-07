@@ -4,6 +4,7 @@
  * 레이아웃 L51-74: 툴바(조회·등록·저장·삭제) + 그리드(행번호). 두 메뉴가 같은 클래스를 쓴다 — 로그인 회사가 관리자 회사(0)면
  *   셀 편집 그리드 + 4개 버튼(buildGrid L115-158, settings L76-113), 아니면 읽기 전용 그리드 + 조회 버튼만. (A31 Sys91과 같은 구조)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 없어 초기화(UX-02) 없음
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as AntButton } from 'antd';

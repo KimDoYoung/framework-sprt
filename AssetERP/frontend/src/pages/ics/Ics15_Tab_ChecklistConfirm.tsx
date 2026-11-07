@@ -5,6 +5,7 @@
  * / 체크박스 다중 그리드 + 페이징(100). 로그인 사용자가 확인자인 직원 작성 내역을 확인·확인취소한다. 열 때 자동 조회는 없다(원본 그대로).
  * [출력/다운로드]는 RD 뷰어 대신 xlsx를 받는다. [상신]은 상신 조회창(Ics16_Lookup_RelateAppr)을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Select, Space } from 'antd';

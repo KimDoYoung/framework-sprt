@@ -7,6 +7,7 @@
  * 다음 단계: makePDF() L263-293(utils.pdf.PDFCreate.createInPDF7 = Apr10_StampPDF7.getInDocument: 본문 파일이 없는 사내문서의 PDF 만들기)는
  *   전자결재 PDF 생성기(apr 도메인)라 옮기지 않았다 — 지금은 이미 있는 본문·첨부파일만 묶어 내려준다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 원본에 초기화가 없어 UX-02는 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, message } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys07_Tab_RoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L35-69): 왼쪽(55%, 최대 1000, 분할) = 권한명 조회 + 권한 그리드, 가운데(45%) = 권한그룹별 매뉴 트리
  * UX보강(10) B12-1: 툴바 = SearchBar(UX-01). 권한명은 원본에 Enter가 없어 antd Input + allowClear(UX-04). 초기화(UX-02)는 조건이 1개라 없음
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Splitter } from 'antd';

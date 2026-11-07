@@ -4,6 +4,7 @@
  * 생성자 L47-97: BorderLayout — 위 툴바 50 (해당 연도 · [조회]) / 왼쪽 급여 목록 그리드 600 / 가운데 RD 보고서 폼(Pay10_Rd_PersonList).
  * 본인 급여만 보인다(사원은 서버가 로그인 사용자로 정한다). 열 때 바로 조회하고 첫 행을 고르면 보고서가 열린다
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 일자 폭 UX-08(90)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

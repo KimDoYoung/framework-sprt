@@ -4,6 +4,7 @@
  * 레이아웃 L80-120: 가운데(왼쪽) = 툴바(검색 200 · 조회 · 등록 · 저장 · 삭제) + 로그인 회사 종목유형 셀 편집 그리드(행번호, 체크박스 다중),
  *   동쪽(오른쪽, 분할) = 툴바(고객사 150 · 조회 · 등록 · 등록(복사) · 저장 · 삭제) + 고른 고객사 종목유형 셀 편집 그리드(행번호, 체크박스 없음 — 한 행 선택)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Splitter } from 'antd';

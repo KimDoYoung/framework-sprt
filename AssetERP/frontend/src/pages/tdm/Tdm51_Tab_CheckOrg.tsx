@@ -6,6 +6,7 @@
  * 다음 단계(N22): 점검항목 [상세]가 여는 점검 창(Tdm52_Edit_ChckManl)은 N22에서 연결한다 — TabPage 참고
  * 생략: [부서책무담당자 관리] managerButton(L81) — 툴바에 넣는 줄이 주석 처리(L109)되어 도달 불가, 승인요청·요청취소 아이콘 열(L229-282, L315-316)도 주석 처리
  * UX보강(10): 툴바 = Button(UX-01), 부서 칸 = LookupInput, 조회창(UX-05·06)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Splitter, message } from 'antd';

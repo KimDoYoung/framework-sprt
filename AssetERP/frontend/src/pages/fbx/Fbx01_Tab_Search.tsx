@@ -5,6 +5,7 @@
  * 함께 쓰는 클래스: Fbx02_Popup_History(기록, F11 것을 재사용), Fbx01_Grid_DocList(파일 목록), Sys10_Lookup_FileViewer(미리보기, 파일 공통)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 원본에 초기화가 없어 UX-02는 넣지 않는다
  * insertRow()·deleteRow()·update()는 원본에 정의만 있고 화면에 연결된 버튼·이벤트가 없어(F11 복사 흔적) 옮기지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Splitter, message } from 'antd';

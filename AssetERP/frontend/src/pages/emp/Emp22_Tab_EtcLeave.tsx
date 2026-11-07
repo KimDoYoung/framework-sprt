@@ -5,6 +5,7 @@
  *   + 오른쪽 400(드래그로 조절, 최대 1000) 대상 직원 페이지(Emp23_Page_EtcLeavePerson). 그리드에서 행을 고르면 대상 직원을 읽는다.
  * 1단계(사용자 묶음 요청 2026-10-28): [결재요청] 아이콘의 결재문서 생성·보기는 다음 단계로 두었다가, V17(2026-10-31)에서
  *   Apr01_Edit_ApprDoc.insertLinkApproval("A25") → updateApprId와 retrieveApproval을 연결했다.
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Splitter, message } from 'antd';

@@ -5,6 +5,7 @@
  *                  + 계좌 그리드(750) | 투자한도 그리드(780) + 안내 한 줄, center = 툴바 + 사전신고 체크박스 다중 셀 편집 그리드(맨 아래 합계 행)
  * [보고주기 변경 및 서약서 서명]은 Flt02_Lookup_Emp를 연다 (EE45, I02 E1·I01 link01·02와 같은 창)
  * UX보강(10): 저장 = 저장(n)(UX-03)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, DatePicker, Input, message, Modal, Space, Splitter } from 'antd';

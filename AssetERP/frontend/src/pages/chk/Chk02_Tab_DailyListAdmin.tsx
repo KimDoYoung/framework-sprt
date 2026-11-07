@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/chk/Chk02_Tab_DailyListAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L72-104: north = 툴바(분류 300 · 사용여부 100 · 검색 250 "분류/점검내용/설명" · [조회][등록][삭제][점검내역복사]), center = 점검내역 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Select } from 'antd';

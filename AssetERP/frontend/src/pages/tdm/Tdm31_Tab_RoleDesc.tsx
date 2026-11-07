@@ -6,6 +6,7 @@
  *        결재요청 중 책무기술서 파일을 새로 만드는 fileCheck·createRd·relateRdFile은 RD 연동이 없어 원본의 "파일생성기능 제한/파일생성실패" 길(상신은 그대로 이어간다)로 옮겼다 — 이미 있는 첨부는 지우지 않는다.
  *        책무기술서 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E11 `Tdm31_Tab_RoleDescAdmin`·N11 `Tdm34_TabPage_RoleAllcDetail`과 같다).
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

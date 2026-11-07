@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys25_Tab_ResetPassword.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L54-74: 툴바(성명 트리거 칸 "전체" + 조회) + 그리드(행번호, 체크박스 없는 단일 선택: 사번·본부(부서)·성명·상태(잠금 아이콘)·잠금해제·비밀번호 초기화). 여백 20/20/0/20
  * UX보강(10): 툴바 = SearchBar(UX-01). 조건이 하나(성명)라 초기화(UX-02) 없음. 성명 칸은 원본처럼 직접 입력은 비우는 용도(비우면 전체)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';

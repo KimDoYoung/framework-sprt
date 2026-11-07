@@ -4,6 +4,7 @@
  * 레이아웃 L47-124: west(455, 분할선, 여백 20/0/20/20) = 테두리 박스(툴바 49: 법규분류 · 찾기 입력 150 · [찾기] / 트리 그리드 흰 배경),
  *   center(여백 20/20/22/0) = 테두리 박스(Ics01_Grid_ApprList)
  * 1단계(F01·F02와 같은 사유): 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류 조회창 Dcr01_Lookup_Class는 다음 단계 (Ics01_Grid_ApprList 머리 참고)
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Splitter } from 'antd';

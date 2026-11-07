@@ -8,6 +8,7 @@
  *   · Ics01_Lookup_IcsFileAdmin은 IcsFile 안의 [불러오기]가 여는데 openPeriod가 [불러오기]를 감추므로 이 화면에서 도달할 수 없다
  * 열 때 바로 조회하지 않는다(원본은 retrieve()를 주석 처리했다) — [조회]·검색어 Enter·월 콤보를 닫을 때 조회한다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 검색 조건이 길어 줄바꿈 위험이라 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message } from 'antd';

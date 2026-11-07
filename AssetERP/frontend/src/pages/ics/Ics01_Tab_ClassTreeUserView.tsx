@@ -4,6 +4,7 @@
  * 레이아웃 L55-95: center=세로(툴바 50 + 그리드 + 페이징 툴바 100) — 툴바(분류 300 "전체" · 법규검색 200 · 조문검색 200 · [조회] · 상세내용 포함 · 일임(자문)관련 법규만 조회) + 법규 그리드(단일 선택, 아이콘 열 4)
  * 연결: Ics01_Lookup_SelectParent(분류)·Ics01_Lookup_Content(상세내용 view)·Ics20_Lookup_RevisionHistory(개정이력)·Sch03_Lookup_IcsUser(주기)·Ics01_Lookup_IcsFile(서식파일 openPeriod)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 검색줄이 길어(분류 300 + 검색 200×2 + 체크 2) 줄바꿈 위험이라 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

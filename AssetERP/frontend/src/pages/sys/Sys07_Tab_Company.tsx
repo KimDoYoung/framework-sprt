@@ -2,6 +2,7 @@
  * [1247] 기초자료 > 50. 권한 > 권한그룹별 메뉴권한 복사  (A08) — admin 회사 메뉴: 출발지 회사의 권한그룹·메뉴권한을 목적지 회사들로 복사한다
  * AS-IS: myApp/client/vi/sys/Sys07_Tab_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L38-68, BorderLayout): north = 툴바(50), center = 출발지 Sys07_Tab_InCompany(0.55, 분할), south = 목적지 Sys07_Tab_OutCompany(0.45, 분할)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useRef } from 'react';
 import { message, Modal, Space, Splitter, Typography } from 'antd';

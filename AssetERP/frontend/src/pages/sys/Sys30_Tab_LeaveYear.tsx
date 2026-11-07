@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L33-86): 위 = 툴바(높이 50, 조회·저장·행 추가·행 삭제), 왼쪽 20% = 회사 휴가 설정 그리드(1행, 분할 조절),
  * 가운데 80% = 근속연수별 연차개수 `Sys30_Grid_LeaveYear`. 열 때 바로 조회한다
  * UX보강(10) B12-2: 조회 버튼 로딩(UX-01), 저장(n)(UX-03, 두 그리드 변경 합). 조건이 없어 SearchBar·초기화(UX-02) 없음
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Splitter, message } from 'antd';

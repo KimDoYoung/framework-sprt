@@ -6,6 +6,7 @@
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * 출력 창 Pay01_Lookup_Rd_AnnualList(1300×880 "연봉계약현황" + [닫기])는 공통 RdViewer가 맡는다(AS-IS도 사원을 안 골랐을 때는 RDViewer.viewer를 쓴다).
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Radio } from 'antd';

@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast05_Tab_TrCodeAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L78-190: 가운데 = 툴바(거래코드/명 200 · 사용항목만 보기 · [조회][저장][등록][삭제][화면별 거래유형 등록] · 고객사 200(다중 선택) · [기초데이터생성]) + 거래코드 셀 편집 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 툴바가 두 줄로 넘어가(높이 72) 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

@@ -5,6 +5,7 @@
  *   center = Dbm02_TabPage_ColComments. 열 때 조회하지 않는다(E0는 초기화만).
  * 저장(update L151-158) = 바뀐 테이블 주석 → comment on table …(sp_DDLRun). DB 프로시저가 asseterpdb에 없어 서버가 거절한다(작업기록)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Input, Splitter } from 'antd';

@@ -7,6 +7,7 @@
  * [결재요청]·[문서보기]는 V41(2026-11-01)에서 전자결재 편집창(Apr01_Edit_ApprDoc, 링크코드 A72)·문서 목록(Apr01_Lookup_ApprLink)·문서분류(Dcr01_Lookup_Class)에 연결했다.
  *   RD 첨부파일 생성(createRd — insertRdCeoReport + RDUtil.download)은 TOBE에 RD가 없어 원본의 "개발계는 파일생성기능 제한" 길로 옮겼다(첨부 없이 상신, RD 연동 때 다시).
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: STP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message, Select, Tabs } from 'antd';

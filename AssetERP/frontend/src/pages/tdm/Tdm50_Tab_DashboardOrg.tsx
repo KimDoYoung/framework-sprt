@@ -6,6 +6,7 @@
  * [보기] 아이콘: grid01·grid03 → Tdm52_Edit_ChckManl.view, grid04 → Tdm54_Lookup_ChckInsuffCmnt.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail),
  *   grid02 [반려의견] 아이콘은 AS-IS 핸들러가 비어 있어 아무 일도 안 한다
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

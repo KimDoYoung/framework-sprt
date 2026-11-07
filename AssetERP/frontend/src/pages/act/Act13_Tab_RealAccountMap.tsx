@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act13_Tab_RealAccountMap.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L76-109: 가운데 = 툴바(검색 250 · [조회][등록][저장][삭제] + 관리자 회사만 고객사 200(다중 선택) · [기초데이터생성]) + 실계정맵핑 셀 편집 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 조건 1개라 초기화(UX-02) 없음), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

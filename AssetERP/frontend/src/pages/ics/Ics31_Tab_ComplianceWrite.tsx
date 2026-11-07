@@ -5,6 +5,7 @@
  * 회사의 체크주기(M 월 / Q 분기)로 콤보 종류를 정하고 기준을 지난 달(분기)로 둔다. 열 때 자동 조회는 없다(원본 그대로 — [조회]를 눌러야 한다).
  * 체크 한 번마다 저장한다(E8). 엑셀은 RD 리포트 서버(Ics31_Rd_ComplianceWrite) 대신 서버가 한 시트 xlsx로 만든다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 그룹 모두펼치기/접기 = ExpandCollapseButtons(UX-09)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';

@@ -4,6 +4,7 @@
  * 레이아웃 L75-125: 가운데(왼쪽) = 툴바(검색 200 · 조회 · 등록 · 저장 · 삭제 · 기초데이터생성) + 로그인 회사 복리후생비 셀 편집 그리드(행번호, 체크박스 다중),
  *   동쪽(오른쪽, 분할) = 툴바(고객사 150 · 검색 200 · 조회 · 등록 · 저장 · 삭제) + 고른 고객사 복리후생비 셀 편집 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button as AntButton, message, Splitter } from 'antd';

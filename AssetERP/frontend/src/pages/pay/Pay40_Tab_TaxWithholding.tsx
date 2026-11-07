@@ -5,6 +5,7 @@
  * V26: [결재요청] 아이콘의 결재문서 작성(Apr01_Edit_ApprDoc.insertLinkApproval 링크코드 X01, sys.Sys99_Print.getIncomeTaxWithholding, updateApprId)과
  *      [상세보기] 아이콘의 결재문서 보기(Apr01_Appr.selectById, retrieveApproval)를 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message } from 'antd';

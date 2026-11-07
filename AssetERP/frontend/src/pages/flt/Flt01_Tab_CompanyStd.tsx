@@ -4,6 +4,7 @@
  * 생성자 L56-133: center = vlc = 툴바(조회 · 등록 · 등록(복사) · 저장 · 삭제 · 종목유형설정 · 매수제한종목 · 예외사원) / 회사 기준 셀 편집 그리드(체크박스 다중).
  * 의무보유기간 열의 편집 아이콘이 조회창 Flt01_Lookup_LockUpCheckType을, [종목유형설정]·[매수제한종목]·[예외사원]이 조회창 Flt05_Lookup_ItemType·Flt08_Lookup_LockupItem·Flt16_Lookup_ExceptPerson을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01, 조건 없음), 저장 = 저장(n)(UX-03), 편집 날짜 열 120(UX-08), 변경 표시(UX-07)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

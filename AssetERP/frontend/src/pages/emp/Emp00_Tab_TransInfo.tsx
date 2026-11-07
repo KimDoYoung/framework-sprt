@@ -4,6 +4,7 @@
  * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 3개: 조회일자·조직/사번/성명·재직구분 → 초기화는 오늘·''·재직, 자동 조회 없음)
  * 레이아웃(생성자 L75-125): 가운데 = 툴바 + 사원 그리드, 아래 = 탭 16개(높이 450, 최대 900, 분할 조절)
  * 단계(C01-작업방법): 1단계 = 목록·등록·기본정보·일반발령. 엑셀(E1·E6~E9·E12)과 나머지 탭은 2·3단계.
+ * 스타일: SGTP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Select, Splitter, Tabs } from 'antd';

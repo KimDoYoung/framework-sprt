@@ -4,6 +4,7 @@
  * 생성자 L52-73: 가운데(여백 20, 테두리) = 툴바(기준년월 QuickMoveField · [조회]) + 점검 결과 그리드(SingleGrid)
  * E15 Tdm50_Tab_DutyReconAdmin의 고객사용 짝 — 같은 API(f_recon_tdm 'DB_CHK' → sys99_print)를 쓰고 고객사 칸·회사명 열이 없다
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

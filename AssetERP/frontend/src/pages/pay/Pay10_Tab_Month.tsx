@@ -6,6 +6,7 @@
  * 급여 지급일(payDate)은 화면에 보이는 입력칸이 아니라 구분 조회창(Pay10_Lookup_GroupList)이 정해 주는 값이다
  * [수정]·calculate(L268-289)는 AS-IS에서도 버튼이 주석 처리되어 도달 불가라 만들지 않았다
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Splitter } from 'antd';

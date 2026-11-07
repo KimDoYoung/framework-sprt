@@ -4,6 +4,7 @@
  * 레이아웃 L67-95: 툴바(구분·특정업무구분 콤보·조회·등록·저장·삭제) + 셀 편집 그리드(행번호, 체크박스 단일)
  * 결재요청 아이콘의 전자결재(Apr01_Edit_ApprDoc, link A80)·분류선택(Dcr01_Lookup_Class)은 V31에서 연결했다
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 2개 콤보 → 초기화는 전체·전체, 자동 조회 없음), 저장 = 저장(n)(UX-03). 1410과 같은 패턴
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';

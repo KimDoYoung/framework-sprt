@@ -7,6 +7,7 @@
  * 함께: Tdm34_TabPage_RoleAllcDetail·Tdm30_Edit_RoleAllc·Tdm30_Edit_RoleAllcModify·Tdm35_Lookup_RoleAllcTask·Tdm02_Lookup_HrRecord
  *       (직책·임원 조회창 Tdm20_Lookup_SelectSingle·Tdm01_Lookup_SelectSingle은 기존 부품)
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Modal, Space, Splitter, message } from 'antd';

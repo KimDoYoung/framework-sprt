@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp20_Tab_YearList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L69-150, SG): 테두리 박스 = 툴바(기준연도 · 월차 계산기준일 라디오 3 + 특정일 · 재직구분 · [조회][출력/다운로드]) + 연월차 그리드(2단 헤더, 앞 2열 고정)
  * [출력/다운로드]는 서비스 sys.Sys99_Print.insertRdYearList → RDViewer.viewer(mrd Emp20_Rd_YearList) — `rdApi` + `RdViewer`.
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, Radio, Select, message } from 'antd';

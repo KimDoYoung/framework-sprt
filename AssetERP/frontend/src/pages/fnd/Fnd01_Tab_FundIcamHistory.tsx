@@ -5,6 +5,7 @@
  * 레이아웃 L42-100: 위(50, 여백 20·20·0·20) 툴바 / 왼쪽 35%(분할, 최대 1000, 여백 0·0·20·20) 펀드 그리드 / 오른쪽 65%(최대 1000, 여백 0·20·20·0) 변경이력 그리드 + 페이징 100
  * 열 때 조회한다(생성자 끝 retrieve()). 조회가 끝나면 첫 행을 고른다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: GGH (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Splitter, message } from 'antd';

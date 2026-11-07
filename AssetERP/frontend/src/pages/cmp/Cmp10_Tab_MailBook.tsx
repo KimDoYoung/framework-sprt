@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/cmp/Cmp10_Tab_MailBook.java (208줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L48-80: BorderLayout — west(폭 1000, 분할, 여백 20·0·22·20, 테두리) 툴바 [조회][등록][삭제] + 그리드(단일 선택, 행번호, 3열: 이메일 220 · 비고 500 · 수정 60),
  *   center = Cmp10_Tab_MailBookList(공용메일 권한자, 테두리, 여백 20·20·22·-2)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Splitter, message } from 'antd';

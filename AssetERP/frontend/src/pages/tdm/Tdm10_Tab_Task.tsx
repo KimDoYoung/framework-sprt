@@ -5,6 +5,7 @@
  * 함께: Tdm10_Edit_Task(편집창), Tdm12_Lookup_TaskRelateDetail(세부내용), Tdm14_Lookup_TaskType(책무유형 관리), Tdm95_Lookup_ChangeHistory(변경이력)
  * 연결법규·연결내규 아이콘은 Tdm11_Lookup_TaskRelateRule(+ Bbs15_Lookup_CompanyRule·Sys09_Lookup_CodeKind 법규 고르기)를 연다(EE43) — 닫으면 그 줄의 건수를 다시 읽는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal, Space } from 'antd';

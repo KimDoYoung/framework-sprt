@@ -6,6 +6,7 @@
  * 함께: Tdm40_Lookup_SelectSingle(매뉴얼작업, checkYn)·Tdm20_Lookup_SelectRole·Tdm10_Lookup_SelectSingle·Org00_Lookup_SelectTdm(부서)·Tdm43_Lookup_ManlItemRegList2(주요관리의무 불러오기)
  *       — 점검항목 등록·수정창(Tdm43_Edit_Manl)과 TabPage의 불러오기 창은 TabPage 쪽
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창(UX-05·06)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Splitter, message } from 'antd';

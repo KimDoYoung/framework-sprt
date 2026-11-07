@@ -4,6 +4,7 @@
  * 생성자 L58-144: BorderLayout — 위 툴바 50 (해당 연도 · 사원명 · [조회]) / 왼쪽 급여 목록 그리드 470 / 가운데 RD 보고서 폼(Pay10_Rd_PersonList, S20과 공용).
  * S20과 다른 점: 사원을 고른다(조회창 Emp00_Lookup_SelectSingle) · 열 때 조회하지 않는다 · 그리드 3열(일자·구분·실수령액)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 일자 폭 UX-08(90)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Input, message } from 'antd';

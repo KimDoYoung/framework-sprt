@@ -6,6 +6,7 @@
  * 체크 한 번마다 저장한다(E13). 제출한 뒤에도 답은 바꿀 수 있다(원본은 확인된 행만 막는다 — 준수확인서 K01과 다름).
  * [E12 생략] sendMailButton[메일발송]은 원본도 툴바에 안 붙인 도달 불가.
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Select, Space } from 'antd';

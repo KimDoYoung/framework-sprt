@@ -5,6 +5,7 @@
  *                  south(40%) = Flt06_TabPage_AccountClose(폐쇄계좌)
  * [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp, EE45)·[최초원장 등록](Flt13_Lookup_BookInit, EE46)은 창을 연다. [상신]/상세보기(전자결재 편집창 Apr01_Edit_ApprDoc, link B05)는 V30에서 연결했다
  * UX보강(10): 저장 = 저장(n)(UX-03)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as AntButton, message, Modal, Space, Splitter } from 'antd';

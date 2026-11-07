@@ -5,6 +5,7 @@
  * 연결: Icr01_Lookup_SelectParent(분류)·Icr01_Lookup_Content(상세내용 view)·Sch03_Lookup_IcsUser(주기)·Icr01_Lookup_IcrFile(서식파일 openPeriod)
  * 연결만 있고 이 화면에서 도달할 수 없는 것: Icr01_Lookup_Share(managerList() L237 — 호출처 없음)·Icr02_Lookup_Manager(Share 안에서만 연다)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 검색줄이 길어(분류 300 + 검색 200×2 + 체크) 줄바꿈 위험이라 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

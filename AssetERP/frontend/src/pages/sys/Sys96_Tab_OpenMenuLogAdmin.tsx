@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys96_Tab_OpenMenuLogAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L55-94: 툴바(고객사·사원명 검색·매뉴명 찾기·실사용 건만 조회·조회) + 단순 그리드 + 페이징 툴바(100)
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 5개 → 초기화는 전체·빈 사원명·전체 매뉴·체크 해제, 자동 조회 없음). 사원명은 SearchBar.Input(Enter = 조회, x)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message } from 'antd';

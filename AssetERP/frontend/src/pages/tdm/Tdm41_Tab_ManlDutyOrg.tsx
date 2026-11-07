@@ -6,6 +6,7 @@
  * 함께: Tdm40_Lookup_SelectSingle(매뉴얼작업)·Tdm20_Lookup_SelectRole(직책, 기존)·Tdm10_Lookup_SelectSingle(책무)·Tdm41_Lookup_ChangeOrg_Tmp(부서변경) — 이 ID에서 새로 만듦
  * 생략: Tdm44_Lookup_ManlDutyOrg — 관리의무 목록의 점검부서 수정 아이콘이 "임시로 막음"(Tdm41_TabPage L297)이라 닿지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창(UX-05·06)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Splitter, message } from 'antd';

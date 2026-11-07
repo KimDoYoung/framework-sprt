@@ -5,6 +5,7 @@
  *   center(여백 20/20/20/0) = Apr01_Grid_ItemDocList
  * 1단계(F01~F06과 같은 사유): 상세보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Radio, Splitter } from 'antd';

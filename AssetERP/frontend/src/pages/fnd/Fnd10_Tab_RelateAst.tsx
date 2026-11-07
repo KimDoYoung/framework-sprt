@@ -4,6 +4,7 @@
  * 레이아웃 L59-90: 여백 20 안의 테두리 박스 = 툴바(50) + 왼쪽 펀드 그리드 40% / 오른쪽 자산 그리드 60%
  * 열 때 기준일을 전 영업일로 채우고 곧바로 조회한다(settings → Sys12_Calendar.selectBizDate). 조회가 끝나면 첫 행을 고른다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

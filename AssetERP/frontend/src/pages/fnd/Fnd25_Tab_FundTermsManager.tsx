@@ -4,6 +4,7 @@
  * 생성자 L56-87: 왼쪽(45%, 분할, 최소 590·최대 1000) = 툴바(50: 구분 콤보 100 · 검색 220 "펀드규약명/펀드명/예탁원코드" · [조회][등록]) + 규약 그리드(행번호, 체크 없음),
  *   가운데 = 개정 목록(Fnd25_Grid_FundTermsDetail). 규약을 고르면 그 개정을 오른쪽에 보인다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Splitter } from 'antd';

@@ -6,6 +6,7 @@
  * 1단계(F·I와 같은 방침): 전자결재 편집창 Apr01_Edit_ApprDoc을 여는 [문서보기]는 안내만 띄운다 — 다음 단계
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

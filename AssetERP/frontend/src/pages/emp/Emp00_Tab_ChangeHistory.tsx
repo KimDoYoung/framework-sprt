@@ -5,6 +5,7 @@
  * 시작일은 일반발령·상벌내역이 오늘 기준 12개월 전, 나머지 날짜는 오늘(settings L107-124).
  * [출력/다운로드]는 서비스 sys.Sys99_Print.insertRdEmp03/08/11History → RDViewer.viewer(mrd Emp03/08/11_Rd_ChangeHistory) — `rdApi` + `RdViewer`.
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Select, Tabs } from 'antd';

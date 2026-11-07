@@ -4,6 +4,7 @@
  * 레이아웃 L52-102: 툴바(조회 · 등록 · 저장 · 삭제) + 체크박스 다중 셀 편집 그리드(카드사명 150 콤보 · 맵핑 80 아이콘 · 비고 500). 여백 20, 최대 폭 1000
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 검색 조건·초기화 버튼이 없어 onReset(UX-02)은 넣지 않는다
  * 로그인 회사의 카드사만 조회한다(retrieve() L139).
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { crdApi } from '@/api/crd';

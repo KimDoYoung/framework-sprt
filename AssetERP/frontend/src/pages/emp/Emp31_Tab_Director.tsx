@@ -6,6 +6,7 @@
  * [문서분류지정]의 Dcr30_Lookup_Link는 B15에서 연결. [임원 선임/해임 보고]는 두 출력 자료(insertRdDirector01·02)를 채우고 보고서 창
  *   RDViewer.openEmp31(구분 콤보 선임/해임·[조회]·[상신하기])을 연다 — 창은 V41에서 Emp31_Lookup_RdDirector로 만들었고 [상신하기]는 전자결재 편집창(A44·A62)을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Checkbox, message } from 'antd';

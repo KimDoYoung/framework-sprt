@@ -4,6 +4,7 @@
  * 레이아웃 L72-197: 왼쪽 28%(위 툴바 둘 — [검색 칸 150 "분류명"][조회]([문서분류복사] 관리자 회사 / [사용여부설정] 그 밖에서 ERP 상품이 S1이 아닐 때), [펼치기][감추기][업무등록][하위등록] + 트리 그리드),
  *   오른쪽 72%(Dcr01_Grid_DocType). 트리 그리드: getCustomTreeGrid(1) — 행번호 없음, 분류명 270 · 분류코드 80 · 수정 50 · 이동 50
  * UX보강(10): 검색 영역 = SearchBar(UX-01)
+ * 스타일: TG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Splitter } from 'antd';

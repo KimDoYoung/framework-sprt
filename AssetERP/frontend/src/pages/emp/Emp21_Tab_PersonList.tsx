@@ -5,6 +5,7 @@
  * 결재요청 = 전자결재 편집창 Apr01_Edit_ApprDoc 링크코드 A15(미사용 연차·월차 휴가 사용 시기 지정통보서, 제공자는 기존 UnLeaveLinkSeedProvider)
  *   — [상신] findLinkCode() L213 → openLookupDoc() L241 → insertAppr() L252 → updateApprId() L265
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

@@ -4,6 +4,7 @@
  * 레이아웃 init() L84-204: 툴바(고객사[admin 회사만] · 구분 150 "전체" · 검색 250 "양식제목/비고" · 조회 · 등록 · 삭제 · 구분추가 · 내보내기[관리자만]) + 체크박스 다중 그리드
  *   (구분 200 · 양식 제목 450 · 상세보기 80[아이콘] · 비고 1000). 화면을 열 때 조회하지 않는다(생성자는 init만) — 조회 버튼이나 구분 콤보를 바꿔야 목록이 뜬다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

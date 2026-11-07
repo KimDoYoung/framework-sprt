@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys04_Tab_RoleAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L52-90, BorderLayout): north = 툴바(50), west = 고객 그리드(380, 분할), center = 권한 그리드
  * UX보강(10) B12-1: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 조건이 1개라 없음
+ * 스타일: GGH (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Splitter } from 'antd';

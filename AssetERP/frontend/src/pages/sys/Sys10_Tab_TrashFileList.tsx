@@ -4,6 +4,7 @@
  * 레이아웃 L48-79: 툴바(조회 · 일괄삭제) + 그리드(parentId·등록일·첨부파일·경로·용량·보기·받기·삭제, 체크박스 없는 단일 선택)
  * 삭제 아이콘 = 확인 → checkFileDelete(연결만 지움 1 / 사용 중 2 / 지워도 됨 3 → 파일·행 삭제). 일괄삭제는 원본 deleteAll()이 빈 메서드라 아무 일도 하지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01). 조건이 없어 초기화(UX-02) 없음
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal } from 'antd';

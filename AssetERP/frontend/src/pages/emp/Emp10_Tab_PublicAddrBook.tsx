@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp10_Tab_PublicAddrBook.java (203줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L51-78: center=vlc(테두리, 여백 20) — 툴바 [검색 칸(빈칸 안내 "담당자명/회사이름/비고")][조회][등록][저장][삭제][그룹설정] + 셀 편집 그리드(체크박스 다중,
  *   8열: G11의 7열 + 등록자 100). G11 주소록 관리와 같은 모양, 공용(publicYn=true)·로그인 회사 전체를 다룬다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Modal, message } from 'antd';

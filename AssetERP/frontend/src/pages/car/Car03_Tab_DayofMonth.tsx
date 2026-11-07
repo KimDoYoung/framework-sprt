@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/car/Car03_Tab_DayofMonth.java (265줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L63-134: 왼쪽 300(여백 20,0,20,20, 테두리) = 달력 + [예약하기] 270, 가운데(여백 20,20,20,-2, 테두리) = 라디오(MY 예약 / 전체 예약) + 예약 그리드(체크 단일)
  * 조회가 끝나면 부모의 callback을 부른다(retrieve() L226) — 부모 목록도 같이 다시 읽는다
+ * 스타일: GCG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Calendar, message, Modal, Radio } from 'antd';

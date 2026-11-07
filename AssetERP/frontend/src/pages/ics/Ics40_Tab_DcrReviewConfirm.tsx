@@ -5,6 +5,7 @@
  * 1단계(M05와 같은 방침): [문서확인]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 안내만(다음 단계). [알림설정] noticeButton은 원본도 툴바에 안 붙인 도달 불가 버튼이라 만들지 않는다
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Select } from 'antd';

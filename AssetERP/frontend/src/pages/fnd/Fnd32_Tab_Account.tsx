@@ -4,6 +4,7 @@
  * 생성자 L84-119: 가운데(여백 20, 테두리) = 툴바 50(검색 350 "증권사/운용대상/구분/계좌번호/은행연계계좌/비고" · 계좌상태 [콤보 100 "활성"] · [조회][등록(복사)][등록][저장][삭제] · [템플릿][엑셀업로드]) + 셀 편집 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 편집 가능 날짜 열 120(UX-08). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 원본 그대로 둔 것: 운용대상 콤보(accountCode1ComboBox.Collapse L253)는 고른 이름을 운용대상이 아니라 구분(accountName2) 이름에 넣는다 — 저장되는 코드(accountCode1)는 맞고 조회하면 제대로 보인다(작업기록 제안)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message } from 'antd';

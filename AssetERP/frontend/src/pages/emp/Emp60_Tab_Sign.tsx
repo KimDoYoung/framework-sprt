@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp60_Tab_Sign.java (308줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L70-91: center=vlc(테두리, 여백 20) — 툴바 [조회][등록][저장][삭제] + 셀 편집 그리드(행 선택 단일, 4열: 사용 100(체크) · 서명 200(이미지) ·
  *   올리기 25 · 비고 700(큰 글상자)). 서명은 사원 한 명이 여러 장을 올려 두되 사용은 하나만 켤 수 있다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Modal, message } from 'antd';

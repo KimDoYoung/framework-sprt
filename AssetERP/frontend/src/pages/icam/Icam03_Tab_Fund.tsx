@@ -6,6 +6,7 @@
  * UX보강(10): 툴바1 = SearchBar(UX-01). 조건이 1개라 초기화(UX-02) 없음
  * 버튼 type: 조회 `search`, ICAM Get·타사무 Get = `download`(원본 문구가 button-types에 없어 '외부에서 가져오기' 뜻으로 고름).
  * ICAM Get·타사무 Get(BatchMain 서블릿)은 외부 ICAM DB를 읽는 작업이라 서버가 거절한다 — 작업기록 의존
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useState } from 'react';
 import { message, Modal, Space, Splitter } from 'antd';

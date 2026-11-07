@@ -5,6 +5,7 @@
  *                 가운데 = 툴바([등록] · 새로고침) + 승인자 그리드(행번호 없음, 위로/아래로/삭제 셀)
  * 함께: Tdm20_Lookup_SelectRole(책무직책 칸)·Tdm23_Lookup_SelectOrg(수행부서 칸)·Emp01_Lookup_PersonModel(승인자 등록, 다른 도메인 — 기존 부품)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 등록은 맨 아래(03 원칙 17)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Modal, message } from 'antd';

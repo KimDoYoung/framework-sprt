@@ -6,6 +6,7 @@
  * [등록]은 보유내역 조회창(Flt11_Lookup_BookList)에서 고른 종목마다 매도 행을 만든다
  * [보고주기 변경 및 서약서 서명]은 Flt02_Lookup_Emp를 연다 (EE45, I02 E1·I03 E3과 같은 창)
  * UX보강(10): 저장 = 저장(n)(UX-03)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Splitter } from 'antd';

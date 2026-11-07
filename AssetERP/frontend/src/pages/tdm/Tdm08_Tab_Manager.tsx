@@ -4,6 +4,7 @@
  * 생성자 L69-110: 가운데 = 툴바(검색 · [조회]) + 구분/수행부서 그리드(단일 체크), 동쪽 = 툴바([행 추가][행 삭제][저장]) + 담당자 적용기간 셀 편집 그리드
  * 함께: Emp00_Lookup_SelectSingle(성명 돋보기, 다른 도메인 — 기존 부품)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 행추가는 맨 아래(03 원칙 17)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message, Splitter } from 'antd';

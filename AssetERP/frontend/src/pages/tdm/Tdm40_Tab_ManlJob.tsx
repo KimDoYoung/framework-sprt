@@ -4,6 +4,7 @@
  * 생성자 L72-105: 툴바(검색 · 작성중만 조회 · [조회][등록][저장][삭제] · [관리의무생성] · 관리자만 [매뉴얼 작성][매뉴얼 복제]) + 셀 편집 그리드(단일 체크)
  * 함께: Tdm20_Lookup_SelectRole(직책 돋보기, 기존 부품) · Org00_Lookup_SelectSingle(점검부서 돋보기, 기존 부품 + [전체] 버튼)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, Modal, message } from 'antd';

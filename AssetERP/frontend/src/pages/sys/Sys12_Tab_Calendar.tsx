@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys12_Tab_Calendar.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L55-85: 툴바(년도 · 월 · 조회·저장·생성·휴일관리, 관리자 회사만 고객사반영) + 그리드(행번호, 체크박스 단일, 영업일 체크 + 휴일사유·비고 편집). 여백 20, 최대 폭 1000
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 저장 = 저장(n)(UX-03)
+ * 스타일: GCG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import dayjs from 'dayjs';

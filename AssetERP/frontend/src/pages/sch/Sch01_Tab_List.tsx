@@ -5,6 +5,7 @@
  *   기본 나의 스케줄) · 주기(80, CycleCode005, 전체 %) · 검색(230, "스케줄명/상세내용/담당부서/담당자") · [데일리 체크리스트만 보기] · [조회]. 그리드는 단일 선택, 아이콘 열 1(상세보기)
  * 연결: Sch01_Lookup_InfoView(업무일정 보기 + 첨부 Bbs02_Lookup_File) · Sch10_Lookup_Ipo(분류가 공모주인 행)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건 6개라 줄바꿈 위험이 있어 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Select, message } from 'antd';

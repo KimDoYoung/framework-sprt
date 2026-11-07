@@ -5,6 +5,7 @@
  * 함께: Tdm20_Edit_Role(편집창), Tdm21_Lookup_RoleRelateTask(연결책무), Tdm22_Lookup_RoleRelateCncl(연결회의체), Tdm23_Lookup_RoleRelateOrg(연결부서),
  *       Tdm20_Lookup_SelectSingle(보고CEO), Tdm95_Lookup_ChangeHistory(변경이력)
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal, Space } from 'antd';

@@ -2,6 +2,7 @@
  * [1069] 관리자 > 01. 화면권한관리 > 권한그룹 관리  (A01)
  * AS-IS: myApp/client/vi/sys/Sys04_Tab_Role.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-1: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 조건이 1개라 없음
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { sysApi } from '@/api/sys';

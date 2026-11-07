@@ -5,6 +5,7 @@
  *   + 아래 테두리 박스(툴바: "▼ 제외사원" · [등록][저장][삭제] + 체크 다중 셀 편집 그리드). 위 그리드 행을 고르면 아래 제외사원을 읽는다.
  * 1단계(사용자 결정 2026-10-28)는 [승인신청]·상세보기를 안내만 했다. V23(2026-10-31)에서 연결했다: [승인신청] → Apr01_Edit_ApprDoc.insertLinkApprovals("A24") → updateApprId,
  *   상세보기 → retrieveApproval (본문 JointLeaveHtmlData는 서버가 만든다 `GET apr/apprs/link-seed`).
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, Modal, message } from 'antd';

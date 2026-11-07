@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L74-114): 가운데 = 툴바(높이 50) + 거래처 그리드, 아래 = 편집 칸 `Sys15_Edit_Corp`(높이 400, 분할 없음).
  * 관리자 회사(0)만 툴바 끝에 고객사 칸 + [기초데이터생성]
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02·04, 조건 3개: 거래처구분·거래처명·사용거래처만 보기 → 초기화는 '%'·''·체크)
+ * 스타일: SGEF (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Splitter } from 'antd';

@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L37-67): west = 회사명 툴바 + 회사 그리드(360, 분할 없음), center = Sys07_TabPage_Role
  * UX보강(10) B12-1: 회사명 툴바 = SearchBar(UX-01), 회사명은 원본에 Enter가 없어 antd Input + allowClear(UX-04).
  * 초기화(UX-02)는 조건이 1개라 없음(패널 폭 원본 360·425에서는 줄도 넘친다)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Input, message } from 'antd';

@@ -2,6 +2,7 @@
  * 공용메일 권한자 — Cmp10_Tab_MailBook 오른쪽 (G13)
  * AS-IS: myApp/client/vi/cmp/Cmp10_Tab_MailBookList.java (215줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L51-64: 툴바 ["사원정보 " 라벨][조회][등록][저장][삭제] + 그리드(체크박스 다중, 행번호, 4열: 조직 160 · 직책 100 · 사번 80 · 성명 80)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';

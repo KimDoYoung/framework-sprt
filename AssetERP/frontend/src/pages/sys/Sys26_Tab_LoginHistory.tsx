@@ -4,6 +4,7 @@
  * 레이아웃 L47-78: 툴바(조회기간 시작일 ~ 종료일 · 접속구분 · 회사명 · 조회 · 삭제) + 그리드(행번호, 체크박스 다중)
  * UX보강(10): 툴바 = SearchBar(UX-01·02 — 초기화는 줄바꿈이 없을 때만)
  * 삭제: 원본 GridDeleteData는 확인창 없이 체크 행을 지운다 — 공통 규칙(05 §8)대로 "n건 삭제되었습니다."·선택 없음 경고를 더했다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

@@ -6,6 +6,7 @@
  * V26: [상신]의 결재문서 작성(Apr01_Edit_ApprDoc.insertLinkApproval, 링크코드 D01, 계약서 양식이 둘 이상이면 Pay06_Lookup_LinkContent)과 updateApprId,
  *      상신상태 아이콘의 결재문서 보기(retrieveApproval)를 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, Input, message, Modal, Radio } from 'antd';

@@ -5,6 +5,7 @@
  *   아래 330(여백 0,20,20,20, 테두리) = Est03_TabPage_PfHistory(수행내역 상세 + 증빙자료)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 전자결재 연결은 없는 화면이다(수행내역 신청·승인은 이 화면의 [승인신청]·승인 화면 Est03_Tab_PfHistoryConfirm(Q11)).
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';

@@ -4,6 +4,7 @@
  * 생성자 L63-84: 가운데(여백 20, 테두리) = 툴바(기준년월 QuickMoveField · [조회]) + 책무진행 상태 그리드(SingleGrid, 앞 3열 고정, 묶음 헤더 3개)
  * E14 Tdm50_Tab_DutyProgressAdmin의 고객사용 짝 — 같은 API(f_recon_tdm → sys99_print)를 쓰고 고객사 칸·회사 열·점검대상 여부 묶음이 없다
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

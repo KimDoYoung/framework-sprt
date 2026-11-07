@@ -6,6 +6,7 @@
  *   아이콘 열 1(상세보기). 공유구분 콤보·결재요청 열·원인문서 열은 원본에서 주석 처리돼 만들지 않는다(Apr01_Edit_ApprDoc·Dcr01_Lookup_Class는 쓰이지 않음)
  * 연결: Emp00_Lookup_SelectSingle(담당자) · Sch01_Lookup_InfoView(업무일정 보기) · Sch10_Lookup_Ipo(공모주)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장(n)(UX-03). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 조건이 많아 줄바꿈 위험이라 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, DatePicker, Radio, Select, message } from 'antd';

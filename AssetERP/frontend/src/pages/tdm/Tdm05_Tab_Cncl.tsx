@@ -4,6 +4,7 @@
  * 생성자 L53-79: 가운데 = 툴바(기준일 · 전체보기 · [조회][등록][삭제]) + 회의체 그리드(MultiGrid)
  * 함께: Tdm05_Edit_Cncl(편집창), Tdm22_Lookup_RoleRelateCncl2(직책 연결, 안에 Tdm20_Lookup_SelectMulti)
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal } from 'antd';

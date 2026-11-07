@@ -8,6 +8,7 @@
  *   openPeriod에서 감춰져 이 화면에서 도달할 수 없다.
  * 관리자용 짝은 Ics01_Tab_ClassTree(E01). 이 화면은 회사별 설정(ics03_company_info: 제외·자동·일임)과 관리그룹을 고친다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장(n)(UX-03). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 검색 조건이 길어 줄바꿈 위험이라 넣지 않는다
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message } from 'antd';

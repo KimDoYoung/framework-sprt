@@ -5,6 +5,7 @@
  * 열어도 자동으로 조회하지 않는다(생성자에 retrieve() 없음) — [조회]를 눌러야 읽는다.
  * 제공/수령이 이익제공(1)이면 거래상대방 열을 숨기고 회사·직원·부서(머리글 "거래상대방" 묶음)를 보이며, 이익수령(2)이면 반대다(setting() L132-148).
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 버튼이 많아 UX-02 초기화는 뺀다), 그리드 날짜 폭(UX-08)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Select, Spin } from 'antd';

@@ -4,6 +4,7 @@
  * 생성자 L71-94: 가운데 = 툴바(기준년월 QuickMoveField · 고객사 200 · [조회]) + 책무진행 상태 그리드(SingleGrid, 앞 4열 고정, 묶음 헤더 4개)
  * 조회는 두 단계다: sys99_print.insertReconTdm(DB 함수 f_recon_tdm이 사용자 몫의 점검상태 행을 다시 만든다) → selectByWindowClassName
  * UX보강(10): 툴바 = SearchBar(UX-01)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useState } from 'react';
 import { message } from 'antd';

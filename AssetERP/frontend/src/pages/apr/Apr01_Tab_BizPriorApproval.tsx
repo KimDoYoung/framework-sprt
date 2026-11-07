@@ -5,6 +5,7 @@
  * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V29에서 연결했다 — [승인신청](링크코드 A10·A11·A12, 제목 "{신청서 구분 이름}_{로그인 사원 이름}"·본문은 문서분류의 대표 양식,
  *   `GET apr/apprs/link-seed`)·[상세보기](문서 열기). [문서분류지정]의 `Dcr30_Lookup_Link`는 B15에서 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

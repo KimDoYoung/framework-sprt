@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act15_Tab_CloseCheck.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L37-62: 가운데 = 툴바(검색 · [조회][저장]) + 고객사별 체크박스 그리드(행번호, 단일 선택, 체크박스 클릭으로 값 변경)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 조건 1개라 초기화(UX-02) 없음), 저장 = 저장(n)(UX-03)
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { actApi } from '@/api/act';

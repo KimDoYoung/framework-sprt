@@ -4,6 +4,7 @@
  * 레이아웃 L64-73: 툴바(조회 · 등록 · 저장 · 삭제) + 체크박스 단일 셀 편집 그리드(야간근로·가산 배수 헤더 묶음). 여백 20, 최대 폭 1000
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 검색 조건·초기화 버튼이 없어 onReset(UX-02)은 넣지 않는다
  * 회사 0(공통) 행만 조회한다(retrieve() L133). 저장·삭제는 서버가 관리자 회사만 허용한다.
+ * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { payApi } from '@/api/pay';

@@ -6,6 +6,7 @@
  * 1단계(G01~G04와 같은 사유): [문서확인]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
  * 사원찾기 lookupEmpInfo(L208-221)는 컬럼·툴바에 연결되지 않은 도달 불가 코드라 만들지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

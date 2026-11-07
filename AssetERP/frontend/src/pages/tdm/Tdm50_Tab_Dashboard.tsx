@@ -5,6 +5,7 @@
  *   + 임원별 진행현황(grid01)·부서별 진행현황(grid02) 가로 2분할 300 + 미흡 조치현황(grid03)
  * [보기] 아이콘(grid03 상세보기)은 Tdm54_Lookup_ChckInsuffCmnt.view (2026-11-05 연결, Tdm50_Dashboard_Common useDashboardDetail)
  * UX보강(10): UX-01(새로고침 버튼 로딩), UX-08(날짜 열 90)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

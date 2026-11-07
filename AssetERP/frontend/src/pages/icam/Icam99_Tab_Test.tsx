@@ -8,6 +8,7 @@
  * 아래 줄의 버튼들은 원본에도 핸들러가 없다(눌러도 아무 일 없음)
  * 버튼 type: 가져오기·Get = `download`, 미일치생성 = `generate`, 알람실행 = `send`, 종목명 변경 반영 = `save`, 소실파일 = `search`, 나머지는 button-types 대응(제목 → type)
  * 작업 버튼(BatchMain 서블릿)은 서버에 연동이 없어 거절한다 — 작업기록 의존
+ * 스타일: GO (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message } from 'antd';

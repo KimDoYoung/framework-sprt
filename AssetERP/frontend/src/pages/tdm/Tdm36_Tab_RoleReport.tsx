@@ -5,6 +5,7 @@
  *               south(0.6) = Tdm36_TabPage_RoleReport (첨부 목록)
  * 다음 단계: 첨부 목록의 보기(RD 뷰어·FINES 다운로드)와 문서(전자결재 문서 보기) — Tdm36_TabPage_RoleReport 머리 참고
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Modal, Splitter } from 'antd';

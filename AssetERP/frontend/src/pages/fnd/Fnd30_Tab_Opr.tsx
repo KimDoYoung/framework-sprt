@@ -5,6 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 전자결재 편집창 Apr01_Edit_ApprDoc(link A26 — [결재요청]이 문서분류 조회창 Dcr01_Lookup_Class를 거쳐 여는 insertLinkApproval(총 배정수량과 펀드별 배정수량 합계 검사 뒤)·[상세보기]의 retrieveApproval,
  *   끝난 뒤 updateApprId)은 V38에서 연결했다. 문서분류지정 창 Dcr30_Lookup_Link는 B15
+ * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

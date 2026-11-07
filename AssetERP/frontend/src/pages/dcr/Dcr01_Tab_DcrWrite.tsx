@@ -5,6 +5,7 @@
  *   center = 툴바(등록기간 · 검색 · 수신처 · 조건 포함 체크 · [조회]) + 문서 그리드(체크박스 단일) + 페이징 툴바(100)
  * [신규문서 작성]·상세보기 아이콘은 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘은 Apr50_Lookup_ApprList를 연다(2026-11-05 북마크 연결, 13-누락대장 3번)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건이 길어 한 줄을 넘기므로 초기화(UX-02)는 넣지 않는다
+ * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Select, Typography } from 'antd';

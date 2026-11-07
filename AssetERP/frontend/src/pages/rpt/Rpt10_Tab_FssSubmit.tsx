@@ -4,6 +4,7 @@
  * 레이아웃 settings() L75-122: 툴바(검색 250 빈칸 "보고서코드" · 조회 · 등록 · 삭제) + 체크박스 다중 그리드
  *   (보고서코드 100 · 보고서명 180 · 제출주기 100 · 작성대상 220 · 작성요령 500 · 개정연혁 400 · 수정 80[아이콘])
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 1개라 그리지 않는다
+ * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
