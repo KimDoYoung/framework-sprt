@@ -14,6 +14,7 @@ import { Checkbox, DatePicker, Input, message, Modal, Splitter } from 'antd';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { scmApi } from '@/api/scm';
+import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { Sr } from '@/types/scm';
 import { Button } from '@/components/button';
@@ -41,7 +42,7 @@ export const Scm01_Tab_Sr: React.FC = () => {
   const retrieveSeq = useRef(0);
   const [startDate, setStartDate] = useState(dayjs().startOf('year').format(FORMAT));
   const [closeDate, setCloseDate] = useState(dayjs().format(FORMAT));
-  const [systemCode, setSystemCode] = useState<string>(ASSETERP_ORGS.includes(Number(user.deptId)) ? '20' : '10');
+  const [systemCode, setSystemCode] = useState<string>('10');
   const [srStatus, setSrStatus] = useState<string>(ALL);
   const [searchText, setSearchText] = useState('');
   const [checkBox01, setCheckBox01] = useState(true);
@@ -52,7 +53,15 @@ export const Scm01_Tab_Sr: React.FC = () => {
   const [selected, setSelected] = useState<Sr | null>(null);
 
   // [E0] 화면 열림 (생성자 L74-130) → settings() 끝에서 retrieve()
-  useEffect(() => { void retrieve(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // 시스템 구분 기본값 = 로그인 사원의 조직이 AssetERP 팀이면 20, 아니면 10 (AS-IS LoginUser.getOrgCodeId()). user.deptId 는 아직 설정값("D101" 같은 글자)이라 쓸 수 없어 서버에서 읽는다
+  useEffect(() => {
+    void (async () => {
+      let code = '10';
+      try { if (ASSETERP_ORGS.includes(await aprApi.getMyOrgCodeId())) code = '20'; } catch { /* 기본값 '10' */ }
+      setSystemCode(code);
+      await retrieve({ systemCode: code });
+    })();
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // [E2] systemComboBox.Collapse (L152) · [E3] srStatusComboBox.Collapse (L160) · [E4] searchText.KeyPress [Enter] (L178) · [E5] retrieveButton[조회].Select (L186)
   //   → retrieve() L250-291: scm.Scm01_Sr.selectByText(startDate, closeDate, "%검색어%", systemCode, srStatus, checkBox01, checkBox02, checkBoxMyReg, personId, gubun="sr")

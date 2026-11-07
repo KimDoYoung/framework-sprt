@@ -8,7 +8,7 @@
  */
 import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
 import { message } from 'antd';
-import { aprStepEditApi } from '@/api/apr';
+import { aprApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { SrApprStep } from '@/types/scm';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -40,12 +40,14 @@ export const Scm02_Grid_ApprStep = forwardRef<ScmApprStepGridHandle, Props>(({ s
   /** makeMeLine L55-57 → insertApprovalEmp("00", LoginUser.getUserModel()): 로그인 사원의 소속·직책으로 상신자 줄 */
   const makeMeLine = async (): Promise<SrApprStep> => {
     let me;
+    let orgCodeId = 0;   // 회사관리자 등 조직이 없으면 0
     try {
-      me = (await aprStepEditApi.emps('org', { orgCodeId: Number(user.deptId) })).find(e => e.personId === user.userId);
+      orgCodeId = await aprApi.getMyOrgCodeId();   // user.deptId 는 아직 설정값("D101" 같은 글자)이라 숫자로 못 쓴다
+      me = (await aprStepEditApi.emps('org', { orgCodeId })).find(e => e.personId === user.userId);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-    return makeStep('00', srId, me ?? { personId: user.userId, orgCodeId: Number(user.deptId), empKorName: user.name });
+    return makeStep('00', srId, me ?? { personId: user.userId, orgCodeId, empKorName: user.name });
   };
 
   useImperativeHandle(ref, () => ({

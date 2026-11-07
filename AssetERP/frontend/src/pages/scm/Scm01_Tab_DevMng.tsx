@@ -9,17 +9,17 @@
  * 스타일: SGEF (견본 Sys90_Tab_AfterService — 아래 폼이 둘이라 분할이 셋이다)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Splitter } from 'antd';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { scmApi } from '@/api/scm';
+import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { Sr } from '@/types/scm';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
-import { useLoginUser } from '@/hooks/useLoginUser';
 import { Scm01_Edit_DevMng } from './Scm01_Edit_DevMng';
 import { Scm01_Edit_DevMngRO } from './Scm01_Edit_DevMngRO';
 
@@ -34,13 +34,12 @@ const SINGLE_CHECK = { mode: 'singleRow', checkboxes: true, enableClickSelection
 const ASSETERP_ORGS = [23541, 23542, 202209221337019];
 
 export const Scm01_Tab_DevMng: React.FC = () => {
-  const user = useLoginUser();
   const gridRef = useRef<AgGridReact<Sr>>(null);
   const selectFirst = useRef(false);
   const retrieveSeq = useRef(0);
   const [startDate, setStartDate] = useState(dayjs().startOf('year').format(FORMAT));
   const [closeDate, setCloseDate] = useState(dayjs().format(FORMAT));
-  const [systemCode, setSystemCode] = useState<string>(ASSETERP_ORGS.includes(Number(user.deptId)) ? '20' : '10');
+  const [systemCode, setSystemCode] = useState<string>('10');
   const [srStatus, setSrStatus] = useState<string>(ALL);
   const [searchText, setSearchText] = useState('');
   const [checkBox01, setCheckBox01] = useState(true);
@@ -49,6 +48,12 @@ export const Scm01_Tab_DevMng: React.FC = () => {
   const [selected, setSelected] = useState<Sr | null>(null);
 
   // [E0] 화면 열림 (생성자 L63-114) → settings() — 열 때 조회하지 않는다
+  // 시스템 구분 기본값 = 로그인 사원의 조직이 AssetERP 팀이면 20, 아니면 10 (AS-IS LoginUser.getOrgCodeId()). user.deptId 는 아직 설정값("D101" 같은 글자)이라 쓸 수 없어 서버에서 읽는다
+  useEffect(() => {
+    void (async () => {
+      try { if (ASSETERP_ORGS.includes(await aprApi.getMyOrgCodeId())) setSystemCode('20'); } catch { /* 기본값 '10' */ }
+    })();
+  }, []);
 
   // [E2] systemComboBox.Collapse (L136) · [E3] srStatusComboBox.Collapse (L144) · [E4] searchText.KeyPress [Enter] (L156) · [E5] retrieveButton[조회].Select (L164)
   //   → retrieve() L235-272: scm.Scm01_Sr.selectByDevMng(startDate, closeDate, "%검색어%", systemCode, srStatus, checkBox01, checkBox02 = false, gubun = "mng")
