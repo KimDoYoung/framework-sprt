@@ -6,6 +6,13 @@
 <!-- AS-IS(IDMS-IC) server/frm/mapper/frm01_list.xml (getNoticeCnt)  (EE53 Frm01_Lookup_CheckList) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.frm.mapper.FrmListMapper">
 
+    <!-- AS-IS MainFrame 생성자 L237-243: LoginUser.getManagerModel().getAdminYn() (sys02_user.sys02_admin_yn) -->
+    <select id="selectManagerAdminYn" resultType="string">
+        SELECT sys02_admin_yn
+          FROM sys02_user
+         WHERE sys02_user_id = #{userId}
+    </select>
+
     <!-- AS-IS frm01_list.getNoticeCnt (IDMS-IC): 미결재건·체크리스트·공지사항·알림함·매매승인 건수. 본문 그대로, 바깥에서 열만 고른다.
          (공지 CTE의 searchText·noticeType 등 분기는 이 호출이 넘기지 않는 파라미터라 기본 가지만 남겼다) -->
     <select id="selectNoticeCnt" resultType="kr.co.kfs.asseterp.biz.frm.dto.FrmNoticeCntRes">

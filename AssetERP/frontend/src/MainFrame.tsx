@@ -266,6 +266,26 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   // ── FlexLayout 모델 상태 ──
   const [model, setModel] = useState<Model>(() => getInitialModel());
 
+  // ── 첫 탭 (AS-IS MainFrame 생성자 L237-252): admin 회사 로그인이면 My Page 대신
+  //    관리자 → "고객별 시스템정보 관리"(Sys01_Tab_Company), 그 밖 → "초기화면" 환영. 서버가 판정한다.
+  useEffect(() => {
+    let alive = true;
+    frmApi.getInitialScreen().then(res => {
+      if (!alive) return;
+      const node = model.getNodeById('tab-mypage');
+      if (!node) return;
+      const attrs =
+        res.screen === 'COMPANY' ? { name: '고객별 시스템정보 관리', component: 'initial-company' }
+        : res.screen === 'WELCOME' ? { name: '초기화면', component: 'initial-welcome' }
+        : { name: 'My Page', component: 'mypage' };
+      if ((node as TabNode).getComponent() !== attrs.component) {
+        model.doAction(Actions.updateNodeAttributes('tab-mypage', attrs));
+      }
+    }).catch(() => { /* 판정 실패 시 My Page 그대로 */ });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.userId]);
+
   // ── 저장된 명명 레이아웃 목록 상태 ──
   const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
     appSettingsStorage.getSavedLayouts()
@@ -612,6 +632,21 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
 
     if (component === 'mypage') {
       return <MyPageView />;
+    }
+
+    // admin 회사 로그인의 첫 탭 (AS-IS MainFrame 생성자)
+    if (component === 'initial-company') {
+      const Company = SCREENS['Sys01_Tab_Company'];
+      return Company ? <Company /> : null;
+    }
+    if (component === 'initial-welcome') {
+      return (
+        <div style={{ margin: 20, padding: '40px 40px 10px', border: '1px solid #d9d9d9', height: 'calc(100% - 40px)', color: '#262d3f', fontSize: 14, fontWeight: 'bold' }}>
+          <div>&nbsp;환영합니다. {user.companyName} {user.name}.</div>
+          <div style={{ marginTop: 20 }}>&nbsp;좌측의 매뉴를 이용하여, Asset-ERP 관리를 시작하세요.</div>
+          <div style={{ marginTop: 200, color: '#E1E5EE' }}>&nbsp;Asset-ERP</div>
+        </div>
+      );
     }
 
     // 변환한 화면 (화면 등록표)

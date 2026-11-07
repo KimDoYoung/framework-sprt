@@ -5,6 +5,12 @@ import { MktHistory } from '../types/mkt';
 
 /** frm(프레임) 화면 API (EE53~) */
 export const frmApi = {
+  /** AS-IS MainFrame 생성자 첫 탭 분기 — COMPANY(고객별 시스템정보 관리) / WELCOME(초기화면) / MYPAGE */
+  getInitialScreen: async (): Promise<{ screen: 'COMPANY' | 'WELCOME' | 'MYPAGE' }> => {
+    const res = await apiClient.get<ApiResponse<{ screen: 'COMPANY' | 'WELCOME' | 'MYPAGE' }>>('v1/frm/lists/initial-screen');
+    return res.data.data as { screen: 'COMPANY' | 'WELCOME' | 'MYPAGE' };
+  },
+
   /** AS-IS frm.Frm01_List.getNoticeCnt — 미결재건·체크리스트·공지사항·알림함·매매승인 건수 */
   getNoticeCnt: async (): Promise<FrmNoticeCnt> => {
     const res = await apiClient.get<ApiResponse<FrmNoticeCnt>>('v1/frm/lists/notice-count');

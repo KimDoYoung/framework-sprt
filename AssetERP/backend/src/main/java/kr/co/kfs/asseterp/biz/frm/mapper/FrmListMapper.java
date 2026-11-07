@@ -15,6 +15,9 @@ import java.util.List;
 @Mapper
 public interface FrmListMapper {
 
+    /** AS-IS MainFrame 초기 탭: 회사관리자(sys02_user)의 sys02_admin_yn. 없으면 null */
+    String selectManagerAdminYn(@Param("userId") Long userId);
+
     /** AS-IS frm01_list.getNoticeCnt — orgId는 로그인 사원의 현재 조직(회사관리자는 0) */
     FrmNoticeCntRes selectNoticeCnt(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("orgId") Long orgId);
 

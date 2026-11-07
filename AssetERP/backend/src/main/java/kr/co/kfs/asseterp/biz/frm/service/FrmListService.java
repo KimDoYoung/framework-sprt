@@ -3,10 +3,12 @@ package kr.co.kfs.asseterp.biz.frm.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmIcsNoticeRes;
+import kr.co.kfs.asseterp.biz.frm.dto.FrmInitialScreenRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmMonitorEmpRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmNoticeCntRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmToDoRes;
 import kr.co.kfs.asseterp.biz.frm.mapper.FrmListMapper;
+import kr.co.kfs.asseterp.common.config.properties.TenantProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,19 @@ public class FrmListService {
 
     private final FrmListMapper mapper;
     private final EmpTransInfoService transInfoService;
+    private final TenantProperties tenantProperties;
+
+    /**
+     * AS-IS MainFrame 생성자 L237-252 첫 탭: 회사 코드가 admin이면 관리자(adminYn)는 "고객별 시스템정보 관리"(COMPANY),
+     * 아니면 "초기화면" 환영(WELCOME). admin 회사가 아니면 My Page(MYPAGE).
+     */
+    public FrmInitialScreenRes getInitialScreen(UserPrincipal user) {
+        if (!tenantProperties.adminCode().equals(user.getCompanyCode())) {
+            return new FrmInitialScreenRes("MYPAGE");
+        }
+        boolean adminYn = user.getUserId() < 0 && "true".equals(mapper.selectManagerAdminYn(-user.getUserId()));
+        return new FrmInitialScreenRes(adminYn ? "COMPANY" : "WELCOME");
+    }
 
     /** AS-IS getNoticeCnt: 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
     public FrmNoticeCntRes getNoticeCnt(UserPrincipal user) {

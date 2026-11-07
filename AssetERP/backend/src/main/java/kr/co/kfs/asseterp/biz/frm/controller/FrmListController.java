@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.frm.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmCalendarEventRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmIcsNoticeRes;
+import kr.co.kfs.asseterp.biz.frm.dto.FrmInitialScreenRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmMonitorEmpRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmNoticeCntRes;
 import kr.co.kfs.asseterp.biz.frm.dto.FrmToDoRes;
@@ -28,6 +29,12 @@ public class FrmListController {
 
     private final FrmListService service;
     private final FrmCalendarService calendarService;
+
+    /** AS-IS MainFrame 생성자 첫 탭 분기 — COMPANY(고객별 시스템정보 관리) / WELCOME(초기화면) / MYPAGE */
+    @GetMapping("/initial-screen")
+    public ApiResponse<FrmInitialScreenRes> getInitialScreen(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.getInitialScreen(principal));
+    }
 
     /** AS-IS frm.Frm01_List.getNoticeCnt */
     @GetMapping("/notice-count")
