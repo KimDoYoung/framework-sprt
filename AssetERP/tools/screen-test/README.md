@@ -1,4 +1,4 @@
-# tools/test — 브라우저 시험 도구
+# tools/screen-test — 브라우저 시험 도구
 
 화면을 실제 브라우저(Playwright + 시스템 Chrome)로 열어 보는 시험 스크립트 모음. 시험 방법·계정은 `../../docs/5-테스트/README.md`와 `테스트용-회사-계정.md`.
 
@@ -37,12 +37,12 @@
 AssetERP 폴더에서. 5173(Vite `./fm.sh run`)과 8080(백엔드 `./bm.sh run`)이 떠 있어야 한다.
 
 ```bash
-node tools/test/list.cjs --screen-no=1282                  # 한 화면
-node tools/test/list.cjs --screen-no=1282,1100             # 여러 화면
-node tools/test/list.cjs                                   # kfstest/104 에게 보이는 전체(약 380개, 수 분)
-node tools/test/list.cjs --company=kfimtest --user=admin   # 다른 계정
-node tools/test/list.cjs --out=/tmp/list.json --verbose    # 결과 파일, 통과 화면도 출력
-node tools/test/list.cjs --help
+node tools/screen-test/list.cjs --screen-no=1282                  # 한 화면
+node tools/screen-test/list.cjs --screen-no=1282,1100             # 여러 화면
+node tools/screen-test/list.cjs                                   # kfstest/104 에게 보이는 전체(약 380개, 수 분)
+node tools/screen-test/list.cjs --company=kfimtest --user=admin   # 다른 계정
+node tools/screen-test/list.cjs --out=/tmp/list.json --verbose    # 결과 파일, 통과 화면도 출력
+node tools/screen-test/list.cjs --help
 ```
 
 옵션: `--screen-no` `--all` `--company` `--user` `--password`(생략하면 환경변수 `ASSETERP_TEST_PASSWORD`, 없으면 테스트 계정 공통 `1111`) `--base-url` `--out` `--concurrency` `--verbose`.

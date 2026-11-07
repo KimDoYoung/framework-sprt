@@ -7,7 +7,7 @@
 //   이어서 해야 할 시험(README.md 참고): ① yunhee compare 로 AS-IS 조회 결과 대조 ② 저장·삭제 등 쓰기 시험
 //   ③ 백엔드 gradle test(업무 로직) ④ 핵심 업무 시나리오.
 //
-// 사용: node tools/test/list.cjs [옵션]      (AssetERP 폴더에서. 5173 Vite + 8080 백엔드가 떠 있어야 한다)
+// 사용: node tools/screen-test/list.cjs [옵션]      (AssetERP 폴더에서. 5173 Vite + 8080 백엔드가 떠 있어야 한다)
 //   --screen-no=1101[,1282,…]   이 화면(들)만. 생략하거나 --all 이면 그 계정에 보이는 메뉴 전부
 //   --company=kfstest           회사코드(= 서브도메인). 기본 kfstest
 //   --user=104                  로그인 ID. 기본 104
@@ -107,7 +107,7 @@ async function check(ctx, item) {
 
   const c = { PASS: 0, WARN: 0, FAIL: 0, SKIP: 0 }; results.forEach((r) => c[r.status]++);
   console.log(`==> 결과: PASS ${c.PASS} · WARN ${c.WARN} · FAIL ${c.FAIL} · SKIP ${c.SKIP}  (총 ${results.length})`);
-  console.log("    ※ 열기와 조회만 본 연기 시험이다. 통과가 '데이터·업무 규칙이 맞다'는 뜻은 아니다 → tools/test/README.md 의 다음 시험.");
+  console.log("    ※ 열기와 조회만 본 연기 시험이다. 통과가 '데이터·업무 규칙이 맞다'는 뜻은 아니다 → tools/screen-test/README.md 의 다음 시험.");
   if (o.out) { results.sort((a, b) => a.no.localeCompare(b.no)); fs.writeFileSync(o.out, JSON.stringify({ base, company: o.company, user: o.user, at: new Date().toISOString(), counts: c, results }, null, 1)); console.log("    결과 파일:", o.out); }
   await browser.close();
   process.exit(c.FAIL ? 1 : 0);

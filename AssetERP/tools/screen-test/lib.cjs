@@ -1,4 +1,4 @@
-// tools/test 공용: 브라우저(Playwright + 시스템 Chrome) 띄우기, 로그인, 화면 열기.
+// tools/screen-test 공용: 브라우저(Playwright + 시스템 Chrome) 띄우기, 로그인, 화면 열기.
 // frontend/package.json 은 건드리지 않는다 — frontend/node_modules 의 playwright-core 를 빌려 쓴다.
 const fs = require("fs");
 const path = require("path");
