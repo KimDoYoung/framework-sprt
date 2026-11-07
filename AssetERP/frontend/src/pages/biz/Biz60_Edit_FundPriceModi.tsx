@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz60_Edit_FundPriceModi.java (870줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L136-161: 새 보고는 getSeq로 번호를 먼저 받고("기준가 정정내역 보고 등록"), 고치기는 행 그대로("기준가 정정내역 보고 수정") + fileRetrieve().
  * init() L163-193: 결재 중·완료(10·20·30)이면 [저장]·[파일업로드] 비활성 + 첨부 "삭제" 열 숨김. 모달 1250×700, 라벨 폭 140, 왼쪽 입력 / 오른쪽 기준가 표·첨부.
- * 스타일: SGP 편집 팝업 → EditModal 규격(11 §4a) — 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
+ * 스타일: MFG 편집 팝업 → EditModal 규격(11 §4a) — 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

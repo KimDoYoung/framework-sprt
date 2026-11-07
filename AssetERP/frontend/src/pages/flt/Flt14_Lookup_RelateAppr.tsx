@@ -2,7 +2,7 @@
  * 문서 창 (I05 정기보고) — Flt10_Tab_RealTransaction [문서보기]에서 보고월 상신문서가 둘 이상일 때 연다.
  * AS-IS: myApp/client/vi/flt/Flt14_Lookup_RelateAppr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(param, callback) L58-77: 750×450 모달 "문서", 툴바 [조회], 체크 다중 그리드(상신일자·상신제목·상태·문서보기 아이콘), [닫기](callback 뒤 hide)
- * 스타일: modal(그리드형) — 머리 아래 선·푸터 위 선은 LookupModal, 스크롤은 그리드 하나
+ * 스타일: MG (그리드형) — 머리 아래 선·푸터 위 선은 LookupModal, 스크롤은 그리드 하나
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

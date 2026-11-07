@@ -2,7 +2,7 @@
  * 활동처 선택 창 (Z06) — Mkt03_Tab_HistoryManager 툴바의 활동처 조회 트리거에서 연다
  * AS-IS: myApp/client/vi/mkt/Mkt01_Lookup_TargetCompany2.java (223줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L61-108: 모달 "활동처 선택" 650×500, 위 = 구분 콤보(250, 전체)·검색(활동처 150)·[조회], 아래 = 단일 체크 그리드(활동처 200·구분 350) + 페이징(100), 아래 가운데 [확인][전체][닫기]
- * 스타일: modal 조회창(그리드형) — 견본 Mkt01_Lookup_SelectCompany(Z05)
+ * 스타일: MG 조회창(그리드형) — 견본 Mkt01_Lookup_SelectCompany(Z05)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Space, Spin } from 'antd';
