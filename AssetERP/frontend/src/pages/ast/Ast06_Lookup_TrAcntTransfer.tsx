@@ -4,7 +4,7 @@
  * openNew() L121-139 / open() L141-192: 모달 600×680 "거래등록"(NEW)·"거래변경"(MODI), getEditor() L383-467: 라벨 폭 130, 박스 3개
  *   (거래일자 · 거래유형 · 종목(자산구분) · 보유수량 · 보유금액 · 출고계좌 / 입고계좌 · 입고수량 · 입고금액 / 수수료 · 결제구분 · 적요) + 분개 안내(MODI만), 아래 가운데 [저장][분개재생성](MODI만)[닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

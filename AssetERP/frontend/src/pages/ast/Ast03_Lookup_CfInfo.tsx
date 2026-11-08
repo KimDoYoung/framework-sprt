@@ -1,7 +1,7 @@
 /**
  * 현금흐름표 관리 모달 (R09) — Ast03_Lookup_CfInfo
  * AS-IS: myApp/client/vi/ast/Ast03_Lookup_CfInfo.java (480줄)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message, Splitter } from 'antd';

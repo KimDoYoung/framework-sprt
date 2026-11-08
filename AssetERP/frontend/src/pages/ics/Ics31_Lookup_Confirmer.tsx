@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics31_Lookup_Confirmer.java (150줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L44-56: 400×180 모달 "확인자 선택", 한 줄 [확인자 (조회창 입력칸 200, 편집 불가, "선택하세요")] + [확인][닫기]
  * open(stdDate, callback) L58-63: 기본 확인자를 읽어 채운다(setComfirmId L121: ics.Ics30_Compliance.selectConfirmer → 이전 확인자 → 부서장 → 준법감시인)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -5,7 +5,7 @@
  * open(title, notice, parentId, callback) L90-123: 760×700, 본문만 — MyPage는 openWithComment만 쓴다
  * 머리글은 제목(78자 넘으면 "…", setHtmlHeaderStyle L163-173), 아래 가운데 [닫기][첨부파일 확인(n)], 닫기 X 없음(setClosable(false))
  * Bbs02_Popup_NoticeAdmin과 같은 모양에서 [해당 공지사항 그만보기]가 없는 창이다
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Space } from 'antd';

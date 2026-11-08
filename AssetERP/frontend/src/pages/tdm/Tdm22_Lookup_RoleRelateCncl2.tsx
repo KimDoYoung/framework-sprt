@@ -4,7 +4,7 @@
  * 창 650×400(원본) → 열 합계(250+100+100+100+행번호·선택 60+여백 130) 기준 740: 툴바([행 추가][행 삭제] + 새로고침 아이콘) + CellEditGrid(체크) + [저장][닫기]
  * 행 삭제는 화면에서만 빼 두었다가(deleteList) [저장]에서 서버에서 지운다 (update() L237-316: 저장 → 삭제 순서)
  * UX보강(10): 조회창(UX-05·06은 Tdm20 안에서), 저장 버튼 UX-03
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

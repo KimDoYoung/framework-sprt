@@ -4,7 +4,7 @@
  * 생성자 L57-65: 모달 1200×550 "지출결의서 불러오기"(크기 조절·최대화, X 없음). open(isManager, callback) L67-99: 툴바(구분 [시작일] ~ [종료일] · 검색 · [조회] · "* 최대 50건까지 조회됩니다")
  *   + 단일 선택 그리드(발생일자 100 · 구분 100 · 지출내역 500 · 지출처 150 · 지출금액 100 · 계정과목 150), [확인][닫기], 열자마자 조회
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

@@ -4,7 +4,7 @@
  * 생성자 L133-168: 모달 1400×650 "용역계쳬결"(원본 문구 그대로), 라벨 폭 130. 왼쪽 670 = 차주명 · 사업장명 · 사업장 주소지 · 용역(수수료)명(조회창 칸) · 수행시작일 230 · 수행종료일 230 · 담당자 230(조회창 칸) · 첨부파일(Est02_Grid_File),
  *   오른쪽 670 = 수행계획 편집기. 아래 가운데 [저장][닫기]
  * insert() L81-101: 새 번호(getSeq)를 받고 담당자 = 로그인 사용자, 수행시작일 = 오늘. edit(model, editChk) L103-131: 수행내역이 있으면(editChk false) 차주명~수행종료일·계획·첨부파일을 잠근다(담당자 칸은 그대로)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Space, Typography } from 'antd';

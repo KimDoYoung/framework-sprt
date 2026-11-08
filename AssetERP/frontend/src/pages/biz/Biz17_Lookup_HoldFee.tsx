@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz17_Lookup_HoldFee.java (186줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(contCorpId, stdDate, callback) L55-63: 모달 "펀드" 위 [기준일자][검색(펀드코드/펀드명)][조회] + 그리드(펀드코드 150 · 펀드명 480), [확인][닫기]
  * 기준일자는 열 때 오늘 전날이다(setting L84-90)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

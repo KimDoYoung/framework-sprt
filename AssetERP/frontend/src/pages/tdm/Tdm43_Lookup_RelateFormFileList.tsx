@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm43_Lookup_RelateFormFileList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L71-97: 모달 1200×650 "불러오기", 툴바(구분 200 · 검색 300 "파일명/비고" · [조회]) + 체크박스 다중 그리드 + 아래 가운데 [확인][닫기]
  * UX보강(10): 툴바 = SearchBar(UX-01)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

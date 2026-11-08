@@ -4,7 +4,7 @@
  * open L54-85: 모달 1000×600 "대사작업용 예금잔고 입력"(닫기 X 없음), 위 툴바 50(잔고일자 100 · 검색 250 "기관/계좌/통화" · [조회][최근잔고 가져오기]) + 셀 편집 그리드(단일 체크), 아래 가운데 [저장][닫기]
  * 그리드: 기준일 100 · 구분 100 · 기관 150 · 계좌 150 · 기준통화 80 · 원화 잔고 150(편집) · 외화 잔고 120(편집)
  * 03 원칙 21: 열 폭 합계 880 + 행번호·선택 60 + 130 = 1070 (AS-IS 1000보다 작게 하지 않는다)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Space } from 'antd';

@@ -4,7 +4,7 @@
  * 창 850×550(원본) → 열 합계(550+80+80+70+선택·행번호 60+여백 130) 기준 970: 툴바([조회][등록][저장][삭제] · 오른쪽 [변경이력]) + 세부내용 그리드(CellEditGrid) + [닫기]
  * 저장·삭제는 변경사유·삭제사유를 받아 변경이력과 함께 처리한다 (서버가 DB 함수로 이력 생성)
  * UX보강(10): 조회창(UX-05·06은 CRUD 그리드라 행 클릭 선택 미적용), 저장 버튼 UX-03
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

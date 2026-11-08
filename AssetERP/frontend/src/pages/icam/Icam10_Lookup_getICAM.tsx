@@ -6,7 +6,7 @@
  * 사무관리보수(20407)만 운용사 칸이 열려 있다(Sys15_Lookup_Corp, 선택안함이면 "전체"). 그 밖은 로그인 회사로 고정이고 칸은 비활성
  * (AS-IS는 코드 칸에 회사의 ICAM 운용사 코드를 넣지만 로그인 사용자에 그 값이 없어 비워 둔다 — 이 화면은 20407만 연다)
  * 편집창 규격: 11 §4a
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';

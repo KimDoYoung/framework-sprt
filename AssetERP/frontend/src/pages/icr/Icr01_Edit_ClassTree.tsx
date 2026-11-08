@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/icr/Icr01_Edit_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L84-103: 분류코드(250)·조회순서(150) / 분류명(400). 라벨 폭 70. 창 440×200.
  *   수시알림(deadlineFullName)·[설정](deadlineButton) 줄은 원본에서 주석 처리돼 화면에 없다 → E1 생략
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

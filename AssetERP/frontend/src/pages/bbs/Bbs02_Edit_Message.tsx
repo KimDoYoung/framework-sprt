@@ -2,7 +2,7 @@
  * 문자내용 창 (Z04) — Bbs02_Tab_NoticeAdmin 그리드의 "문자발송" 아이콘이 연다 (발송할 문구를 고친다)
  * AS-IS: myApp/client/vi/bbs/Bbs02_Edit_Message.java (68줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L21-34: 모달 "문자내용" 450×250, 문구 TextArea 하나 / open(msg, callback) L36-63: 아래 가운데 [발송][취소]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message as toast } from 'antd';

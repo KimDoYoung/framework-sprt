@@ -5,7 +5,7 @@
  *   ※ [다시 표시하지 않음] 체크(checkBox L99-120)는 bottomPanel에 붙이는 줄이 주석(L142-144)이라 AS-IS에서도 화면에 없다 — 만들지 않았다(E2·setMenuInfo L233-263 도달 불가)
  * open(menuModel, callback) L159-200: 700×700 "화면안내 작성", HTML 편집기, 아래 가운데 [저장][닫기]
  * 호출처: view = Emp91_Lookup_List(보기 아이콘), MenuOpener(메뉴 열 때 자동) / open = Sys55_Tab_MenuGuideCompany(TOBE 미변환 — 연결 없음)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Space, message } from 'antd';

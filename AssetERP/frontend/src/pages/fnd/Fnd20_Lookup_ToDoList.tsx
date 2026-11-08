@@ -7,7 +7,7 @@
  * 결재요청 아이콘 → aprLookup() L139: fnd.Fnd20_Plan.insertAppr(상신 문서가 없으면 만들어 줌) → 전자결재 문서창 열기, 닫히면 retrieve()
  * [E2] updateButton[저장] (L75)은 원본도 툴바에 안 붙인 도달 불가 버튼, [E4] gridBuilder.BeforeStartEdit (L140)은 편집기가 있는 열이 없어 일어나지 않는다 — 만들지 않는다
  * TOBE에서는 MyPage Day List(`components/mypage/DayListBox`, EE106)가 연다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Space } from 'antd';

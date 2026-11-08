@@ -6,7 +6,7 @@
  * changeRow L363-411: 상신자는 수정 불가("상신자는 수정할 수 없습니다"), 결재일이 있는 줄은 수정 불가("이미 결재한 사원은 수정할 수 없습니다"), 삭제는 잠금(lockYn)이거나 내가 넣은 줄이 아니면 불가("해당 결재선은 삭제불가능합니다")
  * update() L221-251: "결재선 수정완료 후 변경된 문서상세 팝업창이 다시 실행됩니다" → apr.Apr04_ApprStep.updateList → 성공이면 callback + 닫기(문서상세를 다시 연다), 실패는 "저장에 실패했습니다. 관리자에게 문의하세요"
  * ApprStep 창과 겹치는 부분(조직 트리·사원 조회·줄 만들기)이 두 번째로 쓰인 것 — 세 번째가 되면 공통 부품으로 뽑을 후보. 03 원칙 17: 사원은 항상 맨 아래에 넣는다. 아이콘은 누른 줄로 처리(이상한점 #21).
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Tree } from 'antd';

@@ -2,7 +2,7 @@
  * 임원의 상당한 주의의무 선택창 (E13-2) — Tdm43_Edit_Manl의 임원의무 칸에서 연다.
  * AS-IS: myApp/client/vi/tdm/Tdm43_Lookup_ExctDuty.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L83-148: 모달 550×420(크기 고정) "임원의 상당한 주의의무", 체크박스 6개, 아래 가운데 [선택완료][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, Space } from 'antd';

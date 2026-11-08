@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Edit_Card.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L63-72·getEditor L189-202: 헤더 없음, 폼(라벨 120) = 제공목적(300, 파란 라벨) · 제공내역(300, 파란 라벨) · 계정과목(400) · 비고(400×100, 여러 줄),
  *   창 아래 가운데 [저장][증빙자료(n건)]. 고른 내역이 없으면 통째로 비활성(setEnabled(false)), 마감·상신이면 콤보 3개를 잠근다(setButtonVisible(false))
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Input, message, Select, Space } from 'antd';

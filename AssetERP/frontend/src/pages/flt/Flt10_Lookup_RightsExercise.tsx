@@ -5,7 +5,7 @@
  * getEditor() L321-368: 거래일자 · 거래구분 · 계좌(트리거) · 종목유형 · 종목(코드 + 이름 트리거) · 수량 · 금액 · 비고, 라벨 100, [저장][닫기]
  * 원본은 [등록]에서 그리드에 임시 행을 먼저 넣고 닫기에서 지운다 — TOBE는 임시 행 없이 저장이 성공하면 부른 쪽이 다시 조회한다(`onSaved`)
  * UX보강(10): 조회창 UX-05·06
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Select, Space } from 'antd';

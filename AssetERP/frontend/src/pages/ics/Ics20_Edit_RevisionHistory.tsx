@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L86-158: 라벨 폭 90, 세 칸 = 등록일·소관부처·의견제출일·시행일·법규반영일(200) | 법규명·조문(540×55)·연결법규 그리드(540×175) | "내용 :" 글자(누르면 팝업)+내용 입력(545×140)·첨부파일 그리드(640×145)
  * 읽기 전용: 등록일·시행일·소관부처·법규명·내용. 그 밖(의견제출일·조문·법규반영일)은 AS-IS도 고칠 수 있게 두지만 저장 버튼이 없다(updateButton은 어디서도 열리지 않음)
  * 부르는 쪽은 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve() → editDriver.edit(model))
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { DatePicker, Input, Tooltip, Typography } from 'antd';

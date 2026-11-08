@@ -4,7 +4,7 @@
  * 레이아웃 L101-147: 라벨 폭 120, 줄마다 여백 20·20·17·20. 1줄 관리코드·계좌명(칸 280)·계좌번호(560), 2줄 증권사명(조회창 트리거)·최조설정일·해지일(칸 280)
  * 증권사코드 칸은 레이아웃에서 빠져 있고(L131 주석) 증권사를 골라도 코드는 바꾸지 않는다(L112 주석) — 원본 그대로
  * 선택한 행이 없으면 폼 전체 비활성(Tab의 tabPage.setEnabled). 아래 가운데 [저장](버튼줄 60)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message } from 'antd';

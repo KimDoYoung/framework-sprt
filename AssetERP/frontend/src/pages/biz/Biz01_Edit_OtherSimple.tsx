@@ -5,7 +5,7 @@
  *   창 아래 가운데 [저장][증빙자료(n건)]. 고른 내역이 없으면 통째로 비활성(setEnabled(false)). 마감 검사는 없다(원본에 없음).
  *   L03 `Biz01_Edit_Other`와 달리 거래상대방·인원 칸이 있고 필수이며, 제공내역을 고른 뒤 직원 자동등록(insertEmp)이 없다.
  *   새 행(아직 서버에 없는 행, promoId ≤ 0)은 [저장]이 등록(INSERT)이고 증빙자료는 내역 번호가 필요해 쓰지 않는다.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Select, Space } from 'antd';

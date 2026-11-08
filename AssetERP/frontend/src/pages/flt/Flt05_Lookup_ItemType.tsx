@@ -4,7 +4,7 @@
  * open() L64-94: 모달 1100×550 "종목유형설정", 툴바(검색 150 · 조회 · 등록 · 저장 · 삭제) + 셀 편집 그리드(체크박스 다중) + 하단 [닫기]. 열릴 때 조회.
  * API는 종목유형관리(E08, Flt05_Tab_ItemTypeAdmin)의 `flt/item-types`를 그대로 쓴다. 이 창만 저장 전 검사와 삭제 전 사용 검사(selectUseCount)가 있다.
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 조회창 UX-05
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';

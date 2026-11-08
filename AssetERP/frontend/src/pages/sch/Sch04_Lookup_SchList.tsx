@@ -5,7 +5,7 @@
  *   단추 [저장][닫기][첨부파일 확인(n)]. 창을 닫으면(hideCallback) 부른 화면의 callback이 돈다(MyPage: retrieve01)
  * open(listModel, gubunCode, callback) L79-94: sch.Sch03_Deadline.selectById → settings() L96-135(값 채우기, 010이면 sch.Sch01_Info.selectById의 상세내용)
  * view() L71-77(읽기 전용: 처리여부·마감일 잠금, [저장] 숨김)은 메뉴 #1440 (X)기간별 스케줄 조회만 써서 readOnly prop으로만 둔다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, message } from 'antd';

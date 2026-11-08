@@ -4,7 +4,7 @@
  * open() L54-93: 360×550, 검색 "종목유형명" + [조회] / 안내 / 종목유형 그리드, [닫기]
  * openGroup(floorTrGroupCode) L95-142: 720×550, 검색 "종목유형명 및 구분명", 종목유형 그리드(종목유형코드 90 · 종목유형명 250) | 구분 그리드(구분코드 80 · 구분명 250)
  * UX보강(10): 조회창 UX-05, 툴바 = SearchBar(UX-01)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message } from 'antd';

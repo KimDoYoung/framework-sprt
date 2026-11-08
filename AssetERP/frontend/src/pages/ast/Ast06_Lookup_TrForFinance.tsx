@@ -5,7 +5,7 @@
  *   (거래일자 · 거래유형 · 종목(자산구분) · 거래계좌(보관처)+계좌명 / 보유수량·외화 장부금액 · 출고가능수량·원화 장부금액
  *    / 거래수량·적용통화/환율 · 거래단가·원화 거래금액 · 외화 거래금액·수수료 / 결제금액 · 결제구분(예금계좌 콤보) · 적요) + 분개 안내(MODI만), 아래 가운데 [저장][분개재생성](MODI만)[닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Select, Space } from 'antd';

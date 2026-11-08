@@ -4,7 +4,7 @@
  * open() L58-145: 900×500 모달 "펀드찾기", 위 툴바 = 년도(100) + 검색*(250) + [조회], 운용계획서 그리드(단일 선택, 200 높이: *제목 200 · 년도 80 · 기간구분 80 · 담당자 100 · 직위 80 · 부서 200 · 시작일 100 · 완료일 100),
  *   "연관펀드" 글, 연관펀드 그리드(체크 다중: 펀드코드 70 · 펀드명 250 · 펀드유형 80 · 운용역 70 · 설정일 80 · 공모/사모 70 · 운용부서 150), 아래 가운데 [확인][취소]
  * 호출처 Opr02_Tabpage_Fund_Manager는 TOBE에 없다(Opr 도메인 미변환) — 창만 만들고 연결하지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

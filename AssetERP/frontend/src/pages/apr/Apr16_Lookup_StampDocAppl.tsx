@@ -5,7 +5,7 @@
  *   제출처 · 목적 · 비고(날인요청서류) · 요청자 · 연관상신문서(조회 칸), 아래 가운데 [저장][닫기]. 등록일 또는 날인일자가 있으면 읽기 전용(신청일자·구분·인감·대표명의·반출 비활성, [저장] 없음).
  *   연관상신문서 칸: 읽기 전용이면 바로 문서보기, 연결된 문서가 없으면 문서연결, 있으면 [문서보기][문서연결][연결제거] 작은 창(SettingPopup)
  * 편집창 규격(11 §4a). 새 행은 그리드에 먼저 넣지 않고 저장 뒤 다시 조회한다(원본은 GridInsertRow 뒤 [닫기]에서 지움 — 03 원칙 17의 결과와 같다)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

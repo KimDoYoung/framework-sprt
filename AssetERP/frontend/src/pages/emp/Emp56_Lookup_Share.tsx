@@ -6,7 +6,7 @@
  * insertRow() L247-255: 직원이면 Emp00_Lookup_SelectMulti(오늘), 부서면 Org00_Lookup_SelectMulti(오늘) → 고른 만큼 행 추가.
  * deleteRow() L319-325: 체크한 행을 목록에서 빼고 deleteList에 모아 [저장] 때 지운다. update() L257-292: 지운 것 → 새 행 순서로 저장, updateEnd() L294-317: 공유명을 callback으로 돌려주고 닫는다.
  * 변경이 하나도 없으면 [저장]은 아무 일도 하지 않는다(AS-IS chk1=0 → updateEnd 호출 안 됨).
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Radio, Space } from 'antd';

@@ -2,7 +2,7 @@
  * 계정코드 창 (U05) — Emp17_Tab_BenefitManager의 [복리후생비 설정]이 연다
  * AS-IS: myApp/client/vi/emp/Emp55_Lookup_account.java (144줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L41-63: 모달 800×500 "계정코드", 위 툴바 50([조회][저장]) + 그리드(행번호, 복리후생비명 130 · 미사용 80 편집 · 계정코드 100 돋보기 · 계정과목 420), 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as AntButton, Space } from 'antd';

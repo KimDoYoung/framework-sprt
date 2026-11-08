@@ -4,7 +4,7 @@
  * 생성자 L57-73: 모달 1000×500 "보유자산", 툴바(보유일 100 · 구분 150 "전체" · 검색 200 "자산구분/자산명" · 조회) + 단일 선택 그리드(행번호, 자산구분 150 · 자산명 300 · 취득일 100 · 취득금액 150), [확인] [닫기]
  * 구분 콤보(ItemSClassCode, 코드 5050%)는 원본도 조회 조건으로 보내지 않는다 — 그대로 둔다(원본-이상한점)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06). 초기화(UX-02)는 조건이 3개지만 원본에 없어 넣지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, message, Select, Space } from 'antd';

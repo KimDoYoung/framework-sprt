@@ -4,7 +4,7 @@
  * 창 800×600(원본): 열 합계 670+행번호·선택 60+여백 130 = 860이라 860. 검색줄(기준일 · 책무구분 콤보 · 검색 · [조회]) + 단일 선택 그리드 + [확인][전체][닫기]
  * N08 Tdm10_Lookup_SelectMulti와 다른 AS-IS 클래스(단일 선택, dedupYn 없음, [전체])
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

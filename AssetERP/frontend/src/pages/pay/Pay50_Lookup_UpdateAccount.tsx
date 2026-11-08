@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Lookup_UpdateAccount.java (151줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L49-71: 모달 380×210 "계정과목 일괄저장", 계정과목(300, 조회 트리거)·계정과목명(300, 비활성) + [저장][닫기], 라벨 폭 100
  * UX보강(10): 조회창(UX-05)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz20_Lookup_FileList.java (265줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(parentId, fixYn, callback) L107-114: 모달 850×450 "파일 List", 위 [파일업로드] / 그리드(행번호) / [닫기]. 확정(fixYn)이면 [파일업로드]를 감추고 파일삭제 열(4)을 숨긴다
  * 올리기·받기·삭제는 첨부 목록(Biz11_Lookup_FileList)과 같은 파일 API(fileApi)를 쓴다 — 목록 sys.Sys10_File.selectByFeeChargeId 는 parentId 조회와 같다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

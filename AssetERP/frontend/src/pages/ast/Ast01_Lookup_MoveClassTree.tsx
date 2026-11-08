@@ -1,7 +1,7 @@
 /**
  * 자산분류 이동 팝업 (도달 불가: AS-IS 원본에서도 open 호출처 없음)
  * AS-IS: myApp/client/vi/ast/Ast01_Lookup_MoveClassTree.java (128줄)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
 import { Modal } from 'antd';

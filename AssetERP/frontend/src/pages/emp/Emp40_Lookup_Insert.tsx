@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp40_Lookup_Insert.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L60-103: 모달 350×180 "생성", 가운데 줄 = 적용월 [년도 입력] 년 [월 콤보 MonthsCode], 아래 가운데 [생성][닫기].
  *   처음 값 = 오늘 기준 한 달 전의 년·월 (L64-71)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

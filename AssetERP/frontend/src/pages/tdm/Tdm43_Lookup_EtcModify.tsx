@@ -2,7 +2,7 @@
  * 허용항목 수정창 (N27) — Tdm43_Tab_ManlItemList 그리드의 [허용항목 수정] 아이콘에서 연다.
  * AS-IS: myApp/client/vi/tdm/Tdm43_Lookup_EtcModify.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * getEditor() L126-158: 증빙자료(TextArea 100) · CEO의무 · 임원의무(조회창 트리거) · 중요도(250) · 사용시작일(250) + [미사용], 아래 가운데 [저장][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Space, message } from 'antd';

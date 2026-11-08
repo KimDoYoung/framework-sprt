@@ -4,7 +4,7 @@
  * 생성자 L55-70: 모달 630×290, 아래 가운데 [등록][등록취소] … [닫기]. getEditor() L157-171: 보고 의견(150)
  * view(model) L72-80: 읽기 전용(등록·등록취소 숨김) / edit(model, stdDate, checkYm, cb) L82-91. setButton() L208-218: 상태 10(대기)면 [등록]만 켠다
  * UX보강(10): 해당 없음
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Modal, Space, Typography, message } from 'antd';

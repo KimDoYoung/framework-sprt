@@ -4,7 +4,7 @@
  * open() L65-132: 850×500 모달 "법규 목록", 위 [행 추가][행 삭제] + 오른쪽 새로고침 아이콘, 단일 체크 그리드(법규 510 · 주기 80 · 마감일 100 · 설정 80), 푸터 [저장][닫기]
  * 동작: 변경이 있으면 상신자에게 "상신문서 연관법규 변동알림"이 간다(서버).
  * EE70: 내규판 Apr22_Lookup_RelateIcrList(AS-IS 304줄, 법규 → 내규, Icr01_Lookup_SelectMulti)는 `kind="icr"`로 같은 부품을 쓴다.
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

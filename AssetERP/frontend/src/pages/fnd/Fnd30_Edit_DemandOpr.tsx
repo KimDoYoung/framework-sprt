@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd30_Edit_DemandOpr.java (332줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 열기 4가지: insert(callback) L64 "수요예측 등록" 590×510 / insert(oprModel, callback) L85 "수요예측정보 등록" 590×550 + 등록건수 / edit L104 "수요예측 수정" 590×550 + 참여취소 / edit2 L123 같은 창을 읽기 전용으로(신청일~확약기간을 잠그고 비고·참여취소만)
  * getEditor() L189-253: 신청일 230 · 종목명 560 · 주간사 560 · 수요예측기간 280 + 시장구분 280 · 공모가밴드 280 · 신청가격 280 + ☐ 확정공모가액 -10% 변동수용 · 확약기간 280 · 비고 560×150 (· 등록건수 180 · 참여취소 180), 라벨 폭 105, 아래 가운데 [저장][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, message, Space, Typography } from 'antd';

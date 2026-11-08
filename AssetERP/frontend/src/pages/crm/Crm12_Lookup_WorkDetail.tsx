@@ -5,7 +5,7 @@
  *   활동일 180 / 거래처(읽기 전용) 800 / 활동내용 800 / 내용상세 200 / 연결펀드 [등록] + 그리드 150(코드 80·연관펀드명 480·삭제 80) /
  *   첨부파일 [파일업로드] + 그리드 150(첨부파일 405·공백 65·받기 50·삭제 50·보기 50) / 공유(읽기 전용 600)+[설정]+[비공개] 체크
  * insert() L127 = 새 건(번호를 먼저 받고 거래처 기본 공유를 복사), edit() L151 = 수정, open() L165 = 보기(저장·등록·업로드 막고 삭제 열을 감춘다)
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, Modal, Space, message } from 'antd';

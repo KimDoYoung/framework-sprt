@@ -2,7 +2,7 @@
  * 미등록 근태(이전) 퇴근시간 입력 창 (EE50) — Att02_Lookup_Commute가 지난 근무일의 퇴근이 비어 있을 때 연다
  * AS-IS: myApp/client/vi/att/Att02_Edit_CheckOutTime.java (177줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L67-97: 440×200, 닫기(X) 없음, 라벨 폭 120, 출근시간 {HH:mm 비활성} {출근일 비활성} · 퇴근시간 {HH:mm} {퇴근일(출근일 ~ 출근일+1)}, 아래 가운데 [제출]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, Modal, message, Typography } from 'antd';

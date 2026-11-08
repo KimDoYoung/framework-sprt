@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr42_Lookup_FileList.java (255줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L76-128: 650×350 모달 "첨부파일"(닫기 X 없음), 위 [파일업로드](내가 쓴 댓글일 때만 보임 — open L63-74) + 그리드(첨부파일 440 · 보기 50 · 받기 50 · 삭제 50) + [닫기](callback 뒤 hide)
  * 올리기·보기·받기·삭제는 첨부 목록(Ics35_Grid_FileList)과 같은 파일 API를 쓴다 — 두 번째 사용이라 복사했다(세 번째면 부품 후보).
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

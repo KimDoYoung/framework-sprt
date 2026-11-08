@@ -6,7 +6,7 @@
  * buildGrid() L109-157: 프로그램명 350 · 등록자 100 · 등록일시 150 · 배포일시 150 · 버전 40 · 소스보기 70(View) · 파일다운 70(Down) · 비고 330 · 사용여부 70, 행번호 있음, 단일 선택
  * [E2] sourceViewCell (L120) → Scm30_Edit_Program.versionEdit(lastVersion, grid, tabGrid, selectModel, callback) — 행 수 == 선택 행의 버전이면 lastVersion(탭 그리드도 같이 갱신)
  * [E1] closeButton[닫기].Select (L98) → hide()
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message } from 'antd';

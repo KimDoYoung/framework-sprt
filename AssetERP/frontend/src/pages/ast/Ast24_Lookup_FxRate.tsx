@@ -4,7 +4,7 @@
  * open(stdDate) L69-72 → setting() L91-144: 모달 750×500 "환율입력", 툴바(기준일자 100 · 통화코드 80 `CurCode` "전체"(KRW 뺌) · [조회][등록][저장][삭제]) + 체크박스 셀 편집 그리드
  * (기준일자 100 날짜 · 통화 80 콤보 · 적용환율 120 실수 · 비고 350 글자 — 모두 편집), 아래 [닫기]. 조회창이므로 모달은 LookupModal
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), [저장(n)] UX-03, 조회창 UX-05·06
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Space } from 'antd';

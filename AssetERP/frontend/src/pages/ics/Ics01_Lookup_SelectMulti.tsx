@@ -4,7 +4,7 @@
  * 레이아웃 L71-131: 모달 1500×700 "법규 분류", 위 툴바(분류 200 "전체" · 법규검색 200 "법규코드/법규명" · 조문검색 200 "관련조문" · [검색] · 상세내용 포함)
  *   + 체크박스 다중 그리드 + 페이징 툴바(50), 아래 가운데 [확인][닫기]
  * actionCode: "classTree"(고른 법규 목록을 그대로 돌려줌, 1→1, E03)·"deadline"(고른 법규마다 그 기한을 selectByListIcsId로 읽어 돌려줌, 1→n, E04). openUnConn(relateTable, relateId)는 E13-2에서 더했다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Space } from 'antd';

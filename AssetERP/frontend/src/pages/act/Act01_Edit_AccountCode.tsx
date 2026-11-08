@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act01_Edit_AccountCode.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L134-160: 모달 760×750 "계정코드", 가운데 [저장][닫기]. getEditor() L232-310: 라벨 폭 135, 상위계정 · 계정코드/정렬코드 · 계정과목 · 계정과목(출력용) · 계정영문명 ·
  * 계정속성/출력여부/전표생성여부 · 차대구분/사용여부 · 내용(높이 100) · 금감원보고여부/금감원기준 전표생성여부 · 금감원용 계정과목 · 이익제공(수령) 목적/내용/[선택][삭제] · 연결 그리드(405 + ▲ + ▼)
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Modal, Select, Space, Typography } from 'antd';

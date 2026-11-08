@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/bmt/Bmt10_Lookup_History.java (222줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L54-82: 모달 1650×750 "상세이력"(닫기 X 없음), 왼쪽 800 = Bmt11_TabPage_History, 오른쪽 = 툴바 45("▶ 장비이력" · [조회][등록][삭제]) + 그리드(수정 40 · 시작일자 90 · 호스트 100 · 설치(포맷) 90 · 내부IP 120 · MAC주소 170 · 기타사항 300), 아래 가운데 [닫기]
  * 03 원칙 21: 폭은 AS-IS 1650 그대로(화면보다 크면 줄인다), 12 원칙: 안쪽은 선 하나씩
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

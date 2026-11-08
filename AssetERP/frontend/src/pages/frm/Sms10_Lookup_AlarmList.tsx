@@ -4,7 +4,7 @@
  * 생성자 L58-94: 750×400, 머리말 "알림함", [구분(수신/발신)][조회기간(7일 전~오늘)][검색][조회] + 단일 그리드
  * buildGrid() L136-156: 수신(발신)일 140 · 수신(발신)자 90 · 내용(HTML) 350 · 보기 아이콘 50 · 성공여부 60
  * 보기 아이콘 → SocketMessage.show(content) (SocketMessage.java: 450×250 "실시간 알림", 읽기 전용 글상자 + [닫기])
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { DatePicker, Input, Select, Space, message } from 'antd';

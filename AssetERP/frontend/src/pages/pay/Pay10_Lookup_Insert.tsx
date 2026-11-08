@@ -5,7 +5,7 @@
  *   · 라디오(연봉정보/전월급여 — 지급구분이 "급여"일 때만 활성) · 안내 문구, 아래 가운데 [생성][닫기]
  * 생성 흐름: [생성] → checkAppr(L169-192, 퇴직정산 03은 건너뜀) → update(L194-234): 필수 검사 → Emp01_Lookup_TransDate.open(true) → 서버 insert
  * 11 §4a EditModal 규격: 머리말·푸터 선, 라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Space } from 'antd';

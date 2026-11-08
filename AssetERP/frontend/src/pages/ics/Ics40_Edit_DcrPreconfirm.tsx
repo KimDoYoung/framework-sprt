@@ -9,7 +9,7 @@
  * 서버: PUT /api/v1/ics/dcr-preconfirms (modelUpdate + 회사 설정 dcrPreconfirmSkipYn이면 updateByStatus01), DELETE /api/v1/ics/dcr-preconfirms/{id} (delete)
  * AS-IS와 다른 점: 원본은 PASS(80)일 때 modelUpdate 뒤 updateByStatus01을 따로 부른다 — TOBE는 서버 한 번(한 트랜잭션). 80 판정도 서버가 한다.
  * 버튼 "신청"은 button-types.md `register`(2026-11-05 등록).
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Select, Space } from 'antd';

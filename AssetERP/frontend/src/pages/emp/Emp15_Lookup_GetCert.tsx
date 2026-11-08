@@ -2,7 +2,7 @@
  * 증명서 신청내역 조회창 (S05) — Emp15_Tab_Cert의 [신청내역 가져오기]가 연다
  * AS-IS: myApp/client/vi/emp/Emp15_Lookup_GetCert.java (134줄) — 모달 400×450 "신청내역"(닫기 X 없음), 위 툴바 [조회] + 체크 단일 선택 그리드, 아래 가운데 [확인][닫기]
  * open(callback) L42-47, retrieve() L111-124, update() L126-129
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Space } from 'antd';

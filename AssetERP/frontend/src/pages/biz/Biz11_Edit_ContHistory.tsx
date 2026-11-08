@@ -6,7 +6,7 @@
  *   "edit" = 제목 "계약사 변경/추가"(ContStatusCode02, 그대로 연다)
  * init() L226-251: 모달 600×785, 아래 가운데 [저장][닫기]. getEditor() L315-433: 라벨 폭 125, 줄 13개(아래 JSX), 공유자/부서 = 행 추가·행 삭제·새로고침 + 그리드
  * 편집창 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Space } from 'antd';

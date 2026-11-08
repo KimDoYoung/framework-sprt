@@ -4,7 +4,7 @@
  * 생성자 L190-205: 650×755 모달 "설정", 법규명 · 상세내용(150) · 관련조문 · 제출처 · 기한 · 서식파일 · 기준일(◉결재완료일 ◉발생일 + 날짜) · 마감일([계산하기] + 날짜), 푸터 [저장][닫기]
  * 12-화면우선원칙: 읽기 전용 칸은 높이를 줄여 스크롤바가 생기지 않게 한다(AS-IS 상세내용 150·관련조문 70 고정).
  * V13: view() L146-188 "상세보기"(읽기 전용, [닫기]만)와 연관내규 설정 창 Apr22_Lookup_RelateIcr(같은 화면, 법규명 → 내규명·서식파일 Icr01_Page_IcrFile)를 `view`·`kind`로 함께 쓴다.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio } from 'antd';

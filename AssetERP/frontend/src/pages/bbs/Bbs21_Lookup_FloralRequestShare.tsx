@@ -2,7 +2,7 @@
  * 화환신청 공유지정 창 — Bbs20_Edit_FloralRequest [설정]에서 연다 (T21)
  * AS-IS: myApp/client/vi/bbs/Bbs21_Lookup_FloralRequestShare.java (317줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L76-106: 모달 580×450 "화환신청 공유지정", 툴바 50(○직원 ●부서 · [행 추가][행 삭제] · 새로고침 아이콘), 그리드(구분 70·부서 250·성명 100, 체크 다중), 아래 가운데 [저장][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Radio, Space } from 'antd';

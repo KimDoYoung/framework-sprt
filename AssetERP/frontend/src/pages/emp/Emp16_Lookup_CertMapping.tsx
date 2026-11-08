@@ -5,7 +5,7 @@
  * 편집기는 AS-IS CKEditor 대신 HtmlEditor(Tiptap, 05 §5). 태그 목록은 TempData.getCertMappingList() L238 — 증명서 화면이 정해 둔 값이 없으면 기본 18개
  * [저장] update() L148-159: 양식을 모델에 담고(text-decoration-line → text-decoration, ' → ") "'Mapping' 팝업 창에서 저장을 하셔야 시스템에 최종 반영됩니다" 안내 후 callback(model). 창은 닫지 않는다
  * 호출처(Emp16_TabPage_CertMapping·Emp16_Lookup_CertList)가 AS-IS에서 아무 곳에도 붙어 있지 않아 TOBE에서 여는 곳이 없다(작업기록)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

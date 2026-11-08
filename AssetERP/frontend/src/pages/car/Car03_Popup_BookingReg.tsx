@@ -4,7 +4,7 @@
  * 생성자 L85-146: 모달 880×610 "공용차량 예약정보", 줄 = 차량·사용자 / 일시(시작일 ~ 종료일 시:분 ~ 시:분) / 행선지 / 목적 / 참석자 / 메모(높이 85) + 시간막대 300, 아래 가운데 [저장][변경][닫기]
  * 열기 3가지: open(date) L233-262 [저장]만 / retrieve(model, checkYn) L277-285 [저장]은 checkYn일 때 / getList(model, checkYn) L287-295 [변경]은 checkYn일 때
  * EditModal 규격(11 §4a). 저장은 이 창이 한다(update() L297-375)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

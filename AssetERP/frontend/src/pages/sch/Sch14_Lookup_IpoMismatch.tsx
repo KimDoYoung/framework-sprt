@@ -4,7 +4,7 @@
  * 레이아웃 L52-84: 모달 1500×500 "공모주일정 미일치내역"(닫기 X 없음), 위 = 툴바(체크 "미확인 종목만 조회"(기본 켬) · [조회]),
  *   아래 = 단순 그리드(행번호: 종목코드 80 · 공모주일정 550 · IpoStock 550 · 생성일시 150 · 확인완료 80(체크)), 아래 가운데 [닫기]
  * 조회는 쓰기다: 서버가 먼저 DB 함수(f_create_ipoMismatch)로 미일치내역을 새로 만든다(원본 그대로)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';

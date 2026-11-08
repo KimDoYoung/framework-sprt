@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/car/Car04_Lookup_Batch.java (295줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L67-84: 모달 780×300 "전용차량 운행일지(일괄등록)", 아래 가운데 [생성][취소]. getEditor() L183-218: 라벨 폭 140, 줄 4개(일일 주행거리·비업무용 / 출퇴근용·일반업무용 / 행선지 / 목적)
  * EditModal 규격(11 §4a). 입력칸 값 확정(AS-IS Change = 칸을 벗어날 때)마다 calculation()
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, InputNumber, message, Modal, Space } from 'antd';

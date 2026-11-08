@@ -2,7 +2,7 @@
  * 선택내역 일괄반영 창 — Icam55_Tab_UserApprResult의 [일괄저장]에서 연다 (EE30)
  * AS-IS: myApp/client/vi/icam/Icam55_Lookup_UserApprResult.java (167줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L51-87: 모달 500×300 "선택내역 일괄반영", 라벨 100 + 처리결과 콤보(230) · 처리일자(230) · 처리상세(480×80), 아래 가운데 [저장][닫기]. EditModal 규격(11 §4a).
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Modal, Typography } from 'antd';

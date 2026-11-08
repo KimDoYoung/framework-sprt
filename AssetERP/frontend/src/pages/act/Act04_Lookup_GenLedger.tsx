@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/act/Act04_Lookup_GenLedger.java (170줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L54-77·open(accountCode, stdDate) L48-52: 모달 680×600 "하위계정정보", 툴바([조회][펼치기][감추기]) + 계정 트리(계정코드 120 · 계정과목 390 · 당일잔고액 150), 아래 가운데 [닫기]. 열 때 retrieve()
  * UX보강(10): 조회창 UX-05·06
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { message } from 'antd';

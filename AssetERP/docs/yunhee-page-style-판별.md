@@ -210,7 +210,7 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 
 ## 7. 모달 SID 판별 (2026-11-08 제안, yunhee 0.7.5에서 구현 — `--all --modal`)
 
-`*_Edit_*`·`*_Lookup_*`·`*_Popup_*`(모달)도 자기 SID(MF·MG·MFG·MH)를 가진다 — `page-style.md` "모달 스타일". 지금 판별기는 모달을 Tab 기준으로 읽어 폼 모달을 `DSBRD`·`GO`로 잘못 판별한다(2026-11-08 585개 중 DSBRD 213, GO 92, 미분류 36).
+`*_Edit_*`·`*_Lookup_*`·`*_Popup_*`(모달)도 자기 SID(MF·MG·MFG·MH)를 가진다 — `modal-style.md` "모달 SID". 지금 판별기는 모달을 Tab 기준으로 읽어 폼 모달을 `DSBRD`·`GO`로 잘못 판별한다(2026-11-08 585개 중 DSBRD 213, GO 92, 미분류 36).
 
 | SID | 판별 기준(제안) |
 |:---|:---|

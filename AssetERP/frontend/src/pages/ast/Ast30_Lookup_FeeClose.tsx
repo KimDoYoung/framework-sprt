@@ -6,7 +6,7 @@
  *   KRW면 통화 보수 3열을 숨기고 펀드명 400 · 원화 보수 3열 120, 적용환율·[환율적용]은 비활성(setting() L111-145)
  * 누적보수 두 열만 편집(파란 글씨). 조회창이므로 모달은 LookupModal, 편집 그리드는 CellEditGrid + useGridCrud
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), [저장(n)] UX-03, 조회창 UX-05·06
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, InputNumber, Space } from 'antd';

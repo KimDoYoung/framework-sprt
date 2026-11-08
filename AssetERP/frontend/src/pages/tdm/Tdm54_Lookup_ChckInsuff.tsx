@@ -9,7 +9,7 @@
  * 서버: tdm.Tdm54_ChckInsuff.updateComplete(U 저장·P 조치완료·C 완료취소), Tdm63_ChckInsuffRecord.select/delete/update
  * 다음 단계: 조치기록의 증빙자료 아이콘은 EE49의 Tdm00_Lookup_RelateAppr("tdm63")를 연다
  * UX보강(10): 해당 없음
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';

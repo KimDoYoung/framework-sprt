@@ -4,7 +4,7 @@
  * 생성자 L74-80: 모달 400×450 "최저보수 관리", getEditor() L222-260: 라벨 폭 130 — 최저보수(있음/없음) · 박스(운용최저보수(연) · 자문최저보수(연) · 일임최저보수(연) · 청구구분)
  *   · 병행보수(처리함/처리안함) · 박스(병행보수(연)), 아래 가운데 [저장][닫기]
  * 편집창 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, message, Modal, Select, Space } from 'antd';

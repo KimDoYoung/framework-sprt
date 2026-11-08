@@ -4,7 +4,7 @@
  * getEditor() L132-169: "요청내용 :" 링크(110) + 요청내용 보기(HTML, 490×105) + 첨부파일 라벨 · 첨부 그리드(600×105, 삭제 열 있음) + [파일업로드](120)
  * [E1]·[E5] fileUpload.Change (L88·L201) → FileUpload?parentId=srId&fileYn=false → [E2] SubmitComplete (L100) → 첨부 그리드 다시 조회
  * [E3] updateButton[파일업로드].Select (L124) → fileUpload.click() · [E4] anchor.MouseDown (L135) → Scm01_Lookup_SrContent.open(srContent) (보기 전용)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useRef, useState } from 'react';
 import { message } from 'antd';

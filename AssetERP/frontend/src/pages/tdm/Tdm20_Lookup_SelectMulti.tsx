@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm20_Lookup_SelectMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1200×600(원본, 열 합계 1090+행번호·선택 60+여백 130 = 1280이라 원본 폭 유지): 검색줄(기준일 + 검색 + [조회]) + 체크박스 다중 그리드 + [확인][닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

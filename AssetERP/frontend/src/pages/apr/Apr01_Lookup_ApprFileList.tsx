@@ -2,7 +2,7 @@
  * 첨부파일 옵션설정 창 (V05) — 상신 편집창 [첨부파일 옵션설정]이 연다. 첨부파일의 순서와, 문서 미리보기·PDF를 만들 때 파일·확장자를 보일지를 정한다.
  * AS-IS: myApp/client/vi/apr/Apr01_Lookup_ApprFileList.java (207줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L54-91: 760×500 모달 "첨부파일 옵션설정"(닫기 X 없음), 위 안내 글(파랑), 그리드(▲ 25 · 첨부파일 405 · ▼ 25 · [대외문서] 파일 표시 120 · 확장자 표시 120), 푸터 [저장][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

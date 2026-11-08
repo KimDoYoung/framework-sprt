@@ -4,7 +4,7 @@
  * 레이아웃 L57-123: 모달 600×500 "종목코드 매칭", 위 = 툴바(검색 200 "검색어(종목코드/종목명) 입력" · [조회][등록][저장][삭제]), 아래 = 셀 편집 그리드(행번호, 체크박스 다중:
  *   종목코드 100 · 유효한 종목코드 100 · 종목명 300), 아래 가운데 [닫기]
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';

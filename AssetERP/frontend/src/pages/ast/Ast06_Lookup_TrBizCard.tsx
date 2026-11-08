@@ -4,7 +4,7 @@
  * 생성자 L71-85 · getEditor() L162-193: 모달 600×350 "비품대장 등록", 라벨 폭 120, 줄 5개(거래일자 230(읽기 전용) · 거래유형 450(콤보) · 거래처 450 · 종목(자산구분) 450 · 적요 450), 아래 가운데 [저장][닫기]
  * open(promoModel, note, callback) L87-93 → retrieve() L195-212: 카드 승인번호로 거래를 찾아 있으면 그 값, 없으면 새 거래(일자 = 승인일, 적요 = 폼의 적요)
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬, 줄 사이 간격 gap 10
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Select, Space } from 'antd';

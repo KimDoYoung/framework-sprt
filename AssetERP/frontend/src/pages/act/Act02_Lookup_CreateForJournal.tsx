@@ -6,7 +6,7 @@
  *   / 전표 = 툴바([차변 행추가][대변 행추가][행 삭제] ⟳ … 대차차액 외화 / 원화) + 셀 편집 그리드 250(구분·계정코드·계정과목·외화금액·원화금액·관리계좌·적요), 아래 가운데 [저장][닫기]
  * 편집창 규격(11 §4a, modal 원칙): antd Modal + 머리말 아래 선·푸터 위 선, 라벨 오른쪽 정렬
  * NEW는 AS-IS가 위 그리드에 빈 행을 먼저 넣고 [닫기]에서 뺐지만, TOBE는 저장할 때 서버가 전표를 만들므로 닫기는 그냥 닫는다
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

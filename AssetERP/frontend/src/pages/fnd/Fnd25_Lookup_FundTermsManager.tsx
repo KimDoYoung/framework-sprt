@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd25_Lookup_FundTermsManager.java (247줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L89-129: 모달 "펀드규약 수정" 700×230, 라벨 100, 펀드규약명(655, 읽기 전용) / 신청구분(260, 콤보 FundTermsType) · 조회순서(165) · 예탁원코드(230, 조회창), 아래 가운데 [저장][삭제][닫기]
  * UX보강(10): 첫 입력칸 포커스(UX-05, LookupModal)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, Input, message, Modal, Space, Typography } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys15_Edit_Corp.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L61-88 + getEditor() L90-130: 라벨 폭 120, 줄 5개(구분·거래처명·사업자번호 / 코드·조회순서·사용 / 전화번호·주소 / 비고 / 계좌정보 그리드 150),
  * 필수 라벨(거래처구분·거래처명)은 파란색, 아래 가운데 [저장]. 편집 폼이므로 검색 영역 보강(UX-04 지우기 x)은 쓰지 않는다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, Input, InputNumber, message } from 'antd';

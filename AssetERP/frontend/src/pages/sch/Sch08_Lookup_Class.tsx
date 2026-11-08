@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sch/Sch08_Lookup_Class.java (257줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L62-96: 모달 650×500 "스케줄분류 추가", 위 툴바 50([행 추가][행 삭제] + 새로고침 아이콘), 그리드(체크 다중 + 셀 편집: 분류 200 · 조회순서 70 · 비고 150 · 사용 70),
  *   아래 가운데 [저장][닫기]. 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에 보낸다(deleteList)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

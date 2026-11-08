@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/chk/Chk02_Edit_DailyList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit() L72-96: 모달 "일일점검내역 생성/수정", getEditor() L130-173: 라벨 폭 105, 분류 · 내용(높이 170) · 설명(높이 170) · CutOff/화면번호 · 조회순서/사용여부, 아래 가운데 저장·닫기
  * (open() L98-124 읽기 전용 모드는 이 화면에서 안 쓴다)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';

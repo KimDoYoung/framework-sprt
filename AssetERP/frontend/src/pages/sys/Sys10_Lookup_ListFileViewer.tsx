@@ -4,7 +4,7 @@
  * 레이아웃 L78-186: 모달 1300×700 "파일보기", 왼쪽 450(파일업로드 단추 + 파일 그리드: 파일명 300·받기 50·삭제 50) | 오른쪽 미리보기, 하단 닫기
  * 그리드 끝의 viewerYn·fileType·viewerPath(L229-231)는 DB에 없는 변환 서버용 열이고 fileRandomCopy()(L254-277)도 그 서버 준비용이라 옮기지 않는다
  * (미리보기는 FilePreview — Sys10_Lookup_FileViewer 주석).
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

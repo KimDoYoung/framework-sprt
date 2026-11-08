@@ -4,7 +4,7 @@
  * 생성자 L22-35: 450×250 모달 "결재의견", 글상자 + editMessage(callback) L53-76: [결재][닫기], [결재] → note() → callback.execute(글) 뒤 hide()
  *   (setMessage L37-50 = 읽기 보기, addMessage L78~ = [저장] 모드는 다른 화면용 — 이 단계에서는 쓰지 않는다)
  * 조회창 규격(11a): LookupModal, 머리 아래 선·푸터 위 선
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space } from 'antd';

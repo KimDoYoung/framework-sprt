@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_DcrClass.java (343줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L101-169: 500×700 모달 "문서분류", 툴바 "문서분류 [검색 200] [찾기]" + 트리(typeCode %) + [선택][전체][닫기]
  * Dcr30_Move_DcrClass와 달리 최하위가 아니어도 고른 노드를 그대로 돌려준다(confirm L284-296). 권한 있는 조직만 보는 open(…, orgId)는 이 화면에서 쓰지 않아 옮기지 않았다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Tree } from 'antd';

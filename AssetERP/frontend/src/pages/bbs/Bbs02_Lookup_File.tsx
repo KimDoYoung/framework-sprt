@@ -4,7 +4,7 @@
  * openUser() L58-64: 사용자용 — [파일업로드]를 감추고 삭제 열(4)을 감추며 첨부파일명 폭 720. 그래서 올리기·삭제(E1·E3~E6)는 이 화면에서 쓰이지 않는다.
  * open() L70-150: 모달 "첨부파일" 950×400, 그리드(buildApprFileGrid L153-190: 체크박스 단일 선택, 첨부파일명 · 다운로드 80 · 삭제 80 · 미리보기 80), 아래 가운데 [닫기]
  * `admin`(EE14, Mrb01_Popup_MeetingRoomReg): open(parentId, callback)로 여는 쪽 — [파일업로드] + 삭제 열이 있고 첨부파일명 폭 640. 올리기·삭제는 Bbs15_Lookup_File(E10)과 같다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -4,7 +4,7 @@
  * open(stdDate, callback) L50-82: 모달 600×500 "계약사목록", 검색 줄 = 검색 [텍스트] [조회] / 그리드(체크 다중 6열) / [생성][닫기]. 열 때 retrieve()
  * retrieve() L137-149: biz.Biz51_ErpContCorp.selectErpCompany(searchText "%…%", stdDate) — 그 달에 청구가 아직 없는 계약사만
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05·06(MultiGrid rowClick). 모달 폭은 열 폭 합계로 손으로 정한다(03 원칙 21: 열 480+행번호·선택 60+여백 130 → 700)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

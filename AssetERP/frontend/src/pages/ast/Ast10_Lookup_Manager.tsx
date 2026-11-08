@@ -1,7 +1,7 @@
 /**
  * 담당자 관리 모달 (R08)
  * AS-IS: myApp/client/vi/ast/Ast10_Lookup_Manager.java (310줄)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Radio } from 'antd';

@@ -6,7 +6,7 @@
  *   영업구분(콤보 CrmItemTypeCode) / 회사명 300·담당자명 200·직위 200·부서 200 / 이메일 300·직책 200·회사전화 200·휴대폰 200 / 주요사항 100 / 비고 100 / 공유기본(읽기 전용 500)+[설정]
  * openEdit L73 = 기존 거래처 수정, openNew L84 = 새 거래처, open(contactModel) L122 = 영업구분·회사명·공유정보를 미리 채워 새로 등록
  * postOpen() L183-191: 번호가 없으면(새 거래처) 공유기본·[설정]을 숨긴다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message } from 'antd';

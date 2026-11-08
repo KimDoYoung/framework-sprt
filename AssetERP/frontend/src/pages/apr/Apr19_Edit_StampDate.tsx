@@ -4,7 +4,7 @@
  * 생성자 L49-73: 모달 260×160 "날인일자 설정", getEditor() L75-87: 라벨 폭 75 · 날인일자 칸 200, 아래 가운데 [저장][닫기]
  * 열 때 apr.Apr19_RelateStamp.selectById로 읽은 행을 편집하고, [저장]은 updateStampDate 뒤 callback.execute(=목록 다시 조회)·hide()
  * UX보강(10): 편집창 규격(11 §4a)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Modal, Space, Typography } from 'antd';

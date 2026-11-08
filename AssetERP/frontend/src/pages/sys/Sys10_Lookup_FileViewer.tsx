@@ -6,7 +6,7 @@
  * (GET /api/v1/sys/files/{id}/aview, AS-IS template/fileViewer_AView.jsp). A-View 주소가 설정되지 않은 로컬 환경은 서버 안내 문구를 보여 준다
  * (AS-IS L77-83 "로컬환경에서는 미리보기를 지원하지 않습니다"). open(fileId)의 selectByFileId(확장자)는 행의 fileExt로 대신한다.
  * `FilePreview`는 Sys10_Lookup_ListFileViewer도 쓴다.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { message } from 'antd';

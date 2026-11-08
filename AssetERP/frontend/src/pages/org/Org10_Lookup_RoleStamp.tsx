@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/org/Org10_Lookup_RoleStamp.java (215줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * Org10_Lookup_RoleStamp() L65-103: 모달 450×500 "부서별 사용권한", 위 툴바([행 추가][행 삭제] + 새로고침 아이콘) + 체크박스 다중 그리드(부서 350), 아래 가운데 [저장][닫기]
  * 행 삭제는 화면에서만 빼 두었다가(deleteList) [저장]에서 서버에서 지운다(update() L177-195)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

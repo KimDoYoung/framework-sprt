@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp43_Edit_ChangeEval.java (201줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L53-70: 모달 580×180 "평가자 변경"(X 없음), getEditor() L130-147: 라벨 폭 85, 1차 평가자(400, 파랑 0069B4) · 비중(%)(140), 2차 평가자(400, 빨강 DD5E5E) · 비중(%)(140), 아래 가운데 [변경][닫기]
  * 처음 값 settings() L72-100: 비중 1차 50 · 2차 50
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, message, Modal, Space } from 'antd';

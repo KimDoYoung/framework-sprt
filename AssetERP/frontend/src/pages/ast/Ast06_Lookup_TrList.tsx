@@ -5,7 +5,7 @@
  *   (행번호, 일자 90 · 거래유형 180 · 거래처 180 · 종목 200 · 금액 100 · 적요 350) + 안내 "※ 원장연동 거래유형(비품폐기 등)인 경우 불러오기에서 제외됩니다.", [확인] [닫기]
  * 조회기간 기본: 지난 달 1일 ~ 오늘(setting L88-97). 조회는 ast.Ast06_Tr.selectByPayCode(bookIoCheck true, windowClassName Ast06_Tab_TrIntrinsic)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

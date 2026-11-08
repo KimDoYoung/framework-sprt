@@ -7,7 +7,7 @@
  * [E1] calcButton[계산].Select (L133) → calcRetireLeaveDays() L166-210: 퇴사일이 없으면 "퇴사일을 입력하세요" → pay.Pay15_RetireLeave.calcRetireLeaveDays(personId, retireDate)
  *   → 실패면 서버 문구, 성공이면 "{퇴사년도}년 잔여휴가(A) :" + selectRemLeaveDays 값 + retrieve() L212-222(monthId = 사원ID, 기준 1·2)
  * [E2] closeButton[닫기].Select (L140) → hide()
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { DatePicker, InputNumber, message, Space } from 'antd';

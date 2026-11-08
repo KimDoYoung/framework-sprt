@@ -4,7 +4,7 @@
  * 생성자 L39-60: 모달 500×350 "승인 및 반려사유", 사유 입력칸 490×250 + [저장][취소]
  * open(statusCode, callback) L62-72: 제목 "승인사유"('20') / "반려사유"('30'), [저장] = 입력한 사유를 callback으로 돌려주고 닫는다
  * edit(trModel, callback) L74-80: 그 행의 사유를 채워 열고, [저장] = 서버에 저장(Flt10_Tr.update) → "저장이 완료되었습니다" → 저장한 행을 callback으로
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Input, message, Space } from 'antd';

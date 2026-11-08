@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs07_Lookup_Comment.java (181줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L55-77: 모달 "댓글확인" 405×700, 위 "총 댓글 : n개", 그리드(buildGrid L104-110: 행번호 숨김, 285 · 파일(n) 50 · ✕ 25, 모든 행을 펼쳐 댓글 내용을 보인다), 아래 가운데 [닫기]
  * 댓글 탭(Bbs07_TapPage_Comment)과 달리 삭제 칸이 항상 ✕(deleteMasterStr)이고 작성자 검사가 없다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, message } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp10_Lookup_MailRetrieve.java (222줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * makeLayout() L62-85: 모달 "확인(검증)" 380×180, 메일주소 · 비밀번호(라벨 75), 아래 가운데 [초기화][검증][닫기]. 열 때 retrieve() L108-124(본인 메일·비밀번호)
  * 주의: AS-IS는 callbackResult를 받아 두기만 하고 어디서도 부르지 않는다 — 바꾸거나 초기화해도 발송창의 본인 메일 칸은 다시 읽히지 않는다(그대로 옮김)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space, Typography } from 'antd';

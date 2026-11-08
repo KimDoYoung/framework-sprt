@@ -4,7 +4,7 @@
  * 창 730×380(원본): 직책 · 직책그룹(콤보)+기타그룹명 · 개요(100 높이) · 사용시작일+보고CEO(조회창 칸) · 사용종료일 + [연결책무(n건)][연결회의체(n건)][연결부서(n건)][저장][닫기]
  * 결정: 등록(INSERT)에서는 새 직책이 아직 저장되지 않아 연결 버튼이 "직책을 저장한 뒤 연결할 수 있습니다"를 안내한다 (AS-IS는 미리 받은 ID로 연결을 먼저 저장해 직책 없는 연결이 남을 수 있다)
  * UX보강(10): 조회창(UX-05은 Tdm20_Lookup_SelectSingle 안에서)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Space } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast41_Lookup_InvestLimit.java (296줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 1000×500: 위 툴바([조회][생성][삭제] / [행 추가][행 삭제]) + 왼쪽 기준 적용일 목록(200, SingleGrid) + 오른쪽 자산구분별 한도(CellEditGrid) + 푸터 [저장][닫기]
  * 하위: Ast41_Lookup_Insert(적용일 생성)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';

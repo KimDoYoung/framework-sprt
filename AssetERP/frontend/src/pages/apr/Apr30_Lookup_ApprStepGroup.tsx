@@ -2,7 +2,7 @@
  * 결재선 지정그룹 조회창 (E16, apr 도메인) — Dcr01_Grid_DocType의 추가결재 칸 트리거에서 연다
  * AS-IS: myApp/client/vi/apr/Apr30_Lookup_ApprStepGroup.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L47-71: 모달 700×500 "지정그룹", 위 툴바([조회]) + 그리드(문서결재선 그룹명 250 · 비고 350), 아래 가운데 [확인][선택안함][취소]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

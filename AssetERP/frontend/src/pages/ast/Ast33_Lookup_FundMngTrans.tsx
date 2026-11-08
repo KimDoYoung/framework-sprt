@@ -6,7 +6,7 @@
  * getEditor() L229-279: 라벨 폭 120, 이관구분 · 이관일자 · 펀드(코드 210 + 이름 300) · 통화 · 외화미수보수 · 원화미수보수 · 적요(높이 50) · 파란 안내 · 빨간 경고, 아래 가운데 저장·닫기
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
  * X28 `Ast33_Lookup_OfficeMngFundTrans`와 달리 운용사 칸이 없다 — 운용사는 로그인 회사로 고정이고 보수원장 조회창도 그 운용사로만 찾는다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

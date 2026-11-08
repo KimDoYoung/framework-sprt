@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay20_Lookup_SelectMulti.java (122줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L45-80: 체크 다중 그리드(지급구분 150 가운데 · 항목명 300) + 아래 가운데 [확인][취소]. open(itemType, callback) L38-43이 바로 조회한다.
  * Pay20_Lookup_ItemList(항목명 검색·구분 140)와는 다른 창이다(항목구분으로 거르고 검색칸이 없다)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

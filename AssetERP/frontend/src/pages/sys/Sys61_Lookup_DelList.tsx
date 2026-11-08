@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys61_Lookup_DelList.java (134줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * [E0] 화면 열림 (생성자 L43-68) → settings(), show() ·
  * 생성자 L43-68: 740×450 모달 "삭제된 첨부파일 내역", 그리드, 푸터 [닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
 import { Button } from '@/components/button';

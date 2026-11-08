@@ -4,7 +4,7 @@
  * 생성자 L54-88: 950×820 모달 "양식 & 태그", 왼쪽 CKEditor(720×715) + 오른쪽 150 태그 목록(TempData.getMailMappingList), 아래 가운데 [저장][닫기]
  * open(erpSetupModel) L50: 부르는 쪽이 메일양식 행(없으면 insertMailForm 으로 빈 행)을 넘긴다. 열릴 때 mailForm 이 있으면 에디터에 넣는다(L65-67)
  * 편집기는 AS-IS CKEditor 대신 HtmlEditor(Tiptap, 11 §3) — 표·글꼴 색이 없어 원본 HTML에 표가 있으면 편집 때 사라질 수 있다
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { message, Space } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp57_Lookup_List.java (224줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(actionCode, callback) L54-80: 모달 "그룹선택" 320×600, 위 오른쪽 [전체공개 포함](기본 해제), 그룹 그리드(체크박스 단일, 그룹명 200 · 보기 아이콘 35), 아래 가운데 [확인][닫기]
  * actionCode: "email"(이메일 `이름 <주소>;` 문자열) · "phone"(핸드폰 번호 있는 담당자) · "emp03model"(사내 담당자만 — 사원 ID·조직·직책·사번·이름)
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Space } from 'antd';

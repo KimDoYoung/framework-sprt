@@ -3,7 +3,7 @@
  * 왼쪽에서 알림 구분(SmsNoticeCode)을 하나 고르면 오른쪽에 그 구분의 수신인 목록(Emp93_Tabpage_SmsNoticeTargetList)이 열린다
  * AS-IS: myApp/client/vi/emp/Emp93_Lookup_SmsNoticeTargetList.java (122줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L44-72: 900×500 모달 "특정알림 설정", 왼쪽 310(툴바 [조회] + 체크박스 다중 그리드 구분 240) | 오른쪽 탭 페이지, 푸터 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

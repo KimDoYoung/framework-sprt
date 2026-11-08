@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys52_Lookup_SpecificMenuLink.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(companyId, specificMenuModel) L53-80: 제목 "문서권한설정", 900×350, 모달. 툴바 조회·등록·저장·삭제 + 체크(단일) 셀 편집 그리드
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space } from 'antd';

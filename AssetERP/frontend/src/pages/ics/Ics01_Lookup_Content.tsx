@@ -2,7 +2,7 @@
  * 법규 상세내용 창 (E01) — Ics01_Grid_IcsType 그리드의 상세내용 [수정] 아이콘에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_Content.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L59-95: 모달 650×680, 상세내용 입력(640×590), 아래 가운데 [저장][닫기]. open()은 "법규 상세내용 수정", view()(sch 도메인이 씀)는 읽기 전용 "법규 상세내용"에 저장 버튼 없음
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

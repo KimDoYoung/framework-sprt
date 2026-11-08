@@ -4,7 +4,7 @@
  * 레이아웃 L68-99: 모달 600×500, 제목 = 구분 1이면 "법인인감 선택" 아니면 "대표명의 선택", 툴바(검색 200 · [조회]) + 체크박스 단일 그리드(구분 150 · 인감 및 대표명의 350),
  *   아래 가운데 [확인][전체][닫기]
  * 원본 SQL(selectByApplType)은 검색어·기간을 쓰지 않는다 — 입력칸은 두되 조회에는 보내지 않는다(작업방법)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -1,7 +1,7 @@
 /**
  * 증명서 발급 창 (S05) — Emp15_Tab_Cert의 [생성]이 연다
  * AS-IS: myApp/client/vi/emp/Emp15_Lookup_Cert.java (382줄) — 모달 680×300 "증명서 발급", insert(callBack) L81-93
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
 import { Emp15_CertEdit } from './Emp15_CertEdit';

@@ -4,7 +4,7 @@
  * 생성자 L57-64 / open() L66-82: 모달 900×550 "전표 불러오기", 툴바(조회일자 100 ~ 100 · 검색 200 "거래처/적요" · 조회) + 체크박스 단일 그리드(일자 90 · 전표번호 90 · 거래처 150 · 적요 350 · 금액 120), [확인] [닫기]
  * setting() L84-144: 조회일자 = 3개월 전 1일 ~ 오늘, 열 때 retrieve()
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

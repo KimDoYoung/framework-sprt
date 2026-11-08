@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs15_Edit_CompanyRuleManager.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L85-168: 모달 "회사규정" 1000×850, 라벨 110, 회사규정구분(300)·사용·종료일 / 회사규정코드·개정회차·제개정일 / 회사규정명 / 내용(HTML 편집기 500) / 비고, 아래 가운데 [첨부파일(n건)]·[저장]·[닫기]
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';

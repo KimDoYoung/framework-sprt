@@ -2,7 +2,7 @@
  * 투자한도/StopLoss 적용일 생성창 (W03) — Ast41_Lookup_InvestLimit 의 [생성]
  * AS-IS: myApp/client/vi/ast/Ast41_Lookup_Insert.java (95줄) — 함수 이름은 원본 메서드 이름 그대로
  * 적용일(payDate) 하나 + [생성][닫기]. 250×150 → 편집창 규격(11 §4a)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message } from 'antd';

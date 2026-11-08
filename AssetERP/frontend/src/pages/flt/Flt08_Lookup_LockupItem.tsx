@@ -4,7 +4,7 @@
  * open() L74-106: 모달 910×550 "매수제한종목", 툴바(제한구분 콤보 100 · 검색 150 · 조회 · 등록 · 저장 · 삭제) + 셀 편집 그리드(체크박스 다중) + 하단 [닫기].
  * 종목코드 칸은 조회창 트리거(LookupTriggerField) — 누르면 상장주식 종목 찾기(Com50_Lookup_StkItem VIEW)가 열린다.
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 조회창 UX-05, 날짜 편집 열 120(UX-08)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message } from 'antd';

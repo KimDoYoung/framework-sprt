@@ -4,7 +4,7 @@
  * 레이아웃 open() L56-91: 1000×500 모달 "다운로드 기록", 툴바(기간 · 검색 300 · [조회]) + 그리드(체크박스 단일) + 페이징 툴바(50) + [닫기]
  * 1단계(F01~F08과 같은 사유): 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인(apr)이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
  * → 2026-11-05: 전자결재 문서 창 Apr01_Edit_ApprDoc 연결 완료(13-누락대장 1번). 위 줄의 다른 "다음 단계" 항목은 그대로 남아 있다.
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Space, message } from 'antd';

@@ -4,7 +4,7 @@
  * 창 920×170(원본): 한 줄 = 점검시작일(200) · 점검마감일(200) · 이행점검명(450), 라벨 폭 100, [저장][닫기]
  * 비어 있던 시작일·마감일은 오늘·이번 달 마지막 날로 채워 연다(edit() L53-58)
  * UX보강(10): 팝업(UX-05)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message, Space } from 'antd';

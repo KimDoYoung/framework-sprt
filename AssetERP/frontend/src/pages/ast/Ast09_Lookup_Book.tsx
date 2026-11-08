@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast09_Lookup_Book.java (181줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L62-78: 모달 1100×500 "보유자산", 툴바(보유일 100 · 검색 200 "보관처명/계좌명/자산명" · 조회) + 체크박스 단일 그리드 7열, [확인][닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

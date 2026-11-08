@@ -1,7 +1,7 @@
 /**
  * 추가인적공제 팝업 (C01-3) — Emp35_TabPage_DeductDate의 DeductInsert 폼 [추가인적공제 아이콘]에서 연다.
  * AS-IS: myApp/client/vi/emp/Emp36_Popup_AddDeduct.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Space } from 'antd';

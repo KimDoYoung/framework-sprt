@@ -4,7 +4,7 @@
  * 레이아웃 open() L69-103: 모달 970×400 "포상휴가 내역", 툴바(기준연도 · [조회]), 체크 단일 그리드 7열, 아래 가운데 [닫기]
  * 열 때 오늘 연도로 조회하고 첫 행을 고른다. open(personId, callback) L58 = onSelect를 주면 [선택] 단추(L95-97)와 더블클릭 선택(E5)이 생긴다 — Y01 휴가신청의 포상휴가 선택.
  *   select() L175-192: 선택이 없으면 "선택된 내역이 없습니다", 잔여일수가 1 미만이면 "잔여휴가가 남아있지 않습니다", 아니면 callback 뒤 닫는다. view(personId)는 onSelect 없이 연다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message } from 'antd';

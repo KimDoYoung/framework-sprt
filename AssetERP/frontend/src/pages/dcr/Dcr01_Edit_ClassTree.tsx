@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Edit_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * editData() L82-146: 모달 440×330 (제목 = 업무등록 "루트등록"·하위등록 "하위분류 등록"·수정 "문서분류 수정"), 분류코드(250)·조회순서(150) / 분류명(400) / 상세설명(400×130),
  * 아래 가운데 삭제(수정일 때만)·저장·닫기
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

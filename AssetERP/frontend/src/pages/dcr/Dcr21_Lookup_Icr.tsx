@@ -2,7 +2,7 @@
  * 내규 연결 창 (E16) — Dcr01_Grid_DocType의 "내규연결" 칸 아이콘에서 연다 (문서구분에 내규를 연결한다)
  * AS-IS: myApp/client/vi/dcr/Dcr21_Lookup_Icr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L66-132: Dcr20_Lookup_Ics와 같은 창. 모달 1200×500 "내규 연결", 위 툴바([행 추가][행 삭제] + 오른쪽 새로고침 아이콘) + 체크박스 다중 그리드(내규명 300 · 상세내용 400 · 제출처 150 · 주기 100 · 관련조문 200 · 분류코드 70), 아래 가운데 [저장][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

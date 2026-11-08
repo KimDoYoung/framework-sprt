@@ -2,7 +2,7 @@
  * 문서양식 조회창 (E16) — Dcr06_Lookup_Form의 [행 추가]에서 연다 (연결할 문서양식을 고른다)
  * AS-IS: myApp/client/vi/dcr/Dcr05_Lookup_DocType.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L52-128: 모달 760×600 "문서양식", 위 툴바(구분 콤보 150 "전체" · 검색 200 "양식제목을 입력해주세요" · [조회]) + 체크박스 다중 그리드(구분 150 · 양식 제목 450 · 수정 80), 아래 가운데 [확인][취소]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

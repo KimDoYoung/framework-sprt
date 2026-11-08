@@ -6,7 +6,7 @@
  * 조회창 규격(11a): LookupModal, 머리 아래 선·푸터 위 선, 선은 최소(그리드 사이는 간격 8)
  * [불러오기]는 Apr05_Lookup_LoadDoc(ⓒ 완료: 문서분류 트리 + 문서 목록 + 미리보기)을 열어 고른 문서를 POST act/relate-apprs로 연결하고, [신규문서 작성]은 Dcr01_Lookup_Class(ⓒ 완료)로 문서분류를 정한다.
  * 상세보기는 Apr01_Edit_ApprDoc.retrieveApproval(V01 문서 읽기, 2026-10-30)을 연다. 문서분류를 정한 뒤 여는 Apr01_Edit_ApprDoc.insertApproval(createAppr)은 V03에서 연결하기 전까지 안내만 한다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

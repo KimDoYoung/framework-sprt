@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/est/Est02_Lookup_PfContract.java (164줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L49-76: 모달 900×500 "체결용역" = 툴바 50(조회기준일 100 · 검색 300 "차주명/사업자명/수수료명" · [조회]) + 단일 체크 그리드(차주명 250 · 사업자명 300 · 사업장 주소지 300 · 용역(수수료)명 250 · 수행시작일 100 · 수행종료일 100) + [확인][닫기]. 열자마자 조회
  * UX보강(10): 조회창 UX-05(첫 입력칸 포커스)·UX-06(행 클릭 선택)은 LookupModal·rowSelection으로. 열 폭 합계(1360)가 커서 가로 스크롤(03 원칙 21)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

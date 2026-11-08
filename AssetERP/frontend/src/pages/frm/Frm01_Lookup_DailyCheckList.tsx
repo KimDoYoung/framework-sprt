@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/frm/Frm01_Lookup_DailyCheckList.java (246줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L48-65: 950×400, 머리말 "체크리스트", 단일 그리드(묶음 헤더 "체크"). settings() L67-139: 체크하면 곧바로 저장(O05 Sch04_Tab_DailyCheckList와 같음)
  * buildGrid() L141-157: 업무구분 120 · 제목 500 · 상세보기 80 · 처리완료 100 · 해당없음 100. view() L187-236: 업무일정('1')·공모주('5') 보기
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

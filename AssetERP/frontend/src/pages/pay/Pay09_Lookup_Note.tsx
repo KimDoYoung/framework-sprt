@@ -5,7 +5,7 @@
  *   체크 다중 셀 편집 그리드: 사원명 120 가운데 · 비고 400 큰 글), 아래 가운데 [저장][닫기]
  * open() L83-109: checkNote(noteType "1")로 전체 비고 행을 받아(없으면 서버가 만들어 줌) 채우고 개인별 비고(noteType "2")를 조회
  * update() L243-269: 보고 있는 탭이 전체 비고면 그 행만 저장, 개인별 비고면 변경 행 저장 + 삭제 목록 삭제, 끝에 늘 "저장이 완료되었습니다"
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Space, Tabs } from 'antd';

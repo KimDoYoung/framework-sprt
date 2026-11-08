@@ -4,7 +4,7 @@
  * getEditor L183-200: 헤더 없음, 폼(라벨 120) = 제공목적(300, 파란 라벨) · 제공내역(300, 파란 라벨) · 계정과목(400) · 거래상대방(400, 조회창) · 인원(300) · 비고(400×100, 여러 줄),
  *   창 아래 가운데 [저장][증빙자료(n건)]. 고른 내역이 없으면 통째로 비활성(setEnabled(false)), 마감이면 콤보 3개만 잠근다(setButtonVisible(false)).
  *   L02 `Biz01_Edit_Card`와 달리 거래상대방·인원 칸이 있고 제공내역을 고른 뒤 직원 자동등록(insertEmp)은 없다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Input, InputNumber, message, Select, Space } from 'antd';

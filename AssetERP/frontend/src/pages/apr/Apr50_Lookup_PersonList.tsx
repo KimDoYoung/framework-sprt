@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr50_Lookup_PersonList.java (404줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L79-133: 580×500 모달 "중요표시 설정 (활성화|비활성화)"(닫기 X 없음), 위 ◉전체 중요표시 ◉개별 중요표시 · [등록][저장][삭제] · 새로고침 아이콘,
  *   안내 글(파랑 12), 체크 다중 그리드(사원정보 500), 푸터 [초기화][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Radio } from 'antd';

@@ -4,7 +4,7 @@
  * init() L83-128: 1100×600 모달 "연관문서", 위 등록기간(한 달 전 ~ 오늘)·문서구분(Dcr01_Lookup_DcrClass)·검색 250·[조회], 체크박스 다중 그리드
  *   (등록일 100·문서구분 300·상신제목 300·펀드 250·등록자 55), 푸터 [확인][닫기]. 열 때 자동 조회는 없다(init()이 retrieve()를 부르지 않는다).
  * 조회는 Apr05_Lookup_LoadDoc2와 같은 dcr.Dcr00_DocList.selectByText(`GET apr/doc-picks`)다.
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useMemo, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';

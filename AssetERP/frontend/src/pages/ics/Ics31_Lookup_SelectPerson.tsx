@@ -5,7 +5,7 @@
  *   검색줄(검색 "조직/성명" 200 + [조회]) + 단일 선택 그리드 + [확인][전체][닫기]
  * open(stdDate, cycleType, callback) L45-58: 열 때 곧바로 retrieve() — ics.Ics30_Compliance.selectWriterId(내가 확인자인 확정 작성 사원)
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

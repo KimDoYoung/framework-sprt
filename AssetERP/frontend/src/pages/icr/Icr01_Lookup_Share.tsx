@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L162-173: 모달 550×350 "내규 관리그룹 설정", 라벨 폭 80, 관리그룹 칸(350) + 공유 그리드(구분 80 가운데 · 부서 250, 높이 200), 아래 가운데 [저장][닫기].
  *   담당자(personName) 줄은 원본에서 주석 처리돼 화면에 없다. 열리면 그 내규의 관리그룹(없으면 미지정 그룹)과 공유를 읽는다.
  *   관리그룹 칸의 조회창 Icr02_Lookup_Manager는 법규의 Ics02_Lookup_Manager와 같은 SQL·화면이라 그 부품을 쓴다([전체] 없음)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Typography, Space } from 'antd';

@@ -4,7 +4,7 @@
  * viewNotice() (Bbs02_Tab_NoticeViewLaw L134-152): 댓글 허용(commentYn)이면 openWithComment() L49-94 — 1165×700, 본문 760 | 회색 줄 5 | 댓글 탭 400
  *   아니면 open() L96-130 — 760×700, 본문만. 제목은 머리글(setHtmlHeaderStyle), 본문은 HTML(setHtmlText).
  *   아래 가운데: [해당 공지사항 그만보기] 체크 · [닫기] · [첨부파일 확인(n)]
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, Space, message } from 'antd';

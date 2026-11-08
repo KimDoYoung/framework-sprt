@@ -5,7 +5,7 @@
  *   + 체크박스 다중 그리드 + 페이징 툴바(50), 아래 가운데 [확인][닫기]
  * actionCode: "classTree"(고른 내규 목록을 그대로 돌려줌, 1→1)·"deadline"(고른 내규마다 그 기한을 selectByListIcrId로 읽어 돌려줌, 1→n).
  * openUnConn(relateTable, relateId) L78은 relateTable/relateId props로
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Space } from 'antd';

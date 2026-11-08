@@ -4,7 +4,7 @@
  * 레이아웃 L88-158: 모달 900×400 "서식파일", 그리드(서식파일 580·등록일 100·다운로드 80·삭제 80, 체크박스 단일), 아래 가운데 [불러오기][닫기].
  * 파일 올리기 입력은 원본에서 보이지 않는 폼(setVisible(false))에 있어 화면에서 실행되지 않는다 — 같은 모양으로 숨은 입력만 둔다
  * openPeriod()(법규조회 H02 등 `period`): 삭제 열을 감추고 서식파일 열을 650으로, [불러오기]를 감춘다(L68-78)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

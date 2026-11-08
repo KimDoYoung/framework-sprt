@@ -4,7 +4,7 @@
  * open(happenReason) L44-77 (A30): 모달 700×700 "본문내용", 크기 조절 가능, 하단 닫기 [E1]
  * open(happenReason, callback) L79-118 (A29): 같은 창에 HTML 편집기(CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)), 확인 [E2] → callback.execute(getHtmlText()), 닫기 [E3]
  * onConfirm을 주면 편집(A29), 안 주면 읽기 전용(A30)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Space } from 'antd';

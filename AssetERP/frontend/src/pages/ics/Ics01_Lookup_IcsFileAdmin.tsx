@@ -2,7 +2,7 @@
  * 서식파일 불러오기 창 (E01) — Ics01_Lookup_IcsFile의 [불러오기]에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_IcsFileAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L58-87: 모달 900×650 "불러오기", 위 툴바(검색 · 검색칸 400 "법령구분/내용/서식파일" · [조회]) + 그리드(체크박스 다중), 아래 가운데 [확인][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

@@ -1,7 +1,7 @@
 /**
  * [1269] I/F > 10. ICAM > ICAM DB Source Get 의 소스내용 창 (D09)
  * AS-IS: myApp/client/vi/icam/Icam50_Lookup_Source.java (54줄) — open(sourceText) L23-48: 모달 1000x800, 제목 "소스내용", 읽기 전용 텍스트 영역, 닫기 버튼 하나
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
 import { Input } from 'antd';

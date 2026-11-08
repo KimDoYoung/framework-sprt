@@ -8,7 +8,7 @@
  * 개선(10, 사용자 승인 2026-11-03, 03 원칙 4 예외): [등록]이 직전 행의 적용종료일 객체를 직접 바꿔(addDaysToDate) 그리드의 직전 행 종료일이 하루 밀려 보이던 것을,
  *   새 행의 적용시작일만 종료일+1일로 계산하고 직전 행은 건드리지 않게 했다
  * UX보강(10): 저장(n) UX-03, 변경 표시 UX-07, 날짜 컬럼 폭 UX-08(편집 120), 조회창 UX-05
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space } from 'antd';

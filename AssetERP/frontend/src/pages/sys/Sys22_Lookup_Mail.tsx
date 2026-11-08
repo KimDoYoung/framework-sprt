@@ -4,7 +4,7 @@
  * 호출처 Sys22_Tab_Mail(회사 메일 관리)은 TOBE에 아직 없다 — 창만 만들고 여는 곳은 없다.
  * 레이아웃 makeLayout() L61-85: 모달 380×230 "확인(검증)"(크기 고정) · 라벨 폭 75 · 메일주소 · 비밀번호 · 비고 · 아래 가운데 [저장(검증)][닫기]
  * open(mailModel, callback) L44-49: 고칠 메일(또는 [등록]이 만든 빈 줄)을 채운다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message } from 'antd';

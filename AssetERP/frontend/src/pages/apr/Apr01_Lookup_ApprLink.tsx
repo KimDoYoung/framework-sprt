@@ -4,7 +4,7 @@
  * 레이아웃 checkJobOpen() L83-102: 위 = 버튼줄([조회]) + 아래 = 문서 MultiGrid(행번호 30 · 선택 30 · 상신일자 100 · 상신제목 400 · 상태 100 · 문서보기 80) + [닫기]
  * 12-화면우선원칙: 스크롤이 생기지 않도록 폭을 열 합계 + 안쪽 여백(행번호·선택 60, 여백 130)을 더해 880으로 둔다.
  * 범위: 이행점검(`CheckJob`) 목록으로 여는 길만 — 번호 목록으로 읽는다(selectByApprIdList). 링크코드·기준일로 읽는 `open(stdDate, linkCode)` 길(apr.Apr01_Appr.selectByLinkCode)은 쓰는 화면이 TOBE에 없어 다음 단계.
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

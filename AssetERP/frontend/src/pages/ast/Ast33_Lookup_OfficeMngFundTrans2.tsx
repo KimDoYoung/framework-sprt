@@ -5,7 +5,7 @@
  * buildGrid() L235-246: 체크 다중 · 펀드코드 100(편집) · 펀드명 300 · 통화 80 · 외화미수보수 100(편집) · 원화미수보수 150(편집). 이관(입)이면 통화·외화·원화 열(4,5,6)을 숨긴다
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
  * E1 date.Change(L106)·E2 date.Collapse(L112)는 같은 결과(그리드 비움)라 이관일자가 바뀔 때 한 번 처리한다
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useMemo, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';

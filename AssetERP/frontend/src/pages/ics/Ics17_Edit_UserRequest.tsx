@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L186-278: 라벨 100, 위 270(배경 #F7F8FC) = 요청일자·요청자·확인여부 / 법규명·법규내용(누르면 팝업)·보고주기 / 보고처·법규조항·서식파일 / [파일등록],
  *   아래 200 = 진행상태·완료일 / 처리내용. 요청자·진행상태·완료일·처리내용은 읽기 전용(buttonSetting L160-164). 하단 가운데 [저장]·[삭제]
  *   행을 고르지 않으면 비활성(AS-IS editBoard.setEnabled(false)). 관리자용(Ics17_Edit_UserRequestAdmin)과 반대로 신청 내용을 고치고 비고 칸이 없다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Tooltip } from 'antd';

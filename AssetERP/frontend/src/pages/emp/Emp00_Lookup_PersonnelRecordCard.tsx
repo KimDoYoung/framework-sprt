@@ -4,7 +4,7 @@
  * 생성자 L58-136: 1300×800 모달, 머리말 "인사기록카드", [조직/직책/사번/성명][조회][다운로드] + 왼쪽 체크 다중 그리드 580 + 가운데 RD 뷰어(Emp00_Rd_PersonnelRecordCard) + [닫기]
  * [E5] grid.CellClick (L101) → 1건 선택이면 retrieveEditPage() L173 (sys.Sys99_Print.insertRdPersonnelRecordCard → RD 보기), 아니면 rdForm.clear()
  * [E4] downloadButton[다운로드] (L94) → createRdExcel() L194 (같은 서비스 → RD 내려받기 pdf, 파일명 "인사기록카드(성명)" / 여러 명이면 "인사기록카드")
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Space, message } from 'antd';

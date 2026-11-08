@@ -2,7 +2,7 @@
  * 양식 등록 (N28) — Tdm43_Tab_RelateFormFileUpload의 [파일업로드]에서 연다. 구분·비고를 정하고 파일을 고르면 곧바로 올린다.
  * AS-IS: myApp/client/vi/tdm/Tdm43_Lookup_RelateFormFileMultiUpload.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L47-111: 모달 400×210 "양식 등록", 구분 콤보("선택하세요")·비고 + 아래 가운데 [업로드][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, message, Space } from 'antd';

@@ -6,7 +6,7 @@
  *   아래 가운데 [거래 불러오기](NEW만)[저장][분개재생성](MODI만)[닫기]
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬. 줄 사이 간격은 규격(gap 10)을 따른다
  * 원장에 반영된 거래(bookIoType이 1·2·3·5·8…)의 변경은 일자·거래유형·종목을 막는다(2024.08.30 CYY, open() L167-178)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space } from 'antd';

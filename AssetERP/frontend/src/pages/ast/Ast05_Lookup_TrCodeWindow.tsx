@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ast/Ast05_Lookup_TrCodeWindow.java (195줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(windowClassName, searchText, callback) L53-59 / 생성자 L61-79: 모달 600×400 "거래유형(화면별)", 툴바(검색 라벨 · 거래코드/명 200 · 수령/지급 100 · 조회) + 단일 선택 그리드(행번호, 거래코드 80 · 거래명 200 · 수령/지급 100 · 비고 150), [확인] [전체] [닫기]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06). 초기화(UX-02)는 조건이 2개라 넣지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Space } from 'antd';

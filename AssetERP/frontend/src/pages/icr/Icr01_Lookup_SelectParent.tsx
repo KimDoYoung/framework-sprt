@@ -2,7 +2,7 @@
  * 내규 분류 선택 창 (E13-3) — Icr01_Lookup_SelectMulti의 "분류" 칸에서 연다.
  * AS-IS: myApp/client/vi/icr/Icr01_Lookup_SelectParent.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L53-121: 모달 "내규 분류", 위 툴바(검색칸 250 · [찾기]) + 트리 그리드(분류명 500 · 내규코드 80, 행번호 없음), 아래 가운데 [확인][전체][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

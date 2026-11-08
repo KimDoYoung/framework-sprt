@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/bbs/Bbs33_Lookup_Role.java (274줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L71-100: 모달 "권한관리" 500×550, 툴바 [조회][저장][직원추가][부서추가][삭제] + 그리드(buildFileGrid L142-150: 체크 다중, 구분 100(가운데) · 사원명 110(가운데) · 부서명 200), 아래 가운데 [닫기]
  * 연결: Emp00_Lookup_SelectMulti([직원추가]) · Org00_Lookup_SelectMulti([부서추가])
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Space, message } from 'antd';

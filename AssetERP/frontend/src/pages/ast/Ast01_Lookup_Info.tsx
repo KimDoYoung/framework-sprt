@@ -4,7 +4,7 @@
  * 생성자 L133-155: 모달 650×700, 위 = 툴바 50(◉고유자산 ◉운용자산 · 검색 200 · [찾기]) + 트리(흰 배경, 한 번 눌러 열고 닫음), 아래 가운데 [확인][전체][닫기]
  * gridInsert(assetType, trCode, abroType) = "종목선택", [전체] 숨김 / select(assetType, itemLClass, abroType) = "종목선택", [전체] 보임 / open(assetType) = "항목추가", [전체] 보임
  * 검색(Enter)은 [찾기]와 달리 트리를 다시 읽지 않고 이름에 검색어가 든 노드를 고른다(search() L322-377)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Radio, Space } from 'antd';

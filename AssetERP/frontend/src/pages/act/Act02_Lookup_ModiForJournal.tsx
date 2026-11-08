@@ -5,7 +5,7 @@
  *   / 전표 = 툴바([차변 행추가][대변 행추가][행 삭제] ⟳ … 대차차액 외화 / 원화) + 셀 편집 그리드 250(구분·계정코드·계정과목·외화금액·원화금액·관리계좌·적요), 아래 가운데 [저장][닫기]
  * 전표변경(Act02_Lookup_ModiJournal, W05)의 외화 판 — 머리는 모두 막혀 있고(date·trName·corpName·note·curCode setEnabled(false)) 줄만 고친다
  * 편집창 규격(11 §4a, modal 원칙): antd Modal + 머리말 아래 선·푸터 위 선, 라벨 오른쪽 정렬
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

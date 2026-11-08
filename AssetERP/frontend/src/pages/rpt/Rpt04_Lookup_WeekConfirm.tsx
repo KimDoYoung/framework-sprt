@@ -4,7 +4,7 @@
  * 생성자 L63-121: 1300×880 모달(닫기 X 없음), 위 = RD 미리보기(mrd Rpt04_Rd_WeekConfirm), 가운데 줄 = 확인자(읽기 전용 450) + [확인][확인취소], 아래 = 확인자 메모(높이 80), 아래 가운데 [저장][닫기]
  * RD: 주소는 Rpt04_Tab_WeekConfirm.lookUpRd가 sys99_print를 채운 뒤 발급해 `url`로 넘긴다(docs/RD-대책.md)
  * 편집창 규격(11 §4a): 머리말 아래 선 · 푸터 위 선 · 라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space, Typography } from 'antd';

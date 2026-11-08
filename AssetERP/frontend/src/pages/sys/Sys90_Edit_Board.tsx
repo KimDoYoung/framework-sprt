@@ -6,7 +6,7 @@
  *   버튼 줄(L127-129, 높이 60) = 저장·삭제. "본문내용 :"·"처리방안 :" 글자를 누르면 각각 조회창이 열린다.
  * 본문내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13). 부르는 쪽은 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve()의 editDriver.edit(model)).
  * 등록한 행은 DB에 아직 없다(AS-IS GridInsertRow) — 파일은 새 ID로 바로 올릴 수 있고, 저장하면 DB에 들어간다.
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Typography } from 'antd';

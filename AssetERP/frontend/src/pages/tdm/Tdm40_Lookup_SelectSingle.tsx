@@ -4,7 +4,7 @@
  * 창 1180×500(원본): 열 합계 1050+행번호·선택 60+여백 130 = 1240이라 원본 폭 1180에 가로 스크롤을 허용한다(03 원칙 21).
  * 검색줄(검색 · 작성중만 조회 · [조회]) + 단일 선택 그리드 + [확인][닫기]. 열 때 checkYn=false(open(false, …)) — N17은 `checkYn`으로 open(true, …)(내 부서 확정 작업만, 작성중만 조회 끔·비활성)
  * UX보강(10): 검색 줄 = SearchBar(UX-01), 조회창(UX-05·06), 읽기 전용 날짜 열 90(UX-08)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Space } from 'antd';

@@ -10,7 +10,7 @@
  * [E10] uploadFileButton[파일업로드] (L254) · [E11] updateButton[저장] (L265) → updateRow() L443-459 · [E12] anchor.MouseDown (L296) → Scm11_Lookup_Result
  * [E1] fileUpload.Change (L108)·[E2] fileUploadForm.SubmitComplete (L118) → FileUpload?parentId=devStepId 뒤 첨부파일 다시 조회 · [E13] fileUpload.Change (L480) → resetFileUpload()
  * 버튼 색: 원본 ColorButtonBottom 제목(진행중·완료·이행불가)이 button-types 표에 없다 → 진행중 assign(주황) · 완료 save(민트) · 이행불가 cancel(빨강)로 구분만 한다(작업방법)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message } from 'antd';

@@ -2,7 +2,7 @@
  * 공인IP 등록/수정 조회창 (A15) — 관리정보 탭(Sys01_TabPage_Info01)의 보안로그인 옆 [View]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys29_Lookup_PublicIpList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';

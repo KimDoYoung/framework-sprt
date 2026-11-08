@@ -4,7 +4,7 @@
  * 레이아웃 L97-120: 모달 880×550(크기 조절), 툴바 [조회][불러오기][연결제거] + 연결된 상신문서 그리드(buildGrid L122-162: 체크박스 다중,
  *   제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70) + 아래 200 = `Biz05_Lookup_RelateFile`, 창 아래 가운데 [닫기]
  * [불러오기]는 Apr05_Lookup_LoadDoc, 상세보기는 Apr01_Edit_ApprDoc을 연다(2026-11-05 연결, 13-누락대장 1·3번)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

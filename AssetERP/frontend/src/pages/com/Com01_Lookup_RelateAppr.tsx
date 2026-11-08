@@ -7,7 +7,7 @@
  * [신규문서 작성]은 erpProductCode 가 S1인 회사에는 없다(생성자 L78). 불러오기(Apr05_Lookup_LoadDoc2 "MULTI", 결재완료 문서만)는 keyTable 이 tdm52이면 다른 목록을 쓴다
  *   — tdm52 [불러오기]는 보류(2026-11-05): 그 목록 SQL(dcr.Dcr00_DocList.selectNoAuthByText)이 쓰는 DB 함수 f_get_apprDcrAuth가 asseterpdb에 없다. 누르면 안내만
  * 서버: com.Com01_RelateAppr.selectByKeyTableId·listUpdate·delete, apr.Apr01_Appr.permissionsCheck
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

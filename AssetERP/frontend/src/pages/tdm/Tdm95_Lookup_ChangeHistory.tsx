@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm95_Lookup_ChangeHistory.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1400×700(원본) → 그대로 1400: 툴바(구분 콤보 · 검색 · [조회] · 안내 글) + 왼쪽 이력 그리드(680) + 오른쪽 상세 그리드. 특정 행의 이력(targetId)이면 구분·검색 칸이 없다
  * UX보강(10): 조회창(UX-05·06), 검색 칸 = SearchBar.Input(UX-04)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Space, Typography } from 'antd';

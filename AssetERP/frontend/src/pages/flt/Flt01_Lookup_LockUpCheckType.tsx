@@ -4,7 +4,7 @@
  * 생성자 L62-74: 모달 600×310, 폼(체크방식 콤보 / 의무보유기간 [체크][n][영업일|개월] 미만 보유한 경우 / 매수주문횟수 일간·월간 체크) + [저장][닫기].
  * open(stdModel, callback) L76-85: 고른 기준관리 행을 폼에 채운다.
  * UX보강(10): 조회창 UX-05(열면 첫 입력칸에 커서 — 입력칸이 숫자뿐이라 해당 없음)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, InputNumber, message, Space, Typography } from 'antd';

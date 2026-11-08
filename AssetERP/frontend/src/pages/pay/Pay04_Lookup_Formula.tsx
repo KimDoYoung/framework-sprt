@@ -5,7 +5,7 @@
  *   왼쪽 200 기준 적용일 단일 선택 그리드(150) | 가운데 산출식 체크 다중 셀 편집 그리드(구분 150 · 산출식 또는 산출방법 입력 320 · 비고 200), 아래 가운데 [저장][닫기]
  * 열 때 retrieve(): 로그인 회사의 적용일을 읽고 첫 행을 고른다 → 고른 적용일의 산출식(retrieveForm).
  * 같은 데이터·API를 쓰는 탭 화면 Pay04_TabPage_Formula(E22)와 달리 모든 회사가 자기 회사 산출식을 고친다(쓰기 권한은 로그인 회사 행만 — 사용자 결정 2026-10-28)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';

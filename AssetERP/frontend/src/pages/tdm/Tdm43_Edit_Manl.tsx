@@ -5,7 +5,7 @@
  *   오른쪽 = 점검항목(60)·점검주기·점검시기(월 체크박스 12)·점검방법(200, "점검방법 :" 링크 = 내용 보기)·증빙자료(60)·CEO의무·임원의무·중요도
  * insert(model, orgId, cb) L114-147 "등록" / edit(model, endYn, cb) L149-166 "수정" / view(model) L168-182 "상세보기"(저장 숨김, 연결 읽기 전용)
  * UX보강(10): 해당 없음
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Button as AntButton, Checkbox, DatePicker, Input, message, Modal, Space, Typography } from 'antd';

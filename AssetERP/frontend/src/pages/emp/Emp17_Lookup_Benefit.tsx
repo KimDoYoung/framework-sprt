@@ -6,7 +6,7 @@
  * [상신] update() L190-300: 입력 검사 → emp.Emp17_Benefit.modelUpdate(신청 행 먼저 저장) → 전자결재 편집창(Apr01_Edit_ApprDoc.insertLinkApproval, 링크코드 = 신청구분 설정의 발행 연결코드)
  *   → 상신되면 updateApprId, 저장 없이 닫으면 deleteBenefitId로 신청 행을 지운다.
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Select, Space } from 'antd';

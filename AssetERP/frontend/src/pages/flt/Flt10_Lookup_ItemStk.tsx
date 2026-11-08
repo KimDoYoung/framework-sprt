@@ -4,7 +4,7 @@
  * open() L81-118: 550×500 모달 "종목(주식/ETF) 찾기", 위 툴바 = 기준일(100) + 검색(150 "종목코드/명") + [조회], 그리드(종목코드 120 · 종목명 350) + 페이징 툴바(300건), 아래 가운데 [선택][닫기]
  * 호출처 Flt13_Lookup_BookInit은 AS-IS에서 이 창을 여는 줄이 주석(L401)이라 TOBE에서 여는 곳이 없다 — 창만 만들고 연결하지 않는다
  * 같은 화면 모양의 Com50_Lookup_StkItem(종목정보, com50_item)과 달리 이 창은 기준일의 공용 시세(icam20_price)를 읽는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

@@ -5,7 +5,7 @@
  * open(callback) L58-62: [확인]을 감추고 [전환][닫기]. 생성자 L64-117: 690×300, 닫기(X) 없음, 머리말 "겸직전환", 단일 선택 그리드
  * login(callback) L50-56: 머리말 "로그인 선택", [전환][닫기]를 감추고 [확인]만. [확인]·더블클릭 → 확인 질문 없이 바로 login() (L72-81, L99-103)
  * 전환(login() L167-194): AS-IS는 클라이언트 세션 교체, TOBE는 POST /api/auth/switch-title 로 새 토큰 쿠키를 받는다 → 호출한 쪽이 화면을 새로 연다(onChanged)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Space, message } from 'antd';

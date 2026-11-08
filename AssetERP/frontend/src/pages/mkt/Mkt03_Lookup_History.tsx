@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/mkt/Mkt03_Lookup_History.java (573줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L99-124: 모달 "업무활동내역" 880×750, 라벨 폭 80 — 활동일·활동처([활동처 바로가기])·활동내용·내용상세(높이 200)·공유([설정])·첨부파일([파일업로드] + 그리드 150)·연결펀드([등록] + 그리드 150), 아래 가운데 [저장][닫기]
  * insert() L126-147 새로 등록 · edit() L149-157 내가 쓴 것 수정 · open() L159-176 남이 쓴 것 보기(저장·등록·파일업로드·삭제 아이콘 없음)
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Space, Typography } from 'antd';

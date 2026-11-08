@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd01_Edit_FundPlan.java (368줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L188-289: 라벨 폭 105, 줄마다 칸 350(여백 오른쪽 50), 필수 라벨은 파란색(0069B4). 줄 사이 여백 20·20·17·20. 아래 가운데 [저장](버튼줄 높이 60)
  * 선택한 행이 없으면 폼 전체 비활성(Tab의 editFundCodeForm.setEnabled)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, message } from 'antd';

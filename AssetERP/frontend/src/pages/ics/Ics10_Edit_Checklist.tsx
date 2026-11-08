@@ -3,7 +3,7 @@
  * (Ics10_Tab_Checklist가 씀 — 입력은 모두 읽기 전용, 조회순서·사용여부 줄과 [저장]·행 추가/삭제 없음)
  * AS-IS: myApp/client/vi/ics/Ics10_Edit_Checklist.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L125-182: 모달 730×700, 라벨 폭 105, 체크대상(210)·대분류·중분류·근거(80)·내부통제(행 추가/행 삭제 + 연관 내부통제 그리드 210)·조회순서(210)·사용여부, 아래 가운데 [저장][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Checkbox, Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';

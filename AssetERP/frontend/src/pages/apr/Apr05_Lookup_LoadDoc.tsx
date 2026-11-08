@@ -4,7 +4,7 @@
  * 레이아웃 init() L82-194: 1200×800 모달 "불러오기", 왼쪽 30% = 툴바 "문서분류 [검색 150] [찾기]" + 문서분류 트리(typeCode %),
  *   가운데 위 250 = 문서 목록 그리드, 그 아래 안내 "● 미리보기 화면과 실제 화면은 차이가 있을 수 있습니다 ●" + 미리보기(고른 문서의 내용), 푸터 [확인][닫기]
  * 조회창 규격(11a)·모달 공통 원칙(modal-style): LookupModal, 머리 아래 선·푸터 위 선, 스크롤은 트리·그리드 안쪽 하나씩
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Tree } from 'antd';

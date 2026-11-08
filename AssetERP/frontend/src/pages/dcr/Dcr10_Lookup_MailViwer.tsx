@@ -2,7 +2,7 @@
  * 발신메일 상세보기창 (G14) — 발신메일목록(Dcr10_Tab_MailHistory)의 [내용] 아이콘이 연다.
  * AS-IS: myApp/client/vi/dcr/Dcr10_Lookup_MailViwer.java (186줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L61-121: 850×780 모달 "상세보기"(닫기 X 없음), 라벨 85 + 발신 · 수신 · 참조 · 제목(각 32) · 내용(HTML, 350) · 첨부파일 그리드(180, 체크박스 단일: 첨부파일 570 · 받기 70), 아래 가운데 [닫기]
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message } from 'antd';

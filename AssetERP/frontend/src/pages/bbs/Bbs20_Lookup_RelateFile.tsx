@@ -2,7 +2,7 @@
  * 증빙자료 창 — Bbs20_Tab_FloralRequestMng 증빙자료 칸 옆 [보기] 아이콘에서 연다 (T21)
  * AS-IS: myApp/client/vi/bbs/Bbs20_Lookup_RelateFile.java (112줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L42-65: 모달 560×350 "증빙자료", 그리드(첨부파일명 400·받기 40·보기 40, 체크박스 단일), 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

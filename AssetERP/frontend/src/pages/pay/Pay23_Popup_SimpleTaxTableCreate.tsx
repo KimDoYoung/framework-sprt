@@ -2,7 +2,7 @@
  * 간이세액표 적용일 생성 창 (E22-2) — Pay23_TabPage_SimpleTaxTable [등록]에서 연다.
  * AS-IS: myApp/client/vi/pay/Pay23_Popup_SimpleTaxTableCreate.java (108줄, 새 원본 IDMS-IC)
  * show() L42-71: 모달 250×150 "생성", 적용일 날짜칸(라벨 폭 60), 아래 가운데 [생성][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, message, Space } from 'antd';

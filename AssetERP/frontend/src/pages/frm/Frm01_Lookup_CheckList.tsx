@@ -4,7 +4,7 @@
  * 생성자 L68-93: 머리말 "알림", 높이 180, 폭 690(메뉴 1128 사용자) / 550(그 밖은 [매매승인]을 못 누른다), 라벨(검정 굵게 18) 아래 건수(파랑 굵게 18, 10 미만은 "00건")
  * 연결: 체크리스트 → Frm01_Lookup_DailyCheckList(EE54) · 공지사항 → Frm01_Lookup_NoticeList(EE55) ·
  *       미결재건 → Frm01_Lookup_Outstanding(EE56) · 알림함 → Sms10_Lookup_AlarmList(EE57) · 매매승인 → 메뉴 1128 탭 열기
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';

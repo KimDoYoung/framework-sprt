@@ -5,7 +5,7 @@
  *   + 그리드 체크 다중(구분 70 가운데 · 부서 250 · 성명 100 가운데), 아래 가운데 [저장][닫기]
  * 삭제(deleteRow L304-310)는 그리드에서만 빼 두었다가 [저장]에서 먼저 지운 뒤 저장한다(update L248-283) — 저장이 끝나면 "저장이 완료되었습니다"(updateEnd L285-302)
  *   + 일정공유 문구(sch.Sch02_Share.selectShareInto)를 부르는 쪽에 돌려준다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Radio } from 'antd';

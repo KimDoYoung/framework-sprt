@@ -5,7 +5,7 @@
  * 그리드 buildGrid L247-326: 근무일자 100 · 구분 100 · 연장시간(분) 100(편집) · 근무시간 200 · 사유 350(편집) · 보상 150(편집, 콤보) · 상태 100 · 상신(보기) 80(아이콘)
  * 연장시간을 고치면 시간을 다시 계산한다(recalcFrom L393): 첫 행은 퇴근시간(야간근무면 야간 시작)부터 이어 붙이고, 연장근무가 야간 시작을 넘으면 야간근무 행을 만든다(insertNightRow L568)
  * 상신(보기) 아이콘 L270-311: 변경이 있으면 "저장 후 진행가능합니다" → 상태 10·20·30이면 결재문서 보기, 아니면 insertLinkApproval()(링크코드 A74, 문서분류는 defaultInfo L182의 Dcr30_Link)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Space, message } from 'antd';

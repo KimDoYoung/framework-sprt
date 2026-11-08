@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt10_Lookup_Item.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(stdDate, itemName, callback) L49-62: 500×500 모달, 툴바 "종목명"(150) + [조회], 그리드(종목유형 150 · 종목명 270), [선택][닫기]
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창 UX-05·06
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

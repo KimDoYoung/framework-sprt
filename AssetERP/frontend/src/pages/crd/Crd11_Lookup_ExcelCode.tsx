@@ -5,7 +5,7 @@
  *   업로드 구분코드 200(콤보 CreditCardExcelCode) · 위치(세로줄) 100 · 비고 280), 아래 가운데 [닫기]
  * 이 회사의 맵핑이 없으면 기본 맵핑(회사 0)을 보여 주고 [등록][저장][삭제]를 막는다 → [커스텀 설정]으로 복사해야 고칠 수 있다. 삭제 단추 설명: 전체 제거 후 조회 시 기본세팅으로 돌아간다
  * 같은 맵핑을 관리자 화면에서 고치는 Crd11_Lookup_ExcelCodeAdmin(E24)과 그리드·API가 같다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space, Tooltip, message } from 'antd';

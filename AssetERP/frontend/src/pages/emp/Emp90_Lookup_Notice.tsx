@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp90_Lookup_Notice.java (183줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 호출: JSCaller.returnOpenNotice() L142-151 (fullcalendar.jsp 의 myNoticeButton). [닫기]에서 callback 을 불러 달력·목록을 다시 읽는다
  * 생성자 L88-111: 420×700 모달 "알림설정", 툴바(검색어 120 "일정표시" + [조회][차단][차단해제]) + 체크박스 다중 그리드(차단 60 · 알림항목 210), 푸터 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

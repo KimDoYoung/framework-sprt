@@ -2,7 +2,7 @@
  * 카드내역 금액 불일치 목록 (U15) — Biz01_Tab_CardManagement [마감]이 업로드 금액과 내역관리 금액이 다르면 연다
  * AS-IS: myApp/client/vi/crd/Crd02_Lookup_OtherList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * settings() L38-67: 모달 850×400(크기 고정), 제목 "List", 안내 "데이터가 일치하지 않습니다. 아래 항목들을 다시 확인해주세요."(높이 50) + 그리드, 창 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

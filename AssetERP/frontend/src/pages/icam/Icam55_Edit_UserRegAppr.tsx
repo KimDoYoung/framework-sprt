@@ -5,7 +5,7 @@
  *   오른쪽 = "신청내용 :" 글자(눌러서 창으로 보기) + HTML 편집기. 아래 가운데 [저장].
  * 한 줄 라벨은 오른쪽 정렬(03 SGEF 규칙 2, 12 Page 4). 신청내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13).
  * 부르는 쪽이 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve()의 editDriver.edit(model)).
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Tooltip, Typography } from 'antd';

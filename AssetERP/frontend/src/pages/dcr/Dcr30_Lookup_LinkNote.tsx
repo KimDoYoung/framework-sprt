@@ -2,7 +2,7 @@
  * 비고 (E17) — Dcr30_TabPage_Company dcrGrid의 비고 아이콘에서 연다.
  * AS-IS: myApp/client/vi/dcr/Dcr30_Lookup_LinkNote.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L37-72: 1000×500 모달 "비고", MyTextArea 하나 + 저장·닫기
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

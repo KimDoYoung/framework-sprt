@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz14_Lookup_RelateAppr.java (300줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L154-178: 모달 850×400 "연관문서", 위 줄 문서분류(조회창 칸 400) + [신규문서 작성], 둘째 줄 [조회][불러오기][연결제거], 연관문서 그리드(체크 다중: 제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70), [닫기]
  * 조회창 규격(11a): LookupModal, 머리 아래 선·푸터 위 선, 모달 폭 = 열 합계 780 + 60 + 130
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

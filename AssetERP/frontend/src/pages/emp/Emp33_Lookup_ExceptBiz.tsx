@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp33_Lookup_ExceptBiz.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L58-89: 모달 1200×600 "예외사원 등록", 위 = 툴바 [조회][등록][저장][삭제], 아래 = 셀 편집 그리드(행번호, 체크박스 단일:
  *   사원명 250 · 예외시작일 100 · 예외종료일 100 · 예외사유 350 · 보고서에서 제거 250), 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message, Space } from 'antd';

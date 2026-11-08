@@ -5,7 +5,7 @@
  * open(classTreeModel, apprModel, icsClassTreeModel, callback) L43-46 → retriveIcsLine() L95-108: apr.Apr20_RelateIcs.insertIcs(문서분류·고른 법규)
  *   ※ 오늘의 할일에서 상신하는 두 번째 open(…, Sch04_ListModel, …) L49-57·retriveIcsLine L110-124·createIcsLine L126-141은 AS-IS 호출처(Sch04_Tab_ToDoList.insertAppr)가 주석이라 만들지 않았다
  * 내규판(Apr22_Lookup_SelectIcr, EE69)은 `kind="icr"`로 같은 부품을 쓴다 — 법규 → 내규, ics → icr
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

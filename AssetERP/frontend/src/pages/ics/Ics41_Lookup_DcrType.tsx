@@ -4,7 +4,7 @@
  * 열 때 retrieve() — selectByText(companyId, searchText '%', useYn '%')
  * [저장]·[삭제]는 checkGrid01(actionCode)로 먼저 검사한다: 고친 행의 필수·3자리, 사전확인대장에 쓰인 코드(selectByCompanyId)의 삭제·변경·중복 사용 검사 → checkGrid02 (그리드 안 중복 코드)
  * UX보강(10): 저장 = 저장(n)(UX-03)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { message, Modal, Space } from 'antd';

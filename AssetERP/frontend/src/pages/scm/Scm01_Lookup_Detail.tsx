@@ -4,7 +4,7 @@
  * getEditor() L125-175 (800×700, 라벨 90, 줄 사이 여백 20): 요청일 · 요청구분 / 요청자(요청사) + 요청자 · 등록자 / "요청내용 :" 링크 + HTML 보기(650×370) / 첨부파일(Scm01_Grid_ApprFile, 삭제 열 감춤)
  * [E0] 화면 열림 (생성자 L70-102) → settings(), getEditor(), show() + open(srModel) L65-68: retrieve() L177-180
  * [E2] anchor.MouseDown (L128) → Scm01_Lookup_SrContent.open(srContent) (보기 전용)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Input } from 'antd';

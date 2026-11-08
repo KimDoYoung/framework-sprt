@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz03_Lookup_AccountMap.java (269줄, 새 원본 IDMS-IC) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 창 780x500(크기 고정), 제목 "항목별 계정연결". 생성자 L67-150: 위 = 툴바 [등록][저장][삭제](오른쪽 정렬), 가운데 = 왼쪽 290 항목 그리드(항목명 150 · 순서 80) | 오른쪽 계정 그리드(체크박스 다중, 계정코드 150(조회창 칸) · 계정과목명 250),
  *   아래 = 안내 글 세 줄. 창 아래 버튼(가운데): [닫기] — 닫으면 부른 쪽이 다시 조회한다(callback)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message, Space } from 'antd';

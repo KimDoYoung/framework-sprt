@@ -2,7 +2,7 @@
  * 공람설정 창 (V09) — 결재가 끝난(30) 문서를 볼 수 있는 사원을 더하고 뺀다. 문서창 푸터의 [공람설정]이 연다.
  * AS-IS: myApp/client/vi/apr/Apr13_Lookup_PersonAuth.java (175줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L49-69: 320×400 모달 "공람설정", 위 오른쪽 [행 추가][행 삭제], 체크 다중 그리드(사원번호 120 · 사원명 120), 푸터 [저장][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';

@@ -5,7 +5,7 @@
  *   청구일자 · 운용사명(조회창 트리거) · 발생보수 · 청구보수 · 세금(###,###,###) · 비고(높이 150), 아래 가운데 [저장][닫기]
  * 수정이면 청구일자·운용사명을 못 고치고, 확정(fixYn)이면 발생보수·청구보수·세금도 못 고친다. 당분기 청구가 없는 행(realFeeChargeId 없음)은 새 번호를 받는다
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

@@ -4,7 +4,7 @@
  * 생성자 L54-73: 500×210, 머리말 "2차 인증", [인증번호] + 안내 2줄, 푸터 [발급][인증]
  * settings() L75-106: 처음엔 [발급]만 켜짐. 발급 뒤 [인증] 켜짐
  * ※ AS-IS는 번호를 화면이 만들어 보냈다 — TOBE는 서버가 만들어 내 등록 번호로 보낸다. 문자 발송 연동이 없으면 [발급]이 거절된다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message } from 'antd';

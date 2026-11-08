@@ -2,7 +2,7 @@
  * 사원별 권한현황 (EE08, Dcr04_Tab_EmpAuth 오른쪽 [사원별 권한현황]이 연다) — 왼쪽 사원 목록, 오른쪽 그 사원의 예외 문서분류와 삭제
  * AS-IS: myApp/client/vi/dcr/Dcr04_Lookup_DocList.java (155줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L54-83: 모달 1400×500(크기 고정), 왼쪽 50% = 툴바 50(검색 · 입력 200 "부서/성명/직위/사원구분" · [조회]) + 사원 그리드(부서 300 · 성명 100 · 직위 100 · 사원구분 100, 체크 다중), 오른쪽 50% = Dcr04_TabPage_DocList, 아래 [닫기]
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, message, Typography } from 'antd';

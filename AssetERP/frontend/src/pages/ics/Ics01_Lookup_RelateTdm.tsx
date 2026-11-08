@@ -2,7 +2,7 @@
  * 연결 책무이행점검 조회창 (E01) — Ics01_Grid_IcsType 그리드의 연결책무 [수정] 아이콘에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_RelateTdm.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L70-96: 모달 1500×800 "법규명 - 연결 책무이행점검(기준회사:KFS)", 위 툴바(검색 · 검색칸 350 · [조회] · [점검항목연결] · [연결제거]) + 그리드(체크박스 다중), 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

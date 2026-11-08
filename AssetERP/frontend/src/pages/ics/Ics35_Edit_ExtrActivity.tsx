@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics35_Edit_ExtrActivity.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L96-109·getEditor() L153-203: 모달 800×650, 라벨 100, 신청일자 / 활동처 / 활동대상(콤보 330 + 직접기재 430) / 활동기간 / 활동내용(100) / 활동보수 / 첨부자료([파일업로드]) / 첨부 그리드(190),
  *   아래 가운데 [저장][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Space } from 'antd';

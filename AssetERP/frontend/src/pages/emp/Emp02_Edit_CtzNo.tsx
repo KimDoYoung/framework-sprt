@@ -4,7 +4,7 @@
  * 생성자 L40-54: 500×160 모달 "주민등록번호", makeLayout() L79-103: 한 글자 칸 6개 - 칸 1개 + 안내 "뒷자리는 첫 자리만 입력해 주세요", 아래 [확인][닫기]
  * 서버를 부르지 않는다. [확인]은 "앞6자리-뒷첫자리" + "000000"을 돌려주고, 저장은 기타정보 탭 [저장]이 한다
  * 모달 규격: EditModal(11 §4a)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, InputRef, Modal, Space, Typography } from 'antd';

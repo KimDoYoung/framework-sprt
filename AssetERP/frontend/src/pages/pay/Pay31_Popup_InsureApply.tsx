@@ -5,7 +5,7 @@
  * 4대보험 메뉴(Pay31_Tab_InsureApply S26)와 같은 API(insure-applies)를 쓰고, 조회만 selectByPersonId로 따로 한다
  * UX보강(10): [저장(n)] UX-03
  * AS-IS와 다른 점: 회사는 로그인 회사(원본은 공제 모델의 회사 — 같은 값). 조회 뒤 첫 행 선택은 하지 않는다(CellEditGrid는 체크 선택)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Space } from 'antd';

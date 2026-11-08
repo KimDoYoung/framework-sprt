@@ -6,7 +6,7 @@
  *   | 오른쪽 [Target](540, 같은 모양). 라벨 폭 70. 버튼 줄(L84, 높이 50) = 저장.
  * 선택한 행이 없으면 비활성(AS-IS editConfig.setEnabled(false)). 부르는 쪽은 key={선택 ID-조회 횟수}로 다시 만든다 (AS-IS retrieve()의 editDriver.edit(model)).
  * 계정PW(localPwDec·targetPwDec)는 원본처럼 입력은 되지만 서버가 저장하지 않는다 — 원본 UpdateDataModel이 *_pw_dec 컬럼을 쓰지 않는다 (D01 작업기록 제안)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Input, message, Typography } from 'antd';

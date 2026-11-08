@@ -2,7 +2,7 @@
  * 참고내용 팝업 (A15-4) — Sys54_Lookup_SpecificMenuHistory 요청이력의 '참고내용' [Edit]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys54_Edit_Note.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(specificMenuHistoryModel, callback) L39-80: 제목 "참고내용", 900×700, 모달, 크기 조절 가능. CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { message, Modal, Space } from 'antd';

@@ -2,7 +2,7 @@
  * 월간회의자료 파일목록 조회창 (Z10) — Rpt02_Tab_MonthWrite의 업로드 아이콘(" " 열)에서 연다
  * AS-IS: myApp/client/vi/rpt/Rpt02_Lookup_FileList.java (248줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L57-116: 모달 "파일목록" 700×300, 툴바 [파일업로드] + 그리드(buildApprFileGrid L133-163: 체크박스 단일 선택, 첨부파일 520 · 받기 50 · 삭제 50), 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

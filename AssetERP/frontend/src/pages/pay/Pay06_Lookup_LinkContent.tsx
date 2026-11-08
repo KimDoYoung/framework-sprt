@@ -7,7 +7,7 @@
  * [E0] 화면 열림 (생성자) → show() 뒤 retrieve()
  * [E1] confirmButton[확인].Select (L50) → confirm() L81-89: 한 행을 골랐으면 callback(그 행)+hide(), 아니면 "연봉계약서 양식을 선택해주세요"
  * [E2] closeButton[닫기].Select (L56) → callback(null), hide() (X 닫기 없음 — setClosable(false))
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';

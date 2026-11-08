@@ -2,7 +2,7 @@
  * 자산분류 등록/수정 모달 (R08)
  * AS-IS: myApp/client/vi/ast/Ast01_Edit_ClassTree.java (268줄)
  * EditModal 규격 (11 §4a)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, message, Modal, Select } from 'antd';

@@ -2,7 +2,7 @@
  * 양식 창 (V05) — 상신 편집창의 [양식]이 연다. 문서분류에 연결된 문서양식(또는 [전체보기]로 모든 양식)을 골라 상신내용 본문에 넣는다.
  * AS-IS: myApp/client/vi/dcr/Dcr05_Lookup_FormView.java (281줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * [E0] 화면 열림 (생성자 L77-79) → init() L87-187: 800×700 모달 "양 식", 위 [구분 콤보 150][검색 200]["전체보기" 체크][조회], 그리드(구분 150 · 양식 제목 340 · 비고 250), 아래 안내 + 미리보기, 푸터 [확인][닫기]
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';

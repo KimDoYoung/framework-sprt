@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay51_Lookup_ExpenseForm.java (193줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L57-84: 모달 958×700 "양식"(크기 고정), West 그리드(220: 양식명 155) + Center HTML 편집기(428), [저장][닫기]
  * open(callback) L50-55: 열 때 formCheck()(새 코드의 빈 양식을 만든다) → retrieve(). 양식을 고르기 전에는 편집기를 가린다
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

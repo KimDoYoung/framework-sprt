@@ -4,7 +4,7 @@
  * 레이아웃 L73-82·getEditor L201-216: 헤더 없음, 폼(라벨 110) = 제공(수령)구분(300)·일자(300)·목적(300)·내역(300)·경제적 가치(300, ###,###,###) — 파란 라벨 —
  *   · 비고(400×100, 여러 줄), 창 아래 가운데 [저장][증빙자료(n건)]. 고른 내역이 없으면 통째로 비활성(setEnabled(false))
  * 마감 검사는 없다(원본에 없음). 새 행(아직 서버에 없는 행, promoId ≤ 0)은 [저장]이 등록(INSERT)이고 증빙자료·직원 자동등록은 내역 번호가 필요해 쓰지 않는다.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Select, Space } from 'antd';

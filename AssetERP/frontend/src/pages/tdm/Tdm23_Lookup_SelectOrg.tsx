@@ -4,7 +4,7 @@
  * 창 450×500(원본, 열 합계 370+행번호·선택 60+여백 130 = 560이라 560): 검색줄(검색 + [조회]) + 체크 그리드(SINGLE / MULTI) + [확인]([선택안함])[닫기]
  * `tdm09`(AS-IS openTdm09)면 승인선(tdm09)에 이미 있는 직책-부서는 뺀다
  * UX보강(10): 검색 줄 = SearchBar(UX-01), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

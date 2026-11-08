@@ -5,7 +5,7 @@
  *   · 일정명 · 상세내용(150) · 첨부파일(Sch01_Grid_RelateFile) · 기한(툴바 + 그리드 140) · 일정공유(비공개 체크 + 툴바 + 그리드 130 + 우측 [알람설정]) · 사용여부(사용/미사용), 아래 가운데 [저장][닫기]
  * [생략] 보고처(report)·문서분류(dcrClassTreeName)·법규(relateIcsGrid)·담당자 트리거(managerName)는 getEditor()에서 주석 처리되었거나 화면에 안 붙는다(E1 도달 불가)
  * new 모드: 열 때 이미 서버에 만들어 둔 행(Sch01_Tab_Info.insertRow → update01)으로 열고, [닫기]는 그 행을 되돌린다(newDataRollback)
- * 스타일: MFG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, Modal, Radio, Select, Space, message } from 'antd';

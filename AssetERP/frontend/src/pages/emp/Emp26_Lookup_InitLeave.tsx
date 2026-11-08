@@ -2,7 +2,7 @@
  * 초기설정 휴가일수 창 — 휴가관리(Emp20_Tab_LeaveManager, S06)의 [초기설정 휴가일수]에서 연다 (AS-IS open(year)).
  * AS-IS: myApp/client/vi/emp/Emp26_Lookup_InitLeave.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L71-102: 모달 650×600 "초기설정 휴가일수", 툴바(기준연도 · 사원명 · [조회][등록][저장][삭제]), 체크 다중 셀 편집 그리드 5열, 아래 가운데 [닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LookupModal } from '@/components/lookup/LookupModal';

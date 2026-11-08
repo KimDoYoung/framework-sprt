@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd30_Edit_Opr.java (335줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 열기 4가지: insert(callback) L73 "청약정보 등록" 590×470 / insert(oprModel, callback) L94 "청약정보 등록" 590×510 + 등록건수 / demandOprInsert(oprModel, callback) L113 "청약정보 등록"(수요예측 신청내역에서: 종목명·확약기간·납입일을 가져오고 저장하면 펀드별 배정도 수요예측 비율로 함께 만든다) / edit L139 "청약정보 수정"
  * getEditor() L195-250: 청약일 230 · 납입일 230 / 종목 560 / 주간사 560 / 발행가 280 + 확약기간 280 / 수수료율 180 % / 총배정수량 280 / 비고 560×150 (· 등록건수 180), 라벨 폭 105, 아래 가운데 [저장][닫기]
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Space, Typography } from 'antd';

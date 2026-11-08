@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/cmp/Cmp10_Lookup_MailBookList.java (164줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(callback) L45-72: 모달 "공용메일 List" 650×450, 위 [검색][조회], 단일 체크 그리드(이메일 220 · 비고 340), 아래 가운데 [확인][취소]. 열면서 바로 조회
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 행 클릭 선택(UX-06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

@@ -6,7 +6,7 @@
  * 모드 4개: insertFundTerms() L262-286 · newFundTerms() L224-260 · copyFundTerms() L288-334 · editFundTerms() L194-222
  *   (규약구분·조회순서·예탁원코드는 insert만 편집 가능). 새 ID(termsDetailId)는 열기 전에 받아 둔다(DBUtil.setSeq)
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, InputNumber, message, Space, Typography } from 'antd';

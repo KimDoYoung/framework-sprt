@@ -2,7 +2,7 @@
  * 분류 편집 창 (E06) — Chk01_Tab_ClassTree의 수정 칸·상위분류 등록·하위분류 등록에서 연다
  * AS-IS: myApp/client/vi/chk/Chk01_Edit_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit() L66-87·insert() L89-110: 모달 600×350 "분류 수정"/"분류 신규등록", setForm() L160-232: 라벨 폭 80, 분류명·비고(높이 100)·순서/사용여부·매뉴링크, 아래 가운데 삭제·저장·닫기
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';

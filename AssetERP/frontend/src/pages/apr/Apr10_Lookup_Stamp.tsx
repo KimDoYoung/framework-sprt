@@ -4,7 +4,7 @@
  * 생성자 L79-82(flag, checkflag) · makeLayout() L118-158: 모달 830×550 "인감종류", 위 툴바(검색어 + 200 + [검색]) + 체크박스 단일 그리드(인감 80 이미지 · 인감이름 200 · 사용용도 250 · 부서 200),
  * 아래 가운데 [확인][전체 | 해당사항 없음][닫기]. flag=true는 서비스 apr.Apr10_Stamp.selectBySearchText(모두 사용 가능하거나 내 조직에 역할로 준 인감).
  * flag=false(selectByOrgId)는 T25(부서 인감날인대장)에서 더했다. selectBySearchTextAdmin(openAdmin)은 쓰는 화면이 나올 때 더한다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

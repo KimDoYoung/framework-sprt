@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sch/Sch12_Lookup_IpoCorpList.java (133줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L50-96: 모달 600×500 "주간사List", 위 툴바 50([조회] + 안내 "※ 더블클릭시 해당 홈페이지로 이동됩니다." 4472C4) + 단일 체크 그리드(주간사명 200 · 홈페이지주소 300), 아래 가운데 [닫기]
  * open(corpName, callback) L44-48 → retrieve() L109-124: sch.Sch12_IpoCorp.selectByCorpNameList. 결과가 없으면 "해당 주간사에 대한 주소가 없습니다. 관리자에게 문의해주세요." 뒤 닫는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect } from 'react';
 import { message } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr18_Lookup_RelateAppr.java (205줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L96-114: 모달 850×400, 위 툴바 38([조회][불러오기][연결제거]) + 체크 다중 그리드(제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70), 푸터 [닫기]
  * 제목은 호출처가 준다(open(title, relateId, callback)). 호출처 Apr17_Tab_CorpDoc은 TOBE에 없다 — 창만 만들고 연결하지 않는다
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

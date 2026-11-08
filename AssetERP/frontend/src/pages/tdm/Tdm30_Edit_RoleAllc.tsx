@@ -4,7 +4,7 @@
  * 창 550×320(원본): 직책(조회창) · 담당임원(조회창) + 겸직여부 · 직책부여일 · 책무배분일 + 대체 임직원 · 등록사유(80 높이) + [저장][닫기]
  * 저장 = 직책배정(tdm30)과 책무배분일(tdm34) 한 건을 같이 만든다 (updateRoleAllcDetail L343-363)
  * UX보강(10): 조회창(UX-05)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Space } from 'antd';

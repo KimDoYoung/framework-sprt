@@ -4,7 +4,7 @@
  * open(stdDate, callback) L60-63: 기준일자(막힘)를 받아 setting() L84-150 — 툴바(기준일자 100 · 종목유형 콤보 130 `ItemMClassCode001` "전체" · 검색 200 "종목코드/종목명" · [조회][저장]) + 단일 그리드(종목유형 150 · 종목코드 120 · 종목명 350 · 평가단가 150 편집)
  * 닫기 [닫기] (E3). 조회창이므로 모달은 LookupModal
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), [저장(n)] UX-03, 조회창 UX-05·06
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DatePicker, Space } from 'antd';

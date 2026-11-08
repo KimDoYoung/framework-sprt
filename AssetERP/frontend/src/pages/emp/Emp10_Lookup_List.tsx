@@ -2,7 +2,7 @@
  * 주소록 선택창 (개인·사내·공용 주소록 탭) — Emp57_TabPage_Insert의 [등록]이 연다 (G11)
  * AS-IS: myApp/client/vi/emp/Emp10_Lookup_List.java (282줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 makeLayout() L114-143: 모달 710×490 "주소록", 위 [검색어 칸 250][검색], 가운데 탭 3개(개인 주소록 · 사내 주소록 · 공용 주소록, 각각 체크박스 다중 그리드), 아래 가운데 [확인][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Tabs, message, Space } from 'antd';

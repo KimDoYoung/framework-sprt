@@ -2,7 +2,7 @@
  * 문서양식 등록 창 (E18) — Dcr05_Tab_DocType의 [등록]에서 연다. 로그인 회사에 새 양식을 만든다
  * AS-IS: myApp/client/vi/dcr/Dcr05_Edit_DocType.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L65-100·getEditor() L102-137: 모달 800×880 "문서양식 등록", 구 분(콤보 DocFormClassCode) · 제 목 · 내 용(HTML 편집기) · 비 고(125), 아래 가운데 [저장][닫기]
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';

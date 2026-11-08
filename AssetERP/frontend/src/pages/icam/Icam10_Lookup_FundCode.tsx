@@ -4,7 +4,7 @@
  * 레이아웃 L54-72: 모달 600×400 "펀드", 위 = 툴바(검색 200 "펀드코드/펀드명" · [조회]), 아래 = 단일 체크 그리드(펀드코드 100·펀드명 400), 아래 가운데 [확인][전체][닫기]
  * 모달 폭은 열 폭 합계 500 + 60 + 130 = 690 (12 원칙 2, 스크롤 방지 — 원본 600보다 넓힘)
  * UX보강(10): 툴바 = SearchBar(UX-01), 행 클릭 선택(UX-06), 첫 입력칸 포커스(UX-05, LookupModal)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Spin } from 'antd';

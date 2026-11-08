@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp43_Lookup_SelectMulti.java (206줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L54-92: 모달 800×500 "인사평가 대상등록", 위 툴바(L69-73) 검색 [조직/직책/성명/구분] [조회], 그리드(체크박스 다중: 조직 200 · 직책 120 · 성명 100 · 구분 100 · 입사일 100 · 발령일 100),
  *   아래 툴바(L75-81) "* 비중(%) 초기설정값 1차 평가자 [50] / 2차 평가자 [50]", 아래 가운데 [생성][닫기]. 열면 곧바로 조회(L91)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InputNumber, message, Space } from 'antd';

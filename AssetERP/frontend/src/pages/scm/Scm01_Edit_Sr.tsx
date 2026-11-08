@@ -5,7 +5,7 @@
  *   첨부파일 [파일업로드] ... 결재선 [결재선 설정] / 첨부파일 그리드(500×160) + 결재선 그리드(770×160). 아래 가운데 [저장][결재요청][승인][반려][전체 초기화](60)
  * 상태 판정: retrieveApprStep() L597-691 — 등록자가 임시저장('99'·없음)일 때만 입력·[저장]·[결재요청]·첨부 올리기가 열린다.
  *   [승인]·[반려]는 내 차례(앞 결재자가 승인 '20', 나는 대기 '10')일 때, [전체 초기화]는 등록자에게만(retrieveApproval L587-595)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal } from 'antd';

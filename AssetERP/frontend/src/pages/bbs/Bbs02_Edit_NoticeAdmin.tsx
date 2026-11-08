@@ -6,7 +6,7 @@
  *   아래 가운데 [저장][삭제][닫기][첨부파일 등록(n)][예약알람설정(n)][미리보기]. 머리글을 누르면 기록 창(Bbs09_Lookup_History)
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
  * 연결: Sys01_Lookup_SelectMulti([등록]) · Bbs09_Lookup_History · Bbs02_Lookup_File.open(관리자용 = Bbs15_Lookup_File과 같은 창) · Sch06_Lookup_AlarmSetup · Bbs02_Popup_NoticeAdmin(미리보기)
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Input, Modal, Select, Space, Typography, message } from 'antd';

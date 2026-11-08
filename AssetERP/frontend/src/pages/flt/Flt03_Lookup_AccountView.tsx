@@ -4,7 +4,7 @@
  * 생성자 L41-83: 모달 910×400 "계좌정보", 툴바 "기준일"(비활성) · "폐쇄계좌 포함"(켜짐) + [조회], 그리드 8열, [닫기]. open(personId, baseDate) L85-89: 기준일을 채우고 retrieve()
  * 서비스 flt.Flt03_Account.selectByDate(companyId, personId, setupDate, closeAccountYn) — J01 계좌신고현황 API에 personId를 더해 재사용
  * UX보강(10): 조회창 UX-05·06, 툴바 = SearchBar(UX-01), 날짜 열 90은 원본이 이미 90
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';

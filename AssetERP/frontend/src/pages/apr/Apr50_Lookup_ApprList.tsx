@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr50_Lookup_ApprList.java (178줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L46-82: 1200×600 모달 "중요표시 문서"(닫기 X 없음), 툴바(검색 · 입력 300 "상신제목/등록자/부서/문서분류" · [검색]) + 그리드(결재상태 80 · 등록(상신)일 100 · 문서구분 70 · 문서명 440 · 상신자 100 · 시행일 100 · 문서분류 170 · 상세보기 80) + 페이징 툴바(50) + [닫기]
  * 12-화면우선원칙: 열 폭 합계 1140 + 행번호·여백이 1120을 넘어 AS-IS 1200보다 크게(1300) 잡고 넘치는 만큼만 스크롤한다 (03 원칙 21)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

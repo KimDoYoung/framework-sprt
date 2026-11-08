@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm55_Lookup_ChckRecord2.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 1300×500(원본, 열 합계 1245+여백 130이 1120을 넘어 원본 폭 그대로 두고 가로 스크롤): 점검부서 선택칸 + [조회] / 이력 그리드(행번호 숨김, 첫 열 번호 50) / 안내 글 / [닫기]
  * UX보강(10): 검색 줄 = 점검부서 칸(LookupInput)·[조회], 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys14_Lookup_Holiday.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L76-179: 모달 800×450 "휴일관리", 툴바(조회연도 + 조회·등록·저장·삭제, 관리자 회사만 고객사 칸 + 기초데이터생성) + 셀 편집 그리드(체크박스 다중), 하단 닫기
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { message } from 'antd';

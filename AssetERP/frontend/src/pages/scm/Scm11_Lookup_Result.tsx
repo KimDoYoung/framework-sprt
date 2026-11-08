@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/scm/Scm11_Lookup_Result.java (159줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(devStepModel) L59-86: 보기(HTML), [닫기]만 / open(resultStr, devStepModel, callback) L88-122: 편집(HTML 편집기), [확인]·[닫기] — 모달 1000×700 "결과상세"
  * [E0] 화면 열림 (생성자 L49-57) → 초기화, [E1] closeButton[닫기] (L76, 보기), [E2] confirmButton[확인] (L106, 편집) → update() L124-139: scm.Scm11_DevStep.updateResult(결과상세) → callback(HTML) → 닫기
- * 스타일: MH (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { message, Space } from 'antd';

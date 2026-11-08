@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt03_Lookup_ItemType.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L94-164: 340×310 모달, 체크박스 6개(2열×3줄) + 안내 문구 + [저장][닫기]. open(itemType, callback) L43: 6자리 "101000"의 자리별 1이면 체크
  * 색인이 [저장][닫기]를 "도달 불가"로 표시했지만 getButtonBar()에 붙어 있어 도달한다(L140-141)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, message, Space } from 'antd';

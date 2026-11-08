@@ -4,7 +4,7 @@
  * 생성자 L88-160: 1220×450 모달 "첨부파일 추가/삭제", 왼쪽 450(등록된 첨부파일 + [추가][삭제][옵션설정] + 단일 체크 그리드 첨부파일 270·보기 50·받기 50) | 오른쪽 삭제 내역(Sys61_TabPage_DelList), 푸터 [닫기]
  * [E0] 화면 열림 (생성자 L88-160) → settings(), show() · [E1] tabPage (Sys61_TabPage_DelList).callbackOnCreate (L62) → retrieve()
  * 지운 파일은 실제로 지우지 않고 삭제 내역으로 옮긴다(파일의 부모를 삭제 내역 ID로).
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

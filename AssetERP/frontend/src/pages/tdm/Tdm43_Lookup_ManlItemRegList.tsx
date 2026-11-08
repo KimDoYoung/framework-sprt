@@ -4,7 +4,7 @@
  * 생성자 L88-130: 모달 1600×850, 툴바(기준일 · 전체보기 · 직책 · 책무 · 부서 · 검색 · [조회]) + 위 그리드(원본 주요관리의무, 단일) + 아래 그리드(그 관리의무의 점검항목, 체크 다중) + [확인][닫기]
  * open(manlDutyModel, cb) L79-86: 직책 칸에 관리의무의 직책명만 넣고(직책 ID는 비어 있어 조건에 안 걸린다 — 원본 그대로) 검색칸에 관리의무 이름을 넣은 뒤 조회
  * UX보강(10): 검색 줄 = SearchBar(UX-01), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Space } from 'antd';

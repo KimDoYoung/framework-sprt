@@ -1,7 +1,7 @@
 /**
  * 겸직 등록 팝업 (C01-6) — Emp04_TabPage_AddTitle [등록]·[수정] 셀에서 연다.
  * AS-IS: myApp/client/vi/emp/Emp04_Edit_AddTitle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Space, Typography } from 'antd';

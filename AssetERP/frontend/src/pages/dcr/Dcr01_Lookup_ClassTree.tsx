@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_ClassTree.java (157줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L39-83: 500×500 모달 "문서구분찾기", 위 [조회], 문서분류 트리, 아래 가운데 [확인][취소]. 열 때 retrieve() L131-140
  * 트리는 리서치용(selectByParentIdResrchYn): 조직·사원 조회권한이 있는 분류 중 아래에 리서치사용 분류가 남은 것
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Space, Tree } from 'antd';

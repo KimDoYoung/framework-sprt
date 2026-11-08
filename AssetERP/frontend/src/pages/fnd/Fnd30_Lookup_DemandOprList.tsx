@@ -2,7 +2,7 @@
  * 수요예측 신청내역 조회창 (Q06) — 본 화면 Fnd30_Tab_Opr의 [등록(수요예측)]이 연다
  * AS-IS: myApp/client/vi/fnd/Fnd30_Lookup_DemandOprList.java (180줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(callback) L53: 모달 1270×400 "신청내역"(닫기(X) 없음) = 위 툴바 50(신청기간 [한 달 전 100 ~ 오늘 100] · 검색 250 "종목명" · [조회]) + 그리드(체크 단일) + 아래 가운데 [닫기]([닫기]를 누르면 부른 쪽 callback이 먼저 돈다 → 청약 목록 다시 조회)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys09_Lookup_CodeKind.java — open(codeKindId, companyId, callback)과 tdmLawOpen(taskId, callback)(EE43, kindCode 'TdmLawCode'·taskId) 을 옮김
  * tdmLawOpen L61-65 → open(kindCode) L67-81: 코드구분을 코드로 찾고, 제목 "법규목록" 800×600, 열 코드 70·코드명 650, 그 직무에 이미 연결된 법규는 뺀다(retrieve L175-177)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

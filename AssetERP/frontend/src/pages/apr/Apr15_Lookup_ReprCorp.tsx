@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr15_Lookup_ReprCorp.java (184줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L49-80: 모달 580×550 "대표명의", 툴바(검색 200 · [조회]) + 체크박스 단일 그리드(구분 80 · 대표회사 250 · 대표자 170), 아래 가운데 [확인][해당사항 없음][닫기]
  * 원본 retrieve() L141-162는 검색어가 "" 일 때만 "%%"를 만들고 아니면 null을 보내 입력한 검색어가 걸리지 않는다 — 그대로 둔다(서버가 검색어를 받지 않는다)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';

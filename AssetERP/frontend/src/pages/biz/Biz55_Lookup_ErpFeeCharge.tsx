@@ -5,7 +5,7 @@
  *   ② 시스템 사용료 · DATA 사용료 ③ 안내줄 + 문자 사용량·추가요금 / 서버 사용량·추가요금 / 사용 인원·사용자 추가요금 ④ 기타금액 / 기타금액내용 ⑤ 사용료 합계·부가세 / 청구금액
  *   확정된 행이면 [닫기]만, 아니면 [저장][닫기]
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬. 구역 구분은 선 대신 연한 배경(12 화면우선원칙 Page 2) — AS-IS는 구역마다 테두리
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

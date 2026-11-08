@@ -1,7 +1,7 @@
 /**
  * 자산분류 추가정보 설정 모달 (R08)
  * AS-IS: myApp/client/vi/ast/Ast01_Lookup_ItemClass.java (387줄)
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { DatePicker, Form, Input, message, Modal, Select } from 'antd';

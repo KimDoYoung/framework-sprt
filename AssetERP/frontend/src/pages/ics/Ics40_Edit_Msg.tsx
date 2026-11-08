@@ -5,7 +5,7 @@
  *   · show L65-76 (M06): 두 칸 모두 읽기 전용, [저장] 비활성
  *   · editRegEmpMsg L43-52 (상신내역 조회 #1019의 준감인의견 아이콘, 2026-11-05 추가): 신청인 의견만 고친다(준감인 의견 비활성)
  * 이벤트: [E1] updateButton[저장] (L94) → update() / [E2] closeButton[닫기] (L100) callback != null이면 callback.execute() 뒤 hide()
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';

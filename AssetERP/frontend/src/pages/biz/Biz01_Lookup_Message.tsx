@@ -2,7 +2,7 @@
  * 마감문자발송 창 (U15) — Biz01_Tab_CardManagement의 [마감문자발송]에서 연다
  * AS-IS: myApp/client/vi/biz/Biz01_Lookup_Message.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L58-87: 모달 350×350(크기 고정), 제목 "마감문자발송", 사원명 그리드(체크박스 다중, 열 1개 120) + 아래 가운데 [발송][닫기]
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';

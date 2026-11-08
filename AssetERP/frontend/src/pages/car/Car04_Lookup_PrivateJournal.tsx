@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/car/Car04_Lookup_PrivateJournal.java (488줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L95-112: 모달 780×450 "전용차량 운행일지", 아래 가운데 [저장][닫기]. getEditor() L376-442: 라벨 폭 150, 줄 6개(사용일자·업무용 / 주행 전 · 출퇴근 / 주행 후 · 일반업무용 / 비업무용 / 주행거리 / 행선지 / 목적)
  * EditModal 규격(11 §4a). 확인(저장) 뒤 callback에 모델을 주고 닫는다 — 저장은 부르는 쪽(Tab.update())이 한다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';

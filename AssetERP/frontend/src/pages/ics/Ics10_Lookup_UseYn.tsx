@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics10_Lookup_UseYn.java (311줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L82-122: 모달 1260×700 "법규통제 체크리스트", 툴바 50(대분류 160 · 중분류 200 · 사용여부 70 · 검색 150 "대분류/중분류/체크대상" · [조회][저장][전체선택][전체해제]),
  *   그리드(대분류 180 · 중분류 230 · 체크대상 645 · 상세보기 60 · 사용여부 80 편집), 아래 가운데 [닫기]. 열릴 때 곧바로 조회한다(open L76-80)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Select } from 'antd';

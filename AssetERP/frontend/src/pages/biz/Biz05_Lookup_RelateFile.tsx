@@ -2,7 +2,7 @@
  * 증빙자료 파일 목록 (L02) — Biz05_Lookup_RelateAppr 아래 칸에 붙는 조각
  * AS-IS: myApp/client/vi/biz/Biz05_Lookup_RelateFile.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L60-99: 툴바 [파일업로드](숨은 파일 선택) + 파일 그리드(buildFileGrid L123-171: 체크박스 단일, 첨부파일 450 · 보기 50 · 받기 50 · 삭제 50)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';

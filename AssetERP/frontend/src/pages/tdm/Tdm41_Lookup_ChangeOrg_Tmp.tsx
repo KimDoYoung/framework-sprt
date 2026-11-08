@@ -5,7 +5,7 @@
  * (원본은 updateButton을 툴바에 넣은 뒤 하단 버튼으로 다시 넣어 하단에만 남는다)
  * 부서변경 = 새 부서 고르기(Tdm23_Lookup_SelectOrg, "SINGLE") → 확인(350) → 서버. 서버가 잠긴 매뉴얼이면 거부
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창(UX-05·06)
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message, Space } from 'antd';

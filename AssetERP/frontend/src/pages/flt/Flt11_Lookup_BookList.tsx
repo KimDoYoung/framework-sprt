@@ -5,7 +5,7 @@
  * expectYn=true(사전신고 반영 `selectByText2`, 기본) / expectYn=false(기준일 보유잔고 `selectByText`, I06 계좌대체가 쓴다)
  * 열 폭 합계가 1120을 넘어(03 원칙 21) 모달을 AS-IS 폭(1310)에 두고 가로 스크롤을 허용한다
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창 UX-05·06, 날짜 열 UX-08
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal, Space } from 'antd';

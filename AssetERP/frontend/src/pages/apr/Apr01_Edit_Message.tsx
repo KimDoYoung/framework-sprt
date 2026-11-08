@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Edit_Message.java (52줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L19-32: 450×250 모달 "문서의견", 읽기 전용 글상자 + setMessage(msg) L34-47: [닫기]
  * 조회창 규격(11a): LookupModal, 머리 아래 선·푸터 위 선
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
 import { Input } from 'antd';

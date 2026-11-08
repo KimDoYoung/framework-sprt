@@ -7,7 +7,7 @@
  * [닫기] L165-175: 새 행이면 목록에서 빼고 callBack(null), 고치던 행이면 callBack(모델)(부른 화면이 다시 조회).
  * 공유 칸(L146-157): 전체공유를 켜면 공유대상을 비우고 막는다. 공유대상 칸 → Emp56_Lookup_Share(출장 ID).
  * EditModal 규격(11 §4a): 머리 아래 선·푸터 위 선·라벨 오른쪽 정렬.
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Checkbox, DatePicker, Input, message, Modal, Space } from 'antd';

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay07_Lookup_RetireCreate.java (224줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L51-165: 400×400 모달 "퇴직정산서 생성", 라벨 폭 150, 안내 글 · 정산월수 · 안내 글 · 건강/장기요양/고용 확정보험료(각 120 + "없음" 체크), 아래 가운데 [생성][닫기]
  * 호출처 Pay07_Tab_Retire는 TOBE에 없다(퇴직정산은 Pay10_Tab_Retire로 대체) — 창만 만들고 연결하지 않는다
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useState } from 'react';
 import { Checkbox, InputNumber, message, Space, Typography } from 'antd';

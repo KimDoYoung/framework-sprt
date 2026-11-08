@@ -2,7 +2,7 @@
  * 대표이사 추가가감 (T04) — Emp43_Tab_FinalAppr의 수정 아이콘에서 연다 (가점·감점 입력)
  * AS-IS: myApp/client/vi/emp/Emp43_Edit_CeoScore.java (112줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit() L41-60: 모달 200×200 "대표이사 추가가감"(X 없음), getEditor() L77-87: 라벨 폭 88, 가점 · 감점(LongField 155), 아래 가운데 저장·닫기
- * 스타일: MF (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { InputNumber, message, Modal, Space, Typography } from 'antd';

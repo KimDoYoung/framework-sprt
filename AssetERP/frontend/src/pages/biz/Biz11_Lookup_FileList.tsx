@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/biz/Biz11_Lookup_FileList.java (295줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L64-144: 1500×800 모달 "계약사 이력관리 파일", 왼쪽(450) [파일업로드] + 그리드(파일명 300 · 받기 50 · 삭제 50), 가운데 PDF 미리보기(Biz11_PDFViewer), [닫기]
  * 올리기·받기·삭제는 첨부 목록(Apr42_Lookup_FileList)과 같은 파일 API를 쓴다 — 세 번째 사용이라 부품 후보(작업기록 "부품 제안")
- * 스타일: MG (임시 스크립트 판별 — docs/page-style.md 모달 스타일)
+ * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Splitter } from 'antd';
