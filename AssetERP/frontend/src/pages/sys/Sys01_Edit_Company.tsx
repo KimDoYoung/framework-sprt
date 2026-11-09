@@ -1,15 +1,17 @@
 /**
  * 신규고객사 등록 팝업 (A15) — Sys01_Tab_Company [등록]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Edit_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
+ * 스타일: MF (docs/modal-style.md 편집 폼 모달 원칙 — EditForm 부품). 라벨 폭 98(가장 긴 라벨 7글자),
+ *   모달 1000 → 안쪽 960, 3열은 칸 폭을 똑같이 나눈다(칸 사이 8)
  */
 import React, { useState } from 'react';
-import { Col, DatePicker, Input, message, Modal, Row, Space, Typography } from 'antd';
+import { DatePicker, Input, message, Modal, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, CompanyCreateReq } from '@/types/sys';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField as Field } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
 interface Props {
@@ -34,15 +36,8 @@ interface EditForm {
 // AS-IS 생성자 L83-84: 과세구분 기본 '1'(면세)
 const EMPTY: EditForm = { companyNm: '', locNm: '', emgrcyPasswd: '', startDate: null, mailInfo: '', bizNo: '', taxType: '1' };
 
-/** AS-IS getEditor() L136-170: 3열 3줄, 라벨 폭 120 */
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <Col span={8}>
-    <Space.Compact block style={{ alignItems: 'center' }}>
-      <Typography.Text style={{ width: 120, flex: 'none' }}>{label}</Typography.Text>
-      <div style={{ flex: 1 }}>{children}</div>
-    </Space.Compact>
-  </Col>
-);
+/** AS-IS getEditor() L136-170: 3열 3줄. 라벨 폭은 AS-IS 120이 아니라 가장 긴 라벨(7글자)에 맞춰 98 */
+const LABEL_WIDTH = 98;
 
 export const Sys01_Edit_Company: React.FC<Props> = ({ open, onClose, onSaved }) => {
   const [f, setF] = useState<EditForm>(EMPTY);
@@ -93,11 +88,10 @@ export const Sys01_Edit_Company: React.FC<Props> = ({ open, onClose, onSaved }) 
   // [E0] 화면 열림 (생성자 L69-101) → settings(), getEditor(), show()
   // [E1]~[E3] 콤보 Collapse → 코드값 저장 (L104-121): SystemCodeComboBox가 코드를 바로 준다
   return (
-    <Modal
+    <EditModal
       open={open}
       title="신규고객사 등록"
       width={1000}
-      maskClosable={false}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -108,42 +102,40 @@ export const Sys01_Edit_Company: React.FC<Props> = ({ open, onClose, onSaved }) 
         </div>
       }
     >
-      <Space direction="vertical" size={20} style={{ width: '100%', padding: '15px 0' }}>
-        <Row gutter={20}>
-          <Field label="고객사명">
-            <Input value={f.companyNm} onChange={e => set('companyNm', e.target.value)} />
-          </Field>
-          <Field label="서브도메인">
-            <Input value={f.locNm} onChange={e => set('locNm', e.target.value)} />
-          </Field>
-          <Field label="회사암호">
-            <Input value={f.emgrcyPasswd} onChange={e => set('emgrcyPasswd', e.target.value)} />
-          </Field>
-        </Row>
-        <Row gutter={20}>
-          <Field label="설립일">
-            <DatePicker style={{ width: '100%' }} value={f.startDate} onChange={d => set('startDate', d)}
-              format="YYYY-MM-DD" defaultPickerValue={dayjs()} />
-          </Field>
-          <Field label="메일서버정보">
-            <Input value={f.mailInfo} onChange={e => set('mailInfo', e.target.value)} />
-          </Field>
-          <Field label="사업자등록번호">
-            <Input value={f.bizNo} onChange={e => set('bizNo', e.target.value)} />
-          </Field>
-        </Row>
-        <Row gutter={20}>
-          <Field label="휴가결산(월)">
-            <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.leaveMonthCd} onChange={v => set('leaveMonthCd', v)} />
-          </Field>
-          <Field label="과세구분">
-            <SystemCodeComboBox kindCd="TaxType" style={{ width: '100%' }} value={f.taxType} onChange={v => set('taxType', v)} />
-          </Field>
-          <Field label="회계결산(월)">
-            <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.accountCloseMonth} onChange={v => set('accountCloseMonth', v)} />
-          </Field>
-        </Row>
-      </Space>
-    </Modal>
+      <EditRow>
+        <Field label="고객사명" labelWidth={LABEL_WIDTH}>
+          <Input value={f.companyNm} onChange={e => set('companyNm', e.target.value)} />
+        </Field>
+        <Field label="서브도메인" labelWidth={LABEL_WIDTH}>
+          <Input value={f.locNm} onChange={e => set('locNm', e.target.value)} />
+        </Field>
+        <Field label="회사암호" labelWidth={LABEL_WIDTH}>
+          <Input value={f.emgrcyPasswd} onChange={e => set('emgrcyPasswd', e.target.value)} />
+        </Field>
+      </EditRow>
+      <EditRow>
+        <Field label="설립일" labelWidth={LABEL_WIDTH}>
+          <DatePicker style={{ width: '100%' }} value={f.startDate} onChange={d => set('startDate', d)}
+            format="YYYY-MM-DD" defaultPickerValue={dayjs()} />
+        </Field>
+        <Field label="메일서버정보" labelWidth={LABEL_WIDTH}>
+          <Input value={f.mailInfo} onChange={e => set('mailInfo', e.target.value)} />
+        </Field>
+        <Field label="사업자등록번호" labelWidth={LABEL_WIDTH}>
+          <Input value={f.bizNo} onChange={e => set('bizNo', e.target.value)} />
+        </Field>
+      </EditRow>
+      <EditRow>
+        <Field label="휴가결산(월)" labelWidth={LABEL_WIDTH}>
+          <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.leaveMonthCd} onChange={v => set('leaveMonthCd', v)} />
+        </Field>
+        <Field label="과세구분" labelWidth={LABEL_WIDTH}>
+          <SystemCodeComboBox kindCd="TaxType" style={{ width: '100%' }} value={f.taxType} onChange={v => set('taxType', v)} />
+        </Field>
+        <Field label="회계결산(월)" labelWidth={LABEL_WIDTH}>
+          <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.accountCloseMonth} onChange={v => set('accountCloseMonth', v)} />
+        </Field>
+      </EditRow>
+    </EditModal>
   );
 };

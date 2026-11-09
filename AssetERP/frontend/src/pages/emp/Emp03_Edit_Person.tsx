@@ -1,16 +1,19 @@
 /**
  * 신규사원 등록 팝업 (C01) — Emp00_Tab_TransInfo [등록]에서 연다.
  * AS-IS: myApp/client/vi/emp/Emp03_Edit_Person.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
+ * 레이아웃 getEditor() L254-289: 3열(이메일은 2열 폭). 필수 라벨은 파란색(0069B4)
+ * 스타일: MF (docs/modal-style.md 편집 폼 모달 원칙 — EditForm 부품). 라벨 폭 80(가장 긴 라벨 '계약종료일' 5글자),
+ *   모달 824 → 안쪽 784 = 칸 256 × 3 + 8 × 2
  */
 import React, { useState } from 'react';
-import { Col, DatePicker, Input, message, Modal, Row, Space, Typography } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { Dayjs } from 'dayjs';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 
@@ -43,15 +46,14 @@ const EMPTY: EditForm = {
   empNo: '', korNm: '', hireDate: null, expiryDate: null, officeTelNo: '', officeDetail: '', mobileTelNo: '', emailAddr: '', orgKorNm: '', note: '',
 };
 
-/** AS-IS getEditor() L254-289: 칸 폭 250(이메일 500), 라벨 폭 88. 필수 라벨은 파란색(0069B4) */
-const Field: React.FC<{ label: string; required?: boolean; span?: number; children: React.ReactNode }> = ({ label, required, span = 8, children }) => (
-  <Col span={span}>
-    <Space.Compact block style={{ alignItems: 'center' }}>
-      <Typography.Text style={{ width: 88, flex: 'none', color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
-      <div style={{ flex: 1 }}>{children}</div>
-    </Space.Compact>
-  </Col>
-);
+const LABEL_WIDTH = 80;
+const COL = 256;
+/** 칸 둘 폭 = 256 + 8 + 256 */
+const COL2 = COL * 2 + 8;
+
+/** 필수 라벨은 파란색(0069B4) */
+const L = (text: string, required?: boolean): React.ReactNode =>
+  required ? <span style={{ color: '#0069B4' }}>{text}</span> : text;
 
 export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) => {
   const [f, setF] = useState<EditForm>(EMPTY);
@@ -107,11 +109,10 @@ export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) =
   // [E3]·[E5]~[E7] 사원구분·직위·직책·채용구분 Collapse → 코드 저장 (L179-212): SystemCodeComboBox가 코드를 바로 준다
   // [E4 생략] transName[발령구분] Collapse (L186): 원본도 폼에 넣지 않은 콤보 — 서버가 채용(100)으로 정한다
   return (
-    <Modal
+    <EditModal
       open={open}
       title="신규사원 등록"
-      width={800}
-      maskClosable={false}
+      width={824}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -122,57 +123,53 @@ export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) =
         </div>
       }
     >
-      <Space direction="vertical" size={18} style={{ width: '100%', padding: '10px 0' }}>
-        <Row gutter={20}>
-          <Field label="사원번호" required><Input value={f.empNo} onChange={e => set('empNo', e.target.value)} /></Field>
-          <Field label="한글명" required><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></Field>
-          <Field label="사원구분" required>
-            <SystemCodeComboBox kindCd="EmpKindCode" style={{ width: '100%' }} value={f.kindCd} onChange={v => set('kindCd', v)} />
-          </Field>
-        </Row>
-        <Row gutter={20} style={{ marginTop: 10 }}>
-          <Field label="입사일" required>
-            <DatePicker style={{ width: '100%' }} value={f.hireDate} onChange={d => set('hireDate', d)} format="YYYY-MM-DD" />
-          </Field>
-          <Field label="계약종료일">
-            <DatePicker style={{ width: '100%' }} value={f.expiryDate} onChange={d => set('expiryDate', d)} format="YYYY-MM-DD" />
-          </Field>
-        </Row>
-        <Row gutter={20}>
-          <Field label="회사번호"><Input value={f.officeTelNo} onChange={e => set('officeTelNo', e.target.value)} /></Field>
-          <Field label="내선번호"><Input value={f.officeDetail} onChange={e => set('officeDetail', e.target.value)} /></Field>
-          <Field label="휴대폰" required><Input value={f.mobileTelNo} onChange={e => set('mobileTelNo', e.target.value)} /></Field>
-        </Row>
-        <Row gutter={20} style={{ marginTop: 10 }}>
-          <Field label="채용구분">
-            <SystemCodeComboBox kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} />
-          </Field>
-          <Field label="이메일" required span={16}><Input value={f.emailAddr} onChange={e => set('emailAddr', e.target.value)} /></Field>
-        </Row>
-        <Row gutter={20}>
-          <Field label="직책" required>
-            <SystemCodeComboBox kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
-          </Field>
-          <Field label="직위" required>
-            <SystemCodeComboBox kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
-          </Field>
-          <Field label="조직" required>
-            {/* LookupTriggerField(편집 불가) */}
-            <Input readOnly value={f.orgKorNm} onClick={lookupOrg}
-              suffix={<SearchOutlined style={{ cursor: 'pointer' }} onClick={lookupOrg} />} />
-          </Field>
-        </Row>
-        <Row gutter={20}>
-          <Field label="특이사항" span={24}>
-            <Input.TextArea rows={5} value={f.note} onChange={e => set('note', e.target.value)} />
-          </Field>
-        </Row>
-      </Space>
+      <EditRow>
+        <EditField label={L('사원번호', true)} labelWidth={LABEL_WIDTH} width={COL}><Input value={f.empNo} onChange={e => set('empNo', e.target.value)} /></EditField>
+        <EditField label={L('한글명', true)} labelWidth={LABEL_WIDTH} width={COL}><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></EditField>
+        <EditField label={L('사원구분', true)} labelWidth={LABEL_WIDTH} width={COL}>
+          <SystemCodeComboBox kindCd="EmpKindCode" style={{ width: '100%' }} value={f.kindCd} onChange={v => set('kindCd', v)} />
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label={L('입사일', true)} labelWidth={LABEL_WIDTH} width={COL}>
+          <DatePicker style={{ width: '100%' }} value={f.hireDate} onChange={d => set('hireDate', d)} format="YYYY-MM-DD" />
+        </EditField>
+        <EditField label="계약종료일" labelWidth={LABEL_WIDTH} width={COL}>
+          <DatePicker style={{ width: '100%' }} value={f.expiryDate} onChange={d => set('expiryDate', d)} format="YYYY-MM-DD" />
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="회사번호" labelWidth={LABEL_WIDTH} width={COL}><Input value={f.officeTelNo} onChange={e => set('officeTelNo', e.target.value)} /></EditField>
+        <EditField label="내선번호" labelWidth={LABEL_WIDTH} width={COL}><Input value={f.officeDetail} onChange={e => set('officeDetail', e.target.value)} /></EditField>
+        <EditField label={L('휴대폰', true)} labelWidth={LABEL_WIDTH} width={COL}><Input value={f.mobileTelNo} onChange={e => set('mobileTelNo', e.target.value)} /></EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="채용구분" labelWidth={LABEL_WIDTH} width={COL}>
+          <SystemCodeComboBox kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} />
+        </EditField>
+        <EditField label={L('이메일', true)} labelWidth={LABEL_WIDTH} width={COL2}><Input value={f.emailAddr} onChange={e => set('emailAddr', e.target.value)} /></EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label={L('직책', true)} labelWidth={LABEL_WIDTH} width={COL}>
+          <SystemCodeComboBox kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
+        </EditField>
+        <EditField label={L('직위', true)} labelWidth={LABEL_WIDTH} width={COL}>
+          <SystemCodeComboBox kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
+        </EditField>
+        <EditField label={L('조직', true)} labelWidth={LABEL_WIDTH} width={COL}>
+          {/* LookupTriggerField(편집 불가) */}
+          <Input readOnly value={f.orgKorNm} onClick={lookupOrg}
+            suffix={<SearchOutlined style={{ cursor: 'pointer' }} onClick={lookupOrg} />} />
+        </EditField>
+      </EditRow>
+      <EditField label="특이사항" labelWidth={LABEL_WIDTH}>
+        <Input.TextArea rows={5} value={f.note} onChange={e => set('note', e.target.value)} />
+      </EditField>
       <Org00_Lookup_SelectSingle
         baseDate={orgBaseDate}
         onClose={() => setOrgBaseDate(undefined)}
         onSelect={org => setF(prev => ({ ...prev, orgCodeId: org.orgCodeId, orgKorNm: org.korNm ?? '' }))}
       />
-    </Modal>
+    </EditModal>
   );
 };

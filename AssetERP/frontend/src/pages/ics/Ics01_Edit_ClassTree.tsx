@@ -1,8 +1,8 @@
 /**
  * 법규분류 등록·수정 창 (E01) — Ics01_Tab_ClassTree의 [상위등록]·[하위등록]·트리 [수정]에서 연다.
  * AS-IS: myApp/client/vi/ics/Ics01_Edit_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 레이아웃 L84-103: 분류코드(250)·조회순서(150) / 분류명(400) / 수시알림(325, 읽기 전용) + [설정]. 라벨 폭 70. 창 440×250
- * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
+ * 레이아웃 L84-103: 분류코드·조회순서 / 분류명 / 수시알림(읽기 전용) + [설정]. 라벨 폭 70(가장 긴 라벨 4글자 기준). 창 폭 520(안쪽 480 = 295 + 8 + 177)
+ * 스타일: MF (docs/modal-style.md 편집 폼 모달 원칙 — 견본 Dcr01_Edit_ClassTree)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';
@@ -133,7 +133,7 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
       <EditField label={<span style={{ fontWeight: 600 }}>수시알림</span>} labelWidth={70}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Input style={{ flex: 1 }} readOnly value={deadline} />
-          <span style={{ marginLeft: 5 }}><Button type="register" onClick={setDeadlineFullName}>설정</Button></span>
+          <span style={{ marginLeft: 8 }}><Button type="register" onClick={setDeadlineFullName}>설정</Button></span>
         </div>
       </EditField>
     </EditModal>
