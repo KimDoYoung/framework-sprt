@@ -7,7 +7,7 @@
  *   center = 테두리 박스(Apr01_Grid_DocList). 한 번 눌러도 노드가 열리고 닫힌다(Tree.onClick → super.onDoubleClick)
  * 트리를 어디서 읽는지만 자식 클래스가 바꾼다(DcrUser.retrieve() L36-51) → loadTree 로 받는다
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message, Splitter, Tree, Typography } from 'antd';
 import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { errorMessage } from '@/api/client';
@@ -15,7 +15,9 @@ import { dcrApi } from '@/api/dcr';
 import { DcrWriteTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { Apr01_Grid_DocList } from '../apr/Apr01_Grid_DocList';
-import { ancestorKeys, toTree } from './dcr01Tree';
+import { toTree } from './dcr01Tree';
+import { DcrClassSearchList } from './DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
 interface Props {
   /** AS-IS retrieve(): 트리를 읽는 서비스 (DcrUser = dcr.Dcr01_ClassTree.selectByOrgIdRoleWrite) */
@@ -33,8 +35,9 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrWriteTree | null>(null);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const [loading, setLoading] = useState(false);
-  const boxRef = useRef<HTMLDivElement>(null);
   const treeData = useMemo(() => toTree(rows), [rows]);
 
   // [E1 생략] retrieveButton[조회].Select (L74) → retrieve(): 원본도 이 버튼을 툴바에 달지 않는다(buttonBar에는 라벨·docSearch·[찾기]뿐)
@@ -55,38 +58,35 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
   //   선택을 풀고 모두 접은 뒤, 이름에 검색어(대소문자 무시)가 든 노드를 찾아 부모를 펼치고 선택한다. 화면 이동은 처음 찾은 노드로
   //   (GXT는 직접 부모만 펼치지만 접힌 조상 밑에 숨으면 보이지 않으므로 조상을 모두 펼친다)
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelected(null);
-    setExpanded([]);
-    const text = docSearch.toLowerCase();
-    if (text === '') return;
-    const matches = rows.filter(r => r.classTreeName.toLowerCase().indexOf(text) > -1);
-    if (matches.length === 0) return;
-    const keys = new Set<React.Key>();
-    matches.forEach(m => ancestorKeys(rows, m.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    setSelected(matches[matches.length - 1]);  // 마지막으로 고른 것이 선택으로 남는다
-    // 펼친 뒤 처음 찾은 노드가 보이도록 스크롤 (AS-IS는 nodeTop·scrollTop을 직접 계산)
-    setTimeout(() => boxRef.current?.querySelector(`[data-ckey="${matches[0].classTreeId}"]`)?.scrollIntoView({ block: 'nearest' }), 0);
+    if (docSearch === '') return;
+    setView('list');
   };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize={350} min={200} max={1000}>
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
-            <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-              <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text>
+            <div style={{ minHeight: 50, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 8px', padding: '4px 8px', flex: 'none' }}>
+              {/* <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text> */}
               <Input style={{ width: 150, flex: 'none' }} allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
               <Button type="search" onClick={search}>찾기</Button>
+              <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
-            <div ref={boxRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff' }}>
               {/* [E4] tree.Selection (L108) → docList.retrieve(classTreeModel, managerYn) */}
-              {!loading && treeData.length > 0 && (
+              {view === 'list' ? (
+                <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
+              ) : !loading && treeData.length > 0 && (
                 <Tree
                   treeData={treeData}
                   showIcon
                   blockNode
-                  titleRender={n => <span data-ckey={String(n.key)}>{n.title as React.ReactNode}</span>}
                   icon={p => (p.isLeaf ? <UnorderedListOutlined /> : p.expanded ? <FolderOpenOutlined /> : <FolderOutlined />)}
                   expandedKeys={expanded}
                   onExpand={keys => setExpanded(keys)}

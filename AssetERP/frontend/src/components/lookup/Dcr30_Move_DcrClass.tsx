@@ -17,12 +17,11 @@ import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
-import { ExpandCollapseButtons } from '@/components/button/ExpandCollapseButtons';
-import { TreeListToggle } from '@/components/button/TreeListToggle';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 import { SearchBar } from '@/components/search';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { LookupModal } from './LookupModal';
-import { ancestorKeys, toTree } from '@/pages/dcr/dcr01Tree';
+import { toTree } from '@/pages/dcr/dcr01Tree';
 
 const gb = gbFor<{ classTreeId: number; fullName: string }>();
 
@@ -109,17 +108,9 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
   const search = () => {
     setSelected(null);
     setExpanded([]);
-    const findText = docSearch;
-    if (findText == null || findText === '') return;
-    const lower = findText.toLowerCase();
-    const matches = rows.filter(r => r.classTreeName.toLowerCase().indexOf(lower) > -1);
-    if (matches.length === 0) return;
-    // 찾은 분류의 부모를 모두 펼치고, 마지막으로 찾은 것이 선택으로 남는다(GXT Tree 단일 선택). 화면 이동은 처음 찾은 것으로
-    const keys = new Set<React.Key>();
-    matches.forEach(m => ancestorKeys(rows, m.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    setSelected(matches[matches.length - 1]);
-    setTimeout(() => treeRef.current?.scrollTo({ key: matches[0].classTreeId, align: 'auto' }));
+    // UX보강: 검색어를 넣고 Enter·[찾기]하면 트리 모드였더라도 리스트 보기로 바꿔 결과를 한눈에 보여준다(listRows가 검색어로 거른다)
+    if (docSearch.trim() === '') return;
+    setView('list');
   };
 
   // [E3] updateButton[확인].Select (L136) → update() L168-209 (admin 열기: 권한 검사 없이 callback·hide)
@@ -182,8 +173,7 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
             </SearchBar.Field>
           </SearchBar>
         </div>
-        <TreeListToggle value={view} onChange={setView} />
-        <ExpandCollapseButtons onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} disabled={view === 'list' || treeData.length === 0} />
+        <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
       </div>
       {/* getMenuTree() L211-247: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick). [E6] tree.Selection (L158) → classTreeModel = 선택 항목 */}
       <div style={{ height: treeHeight, overflow: 'hidden', marginTop: 8}}>

@@ -24,7 +24,9 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
-import { ancestorKeys, toTree } from '@/pages/dcr/dcr01Tree';
+import { toTree } from '@/pages/dcr/dcr01Tree';
+import { DcrClassSearchList } from '@/pages/dcr/DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 import { Fbx01_TabPage_DocList, Fbx01_TabPage_DocListHandle } from './Fbx01_TabPage_DocList';
 import { Fbx02_Popup_History } from './Fbx02_Popup_History';
 
@@ -42,6 +44,8 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(보관함을 고를 때마다) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const treeData = useMemo(() => toTree(classRows), [classRows]);
   const selectedBox = useRef<FbxBox | undefined>(undefined);
   const docList = useRef<Fbx01_TabPage_DocListHandle>(null);
@@ -102,6 +106,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
       if (my !== treeSeq.current) return;
       setClassRows(list);
       setSelectedClass(null);
+      setView('tree');
       const parents = new Set(list.map(r => r.parentTreeId));
       setExpanded(list.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
     } catch (err) {
@@ -132,18 +137,22 @@ export const Fbx01_Tab_Document: React.FC = () => {
   // [E10] docSearch.KeyPress [Enter] (L186) · [E11] searchButton[찾기].Select (L194) → search() L409-429:
   // 선택을 풀고 모두 닫은 뒤, 이름에 검색어가 든 분류의 부모를 펼쳐 고른다(여럿이면 마지막 것이 선택으로 남는다)
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelectedClass(null);
-    setExpanded([]);
-    const text = docSearch.toLowerCase();
-    if (text === '') return;
-    const found = classRows.filter(r => r.classTreeName.toLowerCase().indexOf(text) > -1);
-    if (found.length === 0) return;
-    const keys = new Set<React.Key>();
-    found.forEach(r => ancestorKeys(classRows, r.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    const last = found[found.length - 1];
-    setSelectedClass(last.classTreeId);
-    retrieveDocList(last);
+    if (docSearch === '') return;
+    setView('list');
+  };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다 — [E6] expandAll[+] (L122) → tree.expandAll()
+  const expandAll = () => {
+    const parents = new Set(classRows.map(r => r.parentTreeId));
+    setExpanded(classRows.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
+  };
+
+  // 리스트에서 고른 분류 — 트리 선택(onTreeSelect)과 같게 문서 목록을 읽는다
+  const onListSelect = (row: DcrClassTree | null) => {
+    setSelectedClass(row ? row.classTreeId : null);
+    if (row) retrieveDocList(row);
   };
 
   // [E5] deleteButton[삭제].Select (L116) → deleteRow() L381-406: 생성자만 지울 수 있다 → 확인창 → [E13] msgBox.DialogHide [YES] (L388) → fbx.Fbx01_Box.delete
@@ -213,24 +222,17 @@ export const Fbx01_Tab_Document: React.FC = () => {
               <Splitter.Panel defaultSize={400} min={250} max={1000}>
                 <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
                   <SearchBar onSearch={search} searchText="찾기"
-                    extra={
-                      <>
-                        {/* [E6] expandAll[+].Select (L122) → tree.expandAll() */}
-                        <Button type="plus" onClick={() => {
-                          const parents = new Set(classRows.map(r => r.parentTreeId));
-                          setExpanded(classRows.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
-                        }} />
-                        {/* [E7] collapseAll[-].Select (L129) → tree.collapseAll() */}
-                        <Button type="minus" onClick={() => setExpanded([])} />
-                      </>
-                    }
+                    // [E6] expandAll[+] (L122)·[E7] collapseAll[-] (L129) → 보기 전환과 한 묶음(TreeListControlButtons)
+                    extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />}
                   >
                     <SearchBar.Field label="문서분류">
-                      <SearchBar.Input style={{ width: 120 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
+                      <SearchBar.Input style={{ width: 90 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
                     </SearchBar.Field>
                   </SearchBar>
-                  <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '0 4px' }}>
-                    {treeData.length > 0 && (
+                  <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', padding: view === 'list' ? 0 : '0 4px' }}>
+                    {view === 'list' ? (
+                      <DcrClassSearchList rows={classRows} query={docSearch} onSelect={onListSelect} />
+                    ) : treeData.length > 0 && (
                       <Tree
                         showIcon
                         icon={icon}

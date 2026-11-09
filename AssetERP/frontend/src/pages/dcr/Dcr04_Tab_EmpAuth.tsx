@@ -5,7 +5,7 @@
  * 레이아웃 L56-91: west(400, 분할선, 최대 1000, 여백 20/0/20/20) = 테두리 박스(위 툴바 50: 문서분류 · 찾기 입력 200 · [찾기] / 트리 / 아래 툴바 50: 부서별 조회권한 필터링 · 조직 조회창 칸 210 빈칸="전체"),
  *   center = 테두리 박스(Dcr04_TabPage_EmpAuth, 여백 20/20/20/0). 한 번 눌러도 노드가 열리고 닫힌다. 트리 모양은 Dcr03_Tab_DcrAuth(EE06)와 같다
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message, Splitter, Tree, Typography } from 'antd';
 import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -17,20 +17,23 @@ import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 import { Dcr04_TabPage_EmpAuth } from './Dcr04_TabPage_EmpAuth';
-import { ancestorKeys, toTree } from './dcr01Tree';
+import { toTree } from './dcr01Tree';
+import { DcrClassSearchList } from './DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
-const BAR_STYLE: React.CSSProperties = { height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' };
+const BAR_STYLE: React.CSSProperties = { minHeight: 50, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 8px', padding: '4px 8px', flex: 'none' };
 
 export const Dcr04_Tab_EmpAuth: React.FC = () => {
   const [rows, setRows] = useState<DcrClassTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const [orgCodeId, setOrgCodeId] = useState<number | null>(null);
   const [orgName, setOrgName] = useState('');
   const [orgOpen, setOrgOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const boxRef = useRef<HTMLDivElement>(null);
   const treeData = useMemo(() => toTree(rows), [rows]);
 
   // 선택이 정확히 1건일 때만 오른쪽이 그 문서분류를 받는다 (tree.Selection L132-146: count == 1 → retrieve(model), 아니면 retrieve(null))
@@ -53,17 +56,14 @@ export const Dcr04_Tab_EmpAuth: React.FC = () => {
   // [E1] docSearch.KeyPress [Enter] (L95)·[E3] searchButton01[찾기].Select (L126) → search() L217-236
   //   선택을 풀고 모두 접은 뒤, 이름에 검색어가 든 노드를 모두 찾아 부모를 펼치고 선택한다(여러 건이면 오른쪽은 비워진다). 화면 이동은 처음 찾은 노드로
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelectedKeys([]);
-    setExpanded([]);
     if (docSearch === '') return;
-    const matches = rows.filter(r => r.classTreeName.indexOf(docSearch) > -1);
-    if (matches.length === 0) return;
-    const keys = new Set<React.Key>();
-    matches.forEach(m => ancestorKeys(rows, m.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    setSelectedKeys(matches.map(m => m.classTreeId));
-    setTimeout(() => boxRef.current?.querySelector(`[data-ckey="${matches[0].classTreeId}"]`)?.scrollIntoView({ block: 'nearest' }), 0);
+    setView('list');
   };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   // [E2] orgSearch.TriggerClick [result != null] (L106) → Org00_Lookup_SelectSingle(오늘, [전체] 있음): 조직을 고르면 그 조직, [전체]면 비움 → retrieve()
   const onOrgPick = (org: OrgInfo | null) => {
@@ -83,18 +83,20 @@ export const Dcr04_Tab_EmpAuth: React.FC = () => {
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={BAR_STYLE}>
               <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text>
-              <Input style={{ width: 200, flex: 'none' }} allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
+              <Input style={{ width: 120, flex: 'none' }} allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
               <Button type="search" onClick={search}>찾기</Button>
+              <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
-            <div ref={boxRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff' }}>
               {/* [E4] tree.Selection (L132) → tabPage.retrieve(classTreeModel) */}
-              {!loading && treeData.length > 0 && (
+              {view === 'list' ? (
+                <DcrClassSearchList rows={rows} query={docSearch} onSelect={r => setSelectedKeys(r ? [r.classTreeId] : [])} />
+              ) : !loading && treeData.length > 0 && (
                 <Tree
                   treeData={treeData}
                   multiple
                   showIcon
                   blockNode
-                  titleRender={n => <span data-ckey={String(n.key)}>{n.title as React.ReactNode}</span>}
                   icon={p => (p.isLeaf ? <UnorderedListOutlined /> : p.expanded ? <FolderOpenOutlined /> : <FolderOutlined />)}
                   expandedKeys={expanded}
                   onExpand={keys => setExpanded(keys)}

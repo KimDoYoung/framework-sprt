@@ -14,7 +14,9 @@ import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { LookupModal } from '@/components/lookup/LookupModal';
-import { ancestorKeys, toTree } from './dcr01Tree';
+import { toTree } from './dcr01Tree';
+import { DcrClassSearchList } from './DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
 export interface DcrClassResult {
   classTreeId: number;
@@ -48,6 +50,8 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrClassTree | null>(null);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const treeRef = useRef<GetRef<typeof Tree>>(null);
   const treeData = useMemo(() => toTree(rows), [rows]);
 
@@ -57,6 +61,7 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
     setSelected(null);
     setExpanded([]);
     setDocSearch('');
+    setView('tree');
     dcrApi.searchClassTree('%')
       .then(setRows)
       .catch(err => message.error(errorMessage(err, '매뉴조회 오류')));
@@ -64,20 +69,14 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
 
   // [E1] docSearch.KeyPress [Enter] (L111), [E2] searchButton[찾기].Select (L119) → search() L262-282
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelected(null);
-    setExpanded([]);
-    const findText = docSearch;
-    if (findText == null || findText === '') return;
-    const lower = findText.toLowerCase();
-    const matches = rows.filter(r => r.classTreeName.toLowerCase().indexOf(lower) > -1);
-    if (matches.length === 0) return;
-    // 찾은 분류의 부모를 모두 펼치고, 마지막으로 찾은 것이 선택으로 남는다(GXT Tree 단일 선택)
-    const keys = new Set<React.Key>();
-    matches.forEach(m => ancestorKeys(rows, m.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    setSelected(matches[matches.length - 1]);
-    setTimeout(() => treeRef.current?.scrollTo({ key: matches[0].classTreeId, align: 'auto' }));
+    if (docSearch === '') return;
+    setView('list');
   };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   // [E3] okButton[선택].Select (L125) → confirm() L284-296: 고른 것이 없으면 "분류를 선택해주세요"
   const confirm = () => {
@@ -114,14 +113,21 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
         </div>
       }
     >
-      <SearchBar onSearch={search} searchText="찾기">
-        <SearchBar.Field label="문서분류">
-          <SearchBar.Input style={{ width: 200 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
-        </SearchBar.Field>
-      </SearchBar>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <SearchBar onSearch={search} searchText="찾기">
+            <SearchBar.Field label="문서분류">
+              <SearchBar.Input style={{ width: 130 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
+            </SearchBar.Field>
+          </SearchBar>
+        </div>
+        <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
+      </div>
       {/* getMenuTree() L171-208: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick) */}
-      <div style={{ height: 560, overflow: 'auto', marginTop: 8 }}>
-        {treeData.length > 0 && (
+      <div style={{ height: 560, overflow: view === 'list' ? 'hidden' : 'auto', marginTop: 8 }}>
+        {view === 'list' ? (
+          <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
+        ) : treeData.length > 0 && (
           <Tree
             ref={treeRef}
             height={560}

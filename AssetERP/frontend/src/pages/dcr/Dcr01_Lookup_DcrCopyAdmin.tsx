@@ -13,7 +13,9 @@ import { errorMessage } from '@/api/client';
 import { DcrClassTree, DcrCopyCompany } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
-import { ancestorKeys, toTree } from './dcr01Tree';
+import { toTree } from './dcr01Tree';
+import { DcrClassSearchList } from './DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
 const gb = gbFor<DcrCopyCompany>();
 
@@ -29,6 +31,8 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrClassTree | null>(null);
   const [searchText, setSearchText] = useState('');
+  // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const [loadingTree, setLoadingTree] = useState(false);
   const gridRef = useRef<AgGridReact<DcrCopyCompany>>(null);
   const treeData = useMemo(() => toTree(rows), [rows]);
@@ -43,6 +47,7 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
   useEffect(() => {
     if (!open) return;
     setSearchText('');
+    setView('tree');
     setSelected(null);
     setExpanded([]);
     setLoadingTree(true);
@@ -57,14 +62,14 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
 
   // [E1] searchText.KeyPress [Enter] (L122) · [E2] searchButton[찾기].Select (L131) → search() L285-303: 닫고(collapseAll) 이름에 검색어가 든 분류의 부모를 펼치고 고른다
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelected(null);
-    setExpanded([]);
     if (!searchText) return;
-    const found = rows.filter(r => r.classTreeName.indexOf(searchText) > -1);
-    if (found.length === 0) return;
-    setExpanded([...new Set(found.flatMap(r => ancestorKeys(rows, r.classTreeId)))]);
-    setSelected(found[found.length - 1]);
+    setView('list');
   };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   // [E3] updateButton[문서분류복사].Select (L137) → update() L160-196: 분류를 안 골랐으면 "문서분류를 선택해주세요", 최하위(T)가 아니면 "최하위 문서분류를 선택해주세요",
   //   운용사를 안 골랐으면 "운용사를 선택해주세요" → dcr.Dcr01_ClassTree.insertAdminCopy(dcrClassTreeId, 고른 운용사) → "문서분류 반영이 완료되었습니다."
@@ -100,11 +105,14 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
         <div style={{ width: '55%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
           <Space style={{ height: 50, padding: '0 8px', flex: 'none' }}>
             <span>문서분류</span>
-            <Input style={{ width: 250 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
+            <Input style={{ width: 130 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
             <Button type="search" onClick={search}>찾기</Button>
+            <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
           </Space>
-          <div style={{ flex: 1, minHeight: 0, overflow: 'auto', borderTop: '1px solid #d9d9d9', padding: 4 }}>
-            {!loadingTree && treeData.length > 0 && (
+          <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', borderTop: '1px solid #d9d9d9', padding: view === 'list' ? 0 : 4 }}>
+            {view === 'list' ? (
+              <DcrClassSearchList rows={rows} query={searchText} onSelect={setSelected} />
+            ) : !loadingTree && treeData.length > 0 && (
               <Tree
                 treeData={treeData}
                 expandedKeys={expanded}

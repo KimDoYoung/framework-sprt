@@ -19,7 +19,9 @@ import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
-import { ancestorKeys, toTree } from '../dcr/dcr01Tree';
+import { toTree } from '../dcr/dcr01Tree';
+import { DcrClassSearchList } from '../dcr/DcrClassSearchList';
+import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 import { Apr05_Grid_RelateAprList } from './Apr05_Grid_RelateAprList';
 
 interface Props {
@@ -45,6 +47,8 @@ export const Apr05_Lookup_LoadDoc: React.FC<Props> = ({ open, onResult, onClose 
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [doc, setDoc] = useState<AprLoadDoc | null>(null);
   const treeRef = useRef<GetRef<typeof Tree>>(null);
@@ -58,6 +62,7 @@ export const Apr05_Lookup_LoadDoc: React.FC<Props> = ({ open, onResult, onClose 
     setSelected(null);
     setExpanded([]);
     setDocSearch('');
+    setView('tree');
     setClassTreeId(null);
     setDoc(null);
     dcrApi.searchClassTree('%')
@@ -67,17 +72,19 @@ export const Apr05_Lookup_LoadDoc: React.FC<Props> = ({ open, onResult, onClose 
 
   // [E1] docSearch.KeyPress [Enter] (L92), [E2] searchButton[찾기].Select (L100) → search() L305-326
   const search = () => {
+    // UX보강: 이름에 검색어가 든 분류를 리스트로 보인다(AS-IS는 트리를 펼쳐 고름)
     setSelected(null);
-    setExpanded([]);
     if (docSearch === '') return;
-    const lower = docSearch.toLowerCase();
-    const matches = rows.filter(r => (r.classTreeName ?? '').toLowerCase().indexOf(lower) > -1);
-    if (matches.length === 0) return;
-    const keys = new Set<React.Key>();
-    matches.forEach(m => ancestorKeys(rows, m.classTreeId).forEach(k => keys.add(k)));
-    setExpanded([...keys]);
-    setSelected(matches[matches.length - 1].classTreeId);
-    setTimeout(() => treeRef.current?.scrollTo({ key: matches[0].classTreeId, align: 'auto' }));
+    setView('list');
+  };
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
+
+  // 리스트에서 고른 분류 — 트리 선택(onTreeSelect)과 같게: typeCode T면 문서 목록을 읽는다
+  const onListSelect = (r: DcrClassTree | null) => {
+    setSelected(r ? r.classTreeId : null);
+    if (r?.typeCode === 'T') setClassTreeId(r.classTreeId);
   };
 
   // [E3] tree.Selection (L127) → typeCode가 T일 때만 gridPage.retrieve(classTreeModel)
@@ -117,15 +124,18 @@ export const Apr05_Lookup_LoadDoc: React.FC<Props> = ({ open, onResult, onClose 
       <div style={{ height: 'min(640px, calc(100vh - 220px))', minHeight: 420, display: 'flex', gap: 8 }}>
         {/* west 30%: 문서분류 트리 (getMenuTree() L196-230: 한 번 눌러도 노드가 열리고 닫힌다) */}
         <div style={{ width: '30%', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
-          <div style={{ background: '#f5f5f5', borderRadius: 4, padding: '6px 10px' }}>
+          <div style={{ background: '#f5f5f5', borderRadius: 4, padding: '6px 10px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
             <SearchBar onSearch={search} searchText="찾기">
               <SearchBar.Field label="문서분류">
-                <SearchBar.Input style={{ width: 150 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
+                <SearchBar.Input style={{ width: 110 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
+            <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
           </div>
           <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            {treeData.length > 0 && (
+            {view === 'list' ? (
+              <DcrClassSearchList rows={rows} query={docSearch} onSelect={onListSelect} />
+            ) : treeData.length > 0 && (
               <Tree
                 ref={treeRef}
                 showIcon
