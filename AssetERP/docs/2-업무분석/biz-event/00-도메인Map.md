@@ -1,13 +1,13 @@
 # 도메인Map — 도메인 사이 흐름
 
 어느 화면이 비어 있으면 왼쪽(앞) 도메인의 이벤트가 아직 안 일어난 것이다. 도메인을 정리할 때마다 이 그림이 자란다.
-지금은 SYS만 정리했다(2026-11-09). 점선 상자는 아직 정리하지 않은 도메인이다.
+SYS를 정리했고 ORG·EMP는 첫 이벤트까지 했다(2026-11-09). 점선 상자는 아직 정리하지 않은 도메인이다.
 
 ```mermaid
 flowchart LR
     SYS["SYS 시스템관리<br/>고객사 등록·관리자·메뉴"]
-    ORG["ORG 조직<br/>(다음 차례)"]
-    EMP["EMP 사원<br/>(다음 차례)"]
+    ORG["ORG 조직<br/>ORG-BZ-0001"]
+    EMP["EMP 사원<br/>EMP-BZ-0001"]
     AUTH["SYS 권한<br/>권한그룹·직원 권한"]
     WORK["업무 도메인들<br/>APR 결재 · ATT 근태 · PAY 급여 · ICS 내부통제 · TDM 책무 …"]
 
@@ -15,7 +15,7 @@ flowchart LR
     SYS --> AUTH
 
     classDef todo stroke-dasharray: 5 5
-    class ORG,EMP,WORK todo
+    class WORK todo
 ```
 
 | 앞 도메인 | 없으면 생기는 일 |
