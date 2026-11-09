@@ -90,7 +90,7 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
                 </SearchBar.Field>
               </SearchBar>
             </div>
-            <div style={{ flex: 1, minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
               {/* [E6] grid.SelectionChanged (L121) → gridCode.retrieveCode(선택한 코드구분). 체크박스 없음 = 단일 선택 */}
               <CellEditGrid<CodeKind> crud={crud} columnDefs={columnDefs} sortable={false}
                 rowSelection={{ mode: 'singleRow', checkboxes: false, enableClickSelection: true }}

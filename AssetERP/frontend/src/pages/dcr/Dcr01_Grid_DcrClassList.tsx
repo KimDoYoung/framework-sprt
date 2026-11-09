@@ -123,7 +123,7 @@ export const Dcr01_Grid_DcrClassList: React.FC<Props> = ({ node }) => {
           <SearchBar.Input style={{ width: 300 }} disabled={!enabled} placeholder="상신제목/연관펀드/연관일임/등록자/부서" value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <MultiGrid<AprDoc>
           gridRef={gridRef}
           rowData={rows}

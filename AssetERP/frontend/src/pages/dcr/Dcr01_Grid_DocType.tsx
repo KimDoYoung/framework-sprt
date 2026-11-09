@@ -233,7 +233,7 @@ export const Dcr01_Grid_DocType: React.FC<Props> = ({ classTree }) => {
             </SearchBar.Field>
           </SearchBar>
         </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
           <CellEditGrid<DcrDocTypeRow> crud={crud} columnDefs={columnDefs}
             rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
         </div>

@@ -87,7 +87,7 @@ export const Dcr03_Tab_OrgAuth: React.FC = () => {
               <Button type="change" onClick={copy}>권한복사</Button>
               <Button type="search" onClick={retrieve}>조회</Button>
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: '#fff', marginTop: 8 }}>
               {/* [E3] orgCodeTree.SelectionChanged [선택>0] (L111) → orgAuthPage.retrieve(orgCodeId), 선택이 없으면 treeClear() */}
               {treeData.length > 0 && (
                 <Tree

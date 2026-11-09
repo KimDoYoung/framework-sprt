@@ -65,7 +65,7 @@ export const Dcr01_Tab_DcrClassModify: React.FC = () => {
               <Button type="search" onClick={search}>찾기</Button>
               <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff', marginTop: 8 }}>
               {/* [E4] tree.Selection (L96) → dcrClassList.retrieve(classTreeModel, managerYn = true) */}
               {view === 'list' ? (
                 <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />

@@ -91,7 +91,7 @@ export const Dcr04_TabPage_EmpAuth: React.FC<Props> = ({ classTree }) => {
         {/* [E6] deleteListButton[사원별 권한현황].Select (L124) → Dcr04_Lookup_DocList.open(callback: retrieve()) */}
         <Button type="view" onClick={() => setListOpen(true)}>사원별 권한현황</Button>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <CellEditGrid<DcrEmpAuth> crud={crud} columnDefs={columnDefs} />
       </div>
       <Emp00_Lookup_SelectMulti open={pickOpen} transDate={dayjs().format('YYYY-MM-DD')} onResult={onPick} onClose={() => setPickOpen(false)} />

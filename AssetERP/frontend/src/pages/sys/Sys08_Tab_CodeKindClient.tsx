@@ -134,7 +134,7 @@ export const Sys08_Tab_CodeKindClient: React.FC = () => {
                 </SearchBar.Field>
               </SearchBar>
             </div>
-            <div style={{ flex: 1, minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
               {/* [E5] grid.SelectionChanged (L155) → gridCode.retrieveCode(선택한 코드구분, companyId) */}
               <SingleGrid<CodeKind>
                 gridRef={gridRef}

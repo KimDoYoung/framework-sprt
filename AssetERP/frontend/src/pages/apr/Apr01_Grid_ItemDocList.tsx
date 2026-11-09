@@ -89,7 +89,7 @@ export const Apr01_Grid_ItemDocList: React.FC<Props> = ({ node }) => {
           <SearchBar.Input style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <SingleGrid<AprItemDocRow>
           rowData={rows}
           columnDefs={columnDefs}

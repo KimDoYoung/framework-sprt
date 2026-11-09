@@ -97,7 +97,7 @@ export const Sys09_Grid_Code: React.FC<Props> = ({ isAdmin, codeKind, companyId:
           </SearchBar.Field>
         </SearchBar>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         {/* 체크박스 없음(setChecked 없음) = 단일 선택, 삭제는 선택한 행 */}
         <CellEditGrid<CodeAdmin> crud={crud} columnDefs={columnDefs} sortable={false}
           rowSelection={{ mode: 'singleRow', checkboxes: false, enableClickSelection: true }} />

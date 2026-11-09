@@ -85,7 +85,7 @@ export const Apr01_Tab_ItemDocument: React.FC = () => {
                 <Input allowClear style={{ width: 120 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
               </SearchBar.Field>
             </SearchBar>
-            <div style={{ flex: 1, minHeight: 0, background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, background: '#fff', marginTop: 8 }}>
               {/* [E4] tree.Selection (L112) → retrieveTabpage() L182-198: docList.setAstClassTreeId + retrieve() — 노드 종류(분류·종목) 가리지 않고 */}
               <SingleGrid<AstItemTreeNode>
                 gridRef={tree.gridRef}
