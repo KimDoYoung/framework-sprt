@@ -56,7 +56,7 @@ const buildGrid = (marketCodes: Code[]) => [
   gb.textCenter('priceBracket', 150, '희망공모가', { editor: 'text' }),                                   // L284
   gb.long('price', 80, '공모가', { editor: 'number' }),                                                   // L285
   gb.textArea('note', 250, '주간사', { editor: 'largeText' }),                                            // L286
-  gb.boolean('cancelYn', 100, '미사용', { editable: true }),                                              // L287
+  gb.boolean('cancelYn', 70, '미사용', { editable: true }),                                              // L287
 ];
 
 const deleteConfirm = (n: number) => `${n}건의 정보를 삭제하시겠습니까?`;

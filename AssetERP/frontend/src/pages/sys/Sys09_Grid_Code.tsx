@@ -20,7 +20,7 @@ const buildGrid = () => [
   gb.text('code', 60, '코드', { editor: 'text' }),  // L105
   gb.text('name', 150, '코드명', { editor: 'text' }),  // L106
   gb.text('seq', 80, '조회순서', { editor: 'text' }),  // L107
-  gb.boolean('closeYn', 60, '미사용', { editable: true }),  // L108
+  gb.boolean('closeYn', 70, '미사용', { editable: true }),  // L108
   gb.date('applyDate', 100, '시작일자', { editor: 'date' }),  // L109
   gb.date('closeDate', 100, '종료일자', { editor: 'date' }),  // L110
   gb.textArea('note', 300, '상세설명', { editor: 'text' }),  // L111

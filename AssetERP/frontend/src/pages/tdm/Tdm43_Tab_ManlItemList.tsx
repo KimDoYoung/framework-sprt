@@ -113,7 +113,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
     gb.textCenter('icrCntStr', 65, '연관내규'),  // L215
     gb.textCenter('formFileCntStr', 65, '연관양식'),  // L216
     gb.textCenter('dcrCntStr', 65, '연관문서'),  // L217
-    gb.booleanYn2('unuseYn', 65, '미사용'),  // L218
+    gb.booleanYn2('unuseYn', 70, '미사용'),  // L218
     iconCell<TdmManlList>('edit', 'etcEdit', 65, '허용항목<br>수정', row => setEtc(row)),  // L219 → Tdm43_Lookup_EtcModify.open
     gb.text('jobName', 250, '매뉴얼작업명'),  // L220
   ], []);

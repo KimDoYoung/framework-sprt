@@ -35,7 +35,7 @@ export const Dcr40_Lookup_StampAuth: React.FC<Props> = ({ stampId, onClosed, onC
   // buildTreeGrid() L171-176: getTreeGrid(1)
   const columnDefs = useMemo(() => [
     tree.treeCol('classTreeName', 410, '문서분류'),  // L173
-    gb.boolean('stampExceptYn', 80, '미사용'),  // L174 — 클릭은 getColumn()이 처리
+    gb.boolean('stampExceptYn', 70, '미사용'),  // L174 — 클릭은 getColumn()이 처리
   ], [tree.treeCol]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // retrieve() L189-198: 서비스 dcr.Dcr01_ClassTree.selectByAllWithStampAuth(companyId, stampId, typeCode %) → getServiceResult() L201-215

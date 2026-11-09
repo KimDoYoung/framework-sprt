@@ -76,6 +76,8 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 | `addBooleanYn2` | `gb.booleanYn2` | 네모 체크박스, 가운데, 선택·해제 두 상태(null은 해제). 읽기 전용, `{ editable: true }`면 클릭으로 바꿈 (AS-IS는 ✓/빈칸 글자) |
 | `addHeaderGroupMap` | `gb.group` | 헤더 묶음 |
 
+**체크박스 폭 원칙** (사용자 확정 2026-11-09): 체크박스 컬럼(`gb.boolean`·`gb.booleanYn2`·`tgb.boolean`)의 제목이 3글자(`<br>` 없음)면 폭은 70으로 한다. 예: `gb.booleanYn2('mainTitleYn', 70, '본업무')`. `gb.booleanYn`(O/X)·`gb.booleanIcon`은 해당 없음. 기존 화면은 같은 날 일괄 적용했다(26건).
+
 렌더러(직접 쓸 때): `StatusCell`, `SignColorCell`, `ValueWithRateCell`(값 + 작은 비율), `ActionCell`(행 안 버튼, 클릭 전파 막음).
 
 ### 아직 대응 없음

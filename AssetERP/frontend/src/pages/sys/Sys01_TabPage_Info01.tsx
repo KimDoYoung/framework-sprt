@@ -54,9 +54,9 @@ const buildGrid = (erpProducts: Code[], openPublicIp: (r: CompanyManage) => void
   gb.date('closeDate', 100, '계약종료일', { editor: 'date' }),  // L119
   gb.textCenter('icamCompanyCd', 80, 'ICAM<br>운용사코드', { editor: 'text' }),  // L120
   gb.textCenter('icamAdvisCompanyCd', 80, 'ICAM<br>자문사코드', { editor: 'text' }),  // L121
-  gb.boolean('assetYn', 80, '운용사', { editable: true }),  // L122
-  gb.boolean('advisYn', 80, '자문사', { editable: true }),  // L123
-  gb.boolean('pbsYn', 80, 'PBS', { editable: true }),  // L124
+  gb.boolean('assetYn', 70, '운용사', { editable: true }),  // L122
+  gb.boolean('advisYn', 70, '자문사', { editable: true }),  // L123
+  gb.boolean('pbsYn', 70, 'PBS', { editable: true }),  // L124
   gb.boolean('useYn', 80, '사용여부', { editable: true }),  // L125
   gb.text('note', 250, '비고'),  // L126
   iconCell('edit', openNote),  // L127 actionCell02 → Sys01_Edit_Note

@@ -101,7 +101,7 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
     gb.textArea('checkHowLimit', 350, '점검방법'),  // L170
     gb.text('checkCycleName', 60, '점검주기'),  // L171
     gb.textArea('checkEvidDocName', 150, '증빙자료'),  // L172
-    gb.booleanYn2('unuseYn', 50, '미사용'),  // L173
+    gb.booleanYn2('unuseYn', 70, '미사용'),  // L173
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [lockYn]);
 

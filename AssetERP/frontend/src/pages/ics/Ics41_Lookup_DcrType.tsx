@@ -22,7 +22,7 @@ const gb = gbFor<IcsDcrType>();
 const buildGrid = () => [
   gb.textCenter('dcrTypeCode', 100, '분류코드', { editor: 'text' }),  // L126
   gb.text('dcrTypeName', 200, '분류명', { editor: 'text' }),  // L127
-  gb.boolean('adYn', 100, '광고물', { editable: true }),  // L128
+  gb.boolean('adYn', 70, '광고물', { editable: true }),  // L128
   gb.boolean('useYn', 100, '사용여부', { editable: true }),  // L129
 ];
 

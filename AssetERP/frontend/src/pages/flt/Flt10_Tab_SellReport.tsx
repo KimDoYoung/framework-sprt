@@ -438,7 +438,7 @@ export const Flt10_Tab_SellReport: React.FC = () => {
         }
       },
     }),
-    gb.booleanYn2('unfillYn', 60, '미체결'),
+    gb.booleanYn2('unfillYn', 70, '미체결'),
   ], []);
 
   const cycleLabel = checkCycle === '1' ? { text: '분기별', color: BLUE }

@@ -45,7 +45,7 @@ export const Emp55_Lookup_account: React.FC<Props> = ({ open, onClose }) => {
   // buildGrid() L87-115 (GridBuilder.getGrid — 편집은 미사용 체크와 계정코드 돋보기뿐)
   const columnDefs = useMemo(() => [
     gb.textCenter('benefitName', 130, '복리후생비명'),  // L109
-    gb.boolean('unUseYn', 80, '미사용', { editable: true }),  // L110
+    gb.boolean('unUseYn', 70, '미사용', { editable: true }),  // L110
     gb.textCenter('accountCode', 100, '계정코드', {  // L111 lookupAccount (LookupTriggerField, 편집 불가)
       cellStyle: { color: '#1677ff' },
       cellRenderer: (p: { data?: BenefitInfo; value?: string }) => (

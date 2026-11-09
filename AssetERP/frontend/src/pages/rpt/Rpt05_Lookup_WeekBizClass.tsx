@@ -61,7 +61,7 @@ export const Rpt05_Lookup_WeekBizClass: React.FC<Props> = ({ open, onSaved, onCl
   // buildGrid() L100-107
   const columnDefs = useMemo(() => [
     gb.text('weekBizTypeName', 250, '업무구분'),  // L103
-    gb.boolean('unUseYn', 80, '미사용', { editable: true }),  // L104
+    gb.boolean('unUseYn', 70, '미사용', { editable: true }),  // L104
   ], []);
 
   return (

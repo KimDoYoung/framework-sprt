@@ -106,7 +106,7 @@ export const Ics01_Lookup_Except: React.FC<Props> = ({ open, onClose }) => {
     gb.textCenter('classTreeCode', 100, '분류코드'),  // L239
     gb.text('classTreeFullName', 780, '분류명'),  // L240
     gb.text('cycleName', 150, '주기'),  // L241
-    gb.boolean('exceptYn', 80, '미사용', { editable: true }),  // L242 addBoolean
+    gb.boolean('exceptYn', 70, '미사용', { editable: true }),  // L242 addBoolean
   ], []);
 
   return (

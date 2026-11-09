@@ -43,7 +43,7 @@ const buildGrid = (openAccount: (row: BenefitInfo) => void) => [
     ),
   }),
   gb.text('accountName', 120, '계정과목'),  // L297
-  gb.boolean('unUseYn', 80, '미사용', { editable: true }),  // L298
+  gb.boolean('unUseYn', 70, '미사용', { editable: true }),  // L298
 ];
 
 const deleteConfirm = (n: number) => `${n}건의 정보를 삭제하시겠습니까?`;

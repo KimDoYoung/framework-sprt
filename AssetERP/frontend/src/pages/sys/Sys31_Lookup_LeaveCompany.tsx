@@ -58,7 +58,7 @@ export const Sys31_Lookup_LeaveCompany: React.FC<Props> = ({ open, onClose }) =>
         return true;
       },
     }),
-    gb.boolean('unUseYn', 80, '미사용', { editable: true }),  // L133
+    gb.boolean('unUseYn', 70, '미사용', { editable: true }),  // L133
   ], [calcCodes]);
 
   return (

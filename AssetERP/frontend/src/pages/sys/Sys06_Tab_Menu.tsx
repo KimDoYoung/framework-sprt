@@ -144,7 +144,7 @@ export const Sys06_Tab_Menu: React.FC = () => {
     { colId: 'move', headerName: '이동', width: 45, cellStyle: { textAlign: 'center' }, cellRenderer: actionCell(<SwapOutlined />, moveMenu) },  // L217
     gb.booleanYn2('useYn', 45, '사용'),  // L218
     gb.booleanYn2('addTitleUseYn', 45, '겸직<br>사용'),  // L219
-    gb.booleanYn2('mobiUseYn', 50, '모바일'),  // L220
+    gb.booleanYn2('mobiUseYn', 70, '모바일'),  // L220
     gb.textCenter('seq', 50, '순서'),  // L221
     gb.textCenter('menuNo', 60, '화면번호'),  // L222
     gb.text('classNm', 200, '클래스명', { editor: 'text' }),  // L223 편집은 화면 값만(원본에 저장 경로 없음)

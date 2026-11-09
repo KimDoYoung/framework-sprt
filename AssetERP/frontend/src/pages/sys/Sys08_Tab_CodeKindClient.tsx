@@ -28,7 +28,7 @@ const gb = gbFor<CodeKind>();
 const buildGrid = () => [
   gb.text('kindCd', 150, '구분코드'),  // L171
   gb.text('kindNm', 180, '코드구분'),  // L172
-  gb.boolean('sysYn', 60, '시스템'),  // L173 sysYnFlag = sysYn == 'true'. 저장 버튼이 없어 보기 전용(작업방법)
+  gb.boolean('sysYn', 70, '시스템'),  // L173 sysYnFlag = sysYn == 'true'. 저장 버튼이 없어 보기 전용(작업방법)
   gb.textArea('note', 300, '상세설명'),  // L174
 ];
 

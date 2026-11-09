@@ -100,7 +100,7 @@ export const Act01_Tab_AccountCode: React.FC = () => {
     gb.boolean('slipYn', 50, '전표'),  // L194
     gb.boolean('printYn', 50, '출력'),  // L195
     gb.boolean('useYn', 50, '사용'),  // L196
-    gb.boolean('fssYn', 50, '금감원'),  // L197
+    gb.boolean('fssYn', 70, '금감원'),  // L197
     gb.boolean('fssSlipYn', 55, '전표(금)'),  // L198
     iconCell<AccountCodeAdmin>('edit', 'actionCell', 50, '수정', row => setEditTarget(row)),  // L199 addCell(ImageCell("Edit")) → Act01_Edit_AccountCode.edit(selectModel)
     gb.textCenter('printSeq', 100, '정렬코드'),  // L200

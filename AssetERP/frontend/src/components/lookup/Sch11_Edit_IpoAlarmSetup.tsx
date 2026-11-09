@@ -17,8 +17,8 @@ const COLUMNS = [
   gb.boolean('demandCdateAlarmYn', 120, '수요예측종료일', { editable: true }),        // L32
   gb.boolean('subscriptionSdateAlarmYn', 100, '청약시작일', { editable: true }),      // L33
   gb.boolean('subscriptionCdateAlarmYn', 100, '청약종료일', { editable: true }),      // L34
-  gb.boolean('payDateAlarmYn', 90, '납입일', { editable: true }),                     // L35
-  gb.boolean('listDateAlarmYn', 90, '상장일', { editable: true }),                    // L36
+  gb.boolean('payDateAlarmYn', 70, '납입일', { editable: true }),                     // L35
+  gb.boolean('listDateAlarmYn', 70, '상장일', { editable: true }),                    // L36
 ];
 
 /**

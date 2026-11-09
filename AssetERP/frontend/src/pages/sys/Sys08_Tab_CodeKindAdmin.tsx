@@ -41,7 +41,7 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
   const columnDefs = useMemo(() => [
     gb.text('kindCd', 120, '코드구분', { editor: 'text' }),  // L143
     gb.text('kindNm', 150, '코드구분명', { editor: 'text' }),  // L144
-    gb.boolean('sysYn', 60, '시스템', { editable: true }),  // L145 (sysYnFlag ↔ sysYn 'true'/'false')
+    gb.boolean('sysYn', 70, '시스템', { editable: true }),  // L145 (sysYnFlag ↔ sysYn 'true'/'false')
     gb.textArea('note', 340, '상세설명', { editor: 'text' }),  // L146
     { colId: 'actionCell', headerName: '그룹', width: 60, headerClass: 'gb-hdr', cellStyle: { textAlign: 'center' }, cellRenderer: actionCell },  // L147
     // eslint-disable-next-line react-hooks/exhaustive-deps

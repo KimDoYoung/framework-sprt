@@ -113,7 +113,7 @@ export const Biz52_Lookup_ErpFee: React.FC<Props> = ({ erpContCorpId, onClose })
     gb.group('추가요금청구', [  // L185 HeaderGroupMap(0, 18) span 3
       gb.boolean('addFeeSmsYn', 60, '문자', { editable: true }),  // L203
       gb.boolean('addFeeServerYn', 60, '서버', { editable: true }),  // L204
-      gb.boolean('addFeeUserYn', 60, '사용자', { editable: true }),  // L205
+      gb.boolean('addFeeUserYn', 70, '사용자', { editable: true }),  // L205
     ]),
   ], [dateCodes, vatCodes, monthTypes, userStdCodes]);
 

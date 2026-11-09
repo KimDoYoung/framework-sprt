@@ -16,7 +16,7 @@ import { useGridCrud } from '@/hooks/useGridCrud';
 const gb = gbFor<CloseCheck>();
 
 /** buildGrid() L89-110 — addBoolean은 클릭으로 값이 바뀌는 체크박스 */
-const check = (field: Parameters<typeof gb.boolean>[0], title: string) => gb.boolean(field, 100, title, { editable: true });
+const check = (field: Parameters<typeof gb.boolean>[0], title: string, width = 100) => gb.boolean(field, width, title, { editable: true });
 
 const columnDefs = [
   gb.text('companyName', 220, '고객사'),
@@ -25,7 +25,7 @@ const columnDefs = [
   check('depositLedgerMatchYn', '예금대사<br>잔고vs계정'),
   check('financeEvalYn', '금융상품<br>평가'),
   check('financeLedgerMatchYn', '금융상품<br>잔고vs계정'),
-  check('fxEvalYn', '환평가'),
+  check('fxEvalYn', '환평가', 70),
   check('depnYn', '감가상각'),
   check('tangibleMatchYn', '유형자산<br>잔고vs계정'),
   check('intangibleMatchYn', '무형자산<br>잔고vs계정'),

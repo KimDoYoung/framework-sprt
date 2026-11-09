@@ -79,7 +79,7 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
     <LookupModal
       open={!!openDate}
       title="조직찾기"
-      width={450}
+      width={600}
       maskClosable={false}
       onCancel={hide}
       footer={
@@ -93,7 +93,7 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
         </div>
       }
     >
-      <div style={{ height: 420, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: 450, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] retrieveButton[조회].Select (L135) → retrieve(). 폭 450 한 줄이라 초기화(UX-02)는 넣지 않는다 */}
         <SearchBar onSearch={retrieve} style={{ flexWrap: 'nowrap' }}>
           <SearchBar.Field label="기준일">
