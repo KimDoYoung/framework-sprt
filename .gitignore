@@ -5,3 +5,6 @@ docs/asis-asseterp/
 # AS-IS 소스/DB 색인 (생성물, 사내 자료)
 docs/as-is/
 AssetERP/docs/as-is/
+
+# TOBE 화면·컴포넌트 색인 (yunhee가 만든 생성물, 코드가 바뀌면 낡음)
+AssetERP/docs/to-be/
