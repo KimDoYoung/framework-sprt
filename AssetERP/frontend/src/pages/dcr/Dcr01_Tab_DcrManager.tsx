@@ -28,9 +28,11 @@ interface Props {
   showInsert: boolean;
   /** 문서 목록 영역에 안쪽 여백(padding 10·gap 8, Dcr01_Tab_DcrWrite와 같은 값) — #1002만 켠다 */
   padded?: boolean;
+  /** 왼쪽 트리 칸의 처음 폭(px). 기본 350 — #1002만 450 */
+  treeWidth?: number;
 }
 
-export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded }) => {
+export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded, treeWidth = 350 }) => {
   const [rows, setRows] = useState<DcrWriteTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrWriteTree | null>(null);
@@ -70,7 +72,7 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
-        <Splitter.Panel defaultSize={350} min={200} max={1000}>
+        <Splitter.Panel defaultSize={treeWidth} min={200} max={1000}>
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={{ minHeight: 50, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 8px', padding: '4px 8px', flex: 'none' }}>
               {/* <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text> */}

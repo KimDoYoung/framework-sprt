@@ -82,8 +82,8 @@ export const Dcr04_Tab_EmpAuth: React.FC = () => {
         <Splitter.Panel defaultSize={400} min={200} max={1000}>
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={BAR_STYLE}>
-              <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text>
-              <Input style={{ width: 120, flex: 'none' }} allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
+              {/* <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text> */}
+              <Input style={{ width: 120, flex: 'none' }} placeholder='문서분류 검색...' allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
               <Button type="search" onClick={search}>찾기</Button>
               <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
