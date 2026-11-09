@@ -34,6 +34,7 @@
 | 파일 | 용도 |
 |:---|:---|
 | `db_dump_backup.sh` | asseterpdb 통째 백업(pg_dump). 컨테이너는 호스트명 기반 `<호스트명>_postgres`(t3600/omen), `DB_CONTAINER`로 덮어쓴다 |
+| `create-virtual-company.sh` | 업무분석 가상회사(kova·igo)를 TOBE API로 한 번에 만든다: 고객사·관리자·사원구분 코드·메뉴(출발지 prod_s1)·조직 2·직원 7명(사번=직함)·권한·직원 비밀번호. 먼저 `db_dump_backup.sh` |
 | `delete-company-db-data.sh` | 가상 회사(kalpa·kova·igo만) 데이터를 회사 행까지 모두 삭제. 옵션 없으면 dry-run 표, `--all` 실제 삭제. 업무분석 시나리오(`docs/2-업무분석/biz-event/`)를 처음부터 다시 돌릴 때 |
 
 ## yunhee 벤치마크
