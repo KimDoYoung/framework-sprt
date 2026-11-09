@@ -169,7 +169,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, admin = false, showI
           <SearchBar.Input style={{ width: 300 }} disabled={!enabled} placeholder="상신제목/연관펀드/연관일임/등록자/부서" value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', marginTop: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* [E6] grid.RowClick (L170) → tabPage.retrieve(apprId) */}
           <SingleGrid<AprDoc>

@@ -14,6 +14,12 @@
 | `page-style-check.py` | `docs/page-style.md` 규칙을 정규식으로 화면×규칙 표로 점검 (견본은 전부 통과해야 함) |
 | `code-health.sh` + `code-health/` | TOBE 정적분석 일괄(PMD·CPD 중복·Checkstyle·SpotBugs+FindSecBugs) → `docs/5-테스트/정적분석/` 보고서. build.gradle 무수정(init script) |
 
+## 화면 캡쳐 보기
+
+| 파일 | 용도 |
+|:---|:---|
+| `make-screen-index-html.sh` | `yunhee screen-capture` 결과(`.yunhee/screen-capture/<화면번호_클래스명>/*.png`)를 한곳에서 보는 `index.html` 생성. 왼쪽 화면번호 목록(메뉴 경로·검색·↑↓), 오른쪽 이미지+파일명. 캡쳐를 새로 찍은 뒤 다시 실행한다. 인자로 다른 캡쳐 폴더를 줄 수 있다 |
+
 ## 외부 시스템 시뮬레이터
 
 | 파일 | 용도 |

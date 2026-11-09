@@ -125,7 +125,7 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
           <SearchBar.Input style={{ width: 300 }} disabled={!enabled} placeholder="등록자/부서/상신제목" value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <SingleGrid<AprIcsDocRow>
           rowData={rows}
           columnDefs={columnDefs}

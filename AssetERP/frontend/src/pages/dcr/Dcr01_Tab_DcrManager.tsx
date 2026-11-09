@@ -9,7 +9,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Input, message, Splitter, Tree } from 'antd';
-import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { FileTextOutlined, FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { errorMessage } from '@/api/client';
 import { dcrApi } from '@/api/dcr';
 import { DcrWriteTree } from '@/types/dcr';
@@ -30,9 +30,13 @@ interface Props {
   padded?: boolean;
   /** 왼쪽 트리 칸의 처음 폭(px). 기본 350 — #1002만 450 */
   treeWidth?: number;
+  /** 트리 말단(문서구분, typeCode 'T')에 폴더가 아닌 문서 아이콘 — #1003만 켠다 (Dcr30_Move_DcrClass와 같은 방식) */
+  leafDocIcon?: boolean;
 }
 
-export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded, treeWidth = 350 }) => {
+type TreeNode = ReturnType<typeof toTree>[number];
+
+export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded, treeWidth = 350, leafDocIcon = false }) => {
   const [rows, setRows] = useState<DcrWriteTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrWriteTree | null>(null);
@@ -40,7 +44,17 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
   // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
   const [view, setView] = useState<'tree' | 'list'>('tree');
   const [loading, setLoading] = useState(false);
-  const treeData = useMemo(() => toTree(rows), [rows]);
+  // toTree는 말단에도 children: []를 넣어 antd의 isLeaf를 쓸 수 없다 → 데이터(typeCode 'T')로 판정해 노드별 icon을 단다
+  const treeData = useMemo(() => {
+    if (!leafDocIcon) return toTree(rows);
+    const typeById = new Map(rows.map(x => [x.classTreeId, x.typeCode]));
+    const decorate = (nodes: TreeNode[]): TreeNode[] => nodes.map(n => ({
+      ...n,
+      icon: typeById.get(Number(n.key)) === 'T' ? <FileTextOutlined style={{ color: '#8c8c8c' }} /> : undefined,
+      children: n.children ? decorate(n.children) : undefined,
+    }));
+    return decorate(toTree(rows));
+  }, [rows, leafDocIcon]);
 
   // [E1 생략] retrieveButton[조회].Select (L74) → retrieve(): 원본도 이 버튼을 툴바에 달지 않는다(buttonBar에는 라벨·docSearch·[찾기]뿐)
   // [E0] 화면 열림 (생성자 L68-147) → retrieve() L197-208 (서비스는 자식 클래스가 정한다)
@@ -80,7 +94,7 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
               <Button type="search" onClick={search}>찾기</Button>
               <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff', marginTop: 8 }}>
               {/* [E4] tree.Selection (L108) → docList.retrieve(classTreeModel, managerYn) */}
               {view === 'list' ? (
                 <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
@@ -132,5 +146,5 @@ export const Dcr01_Tab_DcrManager: React.FC = () => {
       updateYn: false,
     }));
   };
-  return <DcrManagerView loadTree={loadTree} admin showInsert={false} />;
+  return <DcrManagerView loadTree={loadTree} admin showInsert={false} treeWidth={400} leafDocIcon />;
 };

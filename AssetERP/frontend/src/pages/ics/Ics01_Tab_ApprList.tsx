@@ -67,13 +67,13 @@ export const Ics01_Tab_ApprList: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize={455} min={300} max={1000}>
-          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <SearchBar searchText="찾기" onSearch={search}>
               <SearchBar.Field label="법규분류">
                 <SearchBar.Input style={{ width: 150 }} value={icsSearch} onChange={e => setIcsSearch(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
-            <div style={{ flex: 1, minHeight: 0, background: '#fff' }}>
+            <div style={{ flex: 1, minHeight: 0, background: '#fff', marginTop:8 }}>
               {/* [E3] treeGrid.SelectionChanged [선택>0] (L93) → retrievePage() L171-174: gridApprList.retrieve(선택 분류) */}
               <SingleGrid<IcsWriteTreeNode>
                 gridRef={tree.gridRef}
@@ -87,7 +87,7 @@ export const Ics01_Tab_ApprList: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel>
-          <div style={{ height: '100%', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box'}}>
             <Ics01_Grid_ApprList node={selected} />
           </div>
         </Splitter.Panel>
