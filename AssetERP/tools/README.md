@@ -29,6 +29,13 @@
 
 각 시뮬레이터의 자세한 설정은 폴더의 `README.md`.
 
+## DB 쓰기 (로컬 asseterpdb — 먼저 `db_dump_backup.sh`)
+
+| 파일 | 용도 |
+|:---|:---|
+| `db_dump_backup.sh` | asseterpdb 통째 백업(pg_dump). 지금 컨테이너는 `DB_CONTAINER=t3600_postgres`로 준다 |
+| `delete-company-db-data.sh` | 가상 회사(kalpa·kova·igo만) 데이터를 회사 행까지 모두 삭제. 옵션 없으면 dry-run 표, `--all` 실제 삭제. 업무분석 시나리오(`docs/2-업무분석/biz-event/`)를 처음부터 다시 돌릴 때 |
+
 ## yunhee 벤치마크
 
 | 파일 | 용도 |
