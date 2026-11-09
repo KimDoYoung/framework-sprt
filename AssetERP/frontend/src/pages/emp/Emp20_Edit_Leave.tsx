@@ -325,7 +325,7 @@ export const Emp20_Edit_Leave: React.FC<Props> = ({ model, refreshDays, getRemai
   const closeLocked = isCloseLocked(f.leaveCode);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0, overflow: 'auto', paddingTop: 12 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, overflow: 'auto', paddingTop: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Field label="휴가구분" width={250}>
           <Select style={{ width: 140 }} disabled={disabled} value={f.leaveCode ?? undefined} onChange={onLeaveChange}

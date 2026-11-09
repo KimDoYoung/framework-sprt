@@ -21,8 +21,8 @@ import { Scm10_Grid_Dev, type ScmDevHandle } from './Scm10_Grid_Dev';
 import { Scm01_Lookup_ResultContent } from './Scm01_Lookup_ResultContent';
 import { Scm12_Lookup_DevStepRule } from './Scm12_Lookup_DevStepRule';
 
-const LABEL: React.CSSProperties = { width: 105, textAlign: 'right', paddingRight: 10, flex: 'none', fontSize: 12 };
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', margin: '10px 20px 10px 20px' };
+const LABEL: React.CSSProperties = { width: 105, textAlign: 'right', paddingRight: 8, flex: 'none', fontSize: 12 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', margin: '8px 20px' };
 const FMT = 'YYYY-MM-DD';
 const toDay = (v: string | null | undefined): Dayjs | null => (v ? dayjs(v) : null);
 

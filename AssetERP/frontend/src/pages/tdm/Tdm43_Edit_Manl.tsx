@@ -45,7 +45,7 @@ interface Props {
 
 const LABEL: React.CSSProperties = { width: 100, flex: 'none', paddingTop: 5, textAlign: 'right', paddingRight: 8 };
 const Row: React.FC<{ label: React.ReactNode; blue?: boolean; children: React.ReactNode; top?: boolean }> = ({ label, blue, children, top }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 10 }}>
+  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 8 }}>
     <Typography.Text strong style={{ ...LABEL, color: blue ? '#0069B4' : undefined }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>

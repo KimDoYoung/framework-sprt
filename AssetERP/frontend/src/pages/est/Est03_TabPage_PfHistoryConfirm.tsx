@@ -10,7 +10,7 @@ import { Est04_Grid_PfFileConfirm } from './Est04_Grid_PfFileConfirm';
 
 const Field: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
   <div style={{ width, flex: 'none', display: 'flex', alignItems: 'flex-start' }}>
-    <span style={{ width: 120, flex: 'none', lineHeight: '32px' }}>{label} </span>
+    <span style={{ width: 120, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8 }}>{label} </span>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>{children}</div>
   </div>
 );
@@ -25,7 +25,7 @@ interface Props {
 export const Est03_TabPage_PfHistoryConfirm: React.FC<Props> = ({ row, nonce }) => (
   // [E0] 화면 열림 (생성자 L47-110 → settings L58-67, getEditor L69-110)
   <div style={{ height: '100%', display: 'flex', background: '#fff' }}>
-    <div style={{ width: 660, flex: 'none', display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 40 }}>
+    <div style={{ width: 660, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 40 }}>
       <div style={{ display: 'flex' }}>
         <Field label="수행번호" width={220}><Input readOnly value={row?.no ?? ''} /></Field>
         <Field label="수행시작일" width={220}><Input readOnly value={row?.startDate ?? ''} /></Field>

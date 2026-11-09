@@ -30,9 +30,9 @@ interface Props {
   onSaved: () => void;
 }
 
-const FieldRow: React.FC<{ label: React.ReactNode; marginTop?: number; marginBottom?: number; children: React.ReactNode }> = ({ label, marginTop = 5, marginBottom = 5, children }) => (
+const FieldRow: React.FC<{ label: React.ReactNode; marginTop?: number; marginBottom?: number; children: React.ReactNode }> = ({ label, marginTop = 8, marginBottom = 0, children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', margin: `${marginTop}px 10px ${marginBottom}px 15px` }}>
-    <div style={{ width: 110, flex: 'none', paddingTop: 5 }}>{label}</div>
+    <div style={{ width: 110, flex: 'none', paddingTop: 5, paddingRight: 8, textAlign: 'right' }}>{label}</div>
     {children}
   </div>
 );

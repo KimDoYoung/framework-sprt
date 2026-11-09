@@ -196,7 +196,7 @@ export const Scm01_Edit_Sr: React.FC<Props> = ({ sr, onSaved }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 10, opacity: sr ? 1 : 0.5, pointerEvents: sr ? 'auto' : 'none' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, opacity: sr ? 1 : 0.5, pointerEvents: sr ? 'auto' : 'none' }}>
         {/* hlc00: 요청일 / 요청내용 링크 + 편집기 695 */}
         <div style={{ display: 'flex', gap: 30, alignItems: 'flex-start' }}>
           <div style={ROW}>

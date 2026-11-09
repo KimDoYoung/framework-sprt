@@ -27,7 +27,7 @@ const Cell: React.FC<{ label: string; width?: number; children: React.ReactNode 
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '20px 20px 8px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 20px' }}>{children}</div>
 );
 
 interface Props {
@@ -79,7 +79,7 @@ export const Adv02_Edit_Account: React.FC<Props> = ({ model, onSaved }) => {
 
   return (
     <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', opacity: disabled ? 0.6 : 1 }}>
-      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: 0 }}>
+      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: '12px 0 0' }}>
         <Row>
           <Cell label="관리코드">{text('manageCode')}</Cell>
           <Cell label="계좌명">{text('manageName')}</Cell>

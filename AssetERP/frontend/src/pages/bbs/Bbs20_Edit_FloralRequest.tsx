@@ -27,7 +27,7 @@ const DATE = 'YYYY-MM-DD';
 /** 라벨 폭 105 (form.setLabelWidth(105)), required면 파란 라벨(setHtmlStyle "0069B4") */
 const Field: React.FC<{ label: string; required?: boolean; width?: number | string; children: React.ReactNode }> = ({ label, required, width = '100%', children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width, minWidth: 0 }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10, color: required ? BLUE : undefined }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8, color: required ? BLUE : undefined }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -273,8 +273,8 @@ export const Bbs20_Edit_FloralRequest: React.FC<Props> = ({ target, onSaved, onC
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-          <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 2px' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="신청일" required width="50%">
               {ro
                 ? <Input readOnly value={f.regDate?.format(DATE) ?? ''} />
@@ -282,7 +282,7 @@ export const Bbs20_Edit_FloralRequest: React.FC<Props> = ({ target, onSaved, onC
             </Field>
             <Field label="신청자" required width="50%"><Input disabled value={f.personName} /></Field>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="경조구분" required width="50%">
               {ro
                 ? <Input readOnly value={f.occasionsName} placeholder="선택하세요" />
@@ -295,17 +295,17 @@ export const Bbs20_Edit_FloralRequest: React.FC<Props> = ({ target, onSaved, onC
           <Field label="경조문구" required>{txt('message')}</Field>
           <Field label="신청사유" required>{txt('reason', reasonHint(f.occasionsCode))}</Field>
           <SectionTitle title="보내는 사람 (리본인쇄)" />
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="회사명" required width="50%">{txt('sendCompany')}</Field>
             <Field label="발신인" required width="50%">{txt('sendEmp')}</Field>
           </div>
           <SectionTitle title="받는 사람" extra={!ro && <Button type="register" onClick={() => setLoadChoice(true)}>불러오기</Button>} />
           <Field label="회사명" required width="50%">{txt('rcvCompany', 'ABC자산운용')}</Field>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="수신인" required width="50%">{txt('rcvEmp', '홍길동')}</Field>
             <Field label="직위(직책)" width="50%">{txt('rcvPos')}</Field>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="부서" width="50%">{txt('rcvDept')}</Field>
             <Field label="연락처" required width="50%">{txt('rcvTel')}</Field>
           </div>

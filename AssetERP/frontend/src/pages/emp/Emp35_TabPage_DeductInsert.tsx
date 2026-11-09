@@ -104,9 +104,9 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
       {!isActive ? (
         <div style={{ padding: 24, color: '#888' }}>급여공제 항목을 선택하세요.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
           {/* Row01: 적용시작일 | — | 4대보험가입여부 */}
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Typography.Text style={{ width: 110, textAlign: 'right' }}>적용시작일</Typography.Text>
               <Typography.Text style={{ flex: 1 }}>{form.startDate ?? ''}</Typography.Text>
@@ -121,7 +121,7 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row02: 공제대상 가족수 | [추가인적공제여부+아이콘] | 대표자여부 */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Typography.Text style={{ width: 190, textAlign: 'right' }}>공제대상 가족수(본인포함)</Typography.Text>
               <InputNumber
@@ -148,7 +148,7 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row03: 자녀 수 | — | 4대보험 신고정보 */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Typography.Text style={{ width: 190, textAlign: 'right' }}>공제대상 8세이상 20세이하 자녀 수</Typography.Text>
               <InputNumber
@@ -170,7 +170,7 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row04: 원천징수비율 */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Typography.Text style={{ width: 110, textAlign: 'right' }}>원천징수비율(%)</Typography.Text>
               <InputNumber

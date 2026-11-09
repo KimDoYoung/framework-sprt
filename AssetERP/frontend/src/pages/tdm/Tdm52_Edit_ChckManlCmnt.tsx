@@ -33,7 +33,7 @@ interface Props {
 }
 
 const Row: React.FC<{ label: React.ReactNode; blue?: boolean; top?: boolean; children: React.ReactNode }> = ({ label, blue, top, children }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 12 }}>
+  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 8 }}>
     <Typography.Text strong style={{ width: 100, flex: 'none', paddingTop: top ? 5 : 0, textAlign: 'right', paddingRight: 8, color: blue ? '#0069B4' : undefined }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>

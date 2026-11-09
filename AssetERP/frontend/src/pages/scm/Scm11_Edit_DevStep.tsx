@@ -29,8 +29,8 @@ import { Scm13_Edit_DevProgram } from './Scm13_Edit_DevProgram';
 import { Scm13_Grid_DevProgram, type ScmDevProgramHandle } from './Scm13_Grid_DevProgram';
 import { Scm13_Lookup_MultiUpload } from './Scm13_Lookup_MultiUpload';
 
-const LABEL: React.CSSProperties = { width: 115, textAlign: 'right', paddingRight: 10, flex: 'none', fontSize: 12 };
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', margin: '10px 20px 10px 20px' };
+const LABEL: React.CSSProperties = { width: 115, textAlign: 'right', paddingRight: 8, flex: 'none', fontSize: 12 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', margin: '8px 20px' };
 const FMT = 'YYYY-MM-DD';
 const toDay = (v: string | null | undefined): Dayjs | null => (v ? dayjs(v) : null);
 const NEED_STEP = '상단 개발내용을 먼저 선택해주세요';

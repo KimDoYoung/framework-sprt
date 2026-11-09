@@ -48,7 +48,7 @@ const fmt = (v: number | string | null | undefined) =>
 /** 라벨 폭 140 (form.setLabelWidth(140)) · 오른쪽 정렬 */
 const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode; top?: boolean }> = ({ label, width = '100%', children, top }) => (
   <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', width }}>
-    <Typography.Text style={{ width: 140, flex: 'none', textAlign: 'right', paddingRight: 10, lineHeight: '32px' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 140, flex: 'none', textAlign: 'right', paddingRight: 8, lineHeight: '32px' }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -199,8 +199,8 @@ export const Biz60_Edit_FundPriceModi: React.FC<Props> = ({ model, onSaved, onCl
     >
       <div style={{ display: 'flex', gap: 24, padding: '12px 2px' }}>
         {/* 왼쪽 (layout_l L588-597) */}
-        <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ flex: '0 0 600px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="구분" width={330}>
               {/* [E17] reportTypeName[구분].Collapse (L340) → enableds(code) + reportType = code */}
               <SystemCodeComboBox kindCd="FundPriceModifyReportType" placeholder="선택해주세요" style={{ width: '100%' }} value={f.reportType ?? undefined}
@@ -210,7 +210,7 @@ export const Biz60_Edit_FundPriceModi: React.FC<Props> = ({ model, onSaved, onCl
               <DatePicker style={{ width: '100%' }} format={FORMAT} value={dayOf(f.modiDate)} onChange={d => set('modiDate', d ? d.format(FORMAT) : null)} />
             </Field>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="운용사" width={330}><Input value={f.amCorpName ?? ''} onChange={e => set('amCorpName', e.target.value)} /></Field>
             <Field label="기준가 산출일" width={290}>
               <DatePicker style={{ width: '100%' }} format={FORMAT} value={dayOf(f.priceStdDate)} onChange={d => set('priceStdDate', d ? d.format(FORMAT) : null)} />
@@ -221,7 +221,7 @@ export const Biz60_Edit_FundPriceModi: React.FC<Props> = ({ model, onSaved, onCl
           <Field label="발견경위"><Input value={f.discCause ?? ''} onChange={e => set('discCause', e.target.value)} /></Field>
           <Field label="기준가변경사유" top><Input.TextArea rows={6} value={f.modiReason ?? ''} onChange={e => set('modiReason', e.target.value)} /></Field>
           <Field label="재발방지대책" top><Input.TextArea rows={6} disabled={off} value={f.prevPlan ?? ''} onChange={e => set('prevPlan', e.target.value)} /></Field>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="예탁원 공시" width={200}><Checkbox checked={!!f.ksdNoticeYn} onChange={e => set('ksdNoticeYn', e.target.checked)} /></Field>
             <Field label="협회 공시" width={200}><Checkbox checked={!!f.kofiaNoticeYn} onChange={e => set('kofiaNoticeYn', e.target.checked)} /></Field>
             <Field label="배상액" width={240}>{numInput('cmpsAmt', off)}</Field>
@@ -229,7 +229,7 @@ export const Biz60_Edit_FundPriceModi: React.FC<Props> = ({ model, onSaved, onCl
         </div>
 
         {/* 오른쪽 (layout_r L679-686) */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Field label="결산유무">
             {/* [E18] fundCloseYn[결산유무].ValueChange (L347) → 인라인(원본은 본문이 주석이라 아무 일도 하지 않는다) */}
             <Checkbox checked={!!f.fundCloseYn} onChange={e => set('fundCloseYn', e.target.checked)} />

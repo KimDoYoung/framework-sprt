@@ -583,7 +583,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       }
     >
       {doc && (
-        <div style={{ height: 'min(740px, calc(100vh - 190px))', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ height: 'min(740px, calc(100vh - 190px))', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* north 150: 왼쪽 문서구분·상신제목, 오른쪽 시행일자~비고 */}
           <div style={{ display: 'flex', gap: 24, background: '#f5f5f5', borderRadius: 4, padding: '10px 14px' }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

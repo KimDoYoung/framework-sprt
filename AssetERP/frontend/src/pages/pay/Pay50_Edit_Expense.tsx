@@ -36,13 +36,13 @@ const nz = (v: string | null | undefined) => (v === undefined || v === null || v
 const Field: React.FC<{ label: string; width: number; required?: boolean; children: React.ReactNode; style?: React.CSSProperties }> =
   ({ label, width, required, children, style }) => (
     <div style={{ width, display: 'flex', alignItems: 'center', flexShrink: 0, ...style }}>
-      <label style={{ width: 115, flexShrink: 0, textAlign: 'right', paddingRight: 10, color: required ? LABEL_BLUE : undefined }}>{label}</label>
+      <label style={{ width: 115, flexShrink: 0, textAlign: 'right', paddingRight: 8, color: required ? LABEL_BLUE : undefined }}>{label}</label>
       <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
     </div>
   );
 
 const Row: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <div style={{ display: 'flex', alignItems: 'center', margin: '20px 20px 17px 10px', ...style }}>{children}</div>
+  <div style={{ display: 'flex', alignItems: 'center', margin: '8px 20px 8px 10px', ...style }}>{children}</div>
 );
 
 interface Props {

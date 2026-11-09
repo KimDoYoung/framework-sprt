@@ -35,7 +35,7 @@ const Cell: React.FC<{ label: string; width?: number; align?: 'center' | 'flex-s
   label, width = 300, align = 'center', children,
 }) => (
   <div style={{ width, display: 'flex', alignItems: align, flexShrink: 0 }}>
-    <label style={{ width: 120, flexShrink: 0, textAlign: 'right', paddingRight: 10 }}>{label}</label>
+    <label style={{ width: 120, flexShrink: 0, textAlign: 'right', paddingRight: 8 }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>{children}</div>
   </div>
 );
@@ -52,7 +52,7 @@ const RateCell: React.FC<{ label: string; value?: number | null; onChange: (v: n
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '10px 20px 10px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 20px' }}>{children}</div>
 );
 
 interface Props {
@@ -110,7 +110,7 @@ export const Fnd01_Edit_FundCode: React.FC<Props> = ({ model, onSaved }) => {
 
   return (
     <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', opacity: disabled ? 0.6 : 1 }}>
-      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: 0 }}>
+      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: '12px 0 0' }}>
         <Row>
           <Cell label="펀드코드">{text('fundCode')}</Cell>
           <Cell label="펀드명/약명" width={540}>{text('fundFullName')}</Cell>

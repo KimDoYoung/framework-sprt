@@ -74,12 +74,12 @@ export const toReq = (f: OrgForm, baseDate: string): OrgCodeSaveReq => ({
 /** FieldLabel (form.setLabelWidth(70)). width 없으면 남은 폭(HorizontalLayoutData(1, -1)) */
 export const OrgField: React.FC<{ label: string; width?: number; color?: string; children: React.ReactNode }> = ({ label, width, color, children }) => (
   <div style={{ display: 'flex', alignItems: 'center', width, flex: width ? 'none' : 1, minWidth: 0 }}>
-    <Typography.Text style={{ width: 70, flex: 'none', color }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 70, flex: 'none', textAlign: 'right', paddingRight: 8, color }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
 
-/** HorizontalLayoutContainer 한 줄 (칸 사이 여백 20) */
+/** HorizontalLayoutContainer 한 줄 (칸 사이 8, 사용자 지시 2026-11-09) */
 export const OrgRow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>{children}</div>
+  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>{children}</div>
 );

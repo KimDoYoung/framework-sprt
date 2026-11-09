@@ -19,7 +19,7 @@ const REQUIRED = '#0069B4';
 /** FieldLabel(라벨 폭 120) + 필드 한 칸 — setHtmlStyle("라벨 ", "0069B4") */
 const Row: React.FC<{ label: string; required?: boolean; width: number; children: React.ReactNode }> = ({ label, required, width, children }) => (
   <div style={{ width, display: 'flex', alignItems: 'center', marginRight: 50 }}>
-    <label style={{ width: 120, flex: 'none', color: required ? REQUIRED : undefined }}>{label}</label>
+    <label style={{ width: 120, flex: 'none', textAlign: 'right', paddingRight: 8, color: required ? REQUIRED : undefined }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -60,7 +60,7 @@ export const Sys15_Edit_Corp: React.FC<Props> = ({ corp, onSaved }) => {
   const v = form;
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex' }}>
           <Row label="거래처구분" required width={350}>
             {/* corpTypeName ComboBoxField("CorpType") — 고르면 corpType(코드)·corpTypeName */}

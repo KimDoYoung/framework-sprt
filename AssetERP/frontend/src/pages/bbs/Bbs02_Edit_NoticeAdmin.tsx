@@ -48,7 +48,7 @@ interface Props {
 /** 라벨 폭 100 (form.setLabelWidth(100)) — 11 §4a: 라벨 오른쪽 정렬 */
 const Field: React.FC<{ label: string; width?: number | string; required?: boolean; children: React.ReactNode }> = ({ label, width = '100%', required, children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10, color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8, color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -254,14 +254,14 @@ export const Bbs02_Edit_NoticeAdmin: React.FC<Props> = ({ model, onClose, onSave
     >
       <div style={{ display: 'flex', gap: 20, height: 600, padding: '12px 2px', boxSizing: 'border-box' }}>
         {/* 왼쪽 830 */}
-        <div style={{ width: 830, flex: 'none', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        <div style={{ width: 830, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
           <Field label="제목 " required><Input value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></Field>
           <Field label="내용 ">
             <HtmlEditor key={`${f.noticeId}-${f.isNew ? 'n' : 'e'}-${model?.noticeId}`} value={f.notice} onChange={html => set('notice', html)} height={490} />
           </Field>
         </div>
         {/* 오른쪽 510 */}
-        <div style={{ width: 510, flex: 'none', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        <div style={{ width: 510, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
           <div style={{ display: 'flex' }}>
             <Field label="상태 " width={255} required>
               <Select style={{ width: '100%' }} value={f.openYn ?? undefined} onChange={v => set('openYn', v)} options={[{ value: '알림', label: '알림' }, { value: '대기', label: '대기' }]} />

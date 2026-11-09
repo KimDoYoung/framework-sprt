@@ -54,14 +54,14 @@ const autodecCtzNo = (ctz?: string | null) => {
 /** AS-IS getEditor() L246-248: 칸 폭 350 / 550, 오른쪽 여백 50, 라벨 100 */
 const Field: React.FC<{ label: string; width?: number; children?: React.ReactNode }> = ({ label, width = 350, children }) => (
   <Space.Compact style={{ width, flex: 'none', alignItems: 'flex-start' }}>
-    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8 }}>{label}</Typography.Text>
     <div style={{ flex: 1 }}>{children}</div>
   </Space.Compact>
 );
 
-/** row00~row06: HorizontalLayoutContainer, VerticalLayoutData 여백 20 */
+/** row00~row06: HorizontalLayoutContainer. 사용자 지시 2026-11-09: 행 사이 y 간격 8(원본 20), 라벨 오른쪽 정렬 */
 const FormRow: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', gap: 50, margin: '0 20px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', gap: 50, margin: '0 20px 8px' }}>{children}</div>
 );
 
 export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowChanged }) => {

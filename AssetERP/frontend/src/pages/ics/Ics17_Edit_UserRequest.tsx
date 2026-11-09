@@ -21,9 +21,9 @@ import { Ics17_Lookup_LawContent } from './Ics17_Lookup_LawContent';
 const LABEL_W = 100;
 
 /** 라벨(폭 100) + 칸 한 줄 (AS-IS FieldLabel) */
-const Field: React.FC<{ label: React.ReactNode; children: React.ReactNode; width: number; bottom?: number }> = ({ label, children, width, bottom = 10 }) => (
+const Field: React.FC<{ label: React.ReactNode; children: React.ReactNode; width: number; bottom?: number }> = ({ label, children, width, bottom = 8 }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width: width + LABEL_W, marginBottom: bottom }}>
-    <div style={{ width: LABEL_W, flex: 'none', lineHeight: '32px', fontWeight: 'bold', color: '#1F4D83' }}>{label}</div>
+    <div style={{ width: LABEL_W, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8, fontWeight: 'bold', color: '#1F4D83' }}>{label}</div>
     <div style={{ width }}>{children}</div>
   </div>
 );
@@ -154,7 +154,7 @@ export const Ics17_Edit_UserRequest: React.FC<Props> = ({ model, onSaved, onDele
           </div>
           <div style={{ width: 550, padding: 20, boxSizing: 'content-box' }}>
             <Field label="법규명" width={450}>{input(lawTitle, setLawTitle)}</Field>
-            <div style={{ display: 'flex', marginBottom: 10 }}>
+            <div style={{ display: 'flex', marginBottom: 8 }}>
               <Tooltip title="클릭 시, 팝업으로 보기" placement="right">
                 <a style={{ width: LABEL_W, flex: 'none', lineHeight: '32px', fontWeight: 'bold', color: '#000', textDecoration: 'none' }}
                   onMouseDown={() => model && setLawModel(model)}>법규내용 :</a>

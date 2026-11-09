@@ -12,7 +12,7 @@ import { BbsBoard } from '@/types/bbs';
 import { HtmlView } from '@/components/form/HtmlView';
 import { Sys10_Lookup_SelectMulti } from '@/components/lookup/Sys10_Lookup_SelectMulti';
 
-const LABEL: React.CSSProperties = { width: 50, flex: 'none', textAlign: 'right', paddingRight: 10, fontSize: 12, fontWeight: 'bold' };
+const LABEL: React.CSSProperties = { width: 50, flex: 'none', textAlign: 'right', paddingRight: 8, fontSize: 12, fontWeight: 'bold' };
 
 interface Props {
   /** 목록에서 고른 글. 없으면 빈 칸 */
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const Bbs01_Edit_Board: React.FC<Props> = ({ board }) => (
-  <div style={{ height: '100%', overflowY: 'auto', boxSizing: 'border-box', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+  <div style={{ height: '100%', overflowY: 'auto', boxSizing: 'border-box', padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
     <div style={{ display: 'flex', alignItems: 'center' }}>
       <span style={LABEL}>제목</span>
       <Input readOnly value={board?.title ?? ''} />

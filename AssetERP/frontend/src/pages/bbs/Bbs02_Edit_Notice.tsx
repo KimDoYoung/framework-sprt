@@ -50,7 +50,7 @@ interface Props {
 /** 라벨 폭 80 (form.setLabelWidth(80)) — 11 §4a: 라벨 오른쪽 정렬 */
 const Field: React.FC<{ label: string; width?: number | string; required?: boolean; children: React.ReactNode }> = ({ label, width = '100%', required, children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 80, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10, color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 80, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8, color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -274,8 +274,8 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
     >
       <div style={{ display: 'flex', gap: 20, height: 600, padding: '12px 0', boxSizing: 'border-box' }}>
         {/* 왼쪽: 남는 폭 (모달 1350 − 좌우 여백 40 − 간격 20 − 오른쪽 490 = 800. AS-IS 830은 안쪽 폭을 넘쳐 오른쪽이 모달 밖으로 나갔다) */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-          <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Field label="제목 " required><Input value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></Field>
             {/* [E7] copyButton[불러오기].Select (L253) → loadBbs() */}
             <Button type="register" onClick={() => setLoadOpen(true)}>불러오기</Button>
@@ -285,7 +285,7 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
           </Field>
         </div>
         {/* 오른쪽 490 */}
-        <div style={{ width: 490, flex: 'none', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        <div style={{ width: 490, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
           <div style={{ display: 'flex' }}>
             <Field label="상태 " width={245} required>
               <Select style={{ width: '100%' }} value={f.openYn ?? undefined} onChange={v => set('openYn', v)} options={[{ value: '알림', label: '알림' }, { value: '대기', label: '대기' }]} />

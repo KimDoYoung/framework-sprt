@@ -28,9 +28,9 @@ interface Props {
   onEmpAdded: () => void;
 }
 
-const FieldRow: React.FC<{ label: React.ReactNode; marginTop?: number; children: React.ReactNode }> = ({ label, marginTop = 5, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', margin: `${marginTop}px 10px 5px 10px` }}>
-    <div style={{ width: 120, flex: 'none', paddingTop: 5 }}>{label}</div>
+const FieldRow: React.FC<{ label: React.ReactNode; marginTop?: number; children: React.ReactNode }> = ({ label, marginTop = 8, children }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', margin: `${marginTop}px 10px 0 10px` }}>
+    <div style={{ width: 120, flex: 'none', paddingTop: 5, paddingRight: 8, textAlign: 'right' }}>{label}</div>
     {children}
   </div>
 );

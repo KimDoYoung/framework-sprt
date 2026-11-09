@@ -50,7 +50,7 @@ const toForm = (row: PfHistory): Form => ({
 
 const Field: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
   <div style={{ width, flex: 'none', display: 'flex', alignItems: 'flex-start' }}>
-    <span style={{ width: 120, flex: 'none', lineHeight: '32px' }}>{label} </span>
+    <span style={{ width: 120, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8 }}>{label} </span>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>{children}</div>
   </div>
 );
@@ -151,7 +151,7 @@ export const Est03_TabPage_PfHistory: React.FC<Props> = ({ row, nonce, onChanged
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
       <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        <div style={{ width: 660, flex: 'none', display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 40 }}>
+        <div style={{ width: 660, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 40 }}>
           <div style={{ display: 'flex' }}>
             <Field label="수행번호" width={220}>
               <InputNumber style={{ width: '100%' }} controls={false} precision={0} disabled={locked} value={f.no} onChange={v => set('no', v == null ? null : Number(v))} />

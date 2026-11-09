@@ -97,7 +97,7 @@ export const Fnd01_Edit_FundPlan: React.FC<Props> = ({ model, onSaved }) => {
 
   return (
     <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', opacity: disabled ? 0.6 : 1 }}>
-      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: 0 }}>
+      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: '12px 0 0' }}>
         <Row>
           <Cell label="임시펀드코드" required width={300}>
             <Input value={draft?.fundCode ?? ''} onChange={e => patch({ fundCode: e.target.value })} />

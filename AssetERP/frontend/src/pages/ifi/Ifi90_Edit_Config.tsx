@@ -16,11 +16,11 @@ import { IfiConfig } from '@/types/ifi';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 10 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 8 };
 const BOX: React.CSSProperties = { width: 540, background: '#F7F8FC', border: '1px solid #d9d9d9', padding: '5px 10px 0 5px', boxSizing: 'border-box', flex: 'none' };
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Typography.Text strong style={{ width: 70, flex: 'none' }}>{children}</Typography.Text>
+  <Typography.Text strong style={{ width: 70, flex: 'none', textAlign: 'right', paddingRight: 8 }}>{children}</Typography.Text>
 );
 
 interface Props {

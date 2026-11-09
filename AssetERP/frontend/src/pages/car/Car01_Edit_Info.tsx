@@ -20,13 +20,13 @@ const parseNum = (v: string | undefined) => (v ?? '').replace(/,/g, '');
 /** 칸 하나: 라벨(폭 150) + 입력 */
 const Cell: React.FC<{ label: string; width: number; align?: 'center' | 'flex-start'; children: React.ReactNode }> = ({ label, width, align = 'center', children }) => (
   <div style={{ width, display: 'flex', alignItems: align, flexShrink: 0 }}>
-    <label style={{ width: 150, flexShrink: 0, textAlign: 'right', paddingRight: 10 }}>{label}</label>
+    <label style={{ width: 150, flexShrink: 0, textAlign: 'right', paddingRight: 8 }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: 20 }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 20px' }}>{children}</div>
 );
 
 interface Props {
@@ -71,7 +71,7 @@ export const Car01_Edit_Info: React.FC<Props> = ({ model, onCarTypeChange, onSav
 
   return (
     <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', opacity: disabled ? 0.6 : 1 }}>
-      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: 0 }}>
+      <fieldset disabled={disabled || saving} style={{ flex: 1, minHeight: 0, overflow: 'auto', border: 0, margin: 0, padding: '12px 0 0' }}>
         <Row>
           <Cell label="차량구분" width={250}>
             {/* [E2] carTypeName[차량구분].Collapse (L79) → carType 값 변경 + callback(code) */}

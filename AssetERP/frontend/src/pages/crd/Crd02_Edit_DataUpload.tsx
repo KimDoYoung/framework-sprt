@@ -28,8 +28,8 @@ const Cell: React.FC<{ label: string; required?: boolean; width?: number; childr
   </div>
 );
 
-const Row: React.FC<{ top?: number; children?: React.ReactNode }> = ({ top = 15, children }) => (
-  <div style={{ display: 'flex', margin: `${top}px 15px 15px 15px`, minHeight: 24 }}>{children}</div>
+const Row: React.FC<{ top?: number; children?: React.ReactNode }> = ({ top = 8, children }) => (
+  <div style={{ display: 'flex', margin: `${top}px 15px 8px 15px`, minHeight: 24 }}>{children}</div>
 );
 
 interface Props {

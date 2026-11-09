@@ -37,7 +37,7 @@ interface Props {
 
 const Field: React.FC<{ label: string; width?: number; children: React.ReactNode }> = ({ label, width, children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width: width ?? '100%' }}>
-    <Typography.Text style={{ width: 130, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 130, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 8 }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -145,7 +145,7 @@ export const Est02_Edit_PfContract: React.FC<Props> = ({ target, onSaved, onClos
       >
         {ready && (
           <div style={{ display: 'flex', gap: 20, height: 470 }}>
-            <div style={{ width: 670, flex: 'none', display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 5 }}>
+            <div style={{ width: 670, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 5 }}>
               <Field label="차주명 "><Input disabled={locked} value={f.borrower} onChange={e => set('borrower', e.target.value)} /></Field>
               <Field label="사업장명 "><Input disabled={locked} value={f.projectSiteName} onChange={e => set('projectSiteName', e.target.value)} /></Field>
               <Field label="사업장 주소지 "><Input disabled={locked} value={f.projectSiteAddr} onChange={e => set('projectSiteAddr', e.target.value)} /></Field>
@@ -170,7 +170,7 @@ export const Est02_Edit_PfContract: React.FC<Props> = ({ target, onSaved, onClos
                 </div>
               </div>
             </div>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 5 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 5 }}>
               <Typography.Text style={{ lineHeight: '32px' }}>수행계획</Typography.Text>
               {/* getEditor() L263-275: 편집기는 만들 때 한 번만 값을 넣는다 → 열릴 때마다 key로 새로. 잠그면(cp.setEnabled(false)) 눌러도 안 바뀐다 */}
               <div style={locked ? { pointerEvents: 'none', opacity: 0.6 } : undefined}>

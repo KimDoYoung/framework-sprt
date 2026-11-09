@@ -51,10 +51,10 @@ const getWorkYear = (hire: Dayjs | null) => {
   return years <= 0 ? `${months}개월` : `${years}년 ${months}개월`;
 };
 
-/** AS-IS getEditor() L284-352: 칸 폭 350(라벨 100) */
+/** AS-IS getEditor() L284-352: 칸 폭 350(라벨 100). 사용자 지시 2026-11-09: 라벨 오른쪽 정렬, 행 사이 y 간격 8 */
 const Field: React.FC<{ label?: string; children?: React.ReactNode }> = ({ label, children }) => (
   <Space.Compact block style={{ alignItems: 'center', height: 32 }}>
-    <Typography.Text style={{ width: 100, flex: 'none' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 100, flex: 'none', textAlign: 'right', paddingRight: 8 }}>{label}</Typography.Text>
     <div style={{ flex: 1 }}>{children}</div>
   </Space.Compact>
 );
@@ -137,7 +137,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
         </div>
         <Row gutter={30} wrap={false} style={{ flex: 1, alignItems: 'flex-start' }}>
           <Col flex="350px">
-            <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
               <Field label="사원번호"><Input value={f.empNo} readOnly /></Field>
               <Field label="출력순서"><Input value={f.orderSeq} placeholder="미입력시 자동정렬" onChange={e => set('orderSeq', e.target.value)} /></Field>
               <Field label="한글명"><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></Field>
@@ -146,7 +146,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
             </Space>
           </Col>
           <Col flex="350px">
-            <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
               <Field label="입사일">
                 <Space.Compact block>
                   <DatePicker style={{ width: '100%' }} value={f.hireDate} onChange={d => set('hireDate', d)} format="YYYY-MM-DD" />
@@ -164,7 +164,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
           </Col>
           <Col flex="350px">
             <Space.Compact block style={{ alignItems: 'flex-start' }}>
-              <Typography.Text style={{ width: 100, flex: 'none' }}>특이사항</Typography.Text>
+              <Typography.Text style={{ width: 100, flex: 'none', textAlign: 'right', paddingRight: 8 }}>특이사항</Typography.Text>
               <Input.TextArea style={{ height: 270, resize: 'none' }} value={f.note} onChange={e => set('note', e.target.value)} />
             </Space.Compact>
           </Col>

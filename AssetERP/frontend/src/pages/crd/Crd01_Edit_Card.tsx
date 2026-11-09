@@ -30,7 +30,7 @@ const Cell: React.FC<{ label: string; width?: number; children: React.ReactNode 
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '10px 0 10px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 0 8px 20px' }}>{children}</div>
 );
 
 interface Props {

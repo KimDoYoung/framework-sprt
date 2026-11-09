@@ -28,10 +28,10 @@ import { Sys90_Lookup_HappenRemedy } from './Sys90_Lookup_HappenRemedy';
 import { Sys90_Lookup_Remarks } from './Sys90_Lookup_Remarks';
 
 const FIELD_W = 250;
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 10 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 8 };
 
 const Label: React.FC<{ children: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
-  <Typography.Text strong style={{ width: 100, flex: 'none', cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
+  <Typography.Text strong style={{ width: 100, flex: 'none', textAlign: 'right', paddingRight: 8, cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
 );
 
 interface Props {

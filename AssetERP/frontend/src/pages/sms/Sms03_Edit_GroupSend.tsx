@@ -49,18 +49,18 @@ export const Sms03_Edit_GroupSend: React.FC<Props> = ({ model, onSaved }) => {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #d9d9d9' }}>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '30px 0 0 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', width: 470 }}>
-          <label style={{ width: 60 }}>제목 </label>
+          <label style={{ width: 60, flex: 'none', textAlign: 'right', paddingRight: 8, boxSizing: 'border-box' }}>제목 </label>
           <Input style={{ width: 410 }} value={title} onChange={e => setTitle(e.target.value)} />
         </div>
-        <div style={{ display: 'flex', width: 470, marginTop: 20 }}>
-          <label style={{ width: 60 }}>내용 </label>
+        <div style={{ display: 'flex', width: 470, marginTop: 8 }}>
+          <label style={{ width: 60, flex: 'none', textAlign: 'right', paddingRight: 8, boxSizing: 'border-box' }}>내용 </label>
           <Input.TextArea style={{ width: 410, height: 220, resize: 'none' }} value={content} onChange={e => setContent(e.target.value)} />
         </div>
-        <div style={{ margin: '10px 0 10px 60px', width: 410, color: '#DD5E5E' }}>
+        <div style={{ margin: '8px 0 0 60px', width: 410, color: '#DD5E5E' }}>
           ※ 내용은 띄어쓰기 포함 90자 이하로 작성하셔야합니다.
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', width: 470, marginTop: 20 }}>
-          <label style={{ width: 60 }}>비고 </label>
+        <div style={{ display: 'flex', alignItems: 'center', width: 470, marginTop: 8 }}>
+          <label style={{ width: 60, flex: 'none', textAlign: 'right', paddingRight: 8, boxSizing: 'border-box' }}>비고 </label>
           <Input style={{ width: 410 }} value={note} onChange={e => setNote(e.target.value)} />
         </div>
       </div>

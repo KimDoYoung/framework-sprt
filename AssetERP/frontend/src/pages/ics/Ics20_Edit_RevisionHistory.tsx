@@ -16,10 +16,10 @@ import { Ics20_Grid_FileList } from './Ics20_Grid_FileList';
 import { Ics20_Lookup_Content } from './Ics20_Lookup_Content';
 
 const LABEL_W = 90;
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 10 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 8 };
 
 const Label: React.FC<{ children: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
-  <Typography.Text strong style={{ width: LABEL_W, flex: 'none', cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
+  <Typography.Text strong style={{ width: LABEL_W, flex: 'none', textAlign: 'right', paddingRight: 8, cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
 );
 
 const DateView: React.FC<{ value?: string | null; readOnly?: boolean }> = ({ value, readOnly }) => (
@@ -64,7 +64,7 @@ export const Ics20_Edit_RevisionHistory: React.FC<Props> = ({ model }) => {
           </div>
         </div>
         <div style={{ flex: 'none', width: 640, marginLeft: 20, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', marginBottom: 10 }}>
+          <div style={{ display: 'flex', marginBottom: 8 }}>
             {/* [E1] anchor.MouseDown (L93) → Ics20_Lookup_Content.open(revisionHistoryModel, "user", callback → 내용 칸·그리드 갱신) */}
             <Tooltip title="클릭 시, 팝업으로 보기" placement="right">
               <span style={{ display: 'inline-block', width: 95, flex: 'none' }}>

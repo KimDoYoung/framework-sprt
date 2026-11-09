@@ -30,7 +30,7 @@ const Cell: React.FC<{ label: string; width?: number; value?: string | null; ali
         width: 145, 
         flexShrink: 0, 
         textAlign: 'right', 
-        paddingRight: 10 
+        paddingRight: 8 
       }}
     >
       {label}
@@ -50,7 +50,7 @@ const RateCell: React.FC<{ label: string; value?: number | null }> = ({ label, v
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '10px 20px 10px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 20px' }}>{children}</div>
 );
 
 interface Props {
@@ -60,7 +60,7 @@ interface Props {
 
 // [E0] 화면 열림 (생성자 L192-210) → getEditor() L212-325
 export const Fnd01_Edit_FundSearch: React.FC<Props> = ({ model: m }) => (
-  <div style={{ height: '100%', overflow: 'auto', background: '#fff' }}>
+  <div style={{ height: '100%', overflow: 'auto', background: '#fff', paddingTop: 12 }}>
     <Row>
       <Cell label="펀드코드" value={m?.fundCode} />
       <Cell label="펀드명/약명" width={540} value={m?.fundFullName} />
