@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 업무 시나리오 SYS-BZ-0003 고객사가 쓸 메뉴를 열어 준다 (docs/2-업무분석/biz-event/SYS/SYS-BZ-0003-메뉴열어주기.md).
- * #1075 [매뉴권한복사(초기)]: 출발지 회사 kfstest → 새 회사. 끝나면 롤백한다.
+ * #1075 [매뉴권한복사(초기)]: 출발지 회사 prod_s1 → 새 회사. 끝나면 롤백한다.
  */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -41,8 +41,8 @@ class SysBz0003ScenarioTest {
                 new CompanyCreateReq("(주)시나리오시험", "bztest", "1111", LocalDate.of(2020, 3, 2), null, "999-99-99999", "12", "3", "12")).companyId();
     }
 
-    private long kfstest() {
-        return jdbc.queryForObject("select sys01_company_id from sys01_company where sys01_loc_nm = 'kfstest'", Long.class);
+    private long prod() {
+        return jdbc.queryForObject("select sys01_company_id from sys01_company where sys01_loc_nm = 'prod_s1'", Long.class);
     }
 
     private int count(String sql, Object... args) {
@@ -52,13 +52,14 @@ class SysBz0003ScenarioTest {
     @Test
     @DisplayName("복사하면 출발지의 회사 메뉴·권한그룹·권한그룹별 메뉴가 도착지에 생긴다")
     void 메뉴를_복사한다() {
-        long src = kfstest(), dst = newCompany();
+        long src = prod(), dst = newCompany();
         assertThat(count("select count(*) from sys03_company_menu where sys03_company_id = ?", dst)).isZero();
 
         menuService.copyMenus(kfsAdmin, new CompanyMenuCopyReq(src, dst));
 
+        // 출발지에 같은 메뉴가 두 줄 있어도(prod_s1은 80행/77종) 도착지에는 메뉴당 한 줄만 생긴다
         assertThat(count("select count(*) from sys03_company_menu where sys03_company_id = ?", dst))
-                .isEqualTo(count("select count(*) from sys03_company_menu where sys03_company_id = ?", src));
+                .isEqualTo(count("select count(distinct sys03_menu_id) from sys03_company_menu where sys03_company_id = ?", src));
         assertThat(count("select count(*) from sys04_role where sys04_company_id = ?", dst))
                 .isEqualTo(count("select count(*) from sys04_role where sys04_company_id = ?", src));
         assertThat(count("select count(*) from sys07_role_menu rm join sys04_role r on r.sys04_role_id = rm.sys07_role_id where r.sys04_company_id = ?", dst))
@@ -68,7 +69,7 @@ class SysBz0003ScenarioTest {
     @Test
     @DisplayName("두 번 복사하면 회사 메뉴는 그대로지만 권한그룹은 두 벌이 된다(AS-IS 그대로)")
     void 두번_복사하면_권한그룹이_두벌() {
-        long src = kfstest(), dst = newCompany();
+        long src = prod(), dst = newCompany();
         menuService.copyMenus(kfsAdmin, new CompanyMenuCopyReq(src, dst));
         int menus = count("select count(*) from sys03_company_menu where sys03_company_id = ?", dst);
         int roles = count("select count(*) from sys04_role where sys04_company_id = ?", dst);
