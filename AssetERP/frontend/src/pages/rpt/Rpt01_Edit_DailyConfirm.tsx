@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { Input, message, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { rptDailyApi } from '@/api/rpt';
 import { errorMessage } from '@/api/client';
 import { RptDailyConfirm } from '@/types/rpt';
@@ -18,14 +19,6 @@ interface Props {
   /** AS-IS callback.execute() → retrieve() */
   onDone?: () => void;
 }
-
-/** 라벨 폭 75 (form.setLabelWidth(75)) */
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
-    <Typography.Text style={{ width: 75, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 export const Rpt01_Edit_DailyConfirm: React.FC<Props> = ({ model, onClose, onDone }) => {
   const [note, setNote] = useState('');
@@ -48,16 +41,11 @@ export const Rpt01_Edit_DailyConfirm: React.FC<Props> = ({ model, onClose, onDon
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="등록"
       width={700}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 규격: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -69,10 +57,8 @@ export const Rpt01_Edit_DailyConfirm: React.FC<Props> = ({ model, onClose, onDon
       }
     >
       {/* [E0] 화면 열림 (생성자 L53-83) → settings(), show() */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="업무내용"><Input.TextArea rows={9} readOnly value={model.content ?? ''} /></Field>
-        <Field label="비고"><Input.TextArea rows={5} value={note} onChange={e => setNote(e.target.value)} /></Field>
-      </div>
-    </Modal>
+        <EditField label="업무내용" labelWidth={70}><Input.TextArea rows={9} readOnly value={model.content ?? ''} /></EditField>
+        <EditField label="비고" labelWidth={70}><Input.TextArea rows={5} value={note} onChange={e => setNote(e.target.value)} /></EditField>
+    </EditModal>
   );
 };

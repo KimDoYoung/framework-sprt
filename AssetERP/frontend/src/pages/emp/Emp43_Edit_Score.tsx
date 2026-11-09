@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { InputNumber, message, Modal, Space, Typography } from 'antd';
+import { InputNumber, message, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { empEvalApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { EvalAdmin } from '@/types/emp';
@@ -18,14 +19,6 @@ interface Props {
   onSaved: () => void;
   onClose: () => void;
 }
-
-/** 라벨 폭 88 (form.setLabelWidth(88)), 라벨 색 0069B4(setHtmlStyle) */
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-    <Typography.Text style={{ width: 88, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10, color: '#0069B4', fontWeight: 'bold' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 export const Emp43_Edit_Score: React.FC<Props> = ({ target, onSaved, onClose }) => {
   const [plusScore, setPlusScore] = useState<number | null>(null);
@@ -56,17 +49,12 @@ export const Emp43_Edit_Score: React.FC<Props> = ({ target, onSaved, onClose }) 
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="추가가감"
       width={260}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -77,11 +65,9 @@ export const Emp43_Edit_Score: React.FC<Props> = ({ target, onSaved, onClose }) 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="추가 상점"><InputNumber style={{ width: '100%' }} precision={0} value={plusScore} onChange={v => setPlusScore(v == null ? null : Number(v))} /></Field>
-        <Field label="추가 벌점"><InputNumber style={{ width: '100%' }} precision={0} value={minusScore} onChange={v => setMinusScore(v == null ? null : Number(v))} /></Field>
-        <Field label="평정사유가감"><InputNumber style={{ width: '100%' }} precision={0} value={reasonAdjustScore} onChange={v => setReasonAdjustScore(v == null ? null : Number(v))} /></Field>
-      </div>
-    </Modal>
+        <EditField label="추가 상점" labelWidth={88}><InputNumber style={{ width: '100%' }} precision={0} value={plusScore} onChange={v => setPlusScore(v == null ? null : Number(v))} /></EditField>
+        <EditField label="추가 벌점" labelWidth={88}><InputNumber style={{ width: '100%' }} precision={0} value={minusScore} onChange={v => setMinusScore(v == null ? null : Number(v))} /></EditField>
+        <EditField label="평정사유가감" labelWidth={88}><InputNumber style={{ width: '100%' }} precision={0} value={reasonAdjustScore} onChange={v => setReasonAdjustScore(v == null ? null : Number(v))} /></EditField>
+    </EditModal>
   );
 };

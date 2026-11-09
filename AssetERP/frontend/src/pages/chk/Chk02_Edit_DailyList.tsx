@@ -6,7 +6,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';
+import { Input, InputNumber, message, Select, Space } from 'antd';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { SearchOutlined } from '@ant-design/icons';
 import { chkApi } from '@/api/chk';
 import { errorMessage } from '@/api/client';
@@ -32,13 +33,6 @@ interface Props {
 }
 
 /** 라벨 폭 105 (form.setLabelWidth(105)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
-
 /** GXT TextField/TextArea 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
 
@@ -74,16 +68,11 @@ export const Chk02_Edit_DailyList: React.FC<Props> = ({ model, baseClassTreeId, 
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={readOnly ? '일일점검내역' : '일일점검내역 생성/수정'}
       width={800}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 견본: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -94,32 +83,30 @@ export const Chk02_Edit_DailyList: React.FC<Props> = ({ model, baseClassTreeId, 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="분류">
+        <EditField label="분류" labelWidth={70}>
           {/* [E2] classTreeName[분류].TriggerClick (L191) → Chk01_Lookup_ClassTree.edit(): 결과가 있으면 classTreeId·이름을 바꾼다 */}
           <Input readOnly disabled={locked} value={f.classTreeName ?? ''} suffix={<SearchOutlined />} style={{ cursor: locked ? 'default' : 'pointer' }}
             onClick={() => !locked && setLookupOpen(true)} />
-        </Field>
-        <Field label="내용"><Input.TextArea rows={7} disabled={locked} value={f.content ?? ''} onChange={e => set('content', e.target.value)} /></Field>
-        <Field label="설명"><Input.TextArea rows={7} disabled={locked} value={f.explan ?? ''} onChange={e => set('explan', e.target.value)} /></Field>
-        <Space size={0}>
-          <Field label="CutOff" width={365}><Input disabled={!!readOnly} value={f.cutoff ?? ''} onChange={e => set('cutoff', e.target.value)} /></Field>
-          <Field label="화면번호" width={365}><Input disabled={!!readOnly} value={f.windowNo ?? ''} onChange={e => set('windowNo', e.target.value)} /></Field>
-        </Space>
-        <Space size={0}>
-          <Field label="조회순서" width={365}>
+        </EditField>
+        <EditField label="내용" labelWidth={70}><Input.TextArea rows={7} disabled={locked} value={f.content ?? ''} onChange={e => set('content', e.target.value)} /></EditField>
+        <EditField label="설명" labelWidth={70}><Input.TextArea rows={7} disabled={locked} value={f.explan ?? ''} onChange={e => set('explan', e.target.value)} /></EditField>
+        <EditRow>
+          <EditField label="CutOff" labelWidth={70} width={376}><Input disabled={!!readOnly} value={f.cutoff ?? ''} onChange={e => set('cutoff', e.target.value)} /></EditField>
+          <EditField label="화면번호" labelWidth={70} width={376}><Input disabled={!!readOnly} value={f.windowNo ?? ''} onChange={e => set('windowNo', e.target.value)} /></EditField>
+        </EditRow>
+        <EditRow>
+          <EditField label="조회순서" labelWidth={70} width={376}>
             <InputNumber style={{ width: '100%' }} disabled={!!readOnly} precision={0} value={f.seq ?? null} onChange={v => set('seq', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="사용여부" width={365}>
+          </EditField>
+          <EditField label="사용여부" labelWidth={70} width={376}>
             {/* [E1] useYn[사용여부].Collapse (L181) → useYn = 사용이면 true */}
             <Select style={{ width: '100%' }} disabled={!!readOnly} value={f.useYn === 'false' ? '미사용' : '사용'} options={[{ value: '사용' }, { value: '미사용' }]}
               onChange={v => set('useYn', String(v === '사용'))} />
-          </Field>
-        </Space>
-      </div>
+          </EditField>
+        </EditRow>
       <Chk01_Lookup_ClassTree open={lookupOpen} mode="edit" classTreeId={baseClassTreeId}
         onResult={node => { if (node) { setF(prev => prev && { ...prev, classTreeId: node.classTreeId, classTreeName: node.classTreeName }); } }}
         onClose={() => setLookupOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };
