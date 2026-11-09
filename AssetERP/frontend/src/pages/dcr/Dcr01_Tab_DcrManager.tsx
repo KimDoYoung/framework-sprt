@@ -8,7 +8,7 @@
  * 트리를 어디서 읽는지만 자식 클래스가 바꾼다(DcrUser.retrieve() L36-51) → loadTree 로 받는다
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Input, message, Splitter, Tree, Typography } from 'antd';
+import { Input, message, Splitter, Tree } from 'antd';
 import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { errorMessage } from '@/api/client';
 import { dcrApi } from '@/api/dcr';

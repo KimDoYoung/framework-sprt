@@ -7,6 +7,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
@@ -26,10 +27,10 @@ interface Props {
   onDone: (classTreeId: number | undefined) => void;
 }
 
-/** 라벨 폭 70 (form.setLabelWidth(70)) */
+/** 라벨 폭 70 (form.setLabelWidth(70)), 오른쪽 맞춤 + 입력칸과 8px (UX보강 — 편집 폼 라벨은 오른쪽 맞춤) */
 const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <span style={{ width: 70, flex: 'none', paddingTop: 4 }}>{label}</span>
+    <span style={{ width: 70, flex: 'none', paddingTop: 4, paddingRight: 8, textAlign: 'right', boxSizing: 'border-box' }}>{label}</span>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -123,10 +124,12 @@ export const Dcr01_Edit_ClassTree: React.FC<Props> = ({ model, title, onClose, o
   };
 
   return (
-    <Modal
+    <LookupModal
       open
       title={title}
-      width={440}
+      width={500}
+      // 편집 모달 좌우 여백 20 — 머리·폼·푸터가 같은 선에서 시작하고 끝난다
+      styles={{ content: { padding: 20 } }}
       maskClosable={false}
       onCancel={onClose}
       footer={
@@ -140,14 +143,14 @@ export const Dcr01_Edit_ClassTree: React.FC<Props> = ({ model, title, onClose, o
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 2px 2px' }}>
-        <Space size={0} align="start">
-          <Field label="분류코드" width={250}><Input value={f.classTreeCode ?? ''} onChange={e => set('classTreeCode', e.target.value)} /></Field>
-          <Field label="조회순서" width={150}><Input value={f.seq ?? ''} onChange={e => set('seq', e.target.value)} /></Field>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '20px 0' }}>
+        <Space size={8} align="start">
+          <Field label="분류코드" width={260}><Input value={f.classTreeCode ?? ''} onChange={e => set('classTreeCode', e.target.value)} /></Field>
+          <Field label="조회순서" width={192}><Input value={f.seq ?? ''} onChange={e => set('seq', e.target.value)} /></Field>
         </Space>
         <Field label="분류명"><Input value={f.classTreeName ?? ''} onChange={e => set('classTreeName', e.target.value)} /></Field>
         <Field label="상세설명"><Input.TextArea rows={5} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };
