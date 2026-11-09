@@ -254,7 +254,7 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
       width={1350}
       maskClosable={false}
       onCancel={onClose}
-      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 }, footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 } }}
+      styles={{ content: { padding: 20 }, header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 }, footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -272,9 +272,9 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
         </div>
       }
     >
-      <div style={{ display: 'flex', gap: 20, height: 600, padding: '12px 2px', boxSizing: 'border-box' }}>
-        {/* 왼쪽 830 */}
-        <div style={{ width: 830, flex: 'none', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+      <div style={{ display: 'flex', gap: 20, height: 600, padding: '12px 0', boxSizing: 'border-box' }}>
+        {/* 왼쪽: 남는 폭 (모달 1350 − 좌우 여백 40 − 간격 20 − 오른쪽 490 = 800. AS-IS 830은 안쪽 폭을 넘쳐 오른쪽이 모달 밖으로 나갔다) */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
           <div style={{ display: 'flex', gap: 10 }}>
             <Field label="제목 " required><Input value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></Field>
             {/* [E7] copyButton[불러오기].Select (L253) → loadBbs() */}
@@ -302,7 +302,7 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
           </div>
           <div style={{ display: 'flex' }}>
             {/* [E14] topNoticeYn[상단고정].ValueChange (L313) → setTopNoticeYn() */}
-            <Field label="상단고정 " width={245}><Checkbox checked={f.topNoticeYn} onChange={e => onTopChange(e.target.checked)} /></Field>
+            <Field label="상단고정 " width={245}><Checkbox style={{ marginTop: 8 }} checked={f.topNoticeYn} onChange={e => onTopChange(e.target.checked)} /></Field>
             <Field label="종료일 " width={245}>
               <DatePicker style={{ width: '100%' }} disabled={!f.topNoticeYn} value={f.topNoticeCloseDate ? dayjs(f.topNoticeCloseDate) : null}
                 onChange={d => set('topNoticeCloseDate', d ? d.format(DATE) : null)} />
@@ -322,7 +322,7 @@ export const Bbs02_Edit_Notice: React.FC<Props> = ({ model, onClose, onSaved, on
               />
             </Field>
           </div>
-          <Field label="댓글허용 " width={245}><Checkbox checked={f.commentYn} onChange={e => set('commentYn', e.target.checked)} /></Field>
+          <Field label="댓글허용 " width={245}><Checkbox style={{ marginTop: 8 }} checked={f.commentYn} onChange={e => set('commentYn', e.target.checked)} /></Field>
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box', marginLeft: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 8px' }}>
               <span>개별 대상자</span>
