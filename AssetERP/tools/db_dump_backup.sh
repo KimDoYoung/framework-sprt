@@ -5,7 +5,7 @@
 #   --out <folder>   저장 폴더 지정(없으면 만든다). 파일 이름은 그대로 asseterpdb-<YYYYMMDD-HHMMSS>.dump
 #   --list           저장 폴더의 백업 목록만 보여 주고 끝낸다
 #   -h, --help       이 도움말
-# 환경변수(기본값): DB_CONTAINER=omen_postgres  DB_USER=kdy987  DB_NAME=asseterpdb
+# 환경변수(기본값): DB_CONTAINER=<호스트명 소문자>_postgres (사무실 t3600_postgres, 집 omen_postgres)  DB_USER=kdy987  DB_NAME=asseterpdb
 # 받은 뒤 pg_restore -l 로 덤프가 읽히는지 확인한다. 중간에 실패하면 반쪽 파일을 남기지 않는다.
 # 복원(되돌리기): 백엔드(8080)를 끈 뒤 아래를 실행한다. 접속이 남아 있으면 막힌다.
 #   docker exec -i omen_postgres pg_restore -U kdy987 -d asseterpdb --clean --if-exists --no-owner < <덤프 파일>
@@ -13,7 +13,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONTAINER="${DB_CONTAINER:-omen_postgres}"
+HOST_LC="$(hostname -s 2>/dev/null || hostname)"; HOST_LC="${HOST_LC,,}"
+CONTAINER="${DB_CONTAINER:-${HOST_LC}_postgres}"
 DBUSER="${DB_USER:-kdy987}"
 DBNAME="${DB_NAME:-asseterpdb}"
 OUT="$ROOT/data/backup/db"

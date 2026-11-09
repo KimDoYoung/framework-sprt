@@ -10,10 +10,11 @@
 #   1단계~ 위 행들의 PK 값(전역 채번이라 회사 간에 겹치지 않음)을 *_id 열에 가진 다른 테이블의 행
 #          → 사원(emp01) id에 묶인 emp02~emp35·sys26 로그인 기록, 권한(sys04) id에 묶인 sys07 등. 새 행이 없을 때까지 반복
 # 안전장치: kalpa·kova·igo 만 허용(실제 회사 kfstest·admin 등은 막는다). 쓰기 전에 ./tools/db_dump_backup.sh 로 백업한다.
-# 환경변수(기본값): DB_CONTAINER=t3600_postgres  DB_USER=kdy987  DB_NAME=asseterpdb
+# 환경변수(기본값): DB_CONTAINER=<호스트명 소문자>_postgres (사무실 t3600_postgres, 집 omen_postgres)  DB_USER=kdy987  DB_NAME=asseterpdb
 set -euo pipefail
 
-CONTAINER="${DB_CONTAINER:-t3600_postgres}"
+HOST_LC="$(hostname -s 2>/dev/null || hostname)"; HOST_LC="${HOST_LC,,}"
+CONTAINER="${DB_CONTAINER:-${HOST_LC}_postgres}"
 DBUSER="${DB_USER:-kdy987}"
 DBNAME="${DB_NAME:-asseterpdb}"
 ALLOWED="kalpa kova igo"
