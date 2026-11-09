@@ -6,7 +6,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { DatePicker, Checkbox, Input, InputNumber, message, Modal, Radio, Select, Space, Typography } from 'antd';
+import { DatePicker, Checkbox, Input, InputNumber, message, Modal, Radio, Select, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import dayjs, { Dayjs } from 'dayjs';
 import { empMyErrandApi } from '@/api/emp';
 import { sysApi } from '@/api/sys';
@@ -24,13 +25,6 @@ interface Props {
   onDone: () => void;
   onClose: () => void;
 }
-
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-    <Typography.Text style={{ width: 90, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 const n = (s: string) => (s === '' ? null : s);
 
@@ -116,16 +110,11 @@ export const Emp54_Edit_Errand: React.FC<Props> = ({ open, onDone, onClose }) =>
 
   const box: React.CSSProperties = { border: '1px solid #d9d9d9', padding: '4px 8px', opacity: 1 };
   return (
-    <Modal
+    <EditModal
       open={open}
       title="반복등록"
       width={560}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -136,43 +125,42 @@ export const Emp54_Edit_Errand: React.FC<Props> = ({ open, onDone, onClose }) =>
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
         {/* [E1] date[외출일자].ValueChange (L152) → setMonthLabels() */}
-        <Field label="외출일자"><DatePicker style={{ width: 210 }} allowClear={false} value={date} format={FORMAT} onChange={d => setDate(d)} /></Field>
+        <EditField label="외출일자" labelWidth={85}><DatePicker style={{ width: 210 }} allowClear={false} value={date} format={FORMAT} onChange={d => setDate(d)} /></EditField>
         {/* [E2] errandName[구분].Collapse (L158) → errandCode */}
-        <Field label="구분">
+        <EditField label="구분" labelWidth={85}>
           <Select style={{ width: 210 }} value={errandCode} options={errandCodes.map(c => ({ value: c.code, label: c.name }))} onChange={setErrandCode} />
-        </Field>
-        <Field label="외출시간">
+        </EditField>
+        <EditField label="외출시간" labelWidth={85}>
           <Space size={6}>
             <Input style={{ width: 120 }} value={departTime} onChange={e => setDepartTime(e.target.value)} />~
             <Input style={{ width: 120 }} value={returnTime} onChange={e => setReturnTime(e.target.value)} />
           </Space>
-        </Field>
-        <Field label="사유"><Input value={reason} onChange={e => setReason(e.target.value)} /></Field>
-        <Field label="장소"><Input value={venue} onChange={e => setVenue(e.target.value)} /></Field>
-        <Field label="주최자"><Input value={host} onChange={e => setHost(e.target.value)} /></Field>
-        <Field label="반복주기">
+        </EditField>
+        <EditField label="사유" labelWidth={85}><Input value={reason} onChange={e => setReason(e.target.value)} /></EditField>
+        <EditField label="장소" labelWidth={85}><Input value={venue} onChange={e => setVenue(e.target.value)} /></EditField>
+        <EditField label="주최자" labelWidth={85}><Input value={host} onChange={e => setHost(e.target.value)} /></EditField>
+        <EditField label="반복주기" labelWidth={85}>
           <Space>
             <InputNumber style={{ width: 120 }} precision={0} disabled={isNone} value={cycleNum} onChange={v => setCycleNum(v == null ? null : Number(v))} />
             <Select style={{ width: 100 }} value={cycleName} onChange={onCycleChange}
               options={[{ value: 'none', label: '없음' }, ...cycleCodes.map(c => ({ value: c.code, label: c.name }))]} />
           </Space>
-        </Field>
-        <Field label="반복종료일">
+        </EditField>
+        <EditField label="반복종료일" labelWidth={85}>
           <Space>
             <DatePicker style={{ width: 210 }} disabled={isNone} value={cycleDate} format={FORMAT} onChange={d => setCycleDate(d)} />
             <Checkbox disabled={isNone} checked={holidayYn} onChange={e => setHolidayYn(e.target.checked)}>휴일제외</Checkbox>
           </Space>
-        </Field>
-        <Field label="주기(주)">
+        </EditField>
+        <EditField label="주기(주)" labelWidth={85}>
           <div style={box}>
             <Radio.Group disabled={!weekOn} value={weekOpt} onChange={e => setWeekOpt(e.target.value)} style={{ display: 'flex', justifyContent: 'space-around' }}>
               {WEEKDAYS.map((w, i) => <Radio key={w} value={i + 2}>{w}</Radio>)}
             </Radio.Group>
           </div>
-        </Field>
-        <Field label="주기(월)">
+        </EditField>
+        <EditField label="주기(월)" labelWidth={85}>
           <div style={box}>
             <Radio.Group disabled={!monthOn} value={monthOpt} onChange={e => setMonthOpt(e.target.value)} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Radio value={1}>{labels.l1}</Radio>
@@ -180,8 +168,7 @@ export const Emp54_Edit_Errand: React.FC<Props> = ({ open, onDone, onClose }) =>
               <Radio value={3} disabled={!lastEnabled}>{labels.l3}</Radio>
             </Radio.Group>
           </div>
-        </Field>
-      </div>
-    </Modal>
+        </EditField>
+    </EditModal>
   );
 };

@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, Modal, message, Typography } from 'antd';
+import { DatePicker, Input, message } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import dayjs from 'dayjs';
 import { attApi } from '@/api/att';
 import { errorMessage } from '@/api/client';
@@ -22,11 +23,6 @@ interface Props {
 }
 
 const DATE = 'YYYY-MM-DD';
-
-/** 라벨 폭 120 (form.setLabelWidth(120)) */
-const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Typography.Text style={{ width: 120, flex: 'none', textAlign: 'right', paddingRight: 10 }}>{children}</Typography.Text>
-);
 
 export const Att02_Edit_CheckOutTime: React.FC<Props> = ({ target, onDone, onClose }) => {
   const [outDate, setOutDate] = useState<string | null>(null);
@@ -62,28 +58,24 @@ export const Att02_Edit_CheckOutTime: React.FC<Props> = ({ target, onDone, onClo
   const maxDate = inDate ? dayjs(inDate).add(1, 'day') : null;
 
   return (
-    <Modal
+    <EditModal
       open={target != null}
       title="미등록 근태 (이전)"
       width={440}
       closable={false}
       keyboard={false}
-      maskClosable={false}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={<div style={{ textAlign: 'center' }}><Button type="save" onClick={update} loading={saving}>제출</Button></div>}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Label>출근시간</Label>
+      {/* AS-IS 라벨 폭 120 → 편집 폼 원칙: 가장 긴 라벨(4글자) 기준 70 */}
+      <EditField label="출근시간" labelWidth={70}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* edit() L60-61: checkInTimeStr.setEnabled(false), checkInTime.setEnabled(false) */}
           <Input style={{ width: 70 }} disabled value={target?.checkInTimeStr ?? ''} />
           <DatePicker style={{ width: 115 }} disabled allowClear={false} format={DATE} value={inDate ? dayjs(inDate) : null} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Label>퇴근시간</Label>
+      </EditField>
+      <EditField label="퇴근시간" labelWidth={70}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E1] checkOutTimeStr.Blur (L101) → formatTime(), [E2] checkOutTimeStr.KeyPress (L106) → 숫자와 ':'만 */}
           <Input style={{ width: 70 }} placeholder="HH:mm" value={outTime} onChange={e => setOutTime(e.target.value)}
             onBlur={() => setOutTime(formatTime(outTime) ?? '')} onKeyPress={onlyTimeKey} />
@@ -92,7 +84,7 @@ export const Att02_Edit_CheckOutTime: React.FC<Props> = ({ target, onDone, onClo
             minDate={minDate ?? undefined} maxDate={maxDate ?? undefined}
             onChange={d => setOutDate(d ? d.format(DATE) : null)} />
         </div>
-      </div>
-    </Modal>
+      </EditField>
+    </EditModal>
   );
 };

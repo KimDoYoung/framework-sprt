@@ -9,7 +9,7 @@
  * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { DatePicker, Input, message, Modal, Radio, Space } from 'antd';
+import { DatePicker, Input, message, Radio, Space } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { bizContCorpApi } from '@/api/bizCont';
@@ -18,6 +18,7 @@ import { BizContCorp, BizContFeeInfo, BizContShare } from '@/types/bizCont';
 import { OrgInfo, TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
@@ -45,16 +46,6 @@ interface Props {
   onDone: () => void;
   onClose: () => void;
 }
-
-/** 라벨 폭 125 (form.setLabelWidth(125)) */
-const Field: React.FC<{ label: string; children: React.ReactNode; top?: boolean }> = ({ label, children, top }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', minWidth: 0 }}>
-    <span style={{ width: 125, flex: 'none', textAlign: 'right', paddingRight: 10, fontSize: 12, fontWeight: 'bold', lineHeight: top ? '32px' : undefined }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
-
-const row2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
 
 export const Biz11_Edit_ContHistory: React.FC<Props> = ({ target, onDone, onClose }) => {
   const user = useLoginUser();
@@ -238,18 +229,15 @@ export const Biz11_Edit_ContHistory: React.FC<Props> = ({ target, onDone, onClos
 
   return (
     <>
-      <Modal
+      <EditModal
         open={target != null && f != null}
         title={target?.kind === 'newCorp' ? '계약사 신규' : '계약사 변경/추가'}
         width={620}
         style={{ top: 20 }}
-        maskClosable={false}
         onCancel={onClose}
         destroyOnHidden
         styles={{
-          header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
           body: { maxHeight: 'calc(100vh - 190px)', overflowY: 'auto' },
-          footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
         }}
         footer={
           <div style={{ textAlign: 'center' }}>
@@ -262,66 +250,63 @@ export const Biz11_Edit_ContHistory: React.FC<Props> = ({ target, onDone, onClos
         }
       >
         {f && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-            <div style={row2}>
-              <Field label="적용일"><DatePicker style={{ width: '100%' }} value={day(f.regDate)} onChange={d => set('regDate', fmt(d))} /></Field>
-              <Field label="계약상태">
+          <>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="적용일"><DatePicker style={{ width: '100%' }} value={day(f.regDate)} onChange={d => set('regDate', fmt(d))} /></EditField>
+              <EditField labelWidth={120} width={286} label="계약상태">
                 {/* [E7] contStatusName[계약상태].Collapse (L316) → contStatusCode = contStatusName.getCode() (코드그룹 ContStatusCode{01|02}) */}
                 <SystemCodeComboBox kindGroupCd={`ContStatusCode${actionStr}`} style={{ width: '100%' }} value={f.contStatusCd ?? undefined}
                   onChange={(c, nm) => setF(prev => prev && { ...prev, contStatusCd: c ?? null, contStatusNm: nm ?? null })} />
-              </Field>
-            </div>
-            <Field label="계약사"><Input value={f.contCorpNm ?? ''} onChange={e => set('contCorpNm', e.target.value)} /></Field>
-            <div style={row2}>
-              <Field label="계약사 거래유무">
+              </EditField>
+            </EditRow>
+            <EditField labelWidth={120} label="계약사"><Input value={f.contCorpNm ?? ''} onChange={e => set('contCorpNm', e.target.value)} /></EditField>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="계약사 거래유무">
                 {/* [E8] corpStatusName[계약사 거래유무].Collapse (L322) → corpStatusCode */}
                 <SystemCodeComboBox kindCd="ContCorpStatusCode" style={{ width: '100%' }} value={f.corpStatusCd ?? undefined}
                   onChange={(c, nm) => setF(prev => prev && { ...prev, corpStatusCd: c ?? null, corpStatusNm: nm ?? null })} />
-              </Field>
-              <Field label="계약기간">
+              </EditField>
+              <EditField labelWidth={120} width={286} label="계약기간">
                 {/* [E9] contPeriodName[계약기간].Collapse (L328) → contPeriodCode · [E3] ValueChange → startDate 가 있으면 getDate() */}
                 <SystemCodeComboBox kindCd="ContPeriodCode" style={{ width: '100%' }} value={f.contPeriodCd ?? undefined}
                   onChange={(c, nm) => {
                     setF(prev => prev && { ...prev, contPeriodCd: c ?? null, contPeriodNm: nm ?? null });
                     if (f.startDate) recalcClose(f.startDate, c ?? null);
                   }} />
-              </Field>
-            </div>
-            <div style={row2}>
-              <Field label="거래형태"><Input value={f.trType ?? ''} onChange={e => set('trType', e.target.value)} /></Field>
-              <Field label="거래개시일">
+              </EditField>
+            </EditRow>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="거래형태"><Input value={f.trType ?? ''} onChange={e => set('trType', e.target.value)} /></EditField>
+              <EditField labelWidth={120} width={286} label="거래개시일">
                 <DatePicker style={{ width: '100%' }} value={day(f.startDate)}
                   onChange={d => { set('startDate', fmt(d)); if (f.contPeriodCd) recalcClose(fmt(d), f.contPeriodCd); }} />
-              </Field>
-            </div>
-            <div style={row2}>
-              <Field label="(재)계약일"><DatePicker style={{ width: '100%' }} value={day(f.contDate)} onChange={d => set('contDate', fmt(d))} /></Field>
-              <Field label="거래종료일"><DatePicker style={{ width: '100%' }} value={day(f.closeDate)} onChange={d => set('closeDate', fmt(d))} /></Field>
-            </div>
-            <Field label="최저보수">
+              </EditField>
+            </EditRow>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="(재)계약일"><DatePicker style={{ width: '100%' }} value={day(f.contDate)} onChange={d => set('contDate', fmt(d))} /></EditField>
+              <EditField labelWidth={120} width={286} label="거래종료일"><DatePicker style={{ width: '100%' }} value={day(f.closeDate)} onChange={d => set('closeDate', fmt(d))} /></EditField>
+            </EditRow>
+            <EditField labelWidth={120} label="최저보수">
               <LookupInput value={minFeeStr ?? ''} placeholder="" width={380} empty={['']} onOpen={openFee} />
-            </Field>
-            <div style={row2}>
-              <Field label="기본보수(bp)"><Input value={f.baseFee ?? ''} onChange={e => set('baseFee', e.target.value)} /></Field>
-              <span />
-            </div>
-            <div style={row2}>
-              <Field label="계약사 담당자"><Input value={f.manager ?? ''} onChange={e => set('manager', e.target.value)} /></Field>
-              <Field label="연락처"><Input value={f.managerTel ?? ''} onChange={e => set('managerTel', e.target.value)} /></Field>
-            </div>
-            <div style={row2}>
-              <Field label="대표이사"><Input value={f.ceo ?? ''} onChange={e => set('ceo', e.target.value)} /></Field>
-              <span />
-            </div>
-            <Field label="주소"><Input value={f.address ?? ''} onChange={e => set('address', e.target.value)} /></Field>
-            <Field label="비고" top><Input.TextArea rows={2} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-            <div style={row2}>
-              <Field label="확인자">
+            </EditField>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="기본보수(bp)"><Input value={f.baseFee ?? ''} onChange={e => set('baseFee', e.target.value)} /></EditField>
+            </EditRow>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="계약사 담당자"><Input value={f.manager ?? ''} onChange={e => set('manager', e.target.value)} /></EditField>
+              <EditField labelWidth={120} width={286} label="연락처"><Input value={f.managerTel ?? ''} onChange={e => set('managerTel', e.target.value)} /></EditField>
+            </EditRow>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="대표이사"><Input value={f.ceo ?? ''} onChange={e => set('ceo', e.target.value)} /></EditField>
+            </EditRow>
+            <EditField labelWidth={120} label="주소"><Input value={f.address ?? ''} onChange={e => set('address', e.target.value)} /></EditField>
+            <EditField labelWidth={120} label="비고"><Input.TextArea rows={2} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
+            <EditRow>
+              <EditField labelWidth={120} width={286} label="확인자">
                 <LookupInput value={f.personNm ?? ''} placeholder="" width={200} empty={['']} onOpen={() => setEmpOpen('person')} />
-              </Field>
-              <span />
-            </div>
-            <Field label="공유자/부서" top>
+              </EditField>
+            </EditRow>
+            <EditField labelWidth={120} label="공유자/부서">
               <div style={{ border: '1px solid #d9d9d9', display: 'flex', flexDirection: 'column', height: 205, boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px' }}>
                   <Radio.Group value={shareKind} onChange={e => setShareKind(e.target.value)}>
@@ -343,10 +328,10 @@ export const Biz11_Edit_ContHistory: React.FC<Props> = ({ target, onDone, onClos
                   />
                 </div>
               </div>
-            </Field>
-          </div>
+            </EditField>
+          </>
         )}
-      </Modal>
+      </EditModal>
       <Biz12_Edit_FeeInfo model={feeEdit} onResult={r => setFee(r)} onClose={() => setFeeEdit(null)} />
       <Emp00_Lookup_SelectSingle open={empOpen != null} noneLabel={null} transDate={today} onResult={onEmpResult} onClose={() => setEmpOpen(null)} />
       <Org00_Lookup_SelectSingle baseDate={orgOpen ? today : undefined} onSelect={onOrgResult} onClose={() => setOrgOpen(false)} />

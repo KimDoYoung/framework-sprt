@@ -5,11 +5,12 @@
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrDocType } from '@/types/dcr';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
@@ -24,13 +25,6 @@ interface Props {
   onSaved?: () => void;
   onClose: () => void;
 }
-
-const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-    <span style={{ width: 47, flex: 'none', paddingTop: 4 }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -65,11 +59,10 @@ export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, co
   const makePreviewPDF = () => message.info('PDF 미리보기는 아직 지원하지 않습니다 (PDF 생성 연동 전).');
 
   return (
-    <Modal
+    <EditModal
       open
       title="상세 보기"
       width={836}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnClose
       footer={
@@ -83,18 +76,16 @@ export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, co
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 4px', maxHeight: 700, overflowY: 'auto' }}>
-        <Row label="구 분">
+        <EditField labelWidth={50} label="구 분">
           <SystemCodeComboBox kindCd="DocFormClassCode" style={{ width: '100%' }} disabled={readOnly}
             value={f.docFormClassCode ?? undefined} onChange={(code, name) => setF(prev => prev && { ...prev, docFormClassCode: code ?? null, docFormClassName: name ?? null })} />
-        </Row>
-        <Row label="제 목"><Input readOnly={readOnly} value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></Row>
-        <Row label="내 용">
+        </EditField>
+        <EditField labelWidth={50} label="제 목"><Input readOnly={readOnly} value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></EditField>
+        <EditField labelWidth={50} label="내 용">
           {/* 편집기는 만들 때 한 번만 값을 받는다(HtmlEditor) — 문서양식이 바뀌면 key로 새로 만든다. 읽기 전용에서도 원본 편집기는 막혀 있지 않다 */}
           <HtmlEditor key={f.docTypeId} value={model.content} onChange={html => set('content', html)} height={460} />
-        </Row>
-        <Row label="비 고"><Input.TextArea rows={5} readOnly={readOnly} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Row>
-      </div>
-    </Modal>
+        </EditField>
+        <EditField labelWidth={50} label="비 고"><Input.TextArea rows={5} readOnly={readOnly} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
+    </EditModal>
   );
 };

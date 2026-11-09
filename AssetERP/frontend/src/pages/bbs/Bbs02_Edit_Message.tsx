@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Space, message as toast } from 'antd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal } from '@/components/form/EditForm';
 
 interface Props {
   /** 처음 문구 — 값이 있으면 열린다 (AS-IS open(msg, callback)) */
@@ -30,11 +30,10 @@ export const Bbs02_Edit_Message: React.FC<Props> = ({ message, onSend, onClose }
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={message != null}
       title="문자내용"
       width={450}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnClose
       footer={
@@ -48,6 +47,6 @@ export const Bbs02_Edit_Message: React.FC<Props> = ({ message, onSend, onClose }
       }
     >
       <Input.TextArea rows={7} value={text} onChange={e => setText(e.target.value)} />
-    </LookupModal>
+    </EditModal>
   );
 };

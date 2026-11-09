@@ -12,19 +12,12 @@ import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsExtrActivity } from '@/types/ics';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Ics35_Grid_FileList, Ics35_Grid_FileListHandle } from './Ics35_Grid_FileList';
 
-const LABEL_W = 100;
-
-/** 라벨(폭 100) + 칸 한 줄 (AS-IS FieldLabel) — width는 라벨을 뺀 칸 폭 */
-const Field: React.FC<{ label: React.ReactNode; children: React.ReactNode; width: number; bottom?: number }> = ({ label, children, width, bottom = 16 }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: bottom }}>
-    <div style={{ width: LABEL_W, flex: 'none', lineHeight: '32px', fontWeight: 'bold', color: '#1F4D83' }}>{label}</div>
-    <div style={{ width }}>{children}</div>
-  </div>
-);
+const LABEL_W = 70;  // 라벨 칸: 가장 긴 라벨 4글자 (AS-IS 100)
+const L = (t: string) => <span style={{ fontWeight: 'bold', color: '#1F4D83' }}>{t}</span>;
 
 export type Ics35_Edit_ExtrActivityTarget = { mode: 'insert' } | { mode: 'edit'; row: IcsExtrActivity };
 
@@ -98,11 +91,10 @@ export const Ics35_Edit_ExtrActivity: React.FC<Props> = ({ target, onSaved, onCl
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title={target?.mode === 'edit' ? '대외활동신청 수정' : '대외활동신청 등록'}
       width={800}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -114,40 +106,39 @@ export const Ics35_Edit_ExtrActivity: React.FC<Props> = ({ target, onSaved, onCl
         </div>
       }
     >
-      <div style={{ padding: '10px 0 0' }}>
-        <Field label="신청일자" width={160}>
-          <DatePicker style={{ width: 140 }} allowClear={false} value={regDate ? dayjs(regDate) : null}
-            onChange={d => setRegDate(d ? d.format('YYYY-MM-DD') : null)} />
-        </Field>
-        <Field label="활동처" width={660}>
-          <Input value={activityCorp} onChange={e => setActivityCorp(e.target.value)} />
-        </Field>
-        <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 16 }}>
-          <div style={{ width: LABEL_W, flex: 'none', lineHeight: '32px', fontWeight: 'bold', color: '#1F4D83' }}>활동대상</div>
+      <EditField label={L('신청일자')} labelWidth={LABEL_W}>
+        <DatePicker style={{ width: 140 }} allowClear={false} value={regDate ? dayjs(regDate) : null}
+          onChange={d => setRegDate(d ? d.format('YYYY-MM-DD') : null)} />
+      </EditField>
+      <EditField label={L('활동처')} labelWidth={LABEL_W}>
+        <Input value={activityCorp} onChange={e => setActivityCorp(e.target.value)} />
+      </EditField>
+      <EditField label={L('활동대상')} labelWidth={LABEL_W}>
+        <div style={{ display: 'flex', gap: 8 }}>
           {/* [E1] activityTgtName[활동대상].Collapse (L121) → 90(기타)이면 직접기재 칸을 켜고 아니면 비운 뒤 끄고, activityTgtCode = 고른 코드 */}
           <SystemCodeComboBox kindCd="ExtrActivityTargetCode" placeholder="선택" style={{ width: 230 }} value={activityTgtCd}
             onChange={code => { setActivityTgtCd(code); if (code !== '90') setActivityTgtEtc(''); }} />
-          <Input style={{ width: 430, marginLeft: 10 }} placeholder="기타인 경우 직접기재" disabled={!etcEnabled} value={activityTgtEtc}
+          <Input style={{ flex: 1 }} placeholder="기타인 경우 직접기재" disabled={!etcEnabled} value={activityTgtEtc}
             onChange={e => setActivityTgtEtc(e.target.value)} />
         </div>
-        <Field label="활동기간" width={660}>
-          <Input placeholder="예) 2025-07-01 10:30 ~ 2025-07-02 17:30" value={activityPeriod} onChange={e => setActivityPeriod(e.target.value)} />
-        </Field>
-        <Field label="활동내용" width={660} bottom={10}>
-          <Input.TextArea style={{ height: 100, resize: 'none' }} value={activityDesc} onChange={e => setActivityDesc(e.target.value)}
-            placeholder={'* 다른 법인 임원 취임인 경우 해당 회사명, 직위, 주요 활동내용 등을 기재\n* 강연 등의 경우 강연 주관자, 대상자, 강연주제 등 구체적인 내용을 기재\n* 대외활동 타당성 검토에 필요한 자료를 제출(원고, 강의록 등)'} />
-        </Field>
-        <Field label="활동보수" width={660}>
-          <Input placeholder="예) 시간, 편, 회당 000원 등" value={activityPay} onChange={e => setActivityPay(e.target.value)} />
-        </Field>
-        <Field label="첨부자료" width={160} bottom={10}>
-          {/* [E2] uploadButton[첨부자료].Select (L133) → fileList.upload() */}
-          <Button type="upload" disabled={extrActivityId == null} onClick={() => fileList.current?.upload()}>파일업로드</Button>
-        </Field>
-        <div style={{ height: 190, marginLeft: LABEL_W + 15, width: 645 }}>
-          <Ics35_Grid_FileList ref={fileList} parentId={open ? extrActivityId : null} />
-        </div>
+      </EditField>
+      <EditField label={L('활동기간')} labelWidth={LABEL_W}>
+        <Input placeholder="예) 2025-07-01 10:30 ~ 2025-07-02 17:30" value={activityPeriod} onChange={e => setActivityPeriod(e.target.value)} />
+      </EditField>
+      <EditField label={L('활동내용')} labelWidth={LABEL_W}>
+        <Input.TextArea style={{ height: 100, resize: 'none' }} value={activityDesc} onChange={e => setActivityDesc(e.target.value)}
+          placeholder={'* 다른 법인 임원 취임인 경우 해당 회사명, 직위, 주요 활동내용 등을 기재\n* 강연 등의 경우 강연 주관자, 대상자, 강연주제 등 구체적인 내용을 기재\n* 대외활동 타당성 검토에 필요한 자료를 제출(원고, 강의록 등)'} />
+      </EditField>
+      <EditField label={L('활동보수')} labelWidth={LABEL_W}>
+        <Input placeholder="예) 시간, 편, 회당 000원 등" value={activityPay} onChange={e => setActivityPay(e.target.value)} />
+      </EditField>
+      <EditField label={L('첨부자료')} labelWidth={LABEL_W}>
+        {/* [E2] uploadButton[첨부자료].Select (L133) → fileList.upload() */}
+        <Button type="upload" disabled={extrActivityId == null} onClick={() => fileList.current?.upload()}>파일업로드</Button>
+      </EditField>
+      <div style={{ height: 190, marginLeft: LABEL_W, width: `calc(100% - ${LABEL_W}px)` }}>
+        <Ics35_Grid_FileList ref={fileList} parentId={open ? extrActivityId : null} />
       </div>
-    </LookupModal>
+    </EditModal>
   );
 };

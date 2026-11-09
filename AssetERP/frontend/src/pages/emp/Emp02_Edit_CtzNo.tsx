@@ -7,8 +7,9 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, InputRef, Modal, Space, Typography } from 'antd';
+import { Input, InputRef, Space, Typography } from 'antd';
 import { Button } from '@/components/button';
+import { EditModal } from '@/components/form/EditForm';
 
 const COUNT = 7;
 
@@ -86,16 +87,11 @@ export const Emp02_Edit_CtzNo: React.FC<Props> = ({ ctzNo, onResult, onClose }) 
   );
 
   return (
-    <Modal
+    <EditModal
       open
       title="주민등록번호"
-      width={500}
-      maskClosable={false}
+      width={580}  // 500 → 580: 안내 글까지 한 줄에 들어가도록 (안쪽 폭 540)
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -107,12 +103,12 @@ export const Emp02_Edit_CtzNo: React.FC<Props> = ({ ctzNo, onResult, onClose }) 
         </div>
       }
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '12px 2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         {[0, 1, 2, 3, 4, 5].map(field)}
         <span style={{ width: 15, textAlign: 'center' }}>-</span>
         {field(6)}
         <Typography.Text style={{ marginLeft: 11 }}>뒷자리는 첫 자리만 입력해 주세요</Typography.Text>
       </div>
-    </Modal>
+    </EditModal>
   );
 };

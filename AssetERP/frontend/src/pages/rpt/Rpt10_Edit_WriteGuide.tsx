@@ -6,11 +6,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import { rptApi } from '@/api/rpt';
 import { errorMessage } from '@/api/client';
 import { RptFssSubmit } from '@/types/rpt';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
 interface Props {
@@ -21,12 +22,8 @@ interface Props {
   onClose: () => void;
 }
 
-const Label: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width }}>
-    <span style={{ width: 82, flex: 'none', paddingTop: 4 }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '보고서코드' 5글자 65+18=83 → 85 (편집 폼 모달 원칙) */
+const LW = 85;
 
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -57,11 +54,10 @@ export const Rpt10_Edit_WriteGuide: React.FC<Props> = ({ model, onSaved, onClose
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={isNew ? '작성요령 및 변경이력 등록' : '작성요령 및 변경이력 수정'}
       width={700}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnClose
       footer={
@@ -75,22 +71,21 @@ export const Rpt10_Edit_WriteGuide: React.FC<Props> = ({ model, onSaved, onClose
       }
     >
       {/* view() L57-66·edit() L68-77 → settings(): 모델을 폼에 채운다 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 4px' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Label label="보고서코드" width={220}><Input value={f.reportCode ?? ''} maxLength={5} onChange={e => set('reportCode', e.target.value)} /></Label>
-          <Label label="보고서명" width={420}><Input value={f.reportName ?? ''} onChange={e => set('reportName', e.target.value)} /></Label>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Label label="제출주기" width={220}>
-            {/* [E1] submitCycleName[제출주기].Collapse (L128) → submitCycleCode = 고른 코드 */}
-            <SystemCodeComboBox kindGroupCd="CycleCode001" style={{ width: '100%' }} value={f.submitCycleCode ?? undefined}
-              onChange={(code, name) => setF(prev => ({ ...prev, submitCycleCode: code ?? null, submitCycleName: name ?? null }))} />
-          </Label>
-          <Label label="작성대상" width={420}><Input value={f.writeTarget ?? ''} onChange={e => set('writeTarget', e.target.value)} /></Label>
-        </div>
-        <Label label="작성요령" width={680}><Input.TextArea rows={10} value={f.writeGuide ?? ''} onChange={e => set('writeGuide', e.target.value)} /></Label>
-        <Label label="변경이력" width={680}><Input.TextArea rows={6} value={f.reviseHistory ?? ''} onChange={e => set('reviseHistory', e.target.value)} /></Label>
-      </div>
-    </Modal>
+      {/* 안쪽 폭 660(700 − 40): 두 칸은 원래 220:420 비율 → 224 + 428 + 칸 사이 8 */}
+      <EditRow>
+        <EditField label="보고서코드" labelWidth={LW} width={224}><Input value={f.reportCode ?? ''} maxLength={5} onChange={e => set('reportCode', e.target.value)} /></EditField>
+        <EditField label="보고서명" labelWidth={LW} width={428}><Input value={f.reportName ?? ''} onChange={e => set('reportName', e.target.value)} /></EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="제출주기" labelWidth={LW} width={224}>
+          {/* [E1] submitCycleName[제출주기].Collapse (L128) → submitCycleCode = 고른 코드 */}
+          <SystemCodeComboBox kindGroupCd="CycleCode001" style={{ width: '100%' }} value={f.submitCycleCode ?? undefined}
+            onChange={(code, name) => setF(prev => ({ ...prev, submitCycleCode: code ?? null, submitCycleName: name ?? null }))} />
+        </EditField>
+        <EditField label="작성대상" labelWidth={LW} width={428}><Input value={f.writeTarget ?? ''} onChange={e => set('writeTarget', e.target.value)} /></EditField>
+      </EditRow>
+      <EditField label="작성요령" labelWidth={LW}><Input.TextArea rows={10} value={f.writeGuide ?? ''} onChange={e => set('writeGuide', e.target.value)} /></EditField>
+      <EditField label="변경이력" labelWidth={LW}><Input.TextArea rows={6} value={f.reviseHistory ?? ''} onChange={e => set('reviseHistory', e.target.value)} /></EditField>
+    </EditModal>
   );
 };

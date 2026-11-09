@@ -12,7 +12,7 @@ import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { OprDemandOffer, OprSub } from '@/types/fnd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys15_Lookup_Corp } from '@/components/lookup/Sys15_Lookup_Corp';
 
@@ -39,12 +39,8 @@ interface Props {
   onClose: () => void;
 }
 
-const Field: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '총배정수량'(5글자) 기준 85 (AS-IS 105) */
+const LW = 85;
 
 interface Form {
   subscriptionDate: Dayjs | null;
@@ -119,11 +115,10 @@ export const Fnd30_Edit_Opr: React.FC<Props> = ({ target, onSaved, onClose }) =>
   };
 
   return (
-    <LookupModal
+    <EditModal
       open
       title={title}
       width={640}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -136,49 +131,48 @@ export const Fnd30_Edit_Opr: React.FC<Props> = ({ target, onSaved, onClose }) =>
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 0' }}>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <Field label="청약일 " width={230}>
+      {/* 두 칸 줄 280+280·230+230 → 안쪽 600 − 8 = 592를 반씩 296. 한 칸 줄(280)도 296, 수수료율·등록건수 180 → 193 */}
+        <EditRow>
+          <EditField label="청약일" labelWidth={LW} width={296}>
             <DatePicker style={{ width: '100%' }} format={FORMAT} value={f.subscriptionDate} onChange={d => set('subscriptionDate', d)} />
-          </Field>
-          <Field label="납입일 " width={230}>
+          </EditField>
+          <EditField label="납입일" labelWidth={LW} width={296}>
             <DatePicker style={{ width: '100%' }} format={FORMAT} value={f.payDate} onChange={d => set('payDate', d)} />
-          </Field>
-        </div>
-        <Field label="종목 " width={560}>
+          </EditField>
+        </EditRow>
+        <EditField label="종목" labelWidth={LW}>
           <Input value={f.itemName} onChange={e => set('itemName', e.target.value)} />
-        </Field>
-        <Field label="주간사 " width={560}>
+        </EditField>
+        <EditField label="주간사" labelWidth={LW}>
           <LookupInput value={f.corpName} width={250} onOpen={() => setCorpOpen(true)} />
-        </Field>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <Field label="발행가 " width={280}>
+        </EditField>
+        <EditRow>
+          <EditField label="발행가" labelWidth={LW} width={296}>
             <InputNumber style={{ width: '100%' }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never}
               value={f.price} onChange={v => set('price', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="확약기간 " width={280}>
+          </EditField>
+          <EditField label="확약기간" labelWidth={LW} width={296}>
             <Input value={f.lockPeriod} onChange={e => set('lockPeriod', e.target.value)} />
-          </Field>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-          <Field label="수수료율 " width={180}>
+          </EditField>
+        </EditRow>
+        <EditRow style={{ gap: 6 }}>
+          <EditField label="수수료율" labelWidth={LW} width={193}>
             <InputNumber style={{ width: '100%' }} controls={false} value={f.feeRate} onChange={v => set('feeRate', v == null ? null : Number(v))} />
-          </Field>
+          </EditField>
           <Typography.Text style={{ lineHeight: '32px' }}>%</Typography.Text>
-        </div>
-        <Field label="총배정수량 " width={280}>
+        </EditRow>
+        <EditField label="총배정수량" labelWidth={LW} width={296}>
           <InputNumber style={{ width: '100%' }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never}
             value={f.qty} onChange={v => set('qty', v == null ? null : Number(v))} />
-        </Field>
-        <Field label="비고 " width={560}>
+        </EditField>
+        <EditField label="비고" labelWidth={LW}>
           <Input.TextArea rows={5} value={f.note} onChange={e => set('note', e.target.value)} />
-        </Field>
+        </EditField>
         {multi && (
-          <Field label="등록건수 " width={180}>
+          <EditField label="등록건수" labelWidth={LW} width={193}>
             <InputNumber style={{ width: '100%' }} controls={false} precision={0} min={1} value={insertCount} onChange={v => setInsertCount(v == null ? null : Number(v))} />
-          </Field>
+          </EditField>
         )}
-      </div>
       {/* [E1] corpName[주간사].TriggerClick (L174) → openLookupOpr() L314-326: Sys15_Lookup_Corp.open("증권회사", true, …) — 고른 거래처의 이름·ID를 넣는다(선택안함은 그대로) */}
       <Sys15_Lookup_Corp
         open={corpOpen}
@@ -187,6 +181,6 @@ export const Fnd30_Edit_Opr: React.FC<Props> = ({ target, onSaved, onClose }) =>
         onResult={corp => { if (corp) setF(prev => ({ ...prev, corpName: corp.corpName ?? '', corpId: corp.corpId })); }}
         onClose={() => setCorpOpen(false)}
       />
-    </LookupModal>
+    </EditModal>
   );
 };

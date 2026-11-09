@@ -17,6 +17,7 @@ import dayjs from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { icsApi } from '@/api/ics';
 import { IcsDcrPreconfirm, IcsDcrTypeOption } from '@/types/ics';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
@@ -55,8 +56,7 @@ interface Form {
 }
 
 const FMT = 'YYYY-MM-DD';
-const LABEL_W = 130;   // form.setLabelWidth(130)
-const FIELD_W = 500;   // HorizontalLayoutData(500, …) — 라벨 포함
+const LW = 110;   // 라벨 칸: 가장 긴 라벨 '최초사용예정일'(AS-IS 130), 두 칸 행은 256 + 8 + 256 = 520
 const REQUIRED = '#0069B4';  // setHtmlStyle(…, "0069B4")
 
 const toForm = (t: Ics40_Edit_DcrPreconfirmTarget): Form => {
@@ -78,12 +78,8 @@ const toForm = (t: Ics40_Edit_DcrPreconfirmTarget): Form => {
 
 const nul = (s: string) => (s === '' ? null : s);
 
-const Row: React.FC<{ label: string; required?: boolean; width?: number; children: React.ReactNode; top?: boolean }> = ({ label, required, width = FIELD_W, children, top }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', width }}>
-    <div style={{ width: LABEL_W, flex: 'none', textAlign: 'right', paddingRight: 10, paddingTop: top ? 4 : 0, color: required ? REQUIRED : undefined, fontWeight: required ? 'bold' : undefined }}>{label}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 필수 라벨(파란 굵은 글씨) */
+const req = (t: string) => <span style={{ color: REQUIRED, fontWeight: 'bold' }}>{t}</span>;
 
 export const Ics40_Edit_DcrPreconfirm: React.FC<Props> = ({ target, onCallback, onClose }) => {
   const [form, setForm] = useState<Form | null>(null);
@@ -189,19 +185,14 @@ export const Ics40_Edit_DcrPreconfirm: React.FC<Props> = ({ target, onCallback, 
   const date = (v: string | null) => (v ? dayjs(v) : null);
 
   return (
-    <Modal
+    <EditModal
       open={!!target}
       title="신청"
       width={560}
       closable={false}
-      maskClosable={false}
       keyboard={false}
       onCancel={close}
       destroyOnHidden
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -217,59 +208,59 @@ export const Ics40_Edit_DcrPreconfirm: React.FC<Props> = ({ target, onCallback, 
       }
     >
       {form && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-          <Row label="대장분류" required>
+        <>
+          <EditField label={req('대장분류')} labelWidth={LW}>
             <Select style={{ width: '100%' }} placeholder="선택하세요" value={form.dcrTypeCode ?? undefined}
               options={typeOptions.map(o => ({ value: o.code, label: o.name }))}
               onChange={v => set('dcrTypeCode', v ?? null)} />
-          </Row>
-          <Row label="내용" required top>
+          </EditField>
+          <EditField label={req('내용')} labelWidth={LW}>
             <Input.TextArea style={{ height: 100, resize: 'none' }} value={form.content} onChange={e => set('content', e.target.value)} />
-          </Row>
-          <Row label="제공처">
+          </EditField>
+          <EditField label="제공처" labelWidth={LW}>
             <Input value={form.provideCo} onChange={e => set('provideCo', e.target.value)} />
-          </Row>
-          <Row label="심사필번호">
+          </EditField>
+          <EditField label="심사필번호" labelWidth={LW}>
             <Input value={form.apprNo} readOnly />
-          </Row>
+          </EditField>
           {/* comment01 + line01 L276-280 */}
           <div style={{ marginTop: 14, paddingLeft: 5, color: '#666' }}>* 광고물인 경우 추가정보 입력</div>
           <div style={{ borderTop: '1px solid #d9d9d9', margin: '0 15px' }} />
           {/* [E1] adTypeName[광고종류].Collapse (L146) → adType = 코드 */}
-          <Row label="광고종류">
+          <EditField label="광고종류" labelWidth={LW}>
             <SystemCodeComboBox kindCd="AdType" style={{ width: '100%' }} placeholder="선택" allowClear value={form.adType ?? undefined} onChange={c => set('adType', c ?? null)} />
-          </Row>
+          </EditField>
           {/* [E2] mediaTypeName[매체종류].Collapse (L153) → mediaType = 코드 */}
-          <Row label="매체종류">
+          <EditField label="매체종류" labelWidth={LW}>
             <SystemCodeComboBox kindCd="MediaType" style={{ width: '100%' }} placeholder="선택" allowClear value={form.mediaType ?? undefined} onChange={c => set('mediaType', c ?? null)} />
-          </Row>
-          <Row label="광고상품명">
+          </EditField>
+          <EditField label="광고상품명" labelWidth={LW}>
             <Input value={form.adItemName} onChange={e => set('adItemName', e.target.value)} />
-          </Row>
-          <Row label="광고내용">
+          </EditField>
+          <EditField label="광고내용" labelWidth={LW}>
             <Input value={form.adContent} onChange={e => set('adContent', e.target.value)} />
-          </Row>
-          <div style={{ display: 'flex' }}>
-            <Row label="최초사용예정일" width={250}>
+          </EditField>
+          <EditRow>
+            <EditField label="최초사용예정일" labelWidth={LW} width={256}>
               <DatePicker style={{ width: '100%' }} format={FMT} value={date(form.startDate)} onChange={d => set('startDate', d ? d.format(FMT) : null)} />
-            </Row>
-            <Row label="최종사용예정일" width={250}>
+            </EditField>
+            <EditField label="최종사용예정일" labelWidth={LW} width={256}>
               <DatePicker style={{ width: '100%' }} format={FMT} value={date(form.closeDate)} onChange={d => set('closeDate', d ? d.format(FMT) : null)} />
-            </Row>
-          </div>
-          <Row label="규격">
+            </EditField>
+          </EditRow>
+          <EditField label="규격" labelWidth={LW}>
             <Input value={form.spec} onChange={e => set('spec', e.target.value)} />
-          </Row>
-          <Row label="수량/회수">
+          </EditField>
+          <EditField label="수량/회수" labelWidth={LW}>
             <Input value={form.qtyCnt} onChange={e => set('qtyCnt', e.target.value)} />
-          </Row>
+          </EditField>
           {/* [E3] preApprNo[과거심사필번호].TriggerClick (L165) → Ics40_Lookup_SelectSingle.open — 고르면 그 심사필번호(apprNoPrefix) */}
-          <Row label="과거심사필번호">
-            <LookupInput value={form.preApprNo} width={FIELD_W - LABEL_W} onOpen={() => setLookupOpen(true)} />
-          </Row>
-        </div>
+          <EditField label="과거심사필번호" labelWidth={LW}>
+            <LookupInput value={form.preApprNo} width={370} onOpen={() => setLookupOpen(true)} />
+          </EditField>
+        </>
       )}
       <Ics40_Lookup_SelectSingle open={lookupOpen} onResult={r => set('preApprNo', r.apprNoPrefix ?? '')} onClose={() => setLookupOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };

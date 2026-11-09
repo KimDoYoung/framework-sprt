@@ -7,7 +7,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { InputNumber, message, Modal, Select, Space } from 'antd';
+import { InputNumber, message, Select, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { bizContCorpApi } from '@/api/bizCont';
 import { errorMessage } from '@/api/client';
 import { BizContFeeInfo } from '@/types/bizCont';
@@ -34,14 +35,6 @@ interface Props {
   onResult: (fee: BizContFeeInfo) => void;
   onClose: () => void;
 }
-
-/** 라벨 폭 130 (form.setLabelWidth(130)) */
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center' }}>
-    <span style={{ width: 130, flex: 'none', textAlign: 'right', paddingRight: 10, fontSize: 12, fontWeight: 'bold' }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 const money = {
   formatter: (v?: string | number) => (v == null || v === '' ? '' : String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ',')),
@@ -121,17 +114,12 @@ export const Biz12_Edit_FeeInfo: React.FC<Props> = ({ model, onResult, onClose }
   );
 
   return (
-    <Modal
+    <EditModal
       open
       title="최저보수 관리"
       width={420}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -142,27 +130,25 @@ export const Biz12_Edit_FeeInfo: React.FC<Props> = ({ model, onResult, onClose }
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="최저보수">
+        <EditField label="최저보수" labelWidth={125}>
           <Select style={{ width: 100 }} value={minOn ? '있음' : '없음'} options={[{ value: '있음' }, { value: '없음' }]} onChange={onMinChange} />
-        </Field>
+        </EditField>
         <div style={boxStyle}>
-          <Field label="운용최저보수(연)">{numInput('manageMinFee', lock1)}</Field>
-          <Field label="자문최저보수(연)">{numInput('advMinFee', lock1)}</Field>
-          <Field label="일임최저보수(연)">{numInput('discrMinFee', lock1)}</Field>
-          <Field label="청구구분">
+          <EditField label="운용최저보수(연)" labelWidth={125}>{numInput('manageMinFee', lock1)}</EditField>
+          <EditField label="자문최저보수(연)" labelWidth={125}>{numInput('advMinFee', lock1)}</EditField>
+          <EditField label="일임최저보수(연)" labelWidth={125}>{numInput('discrMinFee', lock1)}</EditField>
+          <EditField label="청구구분" labelWidth={125}>
             {/* [E1] feeChargeTypeName[청구구분].Collapse (L148) → feeChargeType = feeChargeTypeName.getCode() */}
             <SystemCodeComboBox kindCd="FundFeeChargeType" style={{ width: '100%' }} placeholder="선택" disabled={lock1}
               value={f.feeChargeType ?? undefined} onChange={c => set('feeChargeType', c ?? null)} />
-          </Field>
+          </EditField>
         </div>
-        <Field label="병행보수">
+        <EditField label="병행보수" labelWidth={125}>
           <Select style={{ width: 100 }} value={withOn ? '처리함' : '처리안함'} options={[{ value: '처리함' }, { value: '처리안함' }]} onChange={onWithChange} />
-        </Field>
+        </EditField>
         <div style={boxStyle}>
-          <Field label="병행보수(연)">{numInput('withFee', lock2)}</Field>
+          <EditField label="병행보수(연)" labelWidth={125}>{numInput('withFee', lock2)}</EditField>
         </div>
-      </div>
-    </Modal>
+    </EditModal>
   );
 };

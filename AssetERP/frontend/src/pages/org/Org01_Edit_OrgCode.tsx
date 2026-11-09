@@ -12,9 +12,10 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { OrgCode } from '@/types/org';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Org01_Move_OrgCode } from './Org01_Move_OrgCode';
-import { OrgField, OrgForm, OrgRow, toForm, toReq } from './orgForm';
+import { OrgForm, toForm, toReq } from './orgForm';
 
 export interface OrgEditTarget {
   /** 트리의 상위 조직 (없으면 "상위조직이 없습니다") */
@@ -33,7 +34,9 @@ interface Props {
   onSaved: (model: Partial<OrgCode> | null) => void;
 }
 
-const DATE_W = 230; // AS-IS HorizontalLayoutData(200, -1). 날짜 칸 최소 160 + 라벨 70이 들어가게 230
+const W1 = 236; // AS-IS HorizontalLayoutData(200, -1)의 왼쪽 칸 (폭 합 = 모달 600 − 40 − 칸 사이 8)
+const W2 = 316; // 나머지 칸
+const WH = 276; // 같은 폭 두 칸
 
 export const Org01_Edit_OrgCode: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [f, setF] = useState<OrgForm | null>(null);
@@ -116,11 +119,10 @@ export const Org01_Edit_OrgCode: React.FC<Props> = ({ target, onClose, onSaved }
   const dcrDisabled = numberingCode === '1';
 
   return (
-    <Modal
+    <EditModal
       open={!!target && !!f}
       title="조직상세 정보"
       width={600}
-      maskClosable={false}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -133,67 +135,67 @@ export const Org01_Edit_OrgCode: React.FC<Props> = ({ target, onClose, onSaved }
       }
     >
       {f && (
-        <Space direction="vertical" size={16} style={{ width: 560, padding: '10px 0' }}>
-          <OrgRow>
-            <OrgField label="상위조직" width={380}><Input value={f.parentOrgName} readOnly /></OrgField>
+        <>
+          <EditRow>
+            <EditField labelWidth={70} label="상위조직" width={380}><Input value={f.parentOrgName} readOnly /></EditField>
             <Button type="change" onClick={() => setMoveDate(target!.baseDate)}>상위조직변경</Button>
-          </OrgRow>
+          </EditRow>
           {insert ? (
             <>
-              <OrgRow>
-                <OrgField label="개설일" width={DATE_W}><DatePicker style={{ width: '100%' }} value={f.openDate} onChange={v => set('openDate', v)} format="YYYY-MM-DD" /></OrgField>
-                <OrgField label="개설사유"><Input value={f.openReason} onChange={e => set('openReason', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="조직코드" width={DATE_W}><Input value={f.orgCd} onChange={e => set('orgCd', e.target.value)} /></OrgField>
-                <OrgField label="조직명"><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
+              <EditRow>
+                <EditField labelWidth={70} label="개설일" width={W1}><DatePicker style={{ width: '100%' }} value={f.openDate} onChange={v => set('openDate', v)} format="YYYY-MM-DD" /></EditField>
+                <EditField labelWidth={70} label="개설사유" width={W2}><Input value={f.openReason} onChange={e => set('openReason', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="조직코드" width={W1}><Input value={f.orgCd} onChange={e => set('orgCd', e.target.value)} /></EditField>
+                <EditField labelWidth={70} label="조직명" width={W2}><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
                 {/* [E1] levelName[조직레벨].Collapse (L143) → levelCode = 선택 코드 */}
-                <OrgField label="조직레벨" width={DATE_W}><SystemCodeComboBox kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></OrgField>
-                <OrgField label="정렬순서" width={DATE_W}><Input value={f.sortOrder} onChange={e => set('sortOrder', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="주요업무"><Input value={f.note} onChange={e => set('note', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="문서코드" width={DATE_W}><Input value={f.dcrIdWord} disabled={dcrDisabled} onChange={e => set('dcrIdWord', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="종료일" width={DATE_W}><DatePicker style={{ width: '100%' }} value={f.closeDate} disabled format="YYYY-MM-DD" /></OrgField>
-                <OrgField label="종료사유"><Input value={f.closeReason} disabled /></OrgField>
-              </OrgRow>
+                <EditField labelWidth={70} label="조직레벨" width={WH}><SystemCodeComboBox kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></EditField>
+                <EditField labelWidth={70} label="정렬순서" width={WH}><Input value={f.sortOrder} onChange={e => set('sortOrder', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="주요업무"><Input value={f.note} onChange={e => set('note', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="문서코드" width={W1}><Input value={f.dcrIdWord} disabled={dcrDisabled} onChange={e => set('dcrIdWord', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="종료일" width={W1}><DatePicker style={{ width: '100%' }} value={f.closeDate} disabled format="YYYY-MM-DD" /></EditField>
+                <EditField labelWidth={70} label="종료사유" width={W2}><Input value={f.closeReason} disabled /></EditField>
+              </EditRow>
             </>
           ) : (
             <>
-              <OrgRow>
-                <OrgField label="변경일" width={DATE_W}><DatePicker style={{ width: '100%' }} value={f.modDate} onChange={v => set('modDate', v)} format="YYYY-MM-DD" /></OrgField>
-                <OrgField label="변경사유"><Input value={f.modReason} onChange={e => set('modReason', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="조직코드" width={DATE_W}><Input value={f.orgCd} disabled /></OrgField>
-                <OrgField label="조직명"><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="조직레벨" width={DATE_W}><SystemCodeComboBox kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></OrgField>
-                <OrgField label="정렬순서" width={DATE_W}><Input value={f.sortOrder} onChange={e => set('sortOrder', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="개설일" width={DATE_W}><DatePicker style={{ width: '100%' }} value={f.openDate} disabled format="YYYY-MM-DD" /></OrgField>
-                <OrgField label="개설사유"><Input value={f.openReason} disabled /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="종료일" width={DATE_W}><DatePicker style={{ width: '100%' }} value={f.closeDate} onChange={v => set('closeDate', v)} format="YYYY-MM-DD" /></OrgField>
-                <OrgField label="종료사유"><Input value={f.closeReason} onChange={e => set('closeReason', e.target.value)} /></OrgField>
-              </OrgRow>
-              <OrgRow>
-                <OrgField label="비고"><Input.TextArea style={{ height: 100 }} value={f.note} onChange={e => set('note', e.target.value)} /></OrgField>
-              </OrgRow>
+              <EditRow>
+                <EditField labelWidth={70} label="변경일" width={W1}><DatePicker style={{ width: '100%' }} value={f.modDate} onChange={v => set('modDate', v)} format="YYYY-MM-DD" /></EditField>
+                <EditField labelWidth={70} label="변경사유" width={W2}><Input value={f.modReason} onChange={e => set('modReason', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="조직코드" width={W1}><Input value={f.orgCd} disabled /></EditField>
+                <EditField labelWidth={70} label="조직명" width={W2}><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="조직레벨" width={WH}><SystemCodeComboBox kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></EditField>
+                <EditField labelWidth={70} label="정렬순서" width={WH}><Input value={f.sortOrder} onChange={e => set('sortOrder', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="개설일" width={W1}><DatePicker style={{ width: '100%' }} value={f.openDate} disabled format="YYYY-MM-DD" /></EditField>
+                <EditField labelWidth={70} label="개설사유" width={W2}><Input value={f.openReason} disabled /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="종료일" width={W1}><DatePicker style={{ width: '100%' }} value={f.closeDate} onChange={v => set('closeDate', v)} format="YYYY-MM-DD" /></EditField>
+                <EditField labelWidth={70} label="종료사유" width={W2}><Input value={f.closeReason} onChange={e => set('closeReason', e.target.value)} /></EditField>
+              </EditRow>
+              <EditRow>
+                <EditField labelWidth={70} label="비고"><Input.TextArea style={{ height: 100 }} value={f.note} onChange={e => set('note', e.target.value)} /></EditField>
+              </EditRow>
             </>
           )}
-        </Space>
+        </>
       )}
       <Org01_Move_OrgCode baseDate={moveDate} onSelect={onMoveSelect} onClose={() => setMoveDate(null)} />
-    </Modal>
+    </EditModal>
   );
 };

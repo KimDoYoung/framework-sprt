@@ -5,12 +5,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, message, Modal, Typography } from 'antd';
+import { DatePicker, Input, message, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { icamUserApi } from '@/api/icam';
 import { errorMessage } from '@/api/client';
 import { IcamStopAuth } from '@/types/icam';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 
 const FORMAT = 'YYYY-MM-DD';
 
@@ -64,17 +65,13 @@ export const Icam55_Edit_UserStopAuth: React.FC<Props> = ({ model, onDone, onClo
   };
 
   return (
-    <Modal
+    <EditModal
       open={model != null}
       title={model ? `${model.companyName ?? ''} ${model.userName ?? ''}(${model.userId ?? ''})` : ''}
       width={500}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnClose
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0, textAlign: 'center' },
-      }}
+      styles={{ footer: { textAlign: 'center' } }}
       footer={
         <>
           <Button type="save" loading={saving} onClick={update}>저장</Button>
@@ -83,17 +80,15 @@ export const Icam55_Edit_UserStopAuth: React.FC<Props> = ({ model, onDone, onClo
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <StopAuthField label="삭제일자">
-          <DatePicker style={{ width: 230 }} value={delDate} format={FORMAT} onChange={onDelDate} />
-        </StopAuthField>
-        <StopAuthField label="권한정지 해제일자">
-          <DatePicker style={{ width: 230 }} value={unstopDate} format={FORMAT} onChange={onUnstopDate} />
-        </StopAuthField>
-        <StopAuthField label="비고">
-          <Input.TextArea style={{ width: '100%', height: 60 }} value={note} onChange={e => setNote(e.target.value)} />
-        </StopAuthField>
-      </div>
-    </Modal>
+      <EditField label="삭제일자" labelWidth={125}>
+        <DatePicker style={{ width: 230 }} value={delDate} format={FORMAT} onChange={onDelDate} />
+      </EditField>
+      <EditField label="권한정지 해제일자" labelWidth={125}>
+        <DatePicker style={{ width: 230 }} value={unstopDate} format={FORMAT} onChange={onUnstopDate} />
+      </EditField>
+      <EditField label="비고" labelWidth={125}>
+        <Input.TextArea style={{ width: '100%', height: 60 }} value={note} onChange={e => setNote(e.target.value)} />
+      </EditField>
+    </EditModal>
   );
 };

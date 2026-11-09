@@ -6,22 +6,17 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Checkbox, Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';
+import { Checkbox, Input, InputNumber, message, Select, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
 import { IcsChecklist, IcsChecklistClassCode, IcsLawDeadline } from '@/types/ics';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { Sch05_Page_RelateIcs, Sch05_Page_RelateIcsHandle } from '@/components/lookup/Sch05_Page_RelateIcs';
 import { Ics01_Lookup_SelectMulti } from './Ics01_Lookup_SelectMulti';
 
-const LABEL_W = 105;
-const Row: React.FC<{ label: React.ReactNode; children: React.ReactNode; align?: 'center' | 'flex-start' }> = ({ label, children, align = 'center' }) => (
-  <div style={{ display: 'flex', alignItems: align, marginBottom: 16 }}>
-    <Typography.Text strong style={{ width: LABEL_W, flex: 'none' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+const B = (t: string) => <strong>{t}</strong>;
 
 export interface ChecklistEditTarget {
   /** edit(checklistModel, callback) L80-89 — 고칠 체크리스트. 새로 만들 때는 미리 받은 id(next-id)와 회사·사용 true만 있다 */
@@ -127,12 +122,12 @@ export const Ics10_Edit_Checklist: React.FC<Props> = ({ target, readOnly, onSave
 
   const ro = !!readOnly;
   return (
-    <Modal
+    <EditModal
       open={!!target}
       title={ro ? '내부통제 체크리스트' : '내부통제 체크리스트 생성/수정'}
       width={770}
-      maskClosable={false}
       onCancel={onClose}
+      styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -142,43 +137,42 @@ export const Ics10_Edit_Checklist: React.FC<Props> = ({ target, readOnly, onSave
         </div>
       }
     >
-      <div style={{ padding: '10px 10px 0 10px', maxHeight: 600, overflowY: 'auto' }}>
-        <Row label="체크대상" align="flex-start">
-          <Input.TextArea style={{ height: 170, resize: 'none' }} readOnly={ro} value={content} onChange={e => setContent(e.target.value)} />
-        </Row>
-        <Row label="대분류">
-          <Select style={{ width: 300 }} placeholder="선택하세요" disabled={ro} value={lClassId} onChange={onLClass}
-            options={lCodes.map(c => ({ value: c.code, label: c.name }))} />
-        </Row>
-        <Row label="중분류">
-          <Select style={{ width: 300 }} placeholder="선택하세요" disabled={ro} value={mClassId} onChange={onMClass}
-            options={mCodes.map(c => ({ value: c.code, label: c.name }))} />
-        </Row>
-        <Row label="근거" align="flex-start">
-          <Input.TextArea style={{ height: 60, resize: 'none' }} readOnly={ro} value={criterion} onChange={e => setCriterion(e.target.value)} />
-        </Row>
-        <Row label="내부통제" align="flex-start">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Space>
-              <Button type="addRow" disabled={ro} onClick={() => setLookupOpen(true)}>행 추가</Button>
-              {/* [E4] deleteIcsButton[행 삭제].Select (L270) → relateIcsPage.delete() */}
-              <Button type="removeRow" disabled={ro} onClick={() => void relateRef.current?.delete()}>행 삭제</Button>
-            </Space>
-            <div style={{ height: 200 }}><Sch05_Page_RelateIcs ref={relateRef} /></div>
-          </div>
-        </Row>
-        {!ro && (
-          <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
-            <Row label="조회순서">
-              <InputNumber style={{ width: 100 }} controls={false} precision={0} value={seq} onChange={v => setSeq(v == null ? null : Number(v))} />
-            </Row>
-            <Row label="사용여부">
-              <Checkbox checked={useYn} onChange={e => setUseYn(e.target.checked)} />
-            </Row>
-          </div>
-        )}
-      </div>
+      {/* 라벨 칸 70 (가장 긴 라벨 4글자; AS-IS 105), 두 칸 행은 361 + 8 + 361 = 730 */}
+      <EditField label={B('체크대상')} labelWidth={70}>
+        <Input.TextArea style={{ height: 170, resize: 'none' }} readOnly={ro} value={content} onChange={e => setContent(e.target.value)} />
+      </EditField>
+      <EditField label={B('대분류')} labelWidth={70}>
+        <Select style={{ width: 300 }} placeholder="선택하세요" disabled={ro} value={lClassId} onChange={onLClass}
+          options={lCodes.map(c => ({ value: c.code, label: c.name }))} />
+      </EditField>
+      <EditField label={B('중분류')} labelWidth={70}>
+        <Select style={{ width: 300 }} placeholder="선택하세요" disabled={ro} value={mClassId} onChange={onMClass}
+          options={mCodes.map(c => ({ value: c.code, label: c.name }))} />
+      </EditField>
+      <EditField label={B('근거')} labelWidth={70}>
+        <Input.TextArea style={{ height: 60, resize: 'none' }} readOnly={ro} value={criterion} onChange={e => setCriterion(e.target.value)} />
+      </EditField>
+      <EditField label={B('내부통제')} labelWidth={70}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Space>
+            <Button type="addRow" disabled={ro} onClick={() => setLookupOpen(true)}>행 추가</Button>
+            {/* [E4] deleteIcsButton[행 삭제].Select (L270) → relateIcsPage.delete() */}
+            <Button type="removeRow" disabled={ro} onClick={() => void relateRef.current?.delete()}>행 삭제</Button>
+          </Space>
+          <div style={{ height: 200 }}><Sch05_Page_RelateIcs ref={relateRef} /></div>
+        </div>
+      </EditField>
+      {!ro && (
+        <EditRow style={{ alignItems: 'center' }}>
+          <EditField label={B('조회순서')} labelWidth={70} width={361}>
+            <InputNumber style={{ width: 100 }} controls={false} precision={0} value={seq} onChange={v => setSeq(v == null ? null : Number(v))} />
+          </EditField>
+          <EditField label={B('사용여부')} labelWidth={70} width={361}>
+            <Checkbox checked={useYn} onChange={e => setUseYn(e.target.checked)} />
+          </EditField>
+        </EditRow>
+      )}
       <Ics01_Lookup_SelectMulti open={lookupOpen} actionCode="deadline" onResultDeadlines={list => void addLaws(list)} onClose={() => setLookupOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };

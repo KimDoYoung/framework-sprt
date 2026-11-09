@@ -12,11 +12,11 @@ import { aprExtraApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { AprApprDetail, AprTypo } from '@/types/apr';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { HtmlView } from '@/components/form/HtmlView';
 
-const LABEL_W = 80;
+const LABEL_W = 70; // 가장 긴 라벨 4글자(상신제목·수　　신) → 70
 
 interface Form {
   title: string; receiveName: string; referenceName: string; note: string; signCompany: string; signCeo: string; content: string; reason: string;
@@ -32,13 +32,6 @@ interface Props {
   onSaved?: (doc: AprApprDetail) => void;
   onClose: () => void;
 }
-
-const Line: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-    <span style={{ width: LABEL_W, textAlign: 'right', fontSize: 12, fontWeight: 'bold', flexShrink: 0 }}>{label}</span>
-    {children}
-  </div>
-);
 
 const Bar: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{ background: '#f5f5f5', padding: '4px 10px', fontSize: 12, fontWeight: 'bold', borderRadius: 4 }}>{children}</div>
@@ -92,17 +85,15 @@ export const Apr01_Edit_ApprModi: React.FC<Props> = ({ doc = null, typo = null, 
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title={readOnly ? '수정 전 내용' : '오타수정'}
       width={820}
       style={{ top: 20 }}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       focusFirst={false}
-      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 12 } }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
           {!readOnly && <Button type="save" loading={saving} onClick={save}>저장</Button>}
@@ -111,19 +102,19 @@ export const Apr01_Edit_ApprModi: React.FC<Props> = ({ doc = null, typo = null, 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <>
         {/* getApprovalForm() L223-247 */}
-        <Line label="상신제목"><Input value={form.title} readOnly={readOnly} onChange={e => set({ title: e.target.value })} /></Line>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Line label="수　　신"><Input value={form.receiveName} readOnly={readOnly} onChange={e => set({ receiveName: e.target.value })} /></Line>
-          <Line label="참　　조"><Input value={form.referenceName} readOnly={readOnly} onChange={e => set({ referenceName: e.target.value })} /></Line>
-        </div>
-        <Line label="비　　고"><Input value={form.note} readOnly={readOnly} onChange={e => set({ note: e.target.value })} /></Line>
+        <EditField label="상신제목" labelWidth={LABEL_W}><Input value={form.title} readOnly={readOnly} onChange={e => set({ title: e.target.value })} /></EditField>
+        <EditRow>
+          <EditField label="수　　신" labelWidth={LABEL_W} width={386}><Input value={form.receiveName} readOnly={readOnly} onChange={e => set({ receiveName: e.target.value })} /></EditField>
+          <EditField label="참　　조" labelWidth={LABEL_W} width={386}><Input value={form.referenceName} readOnly={readOnly} onChange={e => set({ referenceName: e.target.value })} /></EditField>
+        </EditRow>
+        <EditField label="비　　고" labelWidth={LABEL_W}><Input value={form.note} readOnly={readOnly} onChange={e => set({ note: e.target.value })} /></EditField>
         {/* getHtmlForm() L249-286 */}
         <Bar>상신내용</Bar>
         {readOnly
           ? <HtmlView html={form.content} height={300} />
-          : <HtmlEditor key={doc?.apprId} value={form.content} onChange={html => set({ content: html })} height={Math.max(240, Math.min(300, window.innerHeight - 650))} />}
+          : <HtmlEditor key={doc?.apprId} value={form.content} onChange={html => set({ content: html })} height={Math.max(240, Math.min(300, window.innerHeight - 690))} />}
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}><Bar>대외문서 대표회사명</Bar></div>
           <div style={{ flex: 1 }}><Bar>대외문서 대표서명란</Bar></div>
@@ -134,7 +125,7 @@ export const Apr01_Edit_ApprModi: React.FC<Props> = ({ doc = null, typo = null, 
         </div>
         <Bar>변경사유</Bar>
         <Input.TextArea style={{ height: 70, resize: 'none' }} value={form.reason} readOnly={readOnly} onChange={e => set({ reason: e.target.value })} />
-      </div>
-    </LookupModal>
+      </>
+    </EditModal>
   );
 };

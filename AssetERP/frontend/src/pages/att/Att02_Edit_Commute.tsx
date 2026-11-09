@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, Modal, message, Space, Typography } from 'antd';
+import { DatePicker, Input, Modal, message, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import dayjs from 'dayjs';
 import { attApi } from '@/api/att';
 import { errorMessage } from '@/api/client';
@@ -22,11 +23,6 @@ interface Props {
 }
 
 const DATE = 'YYYY-MM-DD';
-
-/** 라벨 폭 130 (form.setLabelWidth(130)) */
-const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Typography.Text style={{ width: 130, flex: 'none', textAlign: 'right', paddingRight: 10 }}>{children}</Typography.Text>
-);
 
 export const Att02_Edit_Commute: React.FC<Props> = ({ target, onSaved, onClose }) => {
   const [inDate, setInDate] = useState<string | null>(null);
@@ -77,16 +73,11 @@ export const Att02_Edit_Commute: React.FC<Props> = ({ target, onSaved, onClose }
   };
 
   return (
-    <Modal
+    <EditModal
       open={target != null}
       title="수정"
       width={400}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -97,24 +88,25 @@ export const Att02_Edit_Commute: React.FC<Props> = ({ target, onSaved, onClose }
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Label>확정 출근시간</Label>
+      {/* AS-IS 라벨 폭 130 → 편집 폼 원칙: 가장 긴 라벨('확정 출근시간') 기준 100 */}
+      <EditField label="확정 출근시간" labelWidth={100}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E1] checkInTimeStr.Blur (L99) → formatTime(), [E3] checkInTimeStr.KeyPress (L110) → 숫자와 ':'만 */}
           <Input style={{ width: 70 }} placeholder="24:59" value={inTime} onChange={e => setInTime(e.target.value)}
             onBlur={() => setInTime(formatTime(inTime) ?? '')} onKeyPress={onlyTimeKey} />
           {/* settings() L93: checkInTime.setEnabled(false) */}
           <DatePicker style={{ width: 115 }} disabled allowClear={false} format={DATE} value={inDate ? dayjs(inDate) : null} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Label>확정 퇴근시간</Label>
+      </EditField>
+      <EditField label="확정 퇴근시간" labelWidth={100}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E2] checkOutTimeStr.Blur (L104) → formatTime(), [E4] checkOutTimeStr.KeyPress (L116) → 숫자와 ':'만 */}
           <Input style={{ width: 70 }} placeholder="24:59" value={outTime} onChange={e => setOutTime(e.target.value)}
             onBlur={() => setOutTime(formatTime(outTime) ?? '')} onKeyPress={onlyTimeKey} />
           <DatePicker style={{ width: 115 }} allowClear={false} format={DATE} value={outDate ? dayjs(outDate) : null}
             onChange={d => setOutDate(d ? d.format(DATE) : null)} />
         </div>
-      </div>
-    </Modal>
+      </EditField>
+    </EditModal>
   );
 };

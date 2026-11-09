@@ -6,13 +6,14 @@
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';
+import { Checkbox, DatePicker, Input, InputNumber, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { bbsApi } from '@/api/bbs';
 import { fileApi } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { BbsCompanyRule } from '@/types/bbs';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Bbs15_Lookup_File } from './Bbs15_Lookup_File';
@@ -28,13 +29,9 @@ interface Props {
   onDone: () => void;
 }
 
-/** 라벨 폭 110 (form.setLabelWidth(110)) */
-const Field: React.FC<{ label: string; width?: number | string; required?: boolean; children: React.ReactNode }> = ({ label, width = '100%', required, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 110, flex: 'none', lineHeight: '32px', color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 6글자(회사규정구분·회사규정코드) 78+18=96 → 100 (편집 폼 모달 원칙). 필수 라벨은 파란 글자 */
+const LW = 100;
+const Req: React.FC<{ children: string }> = ({ children }) => <span style={{ color: '#0069B4' }}>{children}</span>;
 
 export const Bbs15_Edit_CompanyRuleManager: React.FC<Props> = ({ model, onClose, onDone }) => {
   const [f, setF] = useState<BbsCompanyRuleEdit | null>(model);
@@ -89,11 +86,10 @@ export const Bbs15_Edit_CompanyRuleManager: React.FC<Props> = ({ model, onClose,
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="회사규정"
       width={1000}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -107,43 +103,37 @@ export const Bbs15_Edit_CompanyRuleManager: React.FC<Props> = ({ model, onClose,
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 2px 2px' }}>
-        {/* hlc01/hlc02: 300 · 여백 90 · 220 · 여백 90 · 250 (L139-150) */}
-        <Space size={0} align="start">
-          <Field label="회사규정구분 " width={300} required>
-            <SystemCodeComboBox kindCd="CompanyRuleType" placeholder="(선택하세요)" style={{ width: '100%' }} value={f.ruleType ?? undefined}
-              onChange={code => set('ruleType', code ?? null)} />
-          </Field>
-          <div style={{ width: 90 }} />
-          <Field label="사용 " width={220}><Checkbox checked={!!f.publicYn} onChange={e => set('publicYn', e.target.checked)} /></Field>
-          <div style={{ width: 90 }} />
-          <Field label="종료일 " width={250}>
-            <DatePicker style={{ width: '100%' }} value={f.closeDate ? dayjs(f.closeDate) : null}
-              onChange={d => set('closeDate', d ? d.format('YYYY-MM-DD') : null)} />
-          </Field>
-        </Space>
-        <Space size={0} align="start">
-          <Field label="회사규정코드 " width={300} required>
-            <Input value={f.companyRuleCode ?? ''} onChange={e => set('companyRuleCode', e.target.value)} />
-          </Field>
-          <div style={{ width: 90 }} />
-          <Field label="개정회차 " width={220} required>
-            <InputNumber style={{ width: '100%' }} precision={0} value={f.revisionNo ?? null} onChange={v => set('revisionNo', v == null ? null : Number(v))} />
-          </Field>
-          <div style={{ width: 90 }} />
-          <Field label="제개정일 " width={250} required>
-            <DatePicker style={{ width: '100%' }} value={f.revisionDate ? dayjs(f.revisionDate) : null}
-              onChange={d => set('revisionDate', d ? d.format('YYYY-MM-DD') : null)} />
-          </Field>
-        </Space>
-        <Field label="회사규정명 " required><Input value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></Field>
-        <Field label="내용 ">
-          {/* 편집기는 만들 때 한 번 내용을 넣는다(AS-IS setHtmlText) — 열 때마다 다시 만든다 */}
-          <HtmlEditor key={`${f.companyRuleId}-${f.isNew ? 'n' : 'e'}`} value={f.content} onChange={html => set('content', html)} height={420} />
-        </Field>
-        <Field label="비고 "><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-      </div>
+      {/* 안쪽 폭 960(1000 − 40): 세 칸은 원래 300:220:250 비율 → 368 + 270 + 306 + 칸 사이 8×2 */}
+      <EditRow>
+        <EditField label={<Req>회사규정구분</Req>} labelWidth={LW} width={368}>
+          <SystemCodeComboBox kindCd="CompanyRuleType" placeholder="(선택하세요)" style={{ width: '100%' }} value={f.ruleType ?? undefined}
+            onChange={code => set('ruleType', code ?? null)} />
+        </EditField>
+        <EditField label="사용" labelWidth={LW} width={270}><Checkbox checked={!!f.publicYn} onChange={e => set('publicYn', e.target.checked)} /></EditField>
+        <EditField label="종료일" labelWidth={LW} width={306}>
+          <DatePicker style={{ width: '100%' }} value={f.closeDate ? dayjs(f.closeDate) : null}
+            onChange={d => set('closeDate', d ? d.format('YYYY-MM-DD') : null)} />
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label={<Req>회사규정코드</Req>} labelWidth={LW} width={368}>
+          <Input value={f.companyRuleCode ?? ''} onChange={e => set('companyRuleCode', e.target.value)} />
+        </EditField>
+        <EditField label={<Req>개정회차</Req>} labelWidth={LW} width={270}>
+          <InputNumber style={{ width: '100%' }} precision={0} value={f.revisionNo ?? null} onChange={v => set('revisionNo', v == null ? null : Number(v))} />
+        </EditField>
+        <EditField label={<Req>제개정일</Req>} labelWidth={LW} width={306}>
+          <DatePicker style={{ width: '100%' }} value={f.revisionDate ? dayjs(f.revisionDate) : null}
+            onChange={d => set('revisionDate', d ? d.format('YYYY-MM-DD') : null)} />
+        </EditField>
+      </EditRow>
+      <EditField label={<Req>회사규정명</Req>} labelWidth={LW}><Input value={f.title ?? ''} onChange={e => set('title', e.target.value)} /></EditField>
+      <EditField label="내용" labelWidth={LW}>
+        {/* 편집기는 만들 때 한 번 내용을 넣는다(AS-IS setHtmlText) — 열 때마다 다시 만든다 */}
+        <HtmlEditor key={`${f.companyRuleId}-${f.isNew ? 'n' : 'e'}`} value={f.content} onChange={html => set('content', html)} height={420} />
+      </EditField>
+      <EditField label="비고" labelWidth={LW}><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
       <Bbs15_Lookup_File open={fileOpen} parentId={f.companyRuleId} onClose={() => { setFileOpen(false); void setFileButtonText(); }} />
-    </Modal>
+    </EditModal>
   );
 };

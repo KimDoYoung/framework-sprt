@@ -4,11 +4,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { CompanyManage } from '@/types/sys';
 import { Button } from '@/components/button';
+import { EditModal } from '@/components/form/EditForm';
 
 interface Props {
   /** open(companyModel, callback) L32-38 — 값이 있으면 열린다 */
@@ -38,12 +39,11 @@ export const Sys01_Edit_Note: React.FC<Props> = ({ company, onClose, onSaved }) 
 
   // 생성자 L40-59: 1200×650, 크기 조절 가능, 닫기(X) 없음
   return (
-    <Modal
+    <EditModal
       open={!!company}
       title="비고"
       width={1200}
       closable={false}
-      maskClosable={false}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -55,6 +55,6 @@ export const Sys01_Edit_Note: React.FC<Props> = ({ company, onClose, onSaved }) 
       }
     >
       <Input.TextArea value={note} onChange={e => setNote(e.target.value)} style={{ height: 520, resize: 'none' }} />
-    </Modal>
+    </EditModal>
   );
 };

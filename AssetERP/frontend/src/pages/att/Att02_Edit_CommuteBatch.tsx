@@ -6,7 +6,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, DatePicker, Input, Modal, message, Space, Typography } from 'antd';
+import { Checkbox, DatePicker, Input, message, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import dayjs from 'dayjs';
 import { attApi } from '@/api/att';
 import { errorMessage } from '@/api/client';
@@ -23,11 +24,6 @@ interface Props {
 }
 
 const DATE = 'YYYY-MM-DD';
-
-/** 라벨 폭 110 (form.setLabelWidth(110)) */
-const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Typography.Text style={{ width: 110, flex: 'none', textAlign: 'right', paddingRight: 10 }}>{children}</Typography.Text>
-);
 
 export const Att02_Edit_CommuteBatch: React.FC<Props> = ({ rows, onSaved, onClose }) => {
   const [checkIn, setCheckIn] = useState(true);
@@ -78,16 +74,11 @@ export const Att02_Edit_CommuteBatch: React.FC<Props> = ({ rows, onSaved, onClos
   };
 
   return (
-    <Modal
+    <EditModal
       open={rows != null}
       title="일괄수정"
       width={480}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -98,28 +89,25 @@ export const Att02_Edit_CommuteBatch: React.FC<Props> = ({ rows, onSaved, onClos
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* [E1] checkBox01.ValueChange (L104) → 출근 시각·날짜 칸 사용 여부 */}
-          <Checkbox checked={checkIn} onChange={e => setCheckIn(e.target.checked)} />
-          <Label>확정 출근시간</Label>
+      {/* AS-IS 라벨 폭 110 → 라벨 100 + 체크박스(라벨 안) 25 = 125 */}
+      <EditField label={<>{/* [E1] checkBox01.ValueChange (L104) → 출근 시각·날짜 칸 사용 여부 */}<Checkbox checked={checkIn} onChange={e => setCheckIn(e.target.checked)} style={{ marginRight: 8 }} />확정 출근시간</>} labelWidth={125}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E3] checkInTimeStr.Blur (L114) → formatTime(), [E5] checkInTimeStr.KeyPress (L125) → 숫자와 ':'만 */}
           <Input style={{ width: 70 }} placeholder="24:59" disabled={!checkIn} value={inTime} onChange={e => setInTime(e.target.value)}
             onBlur={() => setInTime(formatTime(inTime) ?? '')} onKeyPress={onlyTimeKey} />
           <DatePicker style={{ width: 115 }} disabled={!checkIn} allowClear={false} format={DATE} value={inDate ? dayjs(inDate) : null}
             onChange={d => setInDate(d ? d.format(DATE) : null)} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* [E2] checkBox02.ValueChange (L109) → 퇴근 시각·날짜 칸 사용 여부 */}
-          <Checkbox checked={checkOut} onChange={e => setCheckOut(e.target.checked)} />
-          <Label>확정 퇴근시간</Label>
+      </EditField>
+      <EditField label={<>{/* [E2] checkBox02.ValueChange (L109) → 퇴근 시각·날짜 칸 사용 여부 */}<Checkbox checked={checkOut} onChange={e => setCheckOut(e.target.checked)} style={{ marginRight: 8 }} />확정 퇴근시간</>} labelWidth={125}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E4] checkOutTimeStr.Blur (L119) → formatTime(), [E6] checkOutTimeStr.KeyPress (L131) → 숫자와 ':'만 */}
           <Input style={{ width: 70 }} placeholder="24:59" disabled={!checkOut} value={outTime} onChange={e => setOutTime(e.target.value)}
             onBlur={() => setOutTime(formatTime(outTime) ?? '')} onKeyPress={onlyTimeKey} />
           <DatePicker style={{ width: 115 }} disabled={!checkOut} allowClear={false} format={DATE} value={outDate ? dayjs(outDate) : null}
             onChange={d => setOutDate(d ? d.format(DATE) : null)} />
         </div>
-      </div>
-    </Modal>
+      </EditField>
+    </EditModal>
   );
 };

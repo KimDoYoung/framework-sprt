@@ -6,11 +6,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
+import { DatePicker, Input, InputNumber, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { carApi } from '@/api/car';
 import { errorMessage } from '@/api/client';
 import { CarPublicAdminJournal } from '@/types/car';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
@@ -21,18 +22,6 @@ const FORMAT = 'YYYY-MM-DD';
 const fmtLong = (v: string | number | undefined) => (v == null || v === '' ? '' : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
 const parseNum = (v: string | undefined) => (v ?? '').replace(/,/g, '');
 const num = (v: number | null | undefined) => v ?? 0;
-
-const Cell: React.FC<{ label: string; width: number; unit?: boolean; children: React.ReactNode }> = ({ label, width, unit, children }) => (
-  <div style={{ width, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-    <label style={{ width: 140, flexShrink: 0, textAlign: 'right', paddingRight: 10 }}>{label}</label>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-    {unit && <span style={{ width: 50, paddingLeft: 5 }}>km</span>}
-  </div>
-);
-
-const Row: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '0 10px 20px 10px' }}>{children}</div>
-);
 
 interface Props {
   /** edit(selectModel, callBack): 값이 있으면 열림 */
@@ -88,23 +77,21 @@ export const Car04_Edit_PublicJournalAdmin: React.FC<Props> = ({ target, onDone,
   };
 
   const km = (value: number | null | undefined, disabled: boolean, onChange?: (v: number | null) => void) => (
-    <InputNumber style={{ width: '100%' }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never}
-      disabled={disabled} value={value ?? null} onChange={v => onChange?.(v == null ? null : Number(v))} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <InputNumber style={{ width: '100%' }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never}
+        disabled={disabled} value={value ?? null} onChange={v => onChange?.(v == null ? null : Number(v))} />
+      <span style={{ flex: 'none' }}>km</span>
+    </div>
   );
 
   return (
     <>
-      <Modal
+      <EditModal
         open={target != null}
         title="공용차량 운행일지 변경"
         width={780}
-        maskClosable={false}
         destroyOnHidden
         onCancel={onClose}
-        styles={{
-          header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-          footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-        }}
         footer={
           <div style={{ textAlign: 'center' }}>
             <Space>
@@ -116,44 +103,39 @@ export const Car04_Edit_PublicJournalAdmin: React.FC<Props> = ({ target, onDone,
         }
       >
         {/* [E0] 화면 열림 (생성자 L85-102) → settings(), show() */}
-        <div style={{ padding: '12px 2px 0' }}>
-          <Row>
-            <Cell label="사용일시" width={680}>
-              <Space size={4}>
-                <DatePicker style={{ width: 130 }} format={FORMAT} disabled allowClear={false} value={draft.date ? dayjs(draft.date) : null} />
-                <span style={{ width: 6 }} />
-                <SystemCodeComboBox kindCd="HourCode" style={{ width: 62 }} value={draft.startHour ?? undefined} onChange={c => set({ startHour: c ?? null })} />
-                <SystemCodeComboBox kindCd="MinuteCode" style={{ width: 62 }} value={draft.startMin ?? undefined} onChange={c => set({ startMin: c ?? null })} />
-                <span>~</span>
-                <SystemCodeComboBox kindCd="HourCode" style={{ width: 62 }} value={draft.closeHour ?? undefined} onChange={c => set({ closeHour: c ?? null })} />
-                <SystemCodeComboBox kindCd="MinuteCode" style={{ width: 62 }} value={draft.closeMin ?? undefined} onChange={c => set({ closeMin: c ?? null })} />
-              </Space>
-            </Cell>
-          </Row>
-          <Row>
-            {/* [E6] personName[사용자].TriggerClick (L189) → Emp00_Lookup_SelectSingle.open(오늘) → personId·personName */}
-            <Cell label="사용자" width={330}><LookupInput width={150} value={draft.personNm ?? ''} onOpen={() => setPersonOpen(true)} /></Cell>
-            <div style={{ width: 20 }} />
-            <Cell label="업무용  사용거리" width={330} unit>{km(businessMileage, true)}</Cell>
-          </Row>
-          <Row>
-            <div style={{ width: 350 }} />
-            <Cell label="(출퇴근용)" width={330} unit>{km(draft.commuteMileage, false, v => setKm('commuteMileage', v))}</Cell>
-          </Row>
-          <Row>
-            <div style={{ width: 350 }} />
-            <Cell label="(일반업무용)" width={330} unit>{km(draft.bizMileage, false, v => setKm('bizMileage', v))}</Cell>
-          </Row>
-          <Row>
-            <Cell label="주행거리" width={330} unit>{km(mileage, true)}</Cell>
-            <div style={{ width: 20 }} />
-            <Cell label="비업무용 사용거리" width={330} unit>{km(draft.unBizMileage, false, v => setKm('unBizMileage', v))}</Cell>
-          </Row>
-          <Row><Cell label="행선지" width={680}><Input maxLength={100} value={draft.destination ?? ''} onChange={e => set({ destination: e.target.value })} /></Cell></Row>
-          <Row><Cell label="목적" width={680}><Input maxLength={200} value={draft.reason ?? ''} onChange={e => set({ reason: e.target.value })} /></Cell></Row>
-          <Row><Cell label="참석자" width={680}><Input maxLength={100} value={draft.attendance ?? ''} onChange={e => set({ attendance: e.target.value })} /></Cell></Row>
-        </div>
-      </Modal>
+        {/* 라벨 칸 130 (가장 긴 라벨 '비업무용 사용거리'), 두 칸 행은 366 + 8 + 366 = 740 */}
+        <EditField label="사용일시" labelWidth={130}>
+          <Space size={4}>
+            <DatePicker style={{ width: 130 }} format={FORMAT} disabled allowClear={false} value={draft.date ? dayjs(draft.date) : null} />
+            <span style={{ width: 6 }} />
+            <SystemCodeComboBox kindCd="HourCode" style={{ width: 62 }} value={draft.startHour ?? undefined} onChange={c => set({ startHour: c ?? null })} />
+            <SystemCodeComboBox kindCd="MinuteCode" style={{ width: 62 }} value={draft.startMin ?? undefined} onChange={c => set({ startMin: c ?? null })} />
+            <span>~</span>
+            <SystemCodeComboBox kindCd="HourCode" style={{ width: 62 }} value={draft.closeHour ?? undefined} onChange={c => set({ closeHour: c ?? null })} />
+            <SystemCodeComboBox kindCd="MinuteCode" style={{ width: 62 }} value={draft.closeMin ?? undefined} onChange={c => set({ closeMin: c ?? null })} />
+          </Space>
+        </EditField>
+        <EditRow>
+          {/* [E6] personName[사용자].TriggerClick (L189) → Emp00_Lookup_SelectSingle.open(오늘) → personId·personName */}
+          <EditField label="사용자" labelWidth={130} width={366}><LookupInput width={150} value={draft.personNm ?? ''} onOpen={() => setPersonOpen(true)} /></EditField>
+          <EditField label="업무용  사용거리" labelWidth={130} width={366}>{km(businessMileage, true)}</EditField>
+        </EditRow>
+        <EditRow>
+          <div style={{ width: 374, flex: 'none' }} />
+          <EditField label="(출퇴근용)" labelWidth={130} width={366}>{km(draft.commuteMileage, false, v => setKm('commuteMileage', v))}</EditField>
+        </EditRow>
+        <EditRow>
+          <div style={{ width: 374, flex: 'none' }} />
+          <EditField label="(일반업무용)" labelWidth={130} width={366}>{km(draft.bizMileage, false, v => setKm('bizMileage', v))}</EditField>
+        </EditRow>
+        <EditRow>
+          <EditField label="주행거리" labelWidth={130} width={366}>{km(mileage, true)}</EditField>
+          <EditField label="비업무용 사용거리" labelWidth={130} width={366}>{km(draft.unBizMileage, false, v => setKm('unBizMileage', v))}</EditField>
+        </EditRow>
+        <EditField label="행선지" labelWidth={130}><Input maxLength={100} value={draft.destination ?? ''} onChange={e => set({ destination: e.target.value })} /></EditField>
+        <EditField label="목적" labelWidth={130}><Input maxLength={200} value={draft.reason ?? ''} onChange={e => set({ reason: e.target.value })} /></EditField>
+        <EditField label="참석자" labelWidth={130}><Input maxLength={100} value={draft.attendance ?? ''} onChange={e => set({ attendance: e.target.value })} /></EditField>
+      </EditModal>
       <Emp00_Lookup_SelectSingle
         open={personOpen}
         noneLabel={null}

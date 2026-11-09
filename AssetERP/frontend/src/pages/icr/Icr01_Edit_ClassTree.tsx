@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Modal, Space } from 'antd';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { icrApi } from '@/api/icr';
 import { errorMessage } from '@/api/client';
 import { IcrClassTreeNode } from '@/types/icr';
@@ -28,14 +28,6 @@ interface Props {
   /** callback.execute(result): 저장 → 저장한 분류, 삭제 → null */
   onSaved: (model: IcrClassTreeNode | null) => void;
 }
-
-const LABEL_W = 70;
-const Row: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-    <span style={{ width: LABEL_W, fontWeight: 600 }}>{label}</span>
-    <div style={{ width: width - LABEL_W }}>{children}</div>
-  </div>
-);
 
 export const Icr01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [code, setCode] = useState('');
@@ -95,11 +87,11 @@ export const Icr01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
   // [E1 생략] deadlineButton[설정].Select (L106) → Sch03_Lookup_Ics.open + sch.Sch03_Deadline.selectDeadlineName: 수시알림 줄이 원본에서 주석 처리돼(L88-90) 화면에 없다
 
   return (
-    <LookupModal
+    // 모달 폭 480 → 520 (조회순서 입력칸 폭 확보). 라벨 칸 70, 295 + 8 + 177 = 480
+    <EditModal
       open={!!target}
       title={target?.titleName}
-      width={480}
-      maskClosable={false}
+      width={520}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -111,17 +103,11 @@ export const Icr01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
         </div>
       }
     >
-      <div style={{ padding: '20px 10px 0 10px' }}>
-        <div style={{ display: 'flex', gap: 0 }}>
-          <div style={{ width: 250 }}>
-            <Row label="분류코드" width={250}><Input value={code} onChange={e => setCode(e.target.value)} /></Row>
-          </div>
-          <div style={{ width: 150 }}>
-            <Row label="조회순서" width={150}><Input value={seq} onChange={e => setSeq(e.target.value)} /></Row>
-          </div>
-        </div>
-        <Row label="분류명" width={400}><Input value={name} onChange={e => setName(e.target.value)} /></Row>
-      </div>
-    </LookupModal>
+      <EditRow>
+        <EditField label={<span style={{ fontWeight: 600 }}>분류코드</span>} labelWidth={70} width={295}><Input value={code} onChange={e => setCode(e.target.value)} /></EditField>
+        <EditField label={<span style={{ fontWeight: 600 }}>조회순서</span>} labelWidth={70} width={177}><Input value={seq} onChange={e => setSeq(e.target.value)} /></EditField>
+      </EditRow>
+      <EditField label={<span style={{ fontWeight: 600 }}>분류명</span>} labelWidth={70}><Input value={name} onChange={e => setName(e.target.value)} /></EditField>
+    </EditModal>
   );
 };

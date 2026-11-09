@@ -5,11 +5,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import { empBenefitApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { Benefit } from '@/types/emp';
 import { Button } from '@/components/button';
+import { EditModal } from '@/components/form/EditForm';
 
 interface Props {
   /** 알림을 쓸 신청 — null이면 닫힘 (AS-IS open(selectModel)) */
@@ -54,16 +55,11 @@ export const Emp17_Edit_Note: React.FC<Props> = ({ model, onClose }) => {
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="알림 등록"
       width={450}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -75,9 +71,7 @@ export const Emp17_Edit_Note: React.FC<Props> = ({ model, onClose }) => {
         </div>
       }
     >
-      <div style={{ padding: '12px 2px' }}>
-        <Input.TextArea rows={5} value={note} onChange={e => setNote(e.target.value)} />
-      </div>
-    </Modal>
+      <Input.TextArea rows={5} value={note} onChange={e => setNote(e.target.value)} />
+    </EditModal>
   );
 };

@@ -7,11 +7,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, Modal, Space, Typography, message } from 'antd';
+import { Input, Modal, Space, message } from 'antd';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckApprCmnt } from '@/types/tdm';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import type { CmntEditTarget } from './Tdm59_Edit_Cmnt';
 
 interface Props {
@@ -69,11 +70,10 @@ export const Tdm59_Edit_ReportCmnt: React.FC<Props> = ({ target, onChanged, onCl
   };
 
   return (
-    <Modal
+    <EditModal
       open={!!target}
       title={<b>보고의견</b>}
       width={630}
-      maskClosable={false}
       keyboard={false}
       closable={false}
       footer={
@@ -88,11 +88,10 @@ export const Tdm59_Edit_ReportCmnt: React.FC<Props> = ({ target, onChanged, onCl
       }
     >
       {model && (
-        <div style={{ paddingTop: 15, display: 'flex' }}>
-          <Typography.Text strong style={{ width: 100, flex: 'none', paddingTop: 5, textAlign: 'right', paddingRight: 8 }}>보고 의견</Typography.Text>
+        <EditField label={<b>보고 의견</b>} labelWidth={80}>
           <Input.TextArea style={{ height: 150, resize: 'none' }} readOnly={!edit} value={reportCmnt} onChange={e => setReportCmnt(e.target.value)} />
-        </div>
+        </EditField>
       )}
-    </Modal>
+    </EditModal>
   );
 };

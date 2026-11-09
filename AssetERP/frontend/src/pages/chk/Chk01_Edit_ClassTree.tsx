@@ -5,10 +5,11 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, InputNumber, message, Modal, Select, Space, Typography } from 'antd';
+import { Input, InputNumber, message, Modal, Select, Space } from 'antd';
 import { chkApi } from '@/api/chk';
 import { errorMessage } from '@/api/client';
 import { ChkClassTree } from '@/types/chk';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -23,14 +24,6 @@ interface Props {
   /** AS-IS callback.execute(모델): 저장 → 저장한 분류 ID, 삭제 → 부모 분류 ID(없으면 undefined) */
   onDone: (classTreeId: number | undefined) => void;
 }
-
-/** 라벨 폭 80 (form.setLabelWidth(80)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', width }}>
-    <Typography.Text style={{ width: 80, flex: 'none' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -84,11 +77,10 @@ export const Chk01_Edit_ClassTree: React.FC<Props> = ({ model, onClose, onDone }
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={isNew ? '분류 신규등록' : '분류 수정'}
       width={600}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -101,26 +93,24 @@ export const Chk01_Edit_ClassTree: React.FC<Props> = ({ model, onClose, onDone }
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 2px 2px' }}>
-        <Field label="분류명"><Input value={f.classTreeName ?? ''} onChange={e => set('classTreeName', e.target.value)} /></Field>
-        <Field label="비고"><Input.TextArea rows={4} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-        <Space size={0}>
-          <Field label="순서" width={200}>
-            <InputNumber style={{ width: '100%' }} precision={0} value={f.seq ?? null} onChange={v => set('seq', v == null ? null : Number(v))} />
-          </Field>
-          <div style={{ width: 160 }} />
-          <Field label="사용여부" width={200}>
-            {/* [E3] useYn[사용여부].Collapse (L182) → useYn = 사용이면 true */}
-            <Select style={{ width: '100%' }} value={f.useYn === 'true' ? '사용' : '미사용'} options={[{ value: '사용' }, { value: '미사용' }]}
-              onChange={v => set('useYn', String(v === '사용'))} />
-          </Field>
-        </Space>
-        <Field label="매뉴링크">
-          {/* [E2] linkName[매뉴링크].Collapse (L170) → linkCode = 고른 코드("(선택안함)"은 비움) */}
-          <SystemCodeComboBox kindCd="ChkLinkCode" altCode={['', '(선택안함)']} style={{ width: 400 }} placeholder="선택" disabled={linkDisabled}
-            value={f.linkCode ?? ''} onChange={v => set('linkCode', v ? v : null)} />
-        </Field>
-      </div>
-    </Modal>
+      {/* 라벨 칸 70 (가장 긴 라벨 4글자; AS-IS 80), 두 칸 행은 276 + 8 + 276 = 560 */}
+      <EditField label="분류명" labelWidth={70}><Input value={f.classTreeName ?? ''} onChange={e => set('classTreeName', e.target.value)} /></EditField>
+      <EditField label="비고" labelWidth={70}><Input.TextArea rows={4} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
+      <EditRow>
+        <EditField label="순서" labelWidth={70} width={276}>
+          <InputNumber style={{ width: '100%' }} precision={0} value={f.seq ?? null} onChange={v => set('seq', v == null ? null : Number(v))} />
+        </EditField>
+        <EditField label="사용여부" labelWidth={70} width={276}>
+          {/* [E3] useYn[사용여부].Collapse (L182) → useYn = 사용이면 true */}
+          <Select style={{ width: '100%' }} value={f.useYn === 'true' ? '사용' : '미사용'} options={[{ value: '사용' }, { value: '미사용' }]}
+            onChange={v => set('useYn', String(v === '사용'))} />
+        </EditField>
+      </EditRow>
+      <EditField label="매뉴링크" labelWidth={70}>
+        {/* [E2] linkName[매뉴링크].Collapse (L170) → linkCode = 고른 코드("(선택안함)"은 비움) */}
+        <SystemCodeComboBox kindCd="ChkLinkCode" altCode={['', '(선택안함)']} style={{ width: 400 }} placeholder="선택" disabled={linkDisabled}
+          value={f.linkCode ?? ''} onChange={v => set('linkCode', v ? v : null)} />
+      </EditField>
+    </EditModal>
   );
 };

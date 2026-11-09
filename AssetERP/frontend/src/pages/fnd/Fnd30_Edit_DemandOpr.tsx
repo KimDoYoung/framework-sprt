@@ -6,13 +6,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, DatePicker, Input, InputNumber, message, Space, Typography } from 'antd';
+import { Checkbox, DatePicker, Input, InputNumber, message, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { OprDemand } from '@/types/fnd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 
 const FORMAT = 'YYYY-MM-DD';
 const fmtLong = (v: string | number | undefined) => (v == null || v === '' ? '' : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
@@ -42,12 +42,8 @@ interface Props {
   onClose: () => void;
 }
 
-const Field: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '수요예측기간'(6글자) 기준 96 (AS-IS 105) */
+const LW = 96;
 
 interface Form {
   demandDate: Dayjs | null;
@@ -128,11 +124,10 @@ export const Fnd30_Edit_DemandOpr: React.FC<Props> = ({ target, onSaved, onClose
   };
 
   return (
-    <LookupModal
+    <EditModal
       open
       title={title}
       width={640}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -145,51 +140,50 @@ export const Fnd30_Edit_DemandOpr: React.FC<Props> = ({ target, onSaved, onClose
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 0' }}>
-        <Field label="신청일 " width={230}>
+      {/* 두 칸 줄: 280+280 → 안쪽 600 − 8 = 592를 반씩 296. 한 칸 줄(280)도 296, 신청일 230 → 246, 등록건수·참여취소 180 → 200 */}
+        <EditField label="신청일" labelWidth={LW} width={246}>
           <DatePicker style={{ width: '100%' }} format={FORMAT} disabled={locked} value={f.demandDate} onChange={d => set('demandDate', d)} />
-        </Field>
-        <Field label="종목명 " width={560}>
+        </EditField>
+        <EditField label="종목명" labelWidth={LW}>
           <Input disabled={locked} value={f.itemName} onChange={e => set('itemName', e.target.value)} />
-        </Field>
-        <Field label="주간사 " width={560}>
+        </EditField>
+        <EditField label="주간사" labelWidth={LW}>
           <Input disabled={locked} value={f.leadManager} onChange={e => set('leadManager', e.target.value)} />
-        </Field>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <Field label="수요예측기간 " width={280}>
+        </EditField>
+        <EditRow>
+          <EditField label="수요예측기간" labelWidth={LW} width={296}>
             <Input disabled={locked} value={f.demandPeriod} onChange={e => set('demandPeriod', e.target.value)} />
-          </Field>
-          <Field label="시장구분 " width={280}>
+          </EditField>
+          <EditField label="시장구분" labelWidth={LW} width={296}>
             <Input disabled={locked} value={f.market} onChange={e => set('market', e.target.value)} />
-          </Field>
-        </div>
-        <Field label="공모가밴드 " width={280}>
+          </EditField>
+        </EditRow>
+        <EditField label="공모가밴드" labelWidth={LW} width={296}>
           <Input disabled={locked} value={f.priceBracket} onChange={e => set('priceBracket', e.target.value)} />
-        </Field>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-          <Field label="신청가격 " width={280}>
+        </EditField>
+        <EditRow>
+          <EditField label="신청가격" labelWidth={LW} width={296}>
             <InputNumber style={{ width: '100%' }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} disabled={locked}
               value={f.price} onChange={v => set('price', v == null ? null : Number(v))} />
-          </Field>
+          </EditField>
           <Checkbox disabled={locked} checked={f.priceAcceptYn} onChange={e => set('priceAcceptYn', e.target.checked)} style={{ lineHeight: '32px', color: '#000', fontSize: 12 }}>확정공모가액 -10% 변동수용</Checkbox>
-        </div>
-        <Field label="확약기간 " width={280}>
+        </EditRow>
+        <EditField label="확약기간" labelWidth={LW} width={296}>
           <Input disabled={locked} value={f.lockPeriod} onChange={e => set('lockPeriod', e.target.value)} />
-        </Field>
-        <Field label="비고 " width={560}>
+        </EditField>
+        <EditField label="비고" labelWidth={LW}>
           <Input.TextArea rows={5} value={f.note} onChange={e => set('note', e.target.value)} />
-        </Field>
+        </EditField>
         {multi && (
-          <Field label="등록건수 " width={180}>
+          <EditField label="등록건수" labelWidth={LW} width={200}>
             <InputNumber style={{ width: '100%' }} controls={false} precision={0} min={1} value={insertCount} onChange={v => setInsertCount(v == null ? null : Number(v))} />
-          </Field>
+          </EditField>
         )}
         {isEdit && (
-          <Field label="참여취소 " width={180}>
+          <EditField label="참여취소" labelWidth={LW} width={200}>
             <Checkbox checked={f.cancelYn} onChange={e => set('cancelYn', e.target.checked)} style={{ lineHeight: '32px' }} />
-          </Field>
+          </EditField>
         )}
-      </div>
-    </LookupModal>
+    </EditModal>
   );
 };

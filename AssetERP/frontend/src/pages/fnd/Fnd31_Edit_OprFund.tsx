@@ -7,13 +7,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, InputNumber, message, Space, Typography } from 'antd';
+import { Input, InputNumber, message, Space } from 'antd';
 import { fndApi } from '@/api/fnd';
 import { advApi } from '@/api/adv';
 import { errorMessage } from '@/api/client';
 import { OprFund } from '@/types/fnd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { SettingPopup } from '@/components/lookup/SettingPopup';
 import { Fnd01_Lookup_SelectSingle } from '@/components/lookup/Fnd01_Lookup_SelectSingle';
@@ -32,12 +32,8 @@ interface Props {
   onClose: () => void;
 }
 
-const Field: React.FC<{ label: string; width: number | string; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨(4글자) 기준 70 (AS-IS 105) */
+const LW = 70;
 
 export const Fnd31_Edit_OprFund: React.FC<Props> = ({ target, onSaved, onClose }) => {
   const [fundCode, setFundCode] = useState('');
@@ -142,11 +138,10 @@ export const Fnd31_Edit_OprFund: React.FC<Props> = ({ target, onSaved, onClose }
   );
 
   return (
-    <LookupModal
+    <EditModal
       open
       title={target.mode === 'insert' ? '펀드별 배정' : '펀드별 배정 수정'}
       width={460}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -159,19 +154,17 @@ export const Fnd31_Edit_OprFund: React.FC<Props> = ({ target, onSaved, onClose }
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 0' }}>
-        <Field label="펀드코드 " width={360}>
-          <LookupInput value={fundCode} width={250} onOpen={openTrigger} />
-        </Field>
-        <Field label="펀드명 " width={360}>
-          <Input.TextArea rows={3} readOnly value={fundName} />
-        </Field>
-        <Field label="배정수량 " width={360}>{num(qty, changeQty)}</Field>
-        <Field label="단가 " width={360}>{num(price)}</Field>
-        <Field label="배정금액 " width={360}>{num(contAmt, changeContAmt)}</Field>
-        <Field label="수수료 " width={360}>{num(fee, changeFee)}</Field>
-        <Field label="납입금액 " width={360}>{num(settleAmt)}</Field>
-      </div>
+      <EditField label="펀드코드" labelWidth={LW}>
+        <LookupInput value={fundCode} width={250} onOpen={openTrigger} />
+      </EditField>
+      <EditField label="펀드명" labelWidth={LW}>
+        <Input.TextArea rows={3} readOnly value={fundName} />
+      </EditField>
+      <EditField label="배정수량" labelWidth={LW}>{num(qty, changeQty)}</EditField>
+      <EditField label="단가" labelWidth={LW}>{num(price)}</EditField>
+      <EditField label="배정금액" labelWidth={LW}>{num(contAmt, changeContAmt)}</EditField>
+      <EditField label="수수료" labelWidth={LW}>{num(fee, changeFee)}</EditField>
+      <EditField label="납입금액" labelWidth={LW}>{num(settleAmt)}</EditField>
       <SettingPopup
         open={settingOpen}
         title="펀드/일임계좌 선택"
@@ -198,6 +191,6 @@ export const Fnd31_Edit_OprFund: React.FC<Props> = ({ target, onSaved, onClose }
         }}
         onClose={() => setAccountOpen(false)}
       />
-    </LookupModal>
+    </EditModal>
   );
 };

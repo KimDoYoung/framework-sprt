@@ -9,7 +9,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { errorMessage } from '@/api/client';
 import { icsApi } from '@/api/ics';
@@ -27,9 +27,6 @@ interface Props {
   onCallback?: () => void;
   onClose: () => void;
 }
-
-const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: 8 };
-const labelStyle: React.CSSProperties = { width: 110, flex: 'none', textAlign: 'right', fontWeight: 'bold', paddingTop: 4 };
 
 export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose }) => {
   const [confirmMsg, setConfirmMsg] = useState('');
@@ -65,7 +62,7 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
   };
 
   return (
-    <LookupModal open={!!target} title="의견" width={550} closable={false} maskClosable={false} keyboard={false} onCancel={close} destroyOnHidden
+    <EditModal open={!!target} title="의견" width={550} closable={false} keyboard={false} onCancel={close} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -75,16 +72,13 @@ export const Ics40_Edit_Msg: React.FC<Props> = ({ target, onCallback, onClose })
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '15px 10px' }}>
-        <div style={rowStyle}>
-          <div style={labelStyle}>준감인 의견</div>
-          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={confirmMsg} readOnly={!edit} disabled={regEmp} onChange={e => setConfirmMsg(e.target.value)} />
-        </div>
-        <div style={rowStyle}>
-          <div style={labelStyle}>신청인 의견</div>
-          <Input.TextArea style={{ width: 500, height: 200, resize: 'none' }} value={regEmpMsg} readOnly={!regEmp} disabled={edit} onChange={e => setRegEmpMsg(e.target.value)} />
-        </div>
-      </div>
-    </LookupModal>
+      {/* 라벨 칸 90 (가장 긴 라벨 '준감인 의견'; AS-IS 110) */}
+      <EditField label={<b>준감인 의견</b>} labelWidth={90}>
+        <Input.TextArea style={{ height: 200, resize: 'none' }} value={confirmMsg} readOnly={!edit} disabled={regEmp} onChange={e => setConfirmMsg(e.target.value)} />
+      </EditField>
+      <EditField label={<b>신청인 의견</b>} labelWidth={90}>
+        <Input.TextArea style={{ height: 200, resize: 'none' }} value={regEmpMsg} readOnly={!regEmp} disabled={edit} onChange={e => setRegEmpMsg(e.target.value)} />
+      </EditField>
+    </EditModal>
   );
 };

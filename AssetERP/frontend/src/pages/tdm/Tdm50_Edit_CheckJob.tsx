@@ -13,10 +13,10 @@ import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckJob } from '@/types/tdm';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 
 const FORMAT = 'YYYY-MM-DD';
-const LABEL = { width: 100, flex: 'none', color: '#0069B4' } as const;
+const lb = (text: string) => <b style={{ color: '#0069B4' }}>{text}</b>;   // 라벨 파랑 굵게
 
 interface Props {
   /** 값이 있으면 열림 — AS-IS edit(chckJobModel, callBack) 의 모델 */
@@ -61,20 +61,12 @@ export const Tdm50_Edit_CheckJob: React.FC<Props> = ({ job, onSaved, onClose }) 
     }
   };
 
-  const field = (label: string, width: number, node: React.ReactNode) => (
-    <div style={{ width, display: 'flex', alignItems: 'center' }}>
-      <span style={LABEL}><b>{label}</b></span>
-      {node}
-    </div>
-  );
-
   return (
-    <LookupModal
+    <EditModal
       open={job != null}
       title="이행점검 작업등록"
       width={920}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -86,11 +78,17 @@ export const Tdm50_Edit_CheckJob: React.FC<Props> = ({ job, onSaved, onClose }) 
         </div>
       }
     >
-      <div style={{ display: 'flex', padding: '15px 10px 25px 0' }}>
-        {field('점검시작일', 300, <DatePicker allowClear={false} style={{ width: 140 }} value={startDate} format={FORMAT} onChange={setStartDate} />)}
-        {field('점검마감일', 300, <DatePicker allowClear={false} style={{ width: 140 }} value={endDate} format={FORMAT} onChange={setEndDate} />)}
-        {field('이행점검명', 450, <Input style={{ width: 340 }} value={checkName} onChange={e => setCheckName(e.target.value)} />)}
-      </div>
-    </LookupModal>
+      <EditRow>
+        <EditField label={lb('점검시작일')} labelWidth={85} width={247}>
+          <DatePicker allowClear={false} style={{ width: 140 }} value={startDate} format={FORMAT} onChange={setStartDate} />
+        </EditField>
+        <EditField label={lb('점검마감일')} labelWidth={85} width={247}>
+          <DatePicker allowClear={false} style={{ width: 140 }} value={endDate} format={FORMAT} onChange={setEndDate} />
+        </EditField>
+        <EditField label={lb('이행점검명')} labelWidth={85} width={370}>
+          <Input value={checkName} onChange={e => setCheckName(e.target.value)} />
+        </EditField>
+      </EditRow>
+    </EditModal>
   );
 };

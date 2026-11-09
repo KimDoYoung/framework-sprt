@@ -6,13 +6,14 @@
  * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Select, Space, Typography } from 'antd';
+import { Checkbox, Input, message, Modal, Select, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import { Button as AntButton } from 'antd';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
 import { AccountCodeAdmin, ActCodeOption, ActLink } from '@/types/act';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
@@ -31,14 +32,6 @@ interface Props {
   /** AS-IS callBack.execute(): 저장하면 목록을 다시 읽는다 */
   onDone: () => void;
 }
-
-/** 라벨 폭 135 (form.setLabelWidth(135)) */
-const Field: React.FC<{ label: string; color?: string; width?: number | string; labelWidth?: number; children: React.ReactNode }> = ({ label, color, width = '100%', labelWidth = 135, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: labelWidth, flex: 'none', lineHeight: '32px', color }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -181,12 +174,14 @@ export const Act01_Edit_AccountCode: React.FC<Props> = ({ model, onClose, onDone
     <Checkbox checked={isTrue(f[k])} onChange={e => set(k, String(e.target.checked))} />
   );
 
+  const LW = 170;  // 라벨 칸 폭: 가장 긴 라벨 '금감원기준 전표생성여부' 기준 (AS-IS 135)
+  const req = (s: string) => <span style={{ color: REQUIRED }}>{s}</span>;
   return (
-    <Modal
+    // 모달 폭 780 → 900 (라벨 칸 170으로 한 줄 3칸 입력폭 확보)
+    <EditModal
       open
       title="계정코드"
-      width={780}
-      maskClosable={false}
+      width={900}
       onCancel={onClose}
       styles={{ body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' } }}
       footer={
@@ -199,43 +194,42 @@ export const Act01_Edit_AccountCode: React.FC<Props> = ({ model, onClose, onDone
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 2px 2px' }}>
-        <Field label="상위계정">
+        <EditField label="상위계정" labelWidth={LW}>
           <Input readOnly value={f.parentName ?? ''} suffix={<SearchOutlined />} style={{ cursor: 'pointer' }} onClick={() => setParentOpen(true)} />
-        </Field>
-        <Space size={0} align="start">
-          <Field label="계정코드" color={REQUIRED} width={330}>{text('accountCode')}</Field>
-          <Field label="정렬코드" color={REQUIRED} width={400} labelWidth={105}>{text('printSeq')}</Field>
-        </Space>
-        <Field label="계정과목" color={REQUIRED}>{text('accountName')}</Field>
-        <Field label="계정과목(출력용)">{text('accountName2')}</Field>
-        <Field label="계정영문명">{text('accountEName')}</Field>
-        <Space size={0} align="start">
-          <Field label="계정속성" color={REQUIRED} width={330}>
+        </EditField>
+        <EditRow>
+          <EditField label={req('계정코드')} labelWidth={LW} width={380}>{text('accountCode')}</EditField>
+          <EditField label={req('정렬코드')} labelWidth={LW} width={456}>{text('printSeq')}</EditField>
+        </EditRow>
+        <EditField label={req('계정과목')} labelWidth={LW}>{text('accountName')}</EditField>
+        <EditField label="계정과목(출력용)" labelWidth={LW}>{text('accountName2')}</EditField>
+        <EditField label="계정영문명" labelWidth={LW}>{text('accountEName')}</EditField>
+        <EditRow>
+          <EditField label={req('계정속성')} labelWidth={LW} width={380}>
             {/* [E3] attributeName[계정속성].Collapse (L164) → attributeCode = 고른 코드 */}
             <SystemCodeComboBox kindCd="AccountAttributeCode" placeholder="선택" style={{ width: '100%' }}
               value={f.attributeCode ?? undefined} onChange={code => set('attributeCode', code ?? null)} />
-          </Field>
-          <Field label="출력여부" width={235} labelWidth={105}>{check('printYn')}</Field>
-          <Field label="전표생성여부" width={165} labelWidth={105}>{check('slipYn')}</Field>
-        </Space>
-        <Space size={0} align="start">
-          <Field label="차대구분" color={REQUIRED} width={330}>
+          </EditField>
+          <EditField label="출력여부" labelWidth={LW} width={262}>{check('printYn')}</EditField>
+          <EditField label="전표생성여부" labelWidth={LW} width={186}>{check('slipYn')}</EditField>
+        </EditRow>
+        <EditRow>
+          <EditField label={req('차대구분')} labelWidth={LW} width={380}>
             {/* [E4] drcrName[차대구분].Collapse (L171) → drcrType = 고른 코드 */}
             <SystemCodeComboBox kindCd="DrcrType" placeholder="선택" style={{ width: '100%' }}
               value={f.drcrType ?? undefined} onChange={code => set('drcrType', code ?? null)} />
-          </Field>
-          <Field label="사용여부" width={235} labelWidth={105}>{check('useYn')}</Field>
-        </Space>
-        <Field label="내용">
+          </EditField>
+          <EditField label="사용여부" labelWidth={LW} width={456}>{check('useYn')}</EditField>
+        </EditRow>
+        <EditField label="내용" labelWidth={LW}>
           <Input.TextArea rows={4} value={f.content ?? ''} onChange={e => set('content', e.target.value)} />
-        </Field>
-        <Space size={0} align="start">
-          <Field label="금감원보고여부" width={330}>{check('fssYn')}</Field>
-          <Field label="금감원기준 전표생성여부" width={400} labelWidth={200}>{check('fssSlipYn')}</Field>
-        </Space>
-        <Field label="금감원용 계정과목">{text('fssAccountName')}</Field>
-        <Field label="이익제공(수령)">
+        </EditField>
+        <EditRow>
+          <EditField label="금감원보고여부" labelWidth={LW} width={380}>{check('fssYn')}</EditField>
+          <EditField label="금감원기준 전표생성여부" labelWidth={LW} width={456}>{check('fssSlipYn')}</EditField>
+        </EditRow>
+        <EditField label="금감원용 계정과목" labelWidth={LW}>{text('fssAccountName')}</EditField>
+        <EditField label="이익제공(수령)" labelWidth={LW}>
           <Space>
             <SystemCodeComboBox kindCd="ProvidePurCode" placeholder="목적" style={{ width: 120 }} value={purposeCode} onChange={code => void onPurposeChange(code)} />
             <Select<string> placeholder="내용" style={{ width: 150 }} value={contentCode} onChange={setContentCode}
@@ -243,8 +237,8 @@ export const Act01_Edit_AccountCode: React.FC<Props> = ({ model, onClose, onDone
             <Button type="select" onClick={insertRow}>선택</Button>
             <Button type="delete" onClick={deleteRow}>삭제</Button>
           </Space>
-        </Field>
-        <div style={{ height: 210, marginLeft: 135 - 0, width: 'calc(100% - 135px)' }}>
+        </EditField>
+        <div style={{ height: 210, marginLeft: LW, width: `calc(100% - ${LW}px)` }}>
           <MultiGrid<ActLink>
             gridRef={linkGridRef}
             rowData={links}
@@ -252,9 +246,8 @@ export const Act01_Edit_AccountCode: React.FC<Props> = ({ model, onClose, onDone
             getRowId={p => String(p.data.linkId)}
           />
         </div>
-      </div>
       <Act01_Lookup_Parent open={parentOpen} onResult={onParentResult} onClose={() => setParentOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };
 

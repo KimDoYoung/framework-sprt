@@ -10,6 +10,7 @@ import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { ClassTreeNode } from '@/types/ics';
 import { schApi } from '@/api/sch';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { Sch03_Lookup_Ics } from '@/components/lookup/Sch03_Lookup_Ics';
 
@@ -28,14 +29,6 @@ interface Props {
   /** callback.execute(result): 저장 → 저장한 분류, 삭제 → null */
   onSaved: (model: ClassTreeNode | null) => void;
 }
-
-const LABEL_W = 70;
-const Row: React.FC<{ label: string; width: number; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-    <span style={{ width: LABEL_W, fontWeight: 600 }}>{label}</span>
-    <div style={{ width: width - LABEL_W }}>{children}</div>
-  </div>
-);
 
 export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [code, setCode] = useState('');
@@ -116,11 +109,11 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
 
   return (
     <>
-    <Modal
+    {/* 모달 폭 480 → 520 (조회순서 입력칸 폭 확보). 라벨 칸 70, 295 + 8 + 177 = 480 */}
+    <EditModal
       open={!!target}
       title={target?.titleName}
-      width={480}
-      maskClosable={false}
+      width={520}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -132,23 +125,18 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
         </div>
       }
     >
-      <div style={{ padding: '20px 10px 0 10px' }}>
-        <div style={{ display: 'flex', gap: 0 }}>
-          <div style={{ width: 250 }}>
-            <Row label="분류코드" width={250}><Input value={code} onChange={e => setCode(e.target.value)} /></Row>
-          </div>
-          <div style={{ width: 150 }}>
-            <Row label="조회순서" width={150}><Input value={seq} onChange={e => setSeq(e.target.value)} /></Row>
-          </div>
-        </div>
-        <Row label="분류명" width={400}><Input value={name} onChange={e => setName(e.target.value)} /></Row>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ width: LABEL_W, fontWeight: 600 }}>수시알림</span>
-          <Input style={{ width: 255 }} readOnly value={deadline} />
+      <EditRow>
+        <EditField label={<span style={{ fontWeight: 600 }}>분류코드</span>} labelWidth={70} width={295}><Input value={code} onChange={e => setCode(e.target.value)} /></EditField>
+        <EditField label={<span style={{ fontWeight: 600 }}>조회순서</span>} labelWidth={70} width={177}><Input value={seq} onChange={e => setSeq(e.target.value)} /></EditField>
+      </EditRow>
+      <EditField label={<span style={{ fontWeight: 600 }}>분류명</span>} labelWidth={70}><Input value={name} onChange={e => setName(e.target.value)} /></EditField>
+      <EditField label={<span style={{ fontWeight: 600 }}>수시알림</span>} labelWidth={70}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Input style={{ flex: 1 }} readOnly value={deadline} />
           <span style={{ marginLeft: 5 }}><Button type="register" onClick={setDeadlineFullName}>설정</Button></span>
         </div>
-      </div>
-    </Modal>
+      </EditField>
+    </EditModal>
       <Sch03_Lookup_Ics
         classTreeId={deadlineId}
         scheduleCode="2"

@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, Modal, message } from 'antd';
+import { Input, message } from 'antd';
+import { EditModal } from '@/components/form/EditForm';
 import { attApi } from '@/api/att';
 import { errorMessage } from '@/api/client';
 import { AttMyCommute } from '@/types/att';
@@ -49,22 +50,15 @@ export const Att02_Edit_Reason: React.FC<Props> = ({ target, onDone, onClose }) 
   };
 
   return (
-    <Modal
+    <EditModal
       open={target != null}
       title={target?.actionCode === 'in' ? '지각 사유등록' : '조기퇴근 / 외근 후 퇴근 사유등록'}
       width={400}
       closable={false}
       keyboard={false}
-      maskClosable={false}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={<div style={{ textAlign: 'center' }}><Button type="save" onClick={update} loading={saving}>제출</Button></div>}
     >
-      <div style={{ padding: '12px 2px' }}>
-        <Input.TextArea rows={4} value={reason} onChange={e => setReason(e.target.value)} autoFocus />
-      </div>
-    </Modal>
+      <Input.TextArea rows={4} value={reason} onChange={e => setReason(e.target.value)} autoFocus />
+    </EditModal>
   );
 };

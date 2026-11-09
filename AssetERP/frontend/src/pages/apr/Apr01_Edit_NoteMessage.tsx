@@ -3,13 +3,13 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Edit_NoteMessage.java (111줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L22-35: 450×250 모달 "결재의견", 글상자 + editMessage(callback) L53-76: [결재][닫기], [결재] → note() → callback.execute(글) 뒤 hide()
  *   (setMessage L37-50 = 읽기 보기, addMessage L78~ = [저장] 모드는 다른 화면용 — 이 단계에서는 쓰지 않는다)
- * 조회창 규격(11a): LookupModal, 머리 아래 선·푸터 위 선
+ * 편집 폼 모달 원칙: EditModal (라벨 없는 글상자 하나)
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
 import { Input, Space } from 'antd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal } from '@/components/form/EditForm';
 
 interface Props {
   open: boolean;
@@ -23,14 +23,12 @@ export const Apr01_Edit_NoteMessage: React.FC<Props> = ({ open, onSubmit, onClos
   useEffect(() => { if (open) setText(''); }, [open]);
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title="결재의견"
       width={450}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
-      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 12 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -43,6 +41,6 @@ export const Apr01_Edit_NoteMessage: React.FC<Props> = ({ open, onSubmit, onClos
       }
     >
       <Input.TextArea value={text} onChange={e => setText(e.target.value)} rows={7} style={{ resize: 'none' }} />
-    </LookupModal>
+    </EditModal>
   );
 };

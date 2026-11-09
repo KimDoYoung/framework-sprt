@@ -15,12 +15,10 @@ import { scmApi } from '@/api/scm';
 import { errorMessage } from '@/api/client';
 import { DevProgram } from '@/types/scm';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { FileUpdownForm, type FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
-import { LookupModal } from '@/components/lookup/LookupModal';
 
-const LABEL: React.CSSProperties = { width: 100, textAlign: 'right', paddingRight: 10, flex: 'none', fontSize: 12 };
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center' };
 
 interface Props {
   open: boolean;
@@ -152,18 +150,15 @@ export const Scm13_Edit_DevProgram: React.FC<Props> = ({ open, mode, devId, syst
   const title = insert ? '변경프로그램 등록' : view ? '변경프로그램 상세보기' : '변경프로그램 수정';
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title={title}
       width={1000}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       focusFirst={false}
       styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        body: { padding: '12px 2px', maxHeight: 'calc(100vh - 230px)', overflowY: 'auto' },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
+        body: { maxHeight: 'calc(100vh - 230px)', overflowY: 'auto' },
       }}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -175,51 +170,57 @@ export const Scm13_Edit_DevProgram: React.FC<Props> = ({ open, mode, devId, syst
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={ROW}>
-          <span style={LABEL}>시스템</span>
-          <SystemCodeComboBox kindCd="SystemCode" disabled style={{ width: 230 }} value={form.systemCd || undefined} />
-          <span style={{ ...LABEL, marginLeft: 20 }}>구분</span>
-          <SystemCodeComboBox kindCd="ProgramType" disabled={!insert} style={{ width: 230 }} value={form.programType || undefined}
+      {/* 라벨 칸 폭 85('프로그램명' 기준, AS-IS 100). 모달 폭 1000 그대로 — 안쪽 960을 칸 비율대로 나눔 */}
+      <EditRow>
+        <EditField label="시스템" labelWidth={85} width={476}>
+          <SystemCodeComboBox kindCd="SystemCode" disabled style={{ width: '100%' }} value={form.systemCd || undefined} />
+        </EditField>
+        <EditField label="구분" labelWidth={85} width={476}>
+          <SystemCodeComboBox kindCd="ProgramType" disabled={!insert} style={{ width: '100%' }} value={form.programType || undefined}
             onChange={c => set({ programType: c ?? '' })} />
-        </div>
-        <div style={ROW}>
-          <span style={LABEL}>프로그램ID</span>
-          <Input disabled={!insert} style={{ width: 480 }} value={form.programCd} onChange={e => set({ programCd: e.target.value })} />
-          <span style={{ ...LABEL, marginLeft: 180 }}>버전</span>
-          <InputNumber disabled style={{ width: 250 }} value={form.version} placeholder="(자동생성)" />
-        </div>
-        <div style={ROW}>
-          <span style={LABEL}>프로그램명</span>
-          <Input style={{ width: 480 }} value={form.programNm} placeholder="미입력시 전버전의 프로그램명으로 등록됩니다." onChange={e => set({ programNm: e.target.value })} />
-          <span style={{ ...LABEL, marginLeft: 180 }}>등록일시</span>
-          <Input disabled style={{ width: 250 }} value={form.regDateStr} />
-        </div>
-        <div style={{ ...ROW, alignItems: 'flex-start' }}>
-          <span style={{ ...LABEL, paddingTop: 5 }}>소스</span>
-          <Input.TextArea disabled={!insert} style={{ width: 860, height: 380, resize: 'none' }} value={form.source} onChange={e => set({ source: e.target.value })} />
-        </div>
-        <div style={ROW}>
-          <span style={LABEL}>파일명</span>
-          <Input disabled readOnly style={{ width: 570 }} value={fileName} />
-          <Space style={{ marginLeft: 10 }}>
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="프로그램ID" labelWidth={85} width={592}>
+          <Input disabled={!insert} value={form.programCd} onChange={e => set({ programCd: e.target.value })} />
+        </EditField>
+        <EditField label="버전" labelWidth={85} width={360}>
+          <InputNumber disabled style={{ width: '100%' }} value={form.version} placeholder="(자동생성)" />
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="프로그램명" labelWidth={85} width={592}>
+          <Input value={form.programNm} placeholder="미입력시 전버전의 프로그램명으로 등록됩니다." onChange={e => set({ programNm: e.target.value })} />
+        </EditField>
+        <EditField label="등록일시" labelWidth={85} width={360}>
+          <Input disabled value={form.regDateStr} />
+        </EditField>
+      </EditRow>
+      <EditField label="소스" labelWidth={85}>
+        <Input.TextArea disabled={!insert} style={{ height: 380, resize: 'none' }} value={form.source} onChange={e => set({ source: e.target.value })} />
+      </EditField>
+      <EditField label="파일명" labelWidth={85}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Input disabled readOnly style={{ flex: 1 }} value={fileName} />
+          <Space>
             <Button type="upload" disabled={view} onClick={upload}>파일업로드</Button>
             <Button type="download" disabled={view} onClick={download}>다운로드</Button>
             <Button type="delete" disabled={view} onClick={deleteFile}>삭제</Button>
           </Space>
         </div>
-        <div style={{ ...ROW, alignItems: 'flex-start' }}>
-          <span style={{ ...LABEL, paddingTop: 5 }}>비고</span>
-          <Input.TextArea style={{ width: 860, height: 80, resize: 'none' }} value={form.note} onChange={e => set({ note: e.target.value })} />
-        </div>
-        <div style={ROW}>
-          <span style={LABEL}>배포대상</span>
-          <Checkbox checked={form.deployTgtYn} onChange={e => set({ deployTgtYn: e.target.checked })} style={{ width: 230 }} />
-          <span style={{ ...LABEL, marginLeft: 20 }}>배포순서</span>
-          <InputNumber style={{ width: 230 }} value={form.deploySeq} onChange={v => set({ deploySeq: v })} />
-        </div>
-      </div>
+      </EditField>
+      <EditField label="비고" labelWidth={85}>
+        <Input.TextArea style={{ height: 80, resize: 'none' }} value={form.note} onChange={e => set({ note: e.target.value })} />
+      </EditField>
+      <EditRow>
+        <EditField label="배포대상" labelWidth={85} width={476}>
+          <Checkbox checked={form.deployTgtYn} onChange={e => set({ deployTgtYn: e.target.checked })} />
+        </EditField>
+        <EditField label="배포순서" labelWidth={85} width={476}>
+          <InputNumber style={{ width: '100%' }} value={form.deploySeq} onChange={v => set({ deploySeq: v })} />
+        </EditField>
+      </EditRow>
       <FileUpdownForm ref={fileForm} onChange={onFile} />
-    </LookupModal>
+    </EditModal>
   );
 };

@@ -6,11 +6,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { InputNumber, message, Modal, Space } from 'antd';
+import { InputNumber, message, Space } from 'antd';
 import { empEvalApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { EvalTarget, TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 import dayjs from 'dayjs';
@@ -23,13 +24,9 @@ interface Props {
   onClose: () => void;
 }
 
-/** 라벨 폭 85 (form.setLabelWidth(85)), 색은 setHtmlStyle */
-const Field: React.FC<{ label: string; color: string; width: number; children: React.ReactNode }> = ({ label, color, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', width }}>
-    <span style={{ width: 85, flex: 'none', textAlign: 'right', paddingRight: 10, fontWeight: 'bold', color }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 색은 setHtmlStyle (굵게) — 라벨 칸 폭은 가장 긴 라벨 '1차 평가자' 기준 85 */
+const LW = 85;
+const lab = (text: string, color: string) => <span style={{ fontWeight: 'bold', color }}>{text}</span>;
 
 export const Emp43_Edit_ChangeEval: React.FC<Props> = ({ targets, onChanged, onClose }) => {
   const [firstName, setFirstName] = useState('');
@@ -79,18 +76,13 @@ export const Emp43_Edit_ChangeEval: React.FC<Props> = ({ targets, onChanged, onC
 
   return (
     <>
-      <Modal
+      <EditModal
         open={targets != null}
         title="평가자 변경"
         width={640}
         closable={false}
-        maskClosable={false}
         destroyOnHidden
         onCancel={onClose}
-        styles={{
-          header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 견본: 머리말 아래 선
-          footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-        }}
         footer={
           <div style={{ textAlign: 'center' }}>
             <Space>
@@ -101,25 +93,24 @@ export const Emp43_Edit_ChangeEval: React.FC<Props> = ({ targets, onChanged, onC
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <Field label="1차 평가자" color="#0069B4" width={400}>
-              <LookupInput width={300} value={firstName} onOpen={() => setLookup('1')} />
-            </Field>
-            <Field label="비중(%)" color="#0069B4" width={140}>
-              <InputNumber style={{ width: 55 }} precision={0} controls={false} value={firstWeight} onChange={v => setFirstWeight(v == null ? null : Number(v))} />
-            </Field>
-          </div>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <Field label="2차 평가자" color="#DD5E5E" width={400}>
-              <LookupInput width={300} value={secondName} onOpen={() => setLookup('2')} />
-            </Field>
-            <Field label="비중(%)" color="#DD5E5E" width={140}>
-              <InputNumber style={{ width: 55 }} precision={0} controls={false} value={secondWeight} onChange={v => setSecondWeight(v == null ? null : Number(v))} />
-            </Field>
-          </div>
-        </div>
-      </Modal>
+        {/* 폭 540 → 592로 비례 확대(640 모달 안쪽 600 − 칸 사이 8): 400:140 → 438:154 */}
+        <EditRow>
+          <EditField label={lab('1차 평가자', '#0069B4')} labelWidth={LW} width={438}>
+            <LookupInput width={300} value={firstName} onOpen={() => setLookup('1')} />
+          </EditField>
+          <EditField label={lab('비중(%)', '#0069B4')} labelWidth={LW} width={154}>
+            <InputNumber style={{ width: 55 }} precision={0} controls={false} value={firstWeight} onChange={v => setFirstWeight(v == null ? null : Number(v))} />
+          </EditField>
+        </EditRow>
+        <EditRow>
+          <EditField label={lab('2차 평가자', '#DD5E5E')} labelWidth={LW} width={438}>
+            <LookupInput width={300} value={secondName} onOpen={() => setLookup('2')} />
+          </EditField>
+          <EditField label={lab('비중(%)', '#DD5E5E')} labelWidth={LW} width={154}>
+            <InputNumber style={{ width: 55 }} precision={0} controls={false} value={secondWeight} onChange={v => setSecondWeight(v == null ? null : Number(v))} />
+          </EditField>
+        </EditRow>
+      </EditModal>
       <Emp00_Lookup_SelectSingle open={lookup != null} separateAddTitle transDate={dayjs().format('YYYY-MM-DD')} onResult={changeEval} onClose={() => setLookup(null)} />
     </>
   );

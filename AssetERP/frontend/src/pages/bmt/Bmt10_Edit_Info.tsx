@@ -7,12 +7,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, InputNumber, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { bmtInfoApi } from '@/api/bmt';
 import { errorMessage } from '@/api/client';
 import { BmtInfo } from '@/types/bmt';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Ast01_Lookup_ClassTree } from '../ast/Ast01_Lookup_ClassTree';
 
@@ -30,14 +31,6 @@ interface Props {
   /** AS-IS callback.execute() — 저장하면 'save'(새 행이면 isNew), 삭제하면 'delete' */
   onDone: (infoId: number, kind: 'save' | 'delete', isNew: boolean) => void;
 }
-
-/** 라벨 폭 100 (form.setLabelWidth(100)) */
-const Field: React.FC<{ label: string; color?: string; width?: number | string; children: React.ReactNode }> = ({ label, color, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10, color }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 interface Form {
   astClassTreeId: number | null;
@@ -122,17 +115,12 @@ export const Bmt10_Edit_Info: React.FC<Props> = ({ target, onClose, onDone }) =>
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={isNew ? '전산장비(신규등록)' : '전산장비(수정)'}
       width={640}
       style={{ top: 20 }}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -144,34 +132,32 @@ export const Bmt10_Edit_Info: React.FC<Props> = ({ target, onClose, onDone }) =>
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="장비명">
-          {/* [E4] astClassTreeName[장비명].TriggerClick (L168) → openLookupAst() L176-186: Ast01_Lookup_ClassTree → 고른 분류의 ID·이름 */}
-          <LookupInput width={470} value={f.astClassTreeName} onOpen={() => setLookupOpen(true)} />
-        </Field>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <Field label="매입일자" width={300}>
-            <DatePicker style={{ width: '100%' }} value={f.applyDate} onChange={d => set('applyDate', d)} />
-          </Field>
-          <Field label="폐기일자" color="#CE4242" width={300}>
-            <DatePicker style={{ width: '100%' }} value={f.retireDate} onChange={d => set('retireDate', d)} />
-          </Field>
-        </div>
-        <Field label="취득금액" width={400}>
-          <InputNumber<number> style={{ width: '100%' }} precision={0} value={f.acqAmount}
-            formatter={v => (v == null ? '' : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ','))}
-            parser={v => Number((v ?? '').replace(/,/g, ''))}
-            onChange={v => set('acqAmount', v == null ? null : Number(v))} />
-        </Field>
-        <Field label="취득정보"><Input.TextArea rows={4} value={f.acqInfo} onChange={e => set('acqInfo', e.target.value)} /></Field>
-        <Field label="세부사양"><Input.TextArea rows={6} value={f.spec} onChange={e => set('spec', e.target.value)} /></Field>
-        <Field label="비고"><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></Field>
-      </div>
+      <EditField label="장비명" labelWidth={70}>
+        {/* [E4] astClassTreeName[장비명].TriggerClick (L168) → openLookupAst() L176-186: Ast01_Lookup_ClassTree → 고른 분류의 ID·이름 */}
+        <LookupInput width={470} value={f.astClassTreeName} onOpen={() => setLookupOpen(true)} />
+      </EditField>
+      <EditRow>
+        <EditField label="매입일자" labelWidth={70} width={296}>
+          <DatePicker style={{ width: '100%' }} value={f.applyDate} onChange={d => set('applyDate', d)} />
+        </EditField>
+        <EditField label={<span style={{ color: '#CE4242' }}>폐기일자</span>} labelWidth={70} width={296}>
+          <DatePicker style={{ width: '100%' }} value={f.retireDate} onChange={d => set('retireDate', d)} />
+        </EditField>
+      </EditRow>
+      <EditField label="취득금액" labelWidth={70} width={400}>
+        <InputNumber<number> style={{ width: '100%' }} precision={0} value={f.acqAmount}
+          formatter={v => (v == null ? '' : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ','))}
+          parser={v => Number((v ?? '').replace(/,/g, ''))}
+          onChange={v => set('acqAmount', v == null ? null : Number(v))} />
+      </EditField>
+      <EditField label="취득정보" labelWidth={70}><Input.TextArea rows={4} value={f.acqInfo} onChange={e => set('acqInfo', e.target.value)} /></EditField>
+      <EditField label="세부사양" labelWidth={70}><Input.TextArea rows={6} value={f.spec} onChange={e => set('spec', e.target.value)} /></EditField>
+      <EditField label="비고" labelWidth={70}><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></EditField>
       <Ast01_Lookup_ClassTree
         open={lookupOpen}
         onResult={node => { setF(prev => ({ ...prev, astClassTreeId: node.classTreeId, astClassTreeName: node.classTreeName })); setLookupOpen(false); }}
         onClose={() => setLookupOpen(false)}
       />
-    </Modal>
+    </EditModal>
   );
 };

@@ -8,12 +8,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { bizErpContCorpApi, bizErpFeeApi } from '@/api/bizErp';
 import { errorMessage } from '@/api/client';
 import { BizErpContCorp } from '@/types/bizErp';
 import { Corp, Company } from '@/types/sys';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
@@ -60,15 +61,6 @@ const fmt = (d: dayjs.Dayjs | null) => (d ? d.format('YYYY-MM-DD') : null);
 const n = (s: string) => (s === '' ? null : s);
 /** checkLongNull() L344-354 */
 const money = (v: number | null | undefined) => (v == null ? '- ' : v.toLocaleString('ko-KR'));
-
-/** 라벨 폭 140 (form.setLabelWidth(140)) */
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 0 }}>
-    <span style={{ width: 140, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
-const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => <div style={{ display: 'flex', gap: 10 }}>{children}</div>;
 
 export const Biz51_Edit_ErpContCorp: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [f, setF] = useState<Form | null>(null);
@@ -157,17 +149,12 @@ export const Biz51_Edit_ErpContCorp: React.FC<Props> = ({ target, onClose, onSav
 
   return (
     <>
-      <Modal
+      <EditModal
         open
         title={isNew ? '계약사 신규' : '계약사 수정'}
         width={780}
-        maskClosable={false}
         onCancel={onClose}
         destroyOnHidden
-        styles={{
-          header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-          footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-        }}
         footer={
           <div style={{ textAlign: 'center' }}>
             <Space>
@@ -178,59 +165,57 @@ export const Biz51_Edit_ErpContCorp: React.FC<Props> = ({ target, onClose, onSav
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-          <Row>
-            <Field label="계약사명">
+          <EditRow>
+            <EditField labelWidth={130} label="계약사명">
               <LookupInput value={f.corpNm} width={420} onOpen={() => setCorpOpen(true)} onClear={() => onCorpResult(null)} />
-            </Field>
-          </Row>
-          <Row>
-            <Field label="계약상태">
+            </EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} width={366} label="계약상태">
               {/* [E6] contStatusName[계약상태].Collapse (L237) → contStatusCode = 고른 코드 (코드그룹 ContStatusCode03) */}
               <SystemCodeComboBox kindGroupCd="ContStatusCode03" style={{ width: '100%' }} value={f.contStatusCd} onChange={c => set('contStatusCd', c)} />
-            </Field>
-            <Field label="서비스 종류">
+            </EditField>
+            <EditField labelWidth={130} width={366} label="서비스 종류">
               {/* [E7] serviceTypeName[서비스 종류].Collapse (L243) → serviceType = 고른 코드 */}
               <SystemCodeComboBox kindCd="ErpServiceType" style={{ width: '100%' }} value={f.serviceType} onChange={c => set('serviceType', c)} />
-            </Field>
-          </Row>
-          <Row>
-            <Field label="최초계약일"><DatePicker style={{ width: '100%' }} value={day(f.firstContDate)} onChange={d => set('firstContDate', fmt(d))} /></Field>
-            <Field label="서브 도메인">
+            </EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} width={366} label="최초계약일"><DatePicker style={{ width: '100%' }} value={day(f.firstContDate)} onChange={d => set('firstContDate', fmt(d))} /></EditField>
+            <EditField labelWidth={130} width={366} label="서브 도메인">
               <LookupInput value={f.locationNm} onOpen={() => setCompanyOpen(true)} onClear={() => onCompanyResult(null)} width={240} />
-            </Field>
-          </Row>
-          <Row>
-            <Field label="(재)계약일"><DatePicker style={{ width: '100%' }} value={day(f.contDate)} onChange={d => set('contDate', fmt(d))} /></Field>
-            <Field label="시스템 사용시작일"><DatePicker style={{ width: '100%' }} value={day(f.erpStartDate)} onChange={d => set('erpStartDate', fmt(d))} /></Field>
-          </Row>
-          <Row>
-            <Field label="계약종료일"><DatePicker style={{ width: '100%' }} value={day(f.contEndDate)} onChange={d => set('contEndDate', fmt(d))} /></Field>
-            <Field label="시스템 사용종료일"><DatePicker style={{ width: '100%' }} value={day(f.erpEndDate)} onChange={d => set('erpEndDate', fmt(d))} /></Field>
-          </Row>
-          <Row>
-            <Field label="사용료">
+            </EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} width={366} label="(재)계약일"><DatePicker style={{ width: '100%' }} value={day(f.contDate)} onChange={d => set('contDate', fmt(d))} /></EditField>
+            <EditField labelWidth={130} width={366} label="시스템 사용시작일"><DatePicker style={{ width: '100%' }} value={day(f.erpStartDate)} onChange={d => set('erpStartDate', fmt(d))} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} width={366} label="계약종료일"><DatePicker style={{ width: '100%' }} value={day(f.contEndDate)} onChange={d => set('contEndDate', fmt(d))} /></EditField>
+            <EditField labelWidth={130} width={366} label="시스템 사용종료일"><DatePicker style={{ width: '100%' }} value={day(f.erpEndDate)} onChange={d => set('erpEndDate', fmt(d))} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} label="사용료">
               <LookupInput value={f.erpFeeNm} width={420} onOpen={() => setFeeOpen(true)} />
-            </Field>
-          </Row>
-          <Row>
-            <Field label="담당자"><Input value={f.managerNm} onChange={e => set('managerNm', e.target.value)} /></Field>
-            <Field label="연락처"><Input value={f.managerTel} onChange={e => set('managerTel', e.target.value)} /></Field>
-          </Row>
-          <Row>
-            <Field label="이메일"><Input placeholder="이메일1; 이메일2;" value={f.managerEmail} onChange={e => set('managerEmail', e.target.value)} /></Field>
-          </Row>
-          <Row>
-            <Field label="대표이사"><Input value={f.companyCeo} onChange={e => set('companyCeo', e.target.value)} /></Field>
-          </Row>
-          <Row>
-            <Field label="주소"><Input value={f.companyAddr} onChange={e => set('companyAddr', e.target.value)} /></Field>
-          </Row>
-          <Row>
-            <Field label="비고"><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></Field>
-          </Row>
-        </div>
-      </Modal>
+            </EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} width={366} label="담당자"><Input value={f.managerNm} onChange={e => set('managerNm', e.target.value)} /></EditField>
+            <EditField labelWidth={130} width={366} label="연락처"><Input value={f.managerTel} onChange={e => set('managerTel', e.target.value)} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} label="이메일"><Input placeholder="이메일1; 이메일2;" value={f.managerEmail} onChange={e => set('managerEmail', e.target.value)} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} label="대표이사"><Input value={f.companyCeo} onChange={e => set('companyCeo', e.target.value)} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} label="주소"><Input value={f.companyAddr} onChange={e => set('companyAddr', e.target.value)} /></EditField>
+          </EditRow>
+          <EditRow>
+            <EditField labelWidth={130} label="비고"><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></EditField>
+          </EditRow>
+      </EditModal>
       {/* regYn true·empYn true: [거래처추가]를 보이고 [전체]를 [선택안함]으로, 임직원도 목록에 (open(true, true, cb)) */}
       <Sys15_Lookup_Corp open={corpOpen} regYn empYn onResult={onCorpResult} onClose={() => setCorpOpen(false)} />
       <Sys01_Lookup_Company open={companyOpen} onResult={onCompanyResult} onClose={() => setCompanyOpen(false)} />

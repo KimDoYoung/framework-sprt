@@ -7,13 +7,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, InputNumber, message, Space, Typography } from 'antd';
+import { Input, InputNumber, message, Space } from 'antd';
 import { fndApi } from '@/api/fnd';
 import { advApi } from '@/api/adv';
 import { errorMessage } from '@/api/client';
 import { OprFund } from '@/types/fnd';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { SettingPopup } from '@/components/lookup/SettingPopup';
 import { Fnd01_Lookup_SelectSingle } from '@/components/lookup/Fnd01_Lookup_SelectSingle';
@@ -31,12 +31,8 @@ interface Props {
   onClose: () => void;
 }
 
-const Field: React.FC<{ label: string; width: number | string; children: React.ReactNode }> = ({ label, width, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨(4글자) 기준 70 (AS-IS 105) */
+const LW = 70;
 
 export const Fnd31_Edit_DemandOprFund: React.FC<Props> = ({ target, onSaved, onClose }) => {
   const [fundCode, setFundCode] = useState('');
@@ -105,11 +101,10 @@ export const Fnd31_Edit_DemandOprFund: React.FC<Props> = ({ target, onSaved, onC
   };
 
   return (
-    <LookupModal
+    <EditModal
       open
       title={target.mode === 'insert' ? '펀드별 수요예측 신청' : '펀드별 수요예측 수정'}
       width={460}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -122,23 +117,21 @@ export const Fnd31_Edit_DemandOprFund: React.FC<Props> = ({ target, onSaved, onC
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '10px 0' }}>
-        <Field label="펀드코드 " width={360}>
-          <LookupInput value={fundCode} width={250} onOpen={openTrigger} />
-        </Field>
-        <Field label="펀드명 " width={360}>
-          <Input.TextArea rows={3} readOnly value={fundName} />
-        </Field>
-        <Field label="신청수량 " width={360}>
-          <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} value={qty} onChange={v => changeQty(v == null ? null : Number(v))} />
-        </Field>
-        <Field label="신청가격 " width={360}>
-          <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} readOnly disabled value={price} />
-        </Field>
-        <Field label="신청금액 " width={360}>
-          <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} readOnly disabled value={settleAmt} />
-        </Field>
-      </div>
+      <EditField label="펀드코드" labelWidth={LW}>
+        <LookupInput value={fundCode} width={250} onOpen={openTrigger} />
+      </EditField>
+      <EditField label="펀드명" labelWidth={LW}>
+        <Input.TextArea rows={3} readOnly value={fundName} />
+      </EditField>
+      <EditField label="신청수량" labelWidth={LW}>
+        <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} value={qty} onChange={v => changeQty(v == null ? null : Number(v))} />
+      </EditField>
+      <EditField label="신청가격" labelWidth={LW}>
+        <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} readOnly disabled value={price} />
+      </EditField>
+      <EditField label="신청금액" labelWidth={LW}>
+        <InputNumber style={{ width: 250 }} controls={false} precision={0} formatter={fmtLong} parser={parseNum as never} readOnly disabled value={settleAmt} />
+      </EditField>
       <SettingPopup
         open={settingOpen}
         title="펀드/일임계좌 선택"
@@ -165,6 +158,6 @@ export const Fnd31_Edit_DemandOprFund: React.FC<Props> = ({ target, onSaved, onC
         }}
         onClose={() => setAccountOpen(false)}
       />
-    </LookupModal>
+    </EditModal>
   );
 };

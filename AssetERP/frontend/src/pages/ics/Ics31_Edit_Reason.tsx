@@ -6,7 +6,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal } from '@/components/form/EditForm';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsComplianceWriteItem } from '@/types/ics';
@@ -39,11 +39,10 @@ export const Ics31_Edit_Reason: React.FC<Props> = ({ model, onSaved, onClose }) 
 
   // [E0] 화면 열림 (생성자 L50-70) → settings(), show()
   return (
-    <LookupModal
+    <EditModal
       open={!!model}
       title="사유"
       width={730}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -56,6 +55,6 @@ export const Ics31_Edit_Reason: React.FC<Props> = ({ model, onSaved, onClose }) 
       }
     >
       <Input.TextArea style={{ height: 300, resize: 'none' }} value={reason} onChange={e => setReason(e.target.value)} />
-    </LookupModal>
+    </EditModal>
   );
 };

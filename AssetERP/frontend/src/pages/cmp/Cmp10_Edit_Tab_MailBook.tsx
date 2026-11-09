@@ -10,7 +10,7 @@ import { cmpMailBookApi } from '@/api/cmp';
 import { errorMessage } from '@/api/client';
 import { CmpMailBook } from '@/types/cmp';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 
 interface Props {
   open: boolean;
@@ -21,8 +21,8 @@ interface Props {
   onClose: () => void;
 }
 
-const LABEL_WIDTH = 105;
-const FIELD_WIDTH = 225;
+// 라벨 칸 폭: 가장 긴 라벨(4글자) → 70 (AS-IS 105 대신 편집 폼 원칙)
+const LABEL_WIDTH = 70;
 
 export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSaved, onClose }) => {
   const [emailAddr, setEmailAddr] = useState('');
@@ -100,12 +100,11 @@ export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSav
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title={mailBook ? '수정' : '신규등록'}
       width={400}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -119,20 +118,15 @@ export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSav
         </div>
       }
     >
-      <div style={{ padding: '10px 15px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ width: LABEL_WIDTH }}>메일주소</span>
-          <Input style={{ width: FIELD_WIDTH }} value={emailAddr} disabled={emailLocked} onChange={e => setEmailAddr(e.target.value)} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ width: LABEL_WIDTH }}>비밀번호</span>
-          <Input.Password style={{ width: FIELD_WIDTH }} value={decPassword} disabled={passwordLocked} onChange={e => setDecPassword(e.target.value)} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <span style={{ width: LABEL_WIDTH }}>비고</span>
-          <Input.TextArea style={{ width: FIELD_WIDTH, height: 120, resize: 'none' }} value={note} onChange={e => setNote(e.target.value)} />
-        </div>
-      </div>
-    </LookupModal>
+      <EditField label="메일주소" labelWidth={LABEL_WIDTH}>
+        <Input value={emailAddr} disabled={emailLocked} onChange={e => setEmailAddr(e.target.value)} />
+      </EditField>
+      <EditField label="비밀번호" labelWidth={LABEL_WIDTH}>
+        <Input.Password value={decPassword} disabled={passwordLocked} onChange={e => setDecPassword(e.target.value)} />
+      </EditField>
+      <EditField label="비고" labelWidth={LABEL_WIDTH}>
+        <Input.TextArea style={{ height: 120, resize: 'none' }} value={note} onChange={e => setNote(e.target.value)} />
+      </EditField>
+    </EditModal>
   );
 };

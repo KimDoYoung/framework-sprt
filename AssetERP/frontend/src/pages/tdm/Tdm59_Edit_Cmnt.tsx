@@ -8,11 +8,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, Modal, Space, Typography, message } from 'antd';
+import { Input, Modal, Space, message } from 'antd';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckApprCmnt } from '@/types/tdm';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 
 export interface CmntEditTarget {
   mode: 'view' | 'edit';
@@ -26,12 +27,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Row: React.FC<{ label: React.ReactNode; top?: boolean; children: React.ReactNode }> = ({ label, top, children }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 12 }}>
-    <Typography.Text strong style={{ width: 120, flex: 'none', paddingTop: top ? 5 : 0, textAlign: 'right', paddingRight: 8 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+const lb = (text: string) => <b>{text}</b>;
 
 const MESSAGES: Record<'A' | 'R' | 'C', string> = {
   A: '승인 처리가 완료되었습니다',
@@ -112,11 +108,10 @@ export const Tdm59_Edit_Cmnt: React.FC<Props> = ({ target, onChanged, onClose })
   const onCancel = () => confirm('승인(반려)를 취소하시겠습니까?', 'C');
 
   return (
-    <Modal
+    <EditModal
       open={!!target}
       title={<b>승인(반려) 의견</b>}
       width={630}
-      maskClosable={false}
       keyboard={false}
       closable={false}
       footer={
@@ -132,18 +127,18 @@ export const Tdm59_Edit_Cmnt: React.FC<Props> = ({ target, onChanged, onClose })
       }
     >
       {model && (
-        <div style={{ paddingTop: 15 }}>
-          <Row label="점검부서"><Input readOnly value={model.checkOrgName ?? ''} /></Row>
-          <Row label="승인(반려) 의견" top>
+        <>
+          <EditField label={lb('점검부서')} labelWidth={120}><Input readOnly value={model.checkOrgName ?? ''} /></EditField>
+          <EditField label={lb('승인(반려) 의견')} labelWidth={120}>
             <Input.TextArea style={{ height: 150, resize: 'none' }} readOnly={apprReadOnly} disabled={noCheck} value={apprCmnt} onChange={e => setApprCmnt(e.target.value)} />
-          </Row>
+          </EditField>
           {self && (
-            <Row label="보고 의견" top>
+            <EditField label={lb('보고 의견')} labelWidth={120}>
               <Input.TextArea style={{ height: 150, resize: 'none' }} readOnly={reportReadOnly} value={reportCmnt} onChange={e => setReportCmnt(e.target.value)} />
-            </Row>
+            </EditField>
           )}
-        </div>
+        </>
       )}
-    </Modal>
+    </EditModal>
   );
 };

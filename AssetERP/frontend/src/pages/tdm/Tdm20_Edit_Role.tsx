@@ -16,7 +16,7 @@ import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { LookupInput } from '@/components/lookup/LookupInput';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Tdm20_Lookup_SelectSingle } from './Tdm20_Lookup_SelectSingle';
 import { Tdm21_Lookup_RoleRelateTask } from './Tdm21_Lookup_RoleRelateTask';
 import { Tdm22_Lookup_RoleRelateCncl } from './Tdm22_Lookup_RoleRelateCncl';
@@ -39,9 +39,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Label: React.FC<{ required?: boolean; width?: number; children: React.ReactNode }> = ({ required, width = 100, children }) => (
-  <div style={{ width, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', color: required ? BLUE : undefined, flex: 'none' }}>{children}</div>
-);
+const lb = (text: string, required?: boolean) => <span style={{ fontWeight: 'bold', color: required ? BLUE : undefined }}>{text}</span>;
 
 const cntOf = (s: string | null | undefined) => (s ? s : '0건');
 
@@ -154,12 +152,11 @@ export const Tdm20_Edit_Role: React.FC<Props> = ({ mode, role, baseDate, onSaved
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={!!mode}
       title="직책"
       width={730}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -174,35 +171,32 @@ export const Tdm20_Edit_Role: React.FC<Props> = ({ mode, role, baseDate, onSaved
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '10px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>직책</Label>
-          <Input value={roleName} onChange={e => setRoleName(e.target.value)} style={{ flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>직책그룹</Label>
-          <div style={{ width: 150 }}>
-            <SystemCodeComboBox kindCd="TdmRoleType" placeholder="선택하세요" style={{ width: '100%' }} value={roleType} onChange={code => changeRoleType(code)} />
-          </div>
-          <Label width={110}>기타그룹명</Label>
-          <Input value={etcName} disabled={roleType !== ETC} onChange={e => setEtcName(e.target.value)} style={{ flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <Label required>개요</Label>
-          <Input.TextArea value={overview} onChange={e => setOverview(e.target.value)} style={{ height: 100, resize: 'none', flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>사용시작일</Label>
-          <div style={{ width: 250 }}><DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} /></div>
-          <Label required>보고CEO</Label>
+      <EditField label={lb('직책', true)} labelWidth={85}>
+        <Input value={roleName} onChange={e => setRoleName(e.target.value)} />
+      </EditField>
+      <EditRow>
+        <EditField label={lb('직책그룹', true)} labelWidth={85} width={250}>
+          <SystemCodeComboBox kindCd="TdmRoleType" placeholder="선택하세요" style={{ width: '100%' }} value={roleType} onChange={code => changeRoleType(code)} />
+        </EditField>
+        <EditField label={lb('기타그룹명')} labelWidth={85} width={432}>
+          <Input value={etcName} disabled={roleType !== ETC} onChange={e => setEtcName(e.target.value)} />
+        </EditField>
+      </EditRow>
+      <EditField label={lb('개요', true)} labelWidth={85}>
+        <Input.TextArea value={overview} onChange={e => setOverview(e.target.value)} style={{ height: 100, resize: 'none' }} />
+      </EditField>
+      <EditRow>
+        <EditField label={lb('사용시작일', true)} labelWidth={85} width={250}>
+          <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} />
+        </EditField>
+        <EditField label={lb('보고CEO', true)} labelWidth={85} width={432}>
           {/* [E2] ceoRoleName[보고CEO].TriggerClick (L153) → Tdm20_Lookup_SelectSingle.open("C", …) */}
           <LookupInput value={ceoRoleName} width={190} onOpen={() => setCeoLookup(true)} onClear={() => { setCeoRoleId(null); setCeoRoleName(''); }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label>사용종료일</Label>
-          <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
-        </div>
-      </div>
+        </EditField>
+      </EditRow>
+      <EditField label={lb('사용종료일')} labelWidth={85}>
+        <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
+      </EditField>
       <Tdm20_Lookup_SelectSingle
         open={ceoLookup}
         roleType={CEO}
@@ -215,6 +209,6 @@ export const Tdm20_Edit_Role: React.FC<Props> = ({ mode, role, baseDate, onSaved
       <AreaMessage open={reasonOpen} title="변경사유" required
         onResult={text => { if (text == null) message.warning('저장이 취소되었습니다 (변경사유 미입력)'); else void update(text); }}
         onClose={() => setReasonOpen(false)} />
-    </LookupModal>
+    </EditModal>
   );
 };

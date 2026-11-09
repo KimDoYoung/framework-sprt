@@ -5,11 +5,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import { empUserInfoApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { NoteAdmin } from '@/types/emp';
 import { Button } from '@/components/button';
+import { EditModal } from '@/components/form/EditForm';
 
 interface Props {
   /** AS-IS edit(othersModel, callback) L40-48: 값이 있으면 열린다 */
@@ -48,11 +49,10 @@ export const Emp02_Edit_Note: React.FC<Props> = ({ othersModel, onSaved, onClose
   };
 
   return (
-    <Modal
+    <EditModal
       open={!!othersModel}
       title="체크내용"
       width={710}
-      maskClosable={false}
       onCancel={hide}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -63,9 +63,7 @@ export const Emp02_Edit_Note: React.FC<Props> = ({ othersModel, onSaved, onClose
         </div>
       }
     >
-      <div style={{ padding: 10 }}>
-        <Input.TextArea style={{ height: 300, resize: 'none' }} value={noteAdmin} onChange={e => setNoteAdmin(e.target.value)} />
-      </div>
-    </Modal>
+      <Input.TextArea style={{ height: 300, resize: 'none' }} value={noteAdmin} onChange={e => setNoteAdmin(e.target.value)} />
+    </EditModal>
   );
 };

@@ -2,15 +2,16 @@
  * 점검결과 창 (R02) — Chk03_Tab_DailyListWrite 그리드의 점검결과 수정 아이콘에서 연다
  * AS-IS: myApp/client/vi/chk/Chk03_Edit_Reason.java (106줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L50-70: 모달 "점검결과", reason 입력(700×300, 여백 10), 아래 가운데 [저장]·[닫기]
- * EditModal 규격(11 §4a): 머리말 아래 선 · 푸터 위 선 · 본문 위아래 간격 12
+ * EditModal(편집 폼 모달 원칙)
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useRef, useState, useEffect } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { chkApi } from '@/api/chk';
 import { errorMessage } from '@/api/client';
 import { ChkDailyListWriteItem } from '@/types/chk';
+import { EditModal } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 
 interface Props {
@@ -45,17 +46,12 @@ export const Chk03_Edit_Reason: React.FC<Props> = ({ model, onSaved, onClose }) 
 
   // [E0] 화면 열림 (생성자 L50-70) → settings(), show() — 열릴 때마다 입력칸에 포커스(UX-05)
   return (
-    <Modal
+    <EditModal
       open={!!model}
       title="점검결과"
       width={750}
-      maskClosable={false}
       onCancel={onClose}
       afterOpenChange={open => { if (open) inputRef.current?.focus(); }}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -66,9 +62,7 @@ export const Chk03_Edit_Reason: React.FC<Props> = ({ model, onSaved, onClose }) 
         </div>
       }
     >
-      <div style={{ padding: '12px 2px' }}>
-        <Input.TextArea ref={inputRef} style={{ height: 300, resize: 'none' }} value={reason} onChange={e => setReasonText(e.target.value)} />
-      </div>
-    </Modal>
+      <Input.TextArea ref={inputRef} style={{ height: 300, resize: 'none' }} value={reason} onChange={e => setReasonText(e.target.value)} />
+    </EditModal>
   );
 };

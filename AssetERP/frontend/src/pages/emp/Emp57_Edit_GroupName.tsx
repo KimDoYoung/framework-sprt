@@ -10,7 +10,7 @@ import { empAddrBookApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { EmpAddrBookGroup } from '@/types/emp';
 import { Button } from '@/components/button';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { useLoginUser } from '@/hooks/useLoginUser';
 
 interface Props {
@@ -63,12 +63,11 @@ export const Emp57_Edit_GroupName: React.FC<Props> = ({ open, group, onSaved, on
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={open}
       title={group ? '수정' : '신규등록'}
       width={450}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -81,16 +80,12 @@ export const Emp57_Edit_GroupName: React.FC<Props> = ({ open, group, onSaved, on
         </div>
       }
     >
-      <div style={{ padding: '15px 15px 5px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ width: 80 }}>그룹명</span>
-          <Input style={{ width: 320 }} value={groupName} onChange={e => setGroupName(e.target.value)} onPressEnter={updateChk} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ width: 80 }}>전체공개</span>
-          <Checkbox checked={publicYn} onChange={e => setPublicYn(e.target.checked)} />
-        </div>
-      </div>
-    </LookupModal>
+      <EditField label="그룹명" labelWidth={70}>
+        <Input value={groupName} onChange={e => setGroupName(e.target.value)} onPressEnter={updateChk} />
+      </EditField>
+      <EditField label="전체공개" labelWidth={70}>
+        <Checkbox checked={publicYn} onChange={e => setPublicYn(e.target.checked)} />
+      </EditField>
+    </EditModal>
   );
 };

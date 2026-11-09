@@ -8,12 +8,13 @@
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Checkbox, Input, Modal, Space, Typography, message } from 'antd';
+import { Checkbox, Input, Space, message } from 'antd';
 import { bbsBoardApi } from '@/api/bbs';
 import { fileApi } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { BbsContent } from '@/types/bbs';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { Bbs15_Lookup_File } from './Bbs15_Lookup_File';
 
@@ -28,10 +29,8 @@ interface Props {
   onDone?: () => void;
 }
 
-/** 라벨 폭 60 (form.setLabelWidth(60)) */
-const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Typography.Text style={{ width: 60, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{children}</Typography.Text>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '비공개' 3글자 39+18=57 → 60 (편집 폼 모달 원칙) */
+const LW = 60;
 
 export const Bbs31_Edit_Content: React.FC<Props> = ({ model, onClose, onDone }) => {
   const [title, setTitle] = useState('');
@@ -81,18 +80,13 @@ export const Bbs31_Edit_Content: React.FC<Props> = ({ model, onClose, onDone }) 
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={<b>{isNew ? '게시물 등록' : '게시물 수정'}</b>}
       width={1080}
       style={{ top: 20 }}
-      maskClosable={false}
       closable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 규격: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -106,21 +100,15 @@ export const Bbs31_Edit_Content: React.FC<Props> = ({ model, onClose, onDone }) 
       }
     >
       {/* [E0] 화면 열림 (생성자 L115-142) → settings(), getEditor() */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <Label>제목</Label>
-          <Input style={{ flex: 1 }} value={title} onChange={e => setTitle(e.target.value)} />
-          <Label>비공개</Label>
-          <Checkbox style={{ lineHeight: '32px' }} checked={hideYn} onChange={e => setHideYn(e.target.checked)} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <Label>내용</Label>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <HtmlEditor key={model.contentId} value={model.content} onChange={setHtml} height={480} />
-          </div>
-        </div>
-      </div>
+      {/* 안쪽 폭 1000(1080 − 40): 제목 902 + 칸 사이 8 + 비공개 90 */}
+      <EditRow>
+        <EditField label="제목" labelWidth={LW} width={902}><Input value={title} onChange={e => setTitle(e.target.value)} /></EditField>
+        <EditField label="비공개" labelWidth={LW} width={90}><Checkbox style={{ lineHeight: '32px' }} checked={hideYn} onChange={e => setHideYn(e.target.checked)} /></EditField>
+      </EditRow>
+      <EditField label="내용" labelWidth={LW}>
+        <HtmlEditor key={model.contentId} value={model.content} onChange={setHtml} height={480} />
+      </EditField>
       <Bbs15_Lookup_File open={fileOpen} parentId={contentId} onClose={() => { setFileOpen(false); void setFileButtonText(); }} />
-    </Modal>
+    </EditModal>
   );
 };

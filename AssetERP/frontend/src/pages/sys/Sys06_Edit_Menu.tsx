@@ -5,11 +5,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, Input, message, Modal, Select, Space, Typography } from 'antd';
+import { Checkbox, Input, message, Modal, Select, Space } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { MenuSaveReq } from '@/types/sys';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 
 interface Props {
   /** 편집할 매뉴(menuId 없으면 새 매뉴) — null이면 닫힘 */
@@ -18,14 +19,6 @@ interface Props {
   /** AS-IS callback.execute(모델): 저장 → 저장한 매뉴 ID, 삭제 → 부모 매뉴 ID */
   onDone: (menuId: number | undefined) => void;
 }
-
-/** 라벨 폭 90 (form.setLabelWidth(90)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', width }}>
-    <Typography.Text style={{ width: 90, flex: 'none' }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -80,11 +73,10 @@ export const Sys06_Edit_Menu: React.FC<Props> = ({ menu, onClose, onDone }) => {
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="매뉴 편집"
       width={550}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -97,29 +89,27 @@ export const Sys06_Edit_Menu: React.FC<Props> = ({ menu, onClose, onDone }) => {
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 2px 2px' }}>
-        <Field label="매뉴명"><Input value={f.menuNm ?? ''} onChange={e => set('menuNm', e.target.value)} /></Field>
-        <Field label="클래스명"><Input value={f.classNm ?? ''} onChange={e => set('classNm', e.target.value)} /></Field>
-        <Space size={0}>
-          <Field label="화면번호" width={200}><Input value={f.menuNo ?? ''} onChange={e => set('menuNo', e.target.value)} /></Field>
-          <Field label="정렬순서" width={200}><Input value={f.seq ?? ''} onChange={e => set('seq', e.target.value)} /></Field>
-        </Space>
-        <Space size={0}>
-          <Field label="사용여부" width={200}>
+        <EditField labelWidth={85} label="매뉴명"><Input value={f.menuNm ?? ''} onChange={e => set('menuNm', e.target.value)} /></EditField>
+        <EditField labelWidth={85} label="클래스명"><Input value={f.classNm ?? ''} onChange={e => set('classNm', e.target.value)} /></EditField>
+        <EditRow>
+          <EditField labelWidth={85} label="화면번호" width={251}><Input value={f.menuNo ?? ''} onChange={e => set('menuNo', e.target.value)} /></EditField>
+          <EditField labelWidth={85} label="정렬순서" width={251}><Input value={f.seq ?? ''} onChange={e => set('seq', e.target.value)} /></EditField>
+        </EditRow>
+        <EditRow>
+          <EditField labelWidth={85} label="사용여부" width={251}>
             {/* [E2] useYnComboBox[사용여부].Collapse (L139) → useYn = ("사용함") */}
             <Select style={{ width: '100%' }} value={f.useYn === 'true' ? '사용함' : '사용안함'}
               options={[{ value: '사용함' }, { value: '사용안함' }]}
               onChange={v => set('useYn', String(v === '사용함'))} />
-          </Field>
-          <Field label="겸직사용" width={200}>{yn('addTitleUseYn')}</Field>
-        </Space>
-        <Field label="화면안내"><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-        <Field label="비고"><Input.TextArea rows={3} value={f.menualUrl ?? ''} onChange={e => set('menualUrl', e.target.value)} /></Field>
-        <Space size={0} style={{ marginTop: 8 }}>
-          <Field label="모바일사용" width={117}>{yn('mobiUseYn')}</Field>
-          <Field label="클래스명" width={400}><Input value={f.mobiClassNm ?? ''} onChange={e => set('mobiClassNm', e.target.value)} /></Field>
-        </Space>
-      </div>
-    </Modal>
+          </EditField>
+          <EditField labelWidth={85} label="겸직사용" width={251}>{yn('addTitleUseYn')}</EditField>
+        </EditRow>
+        <EditField labelWidth={85} label="화면안내"><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
+        <EditField labelWidth={85} label="비고"><Input.TextArea rows={3} value={f.menualUrl ?? ''} onChange={e => set('menualUrl', e.target.value)} /></EditField>
+        <EditRow>
+          <EditField labelWidth={85} label="모바일사용" width={114}>{yn('mobiUseYn')}</EditField>
+          <EditField labelWidth={85} label="클래스명" width={388}><Input value={f.mobiClassNm ?? ''} onChange={e => set('mobiClassNm', e.target.value)} /></EditField>
+        </EditRow>
+    </EditModal>
   );
 };

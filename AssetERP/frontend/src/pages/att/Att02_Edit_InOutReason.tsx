@@ -5,7 +5,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React from 'react';
-import { Input, Modal, Space } from 'antd';
+import { Input, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { AttCommute } from '@/types/att';
 import { Button } from '@/components/button';
 
@@ -16,16 +17,11 @@ interface Props {
 }
 
 export const Att02_Edit_InOutReason: React.FC<Props> = ({ target, onClose }) => (
-  <Modal
+  <EditModal
     open={target != null}
     title="출퇴근 사유"
     width={430}
-    maskClosable={false}
     onCancel={onClose}
-    styles={{
-      header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-      footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-    }}
     footer={
       <div style={{ textAlign: 'center' }}>
         <Space>
@@ -36,15 +32,8 @@ export const Att02_Edit_InOutReason: React.FC<Props> = ({ target, onClose }) => 
     }
   >
     {/* [E0] 화면 열림 (생성자 L43-71) → show() */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '12px 2px' }}>
-      <div>
-        <div style={{ marginBottom: 6, fontWeight: 600 }}>사유(출근)</div>
-        <Input.TextArea rows={5} readOnly value={target?.inReason ?? ''} />
-      </div>
-      <div>
-        <div style={{ marginBottom: 6, fontWeight: 600 }}>사유(퇴근)</div>
-        <Input.TextArea rows={5} readOnly value={target?.outReason ?? ''} />
-      </div>
-    </div>
-  </Modal>
+    {/* 라벨이 위에 있던 것을 왼쪽 라벨로(편집 폼 원칙): '사유(출근)' 기준 90 */}
+    <EditField label="사유(출근)" labelWidth={90}><Input.TextArea rows={5} readOnly value={target?.inReason ?? ''} /></EditField>
+    <EditField label="사유(퇴근)" labelWidth={90}><Input.TextArea rows={5} readOnly value={target?.outReason ?? ''} /></EditField>
+  </EditModal>
 );

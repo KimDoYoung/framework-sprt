@@ -13,7 +13,7 @@ import { tdmApi } from '@/api/tdm';
 import { TdmCouncil } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditField } from '@/components/form/EditForm';
 
 const FORMAT = 'YYYY-MM-DD';
 const BLUE = '#0069B4';   // setHtmlStyle(…, "0069B4") 필수 항목 라벨
@@ -28,9 +28,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Label: React.FC<{ required?: boolean; children: React.ReactNode }> = ({ required, children }) => (
-  <div style={{ width: 120, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', color: required ? BLUE : undefined, flex: 'none' }}>{children}</div>
-);
+const lb = (text: string, required?: boolean) => <span style={{ fontWeight: 'bold', color: required ? BLUE : undefined }}>{text}</span>;
 
 export const Tdm05_Edit_Cncl: React.FC<Props> = ({ mode, council, onSaved, onClose }) => {
   const [cnclId, setCnclId] = useState<number | null>(null);
@@ -84,12 +82,11 @@ export const Tdm05_Edit_Cncl: React.FC<Props> = ({ mode, council, onSaved, onClo
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={!!mode}
       title="회의체"
       width={650}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -101,29 +98,22 @@ export const Tdm05_Edit_Cncl: React.FC<Props> = ({ mode, council, onSaved, onClo
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '10px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>회의체</Label>
-          <Input value={cnclName} onChange={e => setCnclName(e.target.value)} style={{ flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>개최주기</Label>
-          {/* [E1] openCycleName[개최주기].Collapse (L106) → openCycleCode 동기화 */}
-          <SystemCodeComboBox kindGroupCd="CycleCode003" placeholder="선택하세요" style={{ flex: 1 }} value={openCycleCode} onChange={code => setOpenCycleCode(code)} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <Label required>주요의결사항</Label>
-          <Input.TextArea value={mainDecision} onChange={e => setMainDecision(e.target.value)} style={{ height: 100, resize: 'none', flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>사용시작일</Label>
-          <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label>사용종료일</Label>
-          <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
-        </div>
-      </div>
-    </LookupModal>
+      <EditField label={lb('회의체', true)} labelWidth={100}>
+        <Input value={cnclName} onChange={e => setCnclName(e.target.value)} />
+      </EditField>
+      <EditField label={lb('개최주기', true)} labelWidth={100}>
+        {/* [E1] openCycleName[개최주기].Collapse (L106) → openCycleCode 동기화 */}
+        <SystemCodeComboBox kindGroupCd="CycleCode003" placeholder="선택하세요" style={{ width: '100%' }} value={openCycleCode} onChange={code => setOpenCycleCode(code)} />
+      </EditField>
+      <EditField label={lb('주요의결사항', true)} labelWidth={100}>
+        <Input.TextArea value={mainDecision} onChange={e => setMainDecision(e.target.value)} style={{ height: 100, resize: 'none' }} />
+      </EditField>
+      <EditField label={lb('사용시작일', true)} labelWidth={100}>
+        <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} />
+      </EditField>
+      <EditField label={lb('사용종료일')} labelWidth={100}>
+        <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
+      </EditField>
+    </EditModal>
   );
 };

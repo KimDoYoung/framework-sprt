@@ -8,12 +8,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
+import { DatePicker, Input, InputNumber, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { bizFeeChargeApi } from '@/api/bizFee';
 import { errorMessage } from '@/api/client';
 import { BizFeeCharge } from '@/types/bizFee';
 import { BizWithCorp } from '@/types/biz';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Biz13_Lookup_WithCorp } from '@/components/lookup/Biz13_Lookup_WithCorp';
@@ -45,14 +46,6 @@ const money = {
   formatter: (v?: string | number) => (v == null || v === '' ? '' : String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ',')),
   parser: (v?: string) => (v ? v.replace(/,/g, '') : ''),
 };
-
-/** 라벨 폭 110 (form.setLabelWidth(110)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <span style={{ width: 110, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</span>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 export const Biz20_Edit_FeeCharge: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [f, setF] = useState<Form | null>(null);
@@ -125,17 +118,12 @@ export const Biz20_Edit_FeeCharge: React.FC<Props> = ({ target, onClose, onSaved
 
   return (
     <>
-      <Modal
+      <EditModal
         open
         title={title}
         width={450}
-        maskClosable={false}
         onCancel={onClose}
         destroyOnHidden
-        styles={{
-          header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-          footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-        }}
         footer={
           <div style={{ textAlign: 'center' }}>
             <Space>
@@ -146,28 +134,26 @@ export const Biz20_Edit_FeeCharge: React.FC<Props> = ({ target, onClose, onSaved
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-          <Field label="청구일자">
+          <EditField labelWidth={70} label="청구일자">
             <DatePicker style={{ width: 130 }} allowClear={false} disabled={edit} value={f.chargeDate ? dayjs(f.chargeDate) : null}
               onChange={d => set('chargeDate', d ? d.format('YYYY-MM-DD') : f.chargeDate)} />
-          </Field>
-          <Field label="운용사명">
+          </EditField>
+          <EditField labelWidth={70} label="운용사명">
             <LookupInput value={f.corpNm} width={260} disabled={edit} onOpen={() => setLookupOpen(true)} />
-          </Field>
-          <Field label="발생보수">
+          </EditField>
+          <EditField labelWidth={70} label="발생보수">
             <InputNumber style={{ width: '100%' }} precision={0} {...money} disabled={fixed} value={f.occFee} onChange={v => set('occFee', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="청구보수">
+          </EditField>
+          <EditField labelWidth={70} label="청구보수">
             <InputNumber style={{ width: '100%' }} precision={0} {...money} disabled={fixed} value={f.chargeFee} onChange={v => set('chargeFee', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="세금">
+          </EditField>
+          <EditField labelWidth={70} label="세금">
             <InputNumber style={{ width: '100%' }} precision={0} {...money} disabled={fixed} value={f.tax} onChange={v => set('tax', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="비고">
+          </EditField>
+          <EditField labelWidth={70} label="비고">
             <Input.TextArea rows={4} maxLength={200} value={f.note} onChange={e => set('note', e.target.value)} />
-          </Field>
-        </div>
-      </Modal>
+          </EditField>
+      </EditModal>
       <Biz13_Lookup_WithCorp open={lookupOpen} onResult={onCorpResult} onClose={() => setLookupOpen(false)} />
     </>
   );

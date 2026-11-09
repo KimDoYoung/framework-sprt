@@ -6,7 +6,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import dayjs from 'dayjs';
 import { rptDailyApi } from '@/api/rpt';
 import { errorMessage } from '@/api/client';
@@ -25,14 +26,6 @@ interface Props {
   /** AS-IS callback.execute() → retrieve() (저장한 뒤. 창은 닫히지 않는다) */
   onDone?: () => void;
 }
-
-/** 라벨 폭 75 (form.setLabelWidth(75)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 75, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 /** GXT TextArea 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
@@ -66,16 +59,11 @@ export const Rpt01_Edit_DailyWrite: React.FC<Props> = ({ model, onClose, onDone 
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={isNew ? '일일업무보고 등록' : '일일업무보고 수정'}
       width={700}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 규격: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -87,13 +75,11 @@ export const Rpt01_Edit_DailyWrite: React.FC<Props> = ({ model, onClose, onDone 
       }
     >
       {/* [E0] 화면 열림 (생성자 L78-114) → settings(), show() */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <Field label="일자" width={200}>
+        <EditField label="일자" labelWidth={70} width={200}>
           <DatePicker style={{ width: '100%' }} allowClear={false} disabled={locked} value={f.date ? dayjs(f.date) : null} onChange={d => set('date', d ? d.format(DATE) : null)} />
-        </Field>
-        <Field label="업무내용"><Input.TextArea rows={9} disabled={locked} value={f.content ?? ''} onChange={e => set('content', e.target.value)} /></Field>
-        <Field label="비고"><Input.TextArea rows={5} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-      </div>
-    </Modal>
+        </EditField>
+        <EditField label="업무내용" labelWidth={70}><Input.TextArea rows={9} disabled={locked} value={f.content ?? ''} onChange={e => set('content', e.target.value)} /></EditField>
+        <EditField label="비고" labelWidth={70}><Input.TextArea rows={5} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
+    </EditModal>
   );
 };

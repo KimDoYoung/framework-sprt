@@ -7,7 +7,8 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { EditModal } from '@/components/form/EditForm';
 import { scmApi } from '@/api/scm';
 import { errorMessage } from '@/api/client';
 import { SrApprStep } from '@/types/scm';
@@ -55,17 +56,12 @@ export const Scm02_Edit_NoteMessage: React.FC<Props> = ({ step, comment, onSaved
   const isNote = comment === '결재의견';
 
   return (
-    <Modal
+    <EditModal
       open={!!step}
       title={comment}
       width={450}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -77,16 +73,14 @@ export const Scm02_Edit_NoteMessage: React.FC<Props> = ({ step, comment, onSaved
         </div>
       }
     >
-      <div style={{ padding: '12px 2px' }}>
-        <Input.TextArea
-          autoFocus
-          rows={5}
-          value={isNote ? note : rejectReason}
-          readOnly={!canEdit}
-          maxLength={500}
-          onChange={e => (isNote ? setNote(e.target.value) : setRejectReason(e.target.value))}
-        />
-      </div>
-    </Modal>
+      <Input.TextArea
+        autoFocus
+        rows={5}
+        value={isNote ? note : rejectReason}
+        readOnly={!canEdit}
+        maxLength={500}
+        onChange={e => (isNote ? setNote(e.target.value) : setRejectReason(e.target.value))}
+      />
+    </EditModal>
   );
 };

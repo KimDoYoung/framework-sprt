@@ -8,12 +8,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';
+import { DatePicker, Input, Space, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckManlDetail } from '@/types/tdm';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Emp00_Lookup_SelectSingleTdm } from '@/components/lookup/Emp00_Lookup_SelectSingleTdm';
 
@@ -32,12 +33,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Row: React.FC<{ label: React.ReactNode; children: React.ReactNode; top?: boolean }> = ({ label, children, top }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 16 }}>
-    <Typography.Text strong style={{ width: 130, flex: 'none', paddingTop: top ? 5 : 0, textAlign: 'right', paddingRight: 8 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+const lb = (text: string) => <b>{text}</b>;
 
 export const Tdm54_Edit_ChckInsuff: React.FC<Props> = ({ target, onClose }) => {
   const readOnly = target?.mode === 'view';
@@ -96,11 +92,10 @@ export const Tdm54_Edit_ChckInsuff: React.FC<Props> = ({ target, onClose }) => {
   };
 
   return (
-    <Modal
+    <EditModal
       open={!!target}
       title={<b>조치계획 등록</b>}
       width={640}
-      maskClosable={false}
       keyboard={false}
       closable={false}
       footer={
@@ -113,16 +108,14 @@ export const Tdm54_Edit_ChckInsuff: React.FC<Props> = ({ target, onClose }) => {
         </div>
       }
     >
-      <div style={{ paddingTop: 10 }}>
-        <Row label="등록일"><DatePicker style={{ width: 280 }} format={DATE_FORMAT} disabled={readOnly} value={regDate} onChange={setRegDate} /></Row>
-        <Row label="조치완료 예정일"><DatePicker style={{ width: 280 }} format={DATE_FORMAT} disabled={readOnly} value={dueDate} onChange={setDueDate} /></Row>
-        <Row label="조치 예정자">
-          {/* [E1] planActionEmpName[조치 예정자].TriggerClick (L129) → Emp00_Lookup_SelectSingleTdm.open(오늘, 점검항목의 부서, cb) */}
-          <LookupInput value={emp.name} width={280} disabled={readOnly} onOpen={() => setEmpLookup(true)} />
-        </Row>
-        <Row label="조치명"><Input readOnly={readOnly} value={actionName} onChange={e => setActionName(e.target.value)} /></Row>
-        <Row label="조치계획내용" top><Input.TextArea readOnly={readOnly} style={{ height: 250, resize: 'none' }} value={actionPlan} onChange={e => setActionPlan(e.target.value)} /></Row>
-      </div>
+      <EditField label={lb('등록일')} labelWidth={130}><DatePicker style={{ width: 280 }} format={DATE_FORMAT} disabled={readOnly} value={regDate} onChange={setRegDate} /></EditField>
+      <EditField label={lb('조치완료 예정일')} labelWidth={130}><DatePicker style={{ width: 280 }} format={DATE_FORMAT} disabled={readOnly} value={dueDate} onChange={setDueDate} /></EditField>
+      <EditField label={lb('조치 예정자')} labelWidth={130}>
+        {/* [E1] planActionEmpName[조치 예정자].TriggerClick (L129) → Emp00_Lookup_SelectSingleTdm.open(오늘, 점검항목의 부서, cb) */}
+        <LookupInput value={emp.name} width={280} disabled={readOnly} onOpen={() => setEmpLookup(true)} />
+      </EditField>
+      <EditField label={lb('조치명')} labelWidth={130}><Input readOnly={readOnly} value={actionName} onChange={e => setActionName(e.target.value)} /></EditField>
+      <EditField label={lb('조치계획내용')} labelWidth={130}><Input.TextArea readOnly={readOnly} style={{ height: 250, resize: 'none' }} value={actionPlan} onChange={e => setActionPlan(e.target.value)} /></EditField>
       <Emp00_Lookup_SelectSingleTdm
         open={empLookup}
         stdDate={dayjs().format('YYYY-MM-DD')}
@@ -130,6 +123,6 @@ export const Tdm54_Edit_ChckInsuff: React.FC<Props> = ({ target, onClose }) => {
         onResult={p => { setEmpLookup(false); setEmp({ id: p.personId, name: p.korNm ?? '' }); }}
         onClose={() => setEmpLookup(false)}
       />
-    </Modal>
+    </EditModal>
   );
 };

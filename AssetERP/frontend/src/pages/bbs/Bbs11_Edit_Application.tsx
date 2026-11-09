@@ -6,12 +6,13 @@
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useRef, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { bbsApplicationApi, bbsApplicationFormApi } from '@/api/bbs';
 import { errorMessage } from '@/api/client';
 import { BbsApplicationMine } from '@/types/bbs';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
@@ -32,13 +33,8 @@ interface Props {
   onApplied: () => void;
 }
 
-/** 라벨 폭 80 (form.setLabelWidth(80)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 80, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '신청구분' 4글자 → 70 (편집 폼 모달 원칙) */
+const LW = 70;
 
 /** 안쪽 본체 — model이 바뀔 때마다 새로 만들도록 부모가 key를 준다 */
 const Body: React.FC<Required<Pick<Props, 'userId' | 'onClose' | 'onChanged' | 'onApplied'>> & { model: BbsApplicationEdit }> = ({ model, userId, onClose, onChanged, onApplied }) => {
@@ -117,16 +113,11 @@ const Body: React.FC<Required<Pick<Props, 'userId' | 'onClose' | 'onChanged' | '
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title="기타신청서 작성"
       width={830}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 견본: 머리말 아래 선
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space size={8}>
@@ -140,31 +131,28 @@ const Body: React.FC<Required<Pick<Props, 'userId' | 'onClose' | 'onChanged' | '
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Field label="신청일" width={190}>
-            <DatePicker style={{ width: '100%' }} allowClear={false} disabled={!editable} value={f.appDate ? dayjs(f.appDate) : null}
-              onChange={d => d && set('appDate', d.format(DATE))} />
-          </Field>
-          <Field label="신청자" width={190}><Input disabled value={f.appEmpName ?? ''} /></Field>
-          <Field label="신청구분" width="auto">
-            <div style={{ flex: 1 }}>
-              <SystemCodeComboBox kindCd="ApplicationType" style={{ width: 150 }} placeholder="(선택하세요)" disabled={!editable}
-                value={f.appType ?? undefined} onChange={onTypeChange} />
-            </div>
-          </Field>
+      {/* 안쪽 폭 790(830 − 40): 195 + 195 + 384 + 칸 사이 8×2 */}
+      <EditRow>
+        <EditField label="신청일" labelWidth={LW} width={195}>
+          <DatePicker style={{ width: '100%' }} allowClear={false} disabled={!editable} value={f.appDate ? dayjs(f.appDate) : null}
+            onChange={d => d && set('appDate', d.format(DATE))} />
+        </EditField>
+        <EditField label="신청자" labelWidth={LW} width={195}><Input disabled value={f.appEmpName ?? ''} /></EditField>
+        <EditField label="신청구분" labelWidth={LW} width={384}>
+          <SystemCodeComboBox kindCd="ApplicationType" style={{ width: 150 }} placeholder="(선택하세요)" disabled={!editable}
+            value={f.appType ?? undefined} onChange={onTypeChange} />
+        </EditField>
+      </EditRow>
+      <EditField label="비고" labelWidth={LW}>
+        <Input disabled={!editable} placeholder="중복 신청을 방지하기 위해 수신처를 정확히 입력해 주세요" value={f.note ?? ''} onChange={e => set('note', e.target.value)} />
+      </EditField>
+      <EditField label="내용" labelWidth={LW}>
+        {/* getEditor() L251-263: HTML 편집기(높이 450). 본인 것이 아니거나 진행된 신청서는 읽기 전용 */}
+        <div style={{ pointerEvents: editable ? undefined : 'none', opacity: editable ? 1 : 0.7 }}>
+          <HtmlEditor toolbar="client" key={editorKey} value={f.content} onChange={h => { html.current = h; }} height={400} />
         </div>
-        <Field label="비고">
-          <Input disabled={!editable} placeholder="중복 신청을 방지하기 위해 수신처를 정확히 입력해 주세요" value={f.note ?? ''} onChange={e => set('note', e.target.value)} />
-        </Field>
-        <Field label="내용">
-          {/* getEditor() L251-263: HTML 편집기(높이 450). 본인 것이 아니거나 진행된 신청서는 읽기 전용 */}
-          <div style={{ pointerEvents: editable ? undefined : 'none', opacity: editable ? 1 : 0.7 }}>
-            <HtmlEditor toolbar="client" key={editorKey} value={f.content} onChange={h => { html.current = h; }} height={400} />
-          </div>
-        </Field>
-      </div>
-    </Modal>
+      </EditField>
+    </EditModal>
   );
 };
 

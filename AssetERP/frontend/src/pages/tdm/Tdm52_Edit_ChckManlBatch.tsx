@@ -8,12 +8,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';
+import { DatePicker, Input, Space, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
+import { EditModal, EditField } from '@/components/form/EditForm';
 import { Tdm00_Lookup_RelateAppr } from './Tdm00_Lookup_RelateAppr';
 
 const DATE_FORMAT = 'YYYY.MM.DD';
@@ -26,12 +27,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Row: React.FC<{ label: React.ReactNode; blue?: boolean; children: React.ReactNode; top?: boolean }> = ({ label, blue, children, top }) => (
-  <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', marginBottom: 20 }}>
-    <Typography.Text strong style={{ width: 100, flex: 'none', paddingTop: top ? 5 : 0, textAlign: 'right', paddingRight: 8, color: blue ? '#0069B4' : undefined }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+const lb = (text: string, blue?: boolean) => <b style={{ color: blue ? '#0069B4' : undefined }}>{text}</b>;
 
 export const Tdm52_Edit_ChckManlBatch: React.FC<Props> = ({ ids, onDone, onClose }) => {
   const [checkDate, setCheckDate] = useState<Dayjs | null>(dayjs());
@@ -107,11 +103,10 @@ export const Tdm52_Edit_ChckManlBatch: React.FC<Props> = ({ ids, onDone, onClose
   };
 
   return (
-    <Modal
+    <EditModal
       open={!!ids && tmpFileParentId != null}
       title={<b>일괄점검처리</b>}
       width={650}
-      maskClosable={false}
       keyboard={false}
       closable={false}
       footer={
@@ -125,16 +120,14 @@ export const Tdm52_Edit_ChckManlBatch: React.FC<Props> = ({ ids, onDone, onClose
         </div>
       }
     >
-      <div style={{ paddingTop: 10 }}>
-        <Row label="점검일자" blue><DatePicker style={{ width: 270 }} format={DATE_FORMAT} value={checkDate} onChange={setCheckDate} /></Row>
-        <Row label="점검결과" blue>
-          {/* CommonComboBoxField("sys.Sys00_Common.selectByKindGroupCode", TdmCheckResult0003) */}
-          <SystemCodeComboBox kindGroupCd="TdmCheckResult0003" style={{ width: 270 }} placeholder="선택하세요" allowClear={false}
-            value={resultCode} onChange={(code, name) => { setResultCode(code); setResultName(name ?? ''); }} />
-        </Row>
-        <Row label="점검의견" top><Input.TextArea style={{ height: 200, resize: 'none' }} value={cmnt} onChange={e => setCmnt(e.target.value)} /></Row>
-      </div>
+      <EditField label={lb('점검일자', true)} labelWidth={70}><DatePicker style={{ width: 270 }} format={DATE_FORMAT} value={checkDate} onChange={setCheckDate} /></EditField>
+      <EditField label={lb('점검결과', true)} labelWidth={70}>
+        {/* CommonComboBoxField("sys.Sys00_Common.selectByKindGroupCode", TdmCheckResult0003) */}
+        <SystemCodeComboBox kindGroupCd="TdmCheckResult0003" style={{ width: 270 }} placeholder="선택하세요" allowClear={false}
+          value={resultCode} onChange={(code, name) => { setResultCode(code); setResultName(name ?? ''); }} />
+      </EditField>
+      <EditField label={lb('점검의견')} labelWidth={70}><Input.TextArea style={{ height: 200, resize: 'none' }} value={cmnt} onChange={e => setCmnt(e.target.value)} /></EditField>
       <Tdm00_Lookup_RelateAppr open={evidOpen && tmpFileParentId != null} keyTable="tdm52" keyTableId={tmpFileParentId} onChanged={onEvidChanged} onClose={() => setEvidOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };

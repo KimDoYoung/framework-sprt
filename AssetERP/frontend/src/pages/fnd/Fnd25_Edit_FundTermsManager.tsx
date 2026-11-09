@@ -9,7 +9,7 @@
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Checkbox, DatePicker, Input, InputNumber, message, Space, Typography } from 'antd';
+import { Checkbox, DatePicker, Input, InputNumber, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { fndApi } from '@/api/fnd';
 import { fileApi } from '@/api/file';
@@ -21,7 +21,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Com01_Lookup_RelateFile } from '@/components/lookup/Com01_Lookup_RelateFile';
 import { Fnd01_Lookup_SelectSingle } from '@/components/lookup/Fnd01_Lookup_SelectSingle';
 import { LookupInput } from '@/components/lookup/LookupInput';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 
 export type TermsEditMode = 'insert' | 'new' | 'copy' | 'edit';
 
@@ -39,13 +39,9 @@ interface Props {
   onClose: () => void;
 }
 
-/** 라벨 폭 110 (form.setLabelWidth(110)) */
-const Field: React.FC<{ label: string; width?: number | string; required?: boolean; children: React.ReactNode }> = ({ label, width = '100%', required, children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 110, flex: 'none', lineHeight: '32px', color: required ? '#0069B4' : undefined }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
+/** 라벨 칸 폭: 가장 긴 라벨 '펀드규약구분'(6글자) 기준 96 (AS-IS 110). 필수 라벨은 파란색 */
+const LW = 96;
+const req = (text: string) => <span style={{ color: '#0069B4' }}>{text}</span>;
 
 export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, onClose }) => {
   const [f, setF] = useState<TermsRevision | null>(target?.model ?? null);
@@ -105,11 +101,10 @@ export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, o
   };
 
   return (
-    <LookupModal
+    <EditModal
       open
       title="펀드규약"
       width={1000}
-      maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
       footer={
@@ -124,53 +119,47 @@ export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, o
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 2px 2px' }}>
-        {/* hlc01: 360 · 여백 40 · 220 · 여백 160 · 220 (L145-150) */}
-        <Space size={0} align="start">
-          <Field label="펀드규약구분 " width={360} required>
+        {/* hlc01: 360 · 220 · 220 (L145-150) — 안쪽 폭 960 − 칸 사이 16 = 944로 비례 확대: 425·260·259 */}
+        <EditRow>
+          <EditField label={req('펀드규약구분')} labelWidth={LW} width={425}>
             <SystemCodeComboBox kindCd="FundTermsType" placeholder="(선택하세요)" disabled={locked} style={{ width: '100%' }} value={f.termsType ?? undefined}
               onChange={code => set('termsType', code ?? null)} />
-          </Field>
-          <div style={{ width: 40 }} />
-          <Field label="종료일 " width={220}>
+          </EditField>
+          <EditField label="종료일" labelWidth={LW} width={260}>
             <DatePicker style={{ width: '100%' }} value={f.closeDate ? dayjs(f.closeDate) : null}
               onChange={d => set('closeDate', d ? d.format('YYYY-MM-DD') : null)} />
-          </Field>
-          <div style={{ width: 160 }} />
-          <Field label="사용 " width={220}><Checkbox checked={!!f.useYn} onChange={e => set('useYn', e.target.checked)} /></Field>
-        </Space>
-        {/* hlc02: 180 · 180 · 여백 40 · 220 · 여백 60 · 270 (L152-158) */}
-        <Space size={0} align="start">
-          <Field label="조회순서 " width={180} required>
+          </EditField>
+          <EditField label="사용" labelWidth={LW} width={259}><Checkbox checked={!!f.useYn} onChange={e => set('useYn', e.target.checked)} /></EditField>
+        </EditRow>
+        {/* hlc02: 180 · 180 · 220 · 270 (L152-158) — 안쪽 폭 960 − 칸 사이 24 = 936으로 비례 확대: 198·198·242·298 */}
+        <EditRow>
+          <EditField label={req('조회순서')} labelWidth={LW} width={198}>
             <InputNumber style={{ width: '100%' }} precision={0} disabled={locked} value={f.seq ?? null} onChange={v => set('seq', v == null ? null : Number(v))} />
-          </Field>
-          <Field label="개정회차 " width={180} required>
+          </EditField>
+          <EditField label={req('개정회차')} labelWidth={LW} width={198}>
             <InputNumber style={{ width: '100%' }} precision={0} value={f.revisionNo ?? null} onChange={v => set('revisionNo', v == null ? null : Number(v))} />
-          </Field>
-          <div style={{ width: 40 }} />
-          <Field label="제개정일 " width={220} required>
+          </EditField>
+          <EditField label={req('제개정일')} labelWidth={LW} width={242}>
             <DatePicker style={{ width: '100%' }} value={f.revisionDate ? dayjs(f.revisionDate) : null}
               onChange={d => set('revisionDate', d ? d.format('YYYY-MM-DD') : null)} />
-          </Field>
-          <div style={{ width: 60 }} />
-          <Field label="예탁원코드 " width={270} required>
+          </EditField>
+          <EditField label={req('예탁원코드')} labelWidth={LW} width={298}>
             {/* [E4] ksdFundCode[예탁원코드].TriggerClick (L141) → openLookupOpr() L349-361: Fnd01_Lookup_SelectSingle.open — 고르면 채우고, 안 고르면 그대로 */}
             <LookupInput value={f.ksdFundCode ?? ''} width={170} disabled={locked} onOpen={() => setFundOpen(true)} />
-          </Field>
-        </Space>
-        <Field label="펀드규약명 " required><Input value={f.termsName ?? ''} onChange={e => set('termsName', e.target.value)} /></Field>
-        <Field label="내용 ">
+          </EditField>
+        </EditRow>
+        <EditField label={req('펀드규약명')} labelWidth={LW}><Input value={f.termsName ?? ''} onChange={e => set('termsName', e.target.value)} /></EditField>
+        <EditField label="내용" labelWidth={LW}>
           {/* 편집기는 만들 때 한 번 내용을 넣는다(AS-IS setHtmlText) — 열 때마다 다시 만든다 */}
           <HtmlEditor key={`${f.termsDetailId}-${mode}`} value={f.content} onChange={html => set('content', html)} height={420} />
-        </Field>
-        <Field label="비고 "><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></Field>
-      </div>
+        </EditField>
+        <EditField label="비고" labelWidth={LW}><Input.TextArea rows={3} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
       <Com01_Lookup_RelateFile open={fileOpen} parentId={f.termsDetailId} onClose={() => { setFileOpen(false); void setFileButtonText(); }} />
       <Fnd01_Lookup_SelectSingle
         open={fundOpen}
         onResult={fund => { if (fund) setF(prev => prev && { ...prev, ksdFundCode: fund.ksdFundCode ?? null, fundId: fund.fundId }); }}
         onClose={() => setFundOpen(false)}
       />
-    </LookupModal>
+    </EditModal>
   );
 };

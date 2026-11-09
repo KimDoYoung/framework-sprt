@@ -7,12 +7,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { bmtPcHistoryApi } from '@/api/bmt';
 import { errorMessage } from '@/api/client';
 import { BmtInfo, BmtPcHistory } from '@/types/bmt';
 import { Button } from '@/components/button';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Bmt10_Lookup_InfoList } from './Bmt10_Lookup_InfoList';
 
@@ -30,14 +31,6 @@ interface Props {
   /** AS-IS callback.execute() — 저장한 행 */
   onDone: (saved: BmtPcHistory) => void;
 }
-
-/** 라벨 폭 105 (form.setLabelWidth(105)) */
-const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
-    <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-  </div>
-);
 
 interface Form {
   infoId: number | null;
@@ -102,17 +95,12 @@ export const Bmt12_Edit_PcHistory: React.FC<Props> = ({ target, onClose, onDone 
   };
 
   return (
-    <Modal
+    <EditModal
       open
       title={heading}
       width={680}
       style={{ top: 20 }}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -123,25 +111,23 @@ export const Bmt12_Edit_PcHistory: React.FC<Props> = ({ target, onClose, onDone 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <Field label="시작일자" width={260}><DatePicker style={{ width: '100%' }} value={f.startDate} onChange={d => set('startDate', d)} /></Field>
-          <Field label="장비명" width={360}>
-            <LookupInput width={250} value={f.astClassTreeName} disabled={nameLocked} onOpen={() => setLookupOpen(true)} />
-          </Field>
-        </div>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <Field label="설치일자" width={260}><DatePicker style={{ width: '100%' }} value={f.settingDate} onChange={d => set('settingDate', d)} /></Field>
-          <Field label="호스트명" width={360}><Input value={f.hostName} onChange={e => set('hostName', e.target.value)} /></Field>
-        </div>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <Field label="내부IP" width={260}><Input value={f.internalIp} onChange={e => set('internalIp', e.target.value)} /></Field>
-          <Field label="MAC주소" width={360}><Input value={f.macAddress} onChange={e => set('macAddress', e.target.value)} /></Field>
-        </div>
-        <Field label="기타사항"><Input.TextArea rows={8} value={f.etc} onChange={e => set('etc', e.target.value)} /></Field>
-        <Field label="비고"><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></Field>
-      </div>
+      <EditRow>
+        <EditField label="시작일자" labelWidth={70} width={245}><DatePicker style={{ width: '100%' }} value={f.startDate} onChange={d => set('startDate', d)} /></EditField>
+        <EditField label="장비명" labelWidth={70} width={387}>
+          <LookupInput width={250} value={f.astClassTreeName} disabled={nameLocked} onOpen={() => setLookupOpen(true)} />
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="설치일자" labelWidth={70} width={245}><DatePicker style={{ width: '100%' }} value={f.settingDate} onChange={d => set('settingDate', d)} /></EditField>
+        <EditField label="호스트명" labelWidth={70} width={387}><Input value={f.hostName} onChange={e => set('hostName', e.target.value)} /></EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label="내부IP" labelWidth={70} width={245}><Input value={f.internalIp} onChange={e => set('internalIp', e.target.value)} /></EditField>
+        <EditField label="MAC주소" labelWidth={70} width={387}><Input value={f.macAddress} onChange={e => set('macAddress', e.target.value)} /></EditField>
+      </EditRow>
+      <EditField label="기타사항" labelWidth={70}><Input.TextArea rows={8} value={f.etc} onChange={e => set('etc', e.target.value)} /></EditField>
+      <EditField label="비고" labelWidth={70}><Input.TextArea rows={4} value={f.note} onChange={e => set('note', e.target.value)} /></EditField>
       <Bmt10_Lookup_InfoList open={lookupOpen} onResult={onPick} onClose={() => setLookupOpen(false)} />
-    </Modal>
+    </EditModal>
   );
 };

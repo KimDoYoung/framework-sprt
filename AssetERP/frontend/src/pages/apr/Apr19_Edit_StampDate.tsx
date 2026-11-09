@@ -7,11 +7,12 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, message, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { aprRelateStampApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
+import { EditModal, EditField } from '@/components/form/EditForm';
 
 const DATE = 'YYYY-MM-DD';
 
@@ -58,16 +59,11 @@ export const Apr19_Edit_StampDate: React.FC<Props> = ({ relateStampId, onDone, o
 
   if (relateStampId == null) return null;
   return (
-    <Modal
+    <EditModal
       open
       title="날인일자 설정"
       width={320}
-      maskClosable={false}
       onCancel={onClose}
-      styles={{
-        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
-        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
-      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -78,13 +74,10 @@ export const Apr19_Edit_StampDate: React.FC<Props> = ({ relateStampId, onDone, o
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
-        {/* [E0] 화면 열림 (생성자 L49-73) → getEditor() */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Typography.Text style={{ width: 75, flex: 'none', textAlign: 'right', paddingRight: 10 }}>날인일자</Typography.Text>
-          <DatePicker style={{ width: 160 }} value={stampDate} format={DATE} onChange={d => setStampDate(d)} />
-        </div>
-      </div>
-    </Modal>
+      {/* [E0] 화면 열림 (생성자 L49-73) → getEditor() */}
+      <EditField label="날인일자" labelWidth={70}>
+        <DatePicker style={{ width: 160 }} value={stampDate} format={DATE} onChange={d => setStampDate(d)} />
+      </EditField>
+    </EditModal>
   );
 };

@@ -16,7 +16,7 @@ import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { LookupInput } from '@/components/lookup/LookupInput';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Tdm11_Lookup_TaskRelateRule } from './Tdm11_Lookup_TaskRelateRule';
 import { Tdm12_Lookup_TaskRelateDetail } from './Tdm12_Lookup_TaskRelateDetail';
 import { Tdm14_Lookup_TaskType } from './Tdm14_Lookup_TaskType';
@@ -34,9 +34,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Label: React.FC<{ required?: boolean; children: React.ReactNode }> = ({ required, children }) => (
-  <div style={{ width: 100, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', color: required ? BLUE : undefined, flex: 'none' }}>{children}</div>
-);
+const lb = (text: string, required?: boolean) => <span style={{ fontWeight: 'bold', color: required ? BLUE : undefined }}>{text}</span>;
 
 export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose }) => {
   const [taskId, setTaskId] = useState<number | null>(null);
@@ -171,12 +169,11 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
   };
 
   return (
-    <LookupModal
+    <EditModal
       open={!!mode}
       title="책무"
       width={630}
       closable={false}
-      maskClosable={false}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
@@ -190,32 +187,27 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '10px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>책무구분</Label>
-          <SystemCodeComboBox kindCd="TdmTaskClassCode" placeholder="선택하세요" style={{ flex: 1 }} value={classCode} onChange={code => changeClass(code)} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label required>책무유형</Label>
-          <LookupInput value={typeName ?? ''} width={470} onOpen={lookupTaskType} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <Label required>책무</Label>
-          <Input.TextArea value={taskName} onChange={e => setTaskName(e.target.value)} style={{ height: 100, resize: 'none', flex: 1 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label>공통책무</Label>
-          <div style={{ width: 250 }}><Checkbox checked={commonYn} onChange={e => setCommonYn(e.target.checked)} /></div>
-          <Label required>사용시작일</Label>
+      <EditField label={lb('책무구분', true)} labelWidth={70}>
+        <SystemCodeComboBox kindCd="TdmTaskClassCode" placeholder="선택하세요" style={{ width: '100%' }} value={classCode} onChange={code => changeClass(code)} />
+      </EditField>
+      <EditField label={lb('책무유형', true)} labelWidth={70}>
+        <LookupInput value={typeName ?? ''} width={470} onOpen={lookupTaskType} />
+      </EditField>
+      <EditField label={lb('책무', true)} labelWidth={70}>
+        <Input.TextArea value={taskName} onChange={e => setTaskName(e.target.value)} style={{ height: 100, resize: 'none' }} />
+      </EditField>
+      <EditRow>
+        <EditField label={lb('공통책무')} labelWidth={70} width={350}><Checkbox checked={commonYn} onChange={e => setCommonYn(e.target.checked)} /></EditField>
+        <EditField label={lb('사용시작일', true)} labelWidth={70} width={232}>
           <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Label>CEO책무</Label>
-          <div style={{ width: 250 }}><Checkbox checked={ceoYn} onChange={e => setCeoYn(e.target.checked)} /></div>
-          <Label>사용종료일</Label>
+        </EditField>
+      </EditRow>
+      <EditRow>
+        <EditField label={lb('CEO책무')} labelWidth={70} width={350}><Checkbox checked={ceoYn} onChange={e => setCeoYn(e.target.checked)} /></EditField>
+        <EditField label={lb('사용종료일')} labelWidth={70} width={232}>
           <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
-        </div>
-      </div>
+        </EditField>
+      </EditRow>
       <Tdm14_Lookup_TaskType
         mode={typeLookup ? 'view' : null}
         taskClassCode={classCode}
@@ -231,7 +223,7 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
       <AreaMessage open={reasonOpen} title="변경사유" required
         onResult={text => { if (text == null) message.warning('저장이 취소되었습니다 (변경사유 미입력)'); else void update(text); }}
         onClose={() => setReasonOpen(false)} />
-    </LookupModal>
+    </EditModal>
   );
 };
 

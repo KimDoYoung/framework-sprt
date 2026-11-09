@@ -14,7 +14,7 @@ import { tdmApi } from '@/api/tdm';
 import { TdmRoleAllc } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
-import { LookupModal } from '@/components/lookup/LookupModal';
+import { EditModal, EditRow, EditField } from '@/components/form/EditForm';
 import { Tdm01_Lookup_SelectSingle } from './Tdm01_Lookup_SelectSingle';
 import { checkRoleAllcMerge } from './tdmRoleAllcCheck';
 
@@ -31,9 +31,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Label: React.FC<{ required?: boolean; children: React.ReactNode }> = ({ required, children }) => (
-  <div style={{ width: 100, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', color: required ? BLUE : undefined, flex: 'none' }}>{children}</div>
-);
+const lb = (text: string, required?: boolean) => <span style={{ fontWeight: 'bold', color: required ? BLUE : undefined }}>{text}</span>;
 
 export const Tdm30_Edit_RoleAllcModify: React.FC<Props> = ({ target, baseDate, onSaved, onClose }) => {
   const [personId, setPersonId] = useState<number | null>(null);
@@ -88,12 +86,11 @@ export const Tdm30_Edit_RoleAllcModify: React.FC<Props> = ({ target, baseDate, o
 
   return (
     <>
-      <LookupModal
+      <EditModal
         open={!!target}
         title="책무배분 수정"
         width={550}
         closable={false}
-        maskClosable={false}
         onCancel={onClose}
         footer={
           <div style={{ textAlign: 'center' }}>
@@ -105,26 +102,27 @@ export const Tdm30_Edit_RoleAllcModify: React.FC<Props> = ({ target, baseDate, o
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '10px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Label required>직책</Label>
-            <Input value={target?.roleName?.trim() ?? ''} disabled style={{ width: 380 }} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Label required>담당임원</Label>
+        <EditField label={lb('직책', true)} labelWidth={85}>
+          <Input value={target?.roleName?.trim() ?? ''} disabled style={{ width: 380 }} />
+        </EditField>
+        <EditRow>
+          <EditField label={lb('담당임원', true)} labelWidth={85} width={250}>
             {/* [E1] personName[담당임원].TriggerClick (L98) → Tdm01_Lookup_SelectSingle.open() */}
             <LookupInput value={personName} width={150} onOpen={() => setPersonLookup(true)} />
-            <div style={{ width: 100, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', flex: 'none' }}>겸직여부</div>
+          </EditField>
+          <EditField label={lb('겸직여부')} labelWidth={85} width={252}>
             <Checkbox checked={addTitleYn} onChange={e => setAddTitleYn(e.target.checked)} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Label required>직책부여일</Label>
+          </EditField>
+        </EditRow>
+        <EditRow>
+          <EditField label={lb('직책부여일', true)} labelWidth={85} width={250}>
             <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 150 }} />
-            <div style={{ width: 100, textAlign: 'right', paddingRight: 8, fontWeight: 'bold', flex: 'none' }}>직책해제일</div>
+          </EditField>
+          <EditField label={lb('직책해제일')} labelWidth={85} width={252}>
             <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 150 }} />
-          </div>
-        </div>
-      </LookupModal>
+          </EditField>
+        </EditRow>
+      </EditModal>
       <Tdm01_Lookup_SelectSingle
         open={personLookup}
         onSelect={hr => { setPersonId(hr.personId); setPersonName(hr.personName ?? ''); }}
