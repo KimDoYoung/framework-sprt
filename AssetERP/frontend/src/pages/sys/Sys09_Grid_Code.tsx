@@ -81,7 +81,7 @@ export const Sys09_Grid_Code: React.FC<Props> = ({ isAdmin, codeKind, companyId:
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
         {/* [E2] retrieveButton[조회].Select (L63) → retrieve() */}
         <SearchBar style={{ flexWrap: 'nowrap' }} onSearch={retrieve} extra={<>
           {/* [E4] updateButton[저장].Select (L75) → update(). 저장(n)은 UX-03 */}

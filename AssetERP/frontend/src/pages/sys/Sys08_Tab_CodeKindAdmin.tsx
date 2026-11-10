@@ -70,11 +70,11 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
   useEffect(() => { retrieve(); }, []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+    <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize={820} min={300} max={1000}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
-            <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
               {/* [E2] retrieveButton[조회].Select (L71) → retrieve() */}
               <SearchBar style={{ flexWrap: 'nowrap' }} onSearch={retrieve} extra={<>
                 {/* [E4] updateButton[저장].Select (L83) → update(). 저장(n)은 UX-03 */}
@@ -99,7 +99,7 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel min={200}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%'}}>
             <Sys09_Grid_Code isAdmin codeKind={selected} />
           </div>
         </Splitter.Panel>
