@@ -530,7 +530,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Dcr00_Tab_ApprList, // F09 1단계 (메뉴 #1326 문서 다운로드 + Apr40_Lookup_DownloadHistory·Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·PDF 만들기 createInPDF7은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Dcr00_Tab_FileList, // F08 1단계 (메뉴 #1224 문서별 첨부파일 검색 + Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
-  Apr01_Tab_ItemDocument, // F07 1단계 (메뉴 #1137 (X)종목별 문서검색 + Apr01_Grid_ItemDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr01_Tab_ItemDocument, // F07 (메뉴 #1137 (X)종목별 문서검색 + Apr01_Grid_ItemDocList) [2026-11-10 상세보기 Apr01_Edit_ApprDoc 연결]
   Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
@@ -541,7 +541,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기 Dcr10_Lookup_MailSender는 EE35에서 연결)
   Apr01_Tab_TotalList, // G16 (메뉴 #1010 운영현황표. 건별명세 아이콘이 메뉴 #1011 G17을 TempData로 연다)
   Apr01_Tab_SubList, // G17 1단계 (메뉴 #1011 건별명세. 문서조회가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
-  Apr01_Tab_StampSeq, // G06 1단계 (메뉴 #1020 (X)인감대장. 문서확인이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr01_Tab_StampSeq, // G06 (메뉴 #1020 (X)인감대장) [2026-11-10 문서확인 Apr01_Edit_ApprDoc 연결]
   Apr10_Tab_Stamp, // G07 (메뉴 #1026. 조회창 Apr10_Move_OrgCode·Org10_Lookup_RoleStamp·Dcr40_Lookup_StampAuth·Org00_Lookup_SelectMulti를 함께 변환)
   Emp60_Tab_Sign, // G09 (메뉴 #1501)
   Emp30_Tab_ApprStepExcept, // G10 (메뉴 #1439. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
@@ -558,7 +558,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr07_Tab_AltAppr, // G05 (메뉴 #1021. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr07_Tab_AltApprMgr, // EE02 (메뉴 #1022. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr30_Tab_ApprStepGroup, // EE03 (메뉴 #1282. 멤버 Apr31_Page_ApprStepGroupMember, 사원찾기 Emp00_Lookup_SelectMulti 재사용)
-  Apr01_Tab_Restore, // EE01 1단계 (메뉴 #1098. 상세보기가 여는 폐기문서 보기 Apr01_Edit_ApprDoc.getApprDelModel은 다음 단계)
+  Apr01_Tab_Restore, // EE01 (메뉴 #1098) [2026-11-10 상세보기 = 폐기문서 보기 Apr01_Edit_ApprDoc deleted 모드 연결]
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Apr90_Tab_DisposalListAdmin, // EE04 1단계 (메뉴 #1253. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계) [2026-11-05 Apr01_Edit_ApprDoc 연결]
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)

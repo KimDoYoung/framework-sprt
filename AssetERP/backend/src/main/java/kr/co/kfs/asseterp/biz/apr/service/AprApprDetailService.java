@@ -47,11 +47,29 @@ public class AprApprDetailService {
     }
 
     /**
+     * 폐기문서 보기 (#1098 복원 화면 상세보기, AS-IS Apr01_Edit_ApprDoc.getApprDelModel L598-625) — apr99_appr_del의 문서를 같은 모양으로.
+     * 원본은 목록 행 모델을 그대로 넘겼다(목록 SQL과 같은 apr99 열). 로그인 회사의 문서만
+     */
+    public AprApprDetailRes getDelDetail(UserPrincipal user, Long apprId) {
+        AprApprDetailRes d = mapper.selectDetailDel(apprId, user.getCompanyId());
+        if (d == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return d;
+    }
+
+    /** 탭 조회(결재선·첨부·연관 등)의 문서 확인: 결재문서(apr01)가 없으면 폐기문서(apr99)도 본다 — getApprDelModel도 relateList.retrieve로 같은 탭을 읽는다 */
+    private AprApprDetailRes requireDoc(UserPrincipal user, Long apprId) {
+        AprApprDetailRes d = mapper.selectDetail(apprId, user.getCompanyId());
+        return d != null ? d : getDelDetail(user, apprId);
+    }
+
+    /**
      * AS-IS apr.Apr04_ApprStep.selectByApprId (server/apr/Apr04_ApprStep.java L69-343). 결재자 문구(stepApprName)를 서버가 만든다:
      * 결재 완료(20)인데 실결재자가 다르면 부)·대결)/본결), 아니면 대결자(apr07)·인감 (부)책임자 규칙. 문서 열기에 쓰는 baseDate는 문서의 상신일.
      */
     public List<AprApprStepRes> getSteps(UserPrincipal user, Long apprId) {
-        AprApprDetailRes doc = getDetail(user, apprId);
+        AprApprDetailRes doc = requireDoc(user, apprId);   // 폐기문서(#1098 상세보기)도 결재선을 보인다
         LocalDate regDate = doc.regDate().toLocalDate();
         List<AprApprStepRow> rows = mapper.selectSteps(apprId);
         List<AprApprStepRes> out = new ArrayList<>();
@@ -120,43 +138,43 @@ public class AprApprDetailService {
 
     /** AS-IS apr.Apr03_RelateFund.selectByApprId */
     public List<AprApprFundRes> getFunds(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectApprFunds(apprId);
     }
 
     /** AS-IS apr.Apr12_RelateAdv.selectByApprId */
     public List<AprApprAdvRes> getAdvs(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectApprAdvs(apprId);
     }
 
     /** AS-IS apr.Apr21_RelateAppr.selectByApprId */
     public List<AprRelateApprRes> getRelateApprs(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectRelateApprs(apprId);
     }
 
     /** AS-IS apr.Apr20_RelateIcs.selectByApprId */
     public List<AprRelateLawRes> getRelateIcs(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectRelateIcs(apprId);
     }
 
     /** AS-IS apr.Apr22_RelateIcr.selectByApprId */
     public List<AprRelateLawRes> getRelateIcr(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectRelateIcr(apprId);
     }
 
     /** AS-IS apr.Apr16_StampDoc.selectByApprId — 날인신청 탭 */
     public List<AprApprStampApplRes> getStampAppls(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectStampAppls(apprId);
     }
 
     /** AS-IS sys.Sys10_File.selectByParentId (첨부파일 탭) */
     public List<AprApprFileRes> getFiles(UserPrincipal user, Long apprId) {
-        getDetail(user, apprId);
+        requireDoc(user, apprId);
         return mapper.selectApprFiles(apprId);
     }
 

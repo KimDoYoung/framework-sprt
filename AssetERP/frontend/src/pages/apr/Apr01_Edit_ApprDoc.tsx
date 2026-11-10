@@ -80,6 +80,11 @@ interface Props {
   statusCode?: string | null;
   /** [닫기] 단추와 결재 처리(승인·반려·승인취소·상신취소) 뒤 (AS-IS callback.execute() 뒤 hide) — 부른 화면이 목록을 다시 읽는 용 */
   onClosed?: () => void;
+  /**
+   * 폐기문서 보기 (#1098 복원 화면, AS-IS getApprDelModel L598-625): apr99_appr_del의 문서를 읽기 전용으로 연다.
+   * 열람기록을 남기지 않고, 결재·저장·미리보기 등 단추를 모두 숨기고 [닫기]만 둔다(L615-622). 결재선·첨부 등 탭은 그대로 읽는다(relateList.retrieve)
+   */
+  deleted?: boolean;
   onClose: () => void;
 }
 
@@ -91,7 +96,7 @@ const Row: React.FC<{ label: string; children: React.ReactNode; grow?: boolean }
   </div>
 );
 
-export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, icsClassTreeId = null, link = null, onLinkSaved, statusCode, onClosed, onClose }) => {
+export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, icsClassTreeId = null, link = null, onLinkSaved, statusCode, onClosed, deleted = false, onClose }) => {
   const user = useLoginUser();
   const [doc, setDoc] = useState<AprApprDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
@@ -136,7 +141,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   /** 날인신청 줄 수와 제공처·제공목적·비고 (V14) */
   const stampDocRef = useRef<{ count: number; provideCo: string; purpose: string; note: string } | undefined>(undefined);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
-  const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
+  const editable = !deleted && (isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId));
   // EE68: 법규 선택창 — 고르기를 마칠 때까지 문서 열기를 기다린다 (AS-IS는 문서 위에 모달로 겹쳐 뜨고 확인 때 연관법규 줄에 넣는다)
   const [icsPick, setIcsPick] = useState<{ dcrClassTreeId: number; classTreeId: number } | null>(null);
   const icsResolve = useRef<((rows: AprRelateSelect[]) => void) | null>(null);
@@ -220,10 +225,11 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
           setDoc(d);
           return;
         }
-        const d = await aprDetailApi.getDetail(apprId!);
+        const d = deleted ? await aprDetailApi.getDelDetail(apprId!) : await aprDetailApi.getDetail(apprId!);
         if (!alive) return;
         setDoc(d);
         setForm(toForm(d));
+        if (deleted) return;   // getApprDelModel: 열람기록·북마크·결재 상태를 읽지 않는다
         if ((statusCode ?? d.statusCode) !== '99') void aprDetailApi.recordOpen(apprId!);
         const [bm, cs, st] = await Promise.all([aprDetailApi.isBookmarked(apprId!), aprDetailApi.getCommentSize(apprId!), aprActionApi.getState(apprId!)]);
         if (alive) { setBookmarked(bm); setCommentSize(cs); setState(st); }
@@ -513,7 +519,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const title = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       <span>{doc?.classTreeFullName ?? '문서상세'}</span>
-      {!isNew && (
+      {!isNew && !deleted && (
         <Space size={4}>
           <Button type="view" onClick={() => setHistoryOpen(true)}>열람기록</Button>
           <Button type="view" onClick={() => { refreshCommentSize(); setCommentOpen(true); }}>댓글 {commentSize}</Button>
@@ -537,16 +543,18 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       footer={
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {/* [E6] bookMarkAnchor.MouseDown (L493) → Apr50_Lookup_PersonList.open(apprId, cb) — 중요표시 설정 창은 V09 */}
-          <span
+          {!deleted && <span
             role="button"
             aria-label="북마크"
             style={{ cursor: 'pointer', fontSize: 24, color: bookmarked ? '#faad14' : '#bfbfbf' }}
             onMouseDown={() => { if (!isNew && apprId != null) setBookmarkOpen(true); }}
           >
             {bookmarked ? <StarFilled /> : <StarOutlined />}
-          </span>
+          </span>}
           <div style={{ flex: 1, textAlign: 'center' }}>
             <Space>
+              {/* 폐기문서 보기(deleted)는 getApprDelModel L615-622처럼 [닫기]만 */}
+              {!deleted && <>
               {/* [E24] updateButton[결재요청] · [E25] saveButton[저장] · [E14] deleteButton[삭제] — 편집 모드(내 임시저장·새 문서) */}
               {editable && <Button type="register" loading={saving} onClick={requestApproval}>결재요청</Button>}
               {editable && !(linkLock && !linkLock.saveVisible) && <Button type="save" loading={saving} onClick={save}>저장</Button>}
@@ -572,6 +580,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
               <Button type="view" onClick={() => next('PDF 미리보기는 V11에서 연결합니다.')}>미리보기</Button>
               {/* [E13] cancelButton[상신취소] — myTurnCheck(true) L1116-1118: 아무도 결재하지 않은 내 문서 */}
               {state?.canCancelRequest && <Button type="cancel" onClick={() => void cancelRequest()}>상신취소</Button>}
+              </>}
               {/* [E11] closeButton[닫기].Select [callback != null] (L1121) → callback.execute(), hide() */}
               <Button type="close" onClick={() => { onClosed?.(); onClose(); }}>닫기</Button>
               {/* [E7] cancelApprovalButton[승인취소] — retrieveApproval L725-727: 결재완료·반려가 아니고 내가 승인한 단계를 되돌릴 수 있을 때(AS-IS는 닫기 뒤에 붙는다) */}

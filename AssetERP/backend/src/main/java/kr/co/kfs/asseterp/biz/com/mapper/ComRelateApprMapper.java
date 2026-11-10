@@ -22,4 +22,6 @@ public interface ComRelateApprMapper {
     boolean selectApprButtonEnabled(@Param("companyId") Long companyId);
 
     int countPermission(@Param("apprId") Long apprId, @Param("empId") Long empId, @Param("orgId") Long orgId, @Param("companyId") Long companyId);
+
+    int countPermissionWithDel(@Param("apprId") Long apprId, @Param("empId") Long empId, @Param("orgId") Long orgId, @Param("companyId") Long companyId);
 }

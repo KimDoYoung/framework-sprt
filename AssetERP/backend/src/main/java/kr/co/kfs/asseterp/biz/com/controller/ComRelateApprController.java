@@ -55,4 +55,10 @@ public class ComRelateApprController {
     public ApiResponse<Boolean> permission(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
         return ApiResponse.ok(service.canView(principal, apprId));
     }
+
+    /** AS-IS apr.Apr01_Appr.permissionsCheckWithDel — 폐기문서 포함 열람권한 */
+    @GetMapping("/{apprId}/permission-with-del")
+    public ApiResponse<Boolean> permissionWithDel(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        return ApiResponse.ok(service.canViewWithDel(principal, apprId));
+    }
 }

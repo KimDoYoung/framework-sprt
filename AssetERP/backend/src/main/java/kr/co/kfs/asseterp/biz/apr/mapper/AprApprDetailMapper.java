@@ -24,6 +24,8 @@ public interface AprApprDetailMapper {
     /** AS-IS apr01_appr.selectById (회사 조건은 TOBE에서 더함) */
     AprApprDetailRes selectDetail(@Param("apprId") Long apprId, @Param("companyId") Long companyId);
 
+    AprApprDetailRes selectDetailDel(@Param("apprId") Long apprId, @Param("companyId") Long companyId);
+
     /** AS-IS apr04_appr_step.selectByApprId */
     List<AprApprStepRow> selectSteps(@Param("apprId") Long apprId);
 

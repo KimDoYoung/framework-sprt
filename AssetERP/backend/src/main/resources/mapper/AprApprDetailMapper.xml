@@ -56,6 +56,55 @@
         ]]>
     </select>
 
+    <!-- #1098 폐기문서 상세보기 (AS-IS Apr01_Edit_ApprDoc.getApprDelModel L598-625 — 원본은 Apr01_Tab_Restore 목록 행 모델을 그대로 썼다): selectDetail과 같은 열을 apr99_appr_del에서. 같은 문서가 두 번 폐기된 경우를 대비해 최근 1건 -->
+    <select id="selectDetailDel" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes">
+        <![CDATA[
+        SELECT apr99_appr_id                                                                    AS appr_id
+             , apr99_company_id                                                                 AS company_id
+             , apr99_class_tree_id                                                              AS class_tree_id
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)                                     AS class_tree_full_name
+             , dcr01_print_fund_yn                                                              AS print_fund_yn
+             , apr99_title                                                                      AS title
+             , apr99_inout_cd                                                                   AS in_out_type_code
+             , apr99_content                                                                    AS content
+             , apr99_reg_date                                                                   AS reg_date
+             , apr99_effect_date                                                                AS effect_date
+             , apr99_status_cd                                                                  AS status_code
+             , apr99_reg_emp_id                                                                 AS reg_emp_id
+             , emp01_kor_nm                                                                     AS reg_emp_name
+             , apr99_stamp_id                                                                   AS stamp_id
+             , apr10_stamp_nm                                                                   AS stamp_name
+             , apr99_stamp_position                                                             AS stamp_position
+             , f_cdnm('StampLocation', COALESCE(apr99_stamp_position, '1'), apr99_company_id, apr99_reg_date) AS stamp_position_name
+             , apr99_receive_nm                                                                 AS receive_name
+             , apr99_reference_nm                                                               AS reference_name
+             , apr99_sign_company                                                               AS sign_company
+             , apr99_sign_ceo                                                                   AS sign_ceo
+             , apr99_note                                                                       AS note
+             , apr99_link_cd                                                                    AS link_code
+             , dcr01_advert_yn                                                                  AS advert_yn
+          FROM apr99_appr_del
+               INNER JOIN emp01_person ON emp01_person_id = apr99_reg_emp_id
+               INNER JOIN emp03_trans t2 ON ( emp03_person_id = apr99_reg_emp_id
+                                              AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                         FROM emp03_trans
+                                                                        WHERE emp03_person_id = apr99_reg_emp_id
+                                                                          AND emp03_trans_date <= apr99_reg_date ) )
+               INNER JOIN org01_code ON org01_code_id = emp03_org_code_id
+               INNER JOIN org02_info ON ( org02_code_id = org01_code_id
+                                          AND org02_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                   FROM org02_info
+                                                                  WHERE org02_code_id = emp03_org_code_id
+                                                                    AND org02_mod_date <= emp03_trans_date ) )
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr99_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr10_stamp_id = apr99_stamp_id
+         WHERE apr99_appr_id = #{apprId}
+           AND apr99_company_id = #{companyId}
+         ORDER BY apr99_del_date DESC
+         LIMIT 1
+        ]]>
+    </select>
+
     <!-- AS-IS apr04_appr_step.selectByApprId. 단계 담당자의 (결재일 또는 오늘) 기준 발령. 정렬 f_to_number(apr04_seq), 단계코드, ID 그대로 -->
     <select id="selectSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprStepRow">
         <![CDATA[

@@ -36,6 +36,12 @@ public class AprApprDetailController {
         return ApiResponse.ok(service.getDetail(principal, apprId));
     }
 
+    /** 폐기문서 보기 (#1098, AS-IS Apr01_Edit_ApprDoc.getApprDelModel) — apr99_appr_del */
+    @GetMapping("/deleted-detail")
+    public ApiResponse<AprApprDetailRes> getDelDetail(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        return ApiResponse.ok(service.getDelDetail(principal, apprId));
+    }
+
     /** AS-IS apr.Apr04_ApprStep.selectByApprId (결재선) */
     @GetMapping("/steps")
     public ApiResponse<List<AprApprStepRes>> getSteps(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {

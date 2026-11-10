@@ -61,4 +61,10 @@ public class ComRelateApprService {
         Long orgId = aprNewMapper.selectOrgCodeId(user.getUserId());
         return mapper.countPermission(apprId, user.getUserId(), orgId, user.getCompanyId()) > 0;
     }
+
+    /** apr.Apr01_Appr.permissionsCheckWithDel — 폐기문서(apr99)까지 포함한 열람권한 (ApprCallbackResult(apprId, personId), #1098 상세보기) */
+    public boolean canViewWithDel(UserPrincipal user, Long apprId) {
+        Long orgId = aprNewMapper.selectOrgCodeId(user.getUserId());
+        return mapper.countPermissionWithDel(apprId, user.getUserId(), orgId, user.getCompanyId()) > 0;
+    }
 }

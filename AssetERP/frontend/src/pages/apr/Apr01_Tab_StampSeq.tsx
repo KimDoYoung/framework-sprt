@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_StampSeq.java (314줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L79-110: center=vlc, 바깥 여백 20 — 툴바(조회구간 시작 ~ 끝 · 인감선택 칸 200 · [조회]) + 인감대장 그리드(체크박스 단일 선택, 11열)
  * 메뉴명 "(X)"는 메뉴 사용 false라는 뜻이지만 사용자 요청으로 변환한다(01g)
- * 1단계(G01~G04와 같은 사유): [문서확인]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ * [문서확인] → 폐기 검사 → 열람권한(ApprCallbackResult) → 전자결재 문서 창 Apr01_Edit_ApprDoc (2026-11-10 연결, 전엔 안내만).
  * 사원찾기 lookupEmpInfo(L208-221)는 컬럼·툴바에 연결되지 않은 도달 불가 코드라 만들지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
@@ -18,6 +18,8 @@ import { AprStamp, AprStampSeq } from '@/types/apr';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Apr10_Lookup_Stamp } from './Apr10_Lookup_Stamp';
 
@@ -71,7 +73,7 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // [E4] messageBox.DialogHide [YES] (L242) → updatePutSeal() L253-274: apr.Apr01_Appr.updatePutSealEmpId — 인감확인자·확인일시를 채워 그 행을 갱신한다
+  // [E5] messageBox.DialogHide [YES] (L242) → updatePutSeal() L253-274: apr.Apr01_Appr.updatePutSealEmpId — 인감확인자·확인일시를 채워 그 행을 갱신한다
   const updatePutSeal = async (row: AprStampSeq) => {
     try {
       const res = await aprApi.updatePutSeal(row.apprId);
@@ -92,7 +94,19 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
     });
   };
 
-  // [E3] lookupEmpInfo.TriggerClick (L208) → 인라인 L208-221 (사원찾기로 putSealEmpId 변경): 도달 불가 — lookupEmpInfo가 컬럼·툴바에 연결되지 않아 만들지 않는다
+  // [E4] lookupEmpInfo.TriggerClick (L208) → 인라인 L208-221 (사원찾기로 putSealEmpId 변경): 도달 불가 — lookupEmpInfo가 컬럼·툴바에 연결되지 않아 만들지 않는다
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // ApprCallbackResult(apprId) L178-196 = apr.Apr01_Appr.permissionsCheck: 열람권한이 없으면 "해당문서의 열람권한이 없습니다"
+  const openPermitted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permission(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // buildGrid() L163-237 (체크박스 단일 선택)
   const columnDefs = useMemo(() => [
     gb.text('stampSeqText', 70, '대장번호'),  // L224
@@ -102,11 +116,11 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
     gb.textHtml('title', 500, '내용'),  // L228 addTextHtml
     gb.text('stampName', 200, '사용인감'),  // L229
     gb.text('receiveName', 300, '제출처'),  // L230
-    // editDocCell(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 ApprCallbackResult(열람권한 없으면 "해당문서의 열람권한이 없습니다") → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback)
-    // [생략] 편집창은 다음 단계
+    // [E3] editDocCell (ImageCell).callbackOnCreate (L185) → 인라인 L185-190: 문서 창을 닫으면 grid.unmask() — TOBE는 마스크가 없어 창 닫기만
+    // editDocCell(View) L167-199 → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 ApprCallbackResult(열람권한 없으면 "해당문서의 열람권한이 없습니다") → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback)
     iconCell<AprStampSeq>('view', 'actionCell', 80, '문서확인', row => {  // L231
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
-      else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+      else if (row.apprId != null) void openPermitted(row.apprId);
     }),
     // L232 updateCell(Edit) → updatePutSealConfirm() — setGridColmun이 보이게 한 경우만
     { ...iconCell<AprStampSeq>('edit', 'actionCell02', 80, '확인자입력', updatePutSealConfirm), hide: !putSealVisible },
@@ -146,6 +160,7 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
           />
         </div>
       </div>
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
       <Apr10_Lookup_Stamp
         open={stampOpen}
         checkflag

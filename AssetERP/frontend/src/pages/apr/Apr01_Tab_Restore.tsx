@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_Restore.java (291줄) + Apr01_Edit_ApprDoc(연결, getApprDelModel) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 생성자 L58-93: center = vlc(테두리) — 툴바 50(조회기간 시작 ~ 끝 · 담당부서 150 · 담당자 100 · 상신제목 250 · [조회][복구]) / 폐기문서 그리드(행번호, 체크박스 단일)
  * 스타일: SG (견본 — docs/page-style.md). 편집 팝업은 없고 [상세보기] 아이콘이 문서 보기 창(읽기 전용)을 연다 — yunhee가 AS-IS를 SGP로 보는 것은 연결 클래스 Apr01_Edit_ApprDoc 때문
- * 1단계: [상세보기]가 여는 Apr01_Edit_ApprDoc.getApprDelModel(폐기문서를 apr99에서 읽는 보기)은 아직 TOBE에 없어 사전 검사(열람권한) 뒤 안내만 띄운다 — 다음 단계
+ * [상세보기] → 열람권한(permissionsCheckWithDel) → Apr01_Edit_ApprDoc deleted 모드(getApprDelModel, apr99에서 읽기 전용) — 2026-11-10 연결, 전엔 안내만
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 5개이나 한 줄에 공간이 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +17,8 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { comRelateApprApi } from '@/api/com';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 
 const gb = gbFor<AprApprDel>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -83,6 +85,18 @@ export const Apr01_Tab_Restore: React.FC = () => {
     });
   };
 
+  /** 폐기문서 보기 창 (Apr01_Edit_ApprDoc.getApprDelModel) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // [E6] L144-178: ApprCallbackResult(apprId, 로그인 사용자) = apr.Apr01_Appr.permissionsCheckWithDel → 없으면 "해당문서의 열람권한이 없습니다"
+  const openDeleted = async (apprId: number) => {
+    try {
+      if (await comRelateApprApi.permissionWithDel(apprId)) setViewApprId(apprId);
+      else message.info('해당문서의 열람권한이 없습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // buildGrid() L140-192 — 체크박스 단일(setChecked SINGLE)
   const columnDefs = useMemo(() => [
     gb.date('regDate', 100, '등록일'),  // L180
@@ -90,8 +104,8 @@ export const Apr01_Tab_Restore: React.FC = () => {
     gb.text('classTreeNameAllPath', 400, '문서분류'),  // L182
     gb.text('title', 400, '상신제목'),  // L183
     // [E6] actionCell (ImageCell "View").callbackOnCreate (L156) L144-178: ApprCallbackResult(apprId, 로그인 사용자) → 열람권한 없으면 "해당문서의 열람권한이 없습니다",
-    //   있으면 Apr01_Edit_ApprDoc.getApprDelModel(model, false, callback → retrieve()) — 열람 확인·문서 보기 창은 다음 단계
-    iconCell<AprApprDel>('view', 'actionCell', 60, '상세보기', () => message.info('폐기문서 보기 창은 다음 단계에서 연결됩니다')),
+    //   있으면 Apr01_Edit_ApprDoc.getApprDelModel(model, false, callback → retrieve())
+    iconCell<AprApprDel>('view', 'actionCell', 60, '상세보기', row => { void openDeleted(row.apprId); }),
     gb.text('aprOrgName', 150, '담당부서'),  // L185
     gb.textCenter('aprPersonName', 100, '담당자'),  // L186
     gb.date('delDate', 100, '폐기일'),  // L187
@@ -131,6 +145,8 @@ export const Apr01_Tab_Restore: React.FC = () => {
           rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
         />
       </div>
+      {/* getApprDelModel 콜백(L157-160): 창을 닫으면 retrieve() */}
+      <Apr01_Edit_ApprDoc apprId={viewApprId} deleted onClosed={() => void retrieve()} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

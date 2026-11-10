@@ -72,6 +72,12 @@ export const comRelateApprApi = {
     const res = await apiClient.get<ApiResponse<boolean>>('v1/com/relate-apprs/appr-button');
     return res.data.data ?? false;
   },
+  /** AS-IS apr.Apr01_Appr.permissionsCheckWithDel — 폐기문서(apr99) 포함 열람권한 (#1098) */
+  permissionWithDel: async (apprId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/com/relate-apprs/${apprId}/permission-with-del`);
+    return res.data.data ?? false;
+  },
+
   /** AS-IS apr.Apr01_Appr.permissionsCheck — 상세보기 열람권한 */
   permission: async (apprId: number): Promise<boolean> => {
     const res = await apiClient.get<ApiResponse<boolean>>(`v1/com/relate-apprs/${apprId}/permission`);

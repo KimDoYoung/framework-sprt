@@ -2,7 +2,7 @@
  * 문서작성 > 02. 문서검색 > (X)종목별 문서검색 > 오른쪽 문서 목록 (F07, 1단계)
  * AS-IS: myApp/client/vi/apr/Apr01_Grid_ItemDocList.java (167줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L40-95: vlc 테두리 = 툴바(50: ◉연관종목만 ◉연관종목운용펀드포함 · 검색 [200] · [조회]) / 문서 그리드(체크박스 단일, 행번호 표시)
- * 1단계(F01~F06과 같은 사유): 상세보기 아이콘이 여는 Apr01_Edit_ApprDoc은 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * 상세보기 아이콘 → 전자결재 문서 창 Apr01_Edit_ApprDoc (2026-11-10 연결, 전엔 안내만).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -14,6 +14,7 @@ import { AstItemTreeNode } from '@/types/ast';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 
 const gb = gbFor<AprItemDocRow>();
 
@@ -32,6 +33,8 @@ export const Apr01_Grid_ItemDocList: React.FC<Props> = ({ node }) => {
   const [rows, setRows] = useState<AprItemDocRow[]>([]);
   const [loading, setLoading] = useState(false);
   const seq = useRef(0);
+  /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   // public retrieve() L116-130: apr.Apr01_Appr.selectByItemDocList (검색어는 SQL이 %…%로)
   const retrieve = async (target: AstItemTreeNode | null = node, type: string = searchType) => {
@@ -71,9 +74,9 @@ export const Apr01_Grid_ItemDocList: React.FC<Props> = ({ node }) => {
     gb.text('classTreeNameAllPath', 500, '문서분류'),  // L86
     gb.text('title', 500, '상신제목'),  // L87
     gb.text('note', 150, '비고'),  // L88
+    // [E3] detailCell (ImageCell).callbackOnCreate (L117) → 인라인 L117-121
     // L89 actionCell(Detail): Apr01_Edit_ApprDoc.retrieveApproval(model, isAdmin=false, callback: 없음)
-    // [L89 생략] 편집창은 다음 단계
-    iconCell<AprItemDocRow>('view', 'actionCell', 60, '상세보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
+    iconCell<AprItemDocRow>('view', 'actionCell', 60, '상세보기', row => setViewApprId(row.apprId)),
     gb.text('fileName', 500, '첨부파일'),  // L90
   ], []);
 
@@ -98,6 +101,7 @@ export const Apr01_Grid_ItemDocList: React.FC<Props> = ({ node }) => {
           rowSelection={ROW_SELECTION}
         />
       </div>
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

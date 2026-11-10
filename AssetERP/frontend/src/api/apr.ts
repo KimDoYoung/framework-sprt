@@ -582,6 +582,12 @@ export const aprDetailApi = {
     return res.data.data;
   },
 
+  /** 폐기문서 보기 (#1098, AS-IS Apr01_Edit_ApprDoc.getApprDelModel) — apr99_appr_del의 문서 */
+  getDelDetail: async (apprId: number): Promise<AprApprDetail> => {
+    const res = await apiClient.get<ApiResponse<AprApprDetail>>(`v1/apr/apprs/${apprId}/deleted-detail`);
+    return res.data.data;
+  },
+
   /** AS-IS apr.Apr04_ApprStep.selectByApprId: 결재선 (결재자 문구는 서버가 만든다) */
   getSteps: async (apprId: number): Promise<AprApprStep[]> => {
     const res = await apiClient.get<ApiResponse<AprApprStep[]>>(`v1/apr/apprs/${apprId}/steps`);
