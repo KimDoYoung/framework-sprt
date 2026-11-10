@@ -212,9 +212,9 @@ export const Tdm52_Tab_CheckManl: React.FC = () => {
   return (
     <>
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
-      <Splitter.Panel defaultSize={220} min={120} max={600}>
+      <Splitter.Panel defaultSize="50%" min={120}>
         <div style={{ height: '100%', padding: '20px 20px 0', boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', boxSizing: 'border-box' }}>
               <b>점검년월</b>
               <QuickMoveField {...ym} onChange={setYm} onCommit={v => { void retrieve(v, checker); }} />

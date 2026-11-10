@@ -123,7 +123,7 @@ export const Apr90_Tab_DisposalAppr: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <SearchBar
         onSearch={() => void retrieve()}
         searchText="조회"

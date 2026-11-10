@@ -328,7 +328,7 @@ export const Tdm59_TabPage_CheckAppr: React.FC<Props> = ({ target, onChanged }) 
   const label: React.CSSProperties = { color: '#262d3f', fontSize: 12 };
 
   return (
-    <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', overflowY: 'auto' }}>
+    <div style={{ height: '100%', boxSizing: 'border-box', overflowY: 'auto' }}>
       <div style={barStyle}>
         <b style={label}>■ 점검상세</b>
         {/* [E1] searchText.KeyPress [Enter] (L134) → retrieve01() */}

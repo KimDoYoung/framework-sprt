@@ -674,6 +674,10 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           colorPrimary: '#1677ff',
           fontFamily: currentFontOpt.cssFamily,
         },
+        components: {
+          // 분할선(Splitter) 색 — antd 기본(평상시 ≈ #f5f5f5)은 거의 안 보여 파랑 계열로. 평상시 blue-3 → hover blue-4 → 드래그 blue-5 (2026-11-10)
+          Splitter: { controlItemBgHover: '#91caff', controlItemBgActive: '#69b1ff', controlItemBgActiveHover: '#4096ff' },
+        },
       }}
     >
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

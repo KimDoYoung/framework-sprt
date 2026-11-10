@@ -268,9 +268,9 @@ export const Tdm59_Tab_CheckAppr: React.FC = () => {
   return (
     <>
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
-      <Splitter.Panel defaultSize="30%" min={150} max={600}>
+      <Splitter.Panel defaultSize="50%" min={150}>
         <div style={{ height: '100%', padding: '20px 20px 0', boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 'none', height: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', boxSizing: 'border-box' }}>
               <b>점검년월</b>
               {/* [E1 생략] quickMoveField (QuickMoveField).callbackOnCreate (L59) — 생성 완료 때 부를 setInitRoleId()는 AS-IS도 주석 처리(L63) */}

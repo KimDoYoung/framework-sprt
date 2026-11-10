@@ -190,7 +190,7 @@ export const Tdm43_Tab_ManlItemReg: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="50%" min={100}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
             <SearchBar onSearch={onSearch} extra={<Button type="register" onClick={loadDuties}>불러오기</Button>}>
               <SearchBar.Field label="매뉴얼작업">
                 <LookupInput width={250} value={manlJob.name ?? ''} placeholder="필수선택입니다" onOpen={() => setJobLookup({ checkYn: !isManager })} />

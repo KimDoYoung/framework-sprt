@@ -113,7 +113,7 @@ export const Tdm50_Tab_DutyProgress: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <SearchBar onSearch={() => createData()}>
           <SearchBar.Field label="기준년월">
             {/* QuickMoveField: ◀▶·월 콤보·연도 Enter가 곧바로 createData() (콜백 L53-58) */}

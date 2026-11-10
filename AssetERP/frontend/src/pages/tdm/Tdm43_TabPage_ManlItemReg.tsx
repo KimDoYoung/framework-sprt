@@ -139,7 +139,7 @@ export const Tdm43_TabPage_ManlItemReg: React.FC<Props> = ({ target, onEndChange
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderBottom: '1px solid #d9d9d9' }}>
         <b style={{ color: '#15428b' }}>▼ 점검항목:</b>
         <Space>

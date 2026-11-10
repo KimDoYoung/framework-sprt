@@ -244,7 +244,7 @@ export const Tdm51_TabPage_CheckOrg: React.FC<Props> = ({ target, onChanged }) =
   }, [rows]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', boxSizing: 'border-box', borderBottom: '1px solid #d9d9d9' }}>
         {/* [E1] searchText.KeyPress [Enter] (L120) → retrieve() */}
         <Input style={{ width: 280 }} placeholder="검색어(관리의무/점검항목/점검자) 입력후 엔터" value={searchText} allowClear

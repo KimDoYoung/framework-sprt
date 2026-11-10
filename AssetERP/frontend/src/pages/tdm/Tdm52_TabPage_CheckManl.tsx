@@ -149,7 +149,7 @@ export const Tdm52_TabPage_CheckManl = forwardRef<Tdm52_TabPage_CheckManlHandle,
   }, [endYn]);
 
   return (
-    <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', boxSizing: 'border-box' }}>
       <MultiGrid<TdmCheckManlDetail>
         gridRef={gridRef}
         rowData={rows}
