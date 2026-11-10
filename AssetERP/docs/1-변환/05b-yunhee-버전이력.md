@@ -1,6 +1,14 @@
 # 05b. yunhee 버전별 사용 기록 (옛 05 §7 첫 문단)
 
-2026-10-29에 `05-작업방법.md` §7의 긴 버전 문단을 분리했다. 기준 버전·세션 시작 절차는 05 §7에 있고, 이 문서는 버전별 한계·새 기능을 확인해야 할 때(막힐 때, 버전이 바뀔 때)만 연다. 새 버전 기록은 맨 위에 더한다.
+2026-10-29에 `05-작업방법.md` §7의 긴 버전 문단을 분리했다. 기준 버전·세션 시작 절차는 `변환-가이드.md` 5절에 있고, 이 문서는 버전별 한계·새 기능을 확인해야 할 때(막힐 때, 버전이 바뀔 때)만 연다. 새 버전 기록은 맨 위에 더한다.
+
+## 0.8.4 (2026-11-10, 업무분석 SYS-BZ-0021 뒤 `changelog --since 0.7.3`로 확인)
+
+- **`trace-crud`·`trace-pair`(0.8.4~)**: 수정사항051의 오탐(`save:`/`remove:`로 넘긴 API, 매퍼 쓰기 문장)이 해결됐다 — #1077·#1078·#1197·#1360·#1353·#1500·#1302·#1304·#1404가 실제 실행(`api --track`)과 일치. **남은 오탐(수정사항052)**: ① API 함수가 같은 객체의 다른 함수를 거쳐 부르면 놓친다(`fileApi.checkFileDelete` → `checkFileDeleteResult` — #1298 `sys11_relate_file ⚠ TOBE에 D 없음`은 틀림, 같은 꼴 15화면) ② AS-IS 서블릿(`FileDelete`·`FileUpload`) 쓰기를 못 세 `sys10_file`이 "TOBE에 D 추가"·"TOBE에만"으로 나온다. 화면 하나에 약 24초 — 여러 화면은 나눠 돌리거나 `run_in_background`.
+- **`api`(0.8.4~)**: `-c <회사>`만으로 그 회사 서브도메인에 접속(전에는 `-t`도 필요). 응답 필터 `--fields a,b`(TSV)·`--where k=v`·`--count-by k`, 세션 새로 `--fresh`. `api --log`에 500의 가장 안쪽 원인 한 줄.
+- **`screen-desc <번호,번호…>`(0.8.3~)**: 화면번호로 메뉴·TOBE 파일·SID·조회조건·버튼·그리드·팝업·API·SQL·테이블·AS-IS 서비스·이벤트를 한 번에(`-s` 요약, `--section`). 업무분석·변환의 첫 조사로 쓴다. `useGridCrud`로 넘긴 API는 "호출 API 없음"으로 나올 수 있다(#1302 — trace-pair는 찾음).
+- **`analysis method <클래스>`(0.8.4~)**: 메서드 없이 주면 메서드 목록. 겹치는 이름은 `'Cls.m#2'`로 고른다. 모든 명령에 `-h`.
+- **그 밖(0.7.4~0.8.1)**: `api --track <테이블>`(전후 행 수·새 PK), `analysis callers <클래스>`(팝업을 여는 곳), `trace-gap --stubs`(미연결 안내 모음), `port-sql`/`analysis sql`의 DB 없는 객체 경고와 서비스 이름(`dom.Class.method`) 해석, `page-style --all --modal`(모달 SID MF·MG·MFG·MH), `screen-capture --range`·`--set`·`--modal-only`. `rag-*`·`agent`는 이 프로젝트에서 쓰지 않는다.
 
 ## 0.7.3 (2026-11-04, EE44 세션 시작에서 `changelog --since 0.7.0`로 확인)
 
