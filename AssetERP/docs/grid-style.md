@@ -58,8 +58,8 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 | `addTextRight` | `gb.textRight` | 오른쪽 |
 | `addTextArea` | `gb.textArea` | 왼쪽, 줄바꿈 유지·행 높이 자동 |
 | `addTextStatus` | `gb.textStatus` | 완료/점검진행 파랑, 반려/승인반려 빨강, 미흡/개선 주황 (굵게) |
-| `addLong` | `gb.long` | 오른쪽, 천단위 콤마 |
-| `addLongCenter` | `gb.longCenter` | 가운데, 천단위 콤마 |
+| `addLong` | `gb.long` | 오른쪽, 천단위 콤마 (열 이름이 `…Id`면 왼쪽 정렬·콤마 없음 — UX-13) |
+| `addLongCenter` | `gb.longCenter` | 가운데, 천단위 콤마 (UX-13 같음) |
 | `addLongColor` | `gb.longColor` | 오른쪽, **음수 빨강·양수 파랑** (원본 그대로) |
 | `addLongSecond(…, color)` | `gb.longSecond(f, w, h, color)` | 오른쪽, 굵은 정수(콤마 없음), 0·빈 값은 회색 0, 그 밖은 color |
 | `addDouble` | `gb.double` | 오른쪽, `#,###.######` |

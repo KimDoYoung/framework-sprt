@@ -1,5 +1,5 @@
 import type { ColDef, ColGroupDef } from 'ag-grid-community';
-import { fmtDate, fmtDouble, fmtLong, numComparator } from './format';
+import { fmtDate, fmtDouble, fmtId, fmtLong, isIdField, numComparator } from './format';
 import { BookmarkCell, CheckCell, HtmlCell, LockCell, LongSecondCell, PinCell, SignColorCell, StatusCell } from './renderers';
 
 /**
@@ -98,10 +98,12 @@ export function gbFor<T>() {
     bookmarkYn: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', { cellRenderer: BookmarkCell, sortable: false }, o),
 
     // ── 숫자 ──
-    /** addLong: 오른쪽 정렬, 천단위 콤마 */
-    long: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'right', num(fmtLong), o),
-    /** addLongCenter */
-    longCenter: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', num(fmtLong), o),
+    /** addLong: 오른쪽 정렬, 천단위 콤마 (UX-13: 이름이 `…Id`인 열은 왼쪽 정렬·콤마 없음) */
+    long: (f: Field, w: number, h: string, o?: GbOpts<T>) =>
+      isIdField(f) ? col(f, w, h, 'left', num(fmtId), o) : col(f, w, h, 'right', num(fmtLong), o),
+    /** addLongCenter (UX-13 같음) */
+    longCenter: (f: Field, w: number, h: string, o?: GbOpts<T>) =>
+      isIdField(f) ? col(f, w, h, 'left', num(fmtId), o) : col(f, w, h, 'center', num(fmtLong), o),
     /** addLongColor: 음수 빨강 · 양수 파랑 (원본 그대로) */
     longColor: (f: Field, w: number, h: string, o?: GbOpts<T>) =>
       col(f, w, h, 'right', { ...num(fmtLong), cellRenderer: SignColorCell, cellRendererParams: { kind: 'long' } }, o),

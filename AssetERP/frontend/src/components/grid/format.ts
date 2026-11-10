@@ -12,6 +12,13 @@ export const toNum = (v: unknown): number => {
 export const fmtLong = (v: unknown): string =>
   v === undefined || v === null || v === '' ? '' : toNum(v).toLocaleString('ko-KR', { maximumFractionDigits: 0 });
 
+/** UX-13: 키 값(ID) 정수 — 쉼표 없음 */
+export const fmtId = (v: unknown): string =>
+  v === undefined || v === null || v === '' ? '' : String(Math.trunc(toNum(v)));
+
+/** UX-13: 이름이 `…Id`인 열(parentId·fileId …)은 키 값이라 쉼표를 찍지 않는다 */
+export const isIdField = (field: unknown): boolean => typeof field === 'string' && /Id$/.test(field);
+
 /** NumberCell<Double>("#,###.######"): 소수 6자리까지 */
 export const fmtDouble = (v: unknown): string =>
   v === undefined || v === null || v === '' ? '' : toNum(v).toLocaleString('ko-KR', { maximumFractionDigits: 6 });

@@ -37,6 +37,31 @@ export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
   /** 모든 셀을 세로 가운데로 (AS-IS는 전부 vertical center — 03 원칙 20, 기본 true. 끄려면 `vCenter={false}`) */
   vCenter?: boolean;
   wrapperStyle?: CSSProperties;
+  /**
+   * UX-14 그리드 안에서 거르기: 헤더 아래에 열마다 글자 입력칸(포함 검색)을 둔다. 받은 행만 거르고 서버 조회는 그대로.
+   * 값이 있는 열(`field`)에만 붙는다(아이콘 열 제외). 셀에 보이는 글자(valueFormatter 결과)로 비교한다 — 날짜는 'yyyy-mm-dd', ID는 쉼표 없음
+   */
+  filterable?: boolean;
+}
+
+/** UX-14: 보이는 글자로 포함 검색하는 열 필터 */
+function withTextFilter<T>(c: ColDef<T> | ColGroupDef<T>): ColDef<T> | ColGroupDef<T> {
+  if ('children' in c) return { ...c, children: c.children.map(withTextFilter) };
+  if (!c.field || c.filter !== undefined) return c;
+  const fmt = typeof c.valueFormatter === 'function' ? c.valueFormatter : undefined;
+  return {
+    ...c,
+    filter: 'agTextColumnFilter',
+    floatingFilter: true,
+    suppressFloatingFilterButton: true,
+    filterParams: { filterOptions: ['contains'], maxNumConditions: 1 },
+    filterValueGetter: p => {
+      const v = (p.data as Record<string, unknown> | undefined)?.[c.field as string];
+      if (v === undefined || v === null) return '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return fmt ? String(fmt({ ...p, value: v } as any) ?? '') : String(v);
+    },
+  };
 }
 
 const ROWNUM_ID = '__rownum';
@@ -72,6 +97,7 @@ export function BaseGrid<T>({
   sumRow,
   vCenter = true,
   wrapperStyle,
+  filterable = false,
   columnDefs,
   defaultColDef,
   rowData,
@@ -81,10 +107,10 @@ export function BaseGrid<T>({
   onRowDataUpdated,
   ...rest
 }: BaseGridProps<T>) {
-  const cols = useMemo<(ColDef<T> | ColGroupDef<T>)[]>(
-    () => (rowNumber ? [rowNumberCol as ColDef<T>, ...(columnDefs ?? [])] : [...(columnDefs ?? [])]),
-    [rowNumber, columnDefs],
-  );
+  const cols = useMemo<(ColDef<T> | ColGroupDef<T>)[]>(() => {
+    const data = filterable ? (columnDefs ?? []).map(withTextFilter) : [...(columnDefs ?? [])];
+    return rowNumber ? [rowNumberCol as ColDef<T>, ...data] : data;
+  }, [rowNumber, columnDefs, filterable]);
 
   const colDef = useMemo<ColDef<T>>(
     () => ({ sortable, resizable: true, suppressHeaderMenuButton: true, ...defaultColDef }),

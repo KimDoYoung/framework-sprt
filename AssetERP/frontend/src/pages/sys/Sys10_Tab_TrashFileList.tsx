@@ -40,9 +40,10 @@ export const Sys10_Tab_TrashFileList: React.FC = () => {
   // checkFileDelete() L172-197: 연결만 지움(1) → 다시 조회 / 사용 중(2) → 안내 / 지워도 됨(3) → FileDelete → [E1] fileDeleteForm.SubmitComplete (L84) → retrieve()
   const checkFileDelete = async (row: FileInfo) => {
     try {
-      const status = await fileApi.checkFileDelete(row.fileId, row.parentId);
+      // 상태 2 문구는 서버 것(result.getMessage()) — 상신문서 사용 중(02) / 사용중인 파일(03) 두 가지
+      const { status, message: inUseMessage } = await fileApi.checkFileDeleteResult(row.fileId, row.parentId);
       if (status === FILE_DELETE_STATUS.IN_USE) {
-        message.warning('해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
+        message.warning(inUseMessage ?? '해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
         return;
       }
       if (status === FILE_DELETE_STATUS.DELETABLE) await fileApi.deleteFile(row.fileId);
@@ -88,7 +89,8 @@ export const Sys10_Tab_TrashFileList: React.FC = () => {
         <Button type="delete" onClick={() => undefined}>일괄삭제</Button>
       } />
       <div style={{ flex: 1, minHeight: 0 }}>
-        <CellEditGrid<FileInfo> crud={crud} columnDefs={columnDefs} rowSelection={{ mode: 'singleRow', checkboxes: false }} />
+        {/* UX-14: 받은 목록을 열마다 글자로 거른다(경로로 회사, 파일명, 등록일 등) */}
+        <CellEditGrid<FileInfo> crud={crud} columnDefs={columnDefs} filterable rowSelection={{ mode: 'singleRow', checkboxes: false }} />
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
     </div>
