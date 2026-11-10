@@ -306,6 +306,12 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   // ── 메뉴 클릭 및 화면번호 검색 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
   const handleSelectMenuLevel_3 = (item: MenuLevel_3, _parent: MenuLevel_1) => {
     setSelectedMenuLevel_3_Code(item.code);
+    // admin 회사의 고정 첫 탭(initial-company)이 이미 같은 화면이면 새 탭을 열지 않고 그 탭을 고른다 (#1075 중복 탭 방지, 2026-11-10)
+    const homeNode = model.getNodeById('tab-mypage') as TabNode | undefined;
+    if (item.classNm === 'Sys01_Tab_Company' && homeNode?.getComponent() === 'initial-company') {
+      model.doAction(Actions.selectTab('tab-mypage'));
+      return;
+    }
     const tabId = `tab-${item.code}`;
 
     const existingNode = model.getNodeById(tabId);

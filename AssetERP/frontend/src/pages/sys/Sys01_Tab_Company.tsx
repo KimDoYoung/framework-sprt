@@ -27,9 +27,10 @@ const gb = gbFor<Company>();
 
 /** AS-IS buildGrid() L181-230 (색인 Grid Spec). ⚠DB없음으로 표시된 이름 컬럼은 SQL이 f_cdnm으로 계산한다 */
 const buildGrid = () => [
-  gb.booleanYn2('loginSecureYn', 100, '보안로그인'),  // L185
-  gb.text('companyNm', 200, '고객명'),  // L186
-  gb.textCenter('locNm', 120, 'Sub-Domain'),  // L187
+  // 보안로그인·고객명·Sub-Domain은 가로 스크롤해도 왼쪽 고정(사용자 요청 2026-11-10)
+  { ...gb.booleanYn2('loginSecureYn', 100, '보안로그인'), pinned: 'left' as const },  // L185
+  { ...gb.text('companyNm', 200, '고객명'), pinned: 'left' as const },  // L186
+  { ...gb.textCenter('locNm', 120, 'Sub-Domain'), pinned: 'left' as const },  // L187
   gb.textCenter('icamCompanyCd', 80, 'ICAM<br>운용사코드'),  // L191
   gb.textCenter('icamAdvisCompanyCd', 80, 'ICAM<br>자문사코드'),  // L192
   gb.booleanYn2('useYn', 80, '사용여부'),  // L193
