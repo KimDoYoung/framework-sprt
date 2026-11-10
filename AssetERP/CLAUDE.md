@@ -65,6 +65,7 @@ ID별 교훈은 쓰지 않는다. 같은 실수가 있으면 새로 쓰지 말�
 
 - `yunhee mapper-run`·`compare`에 `-p flag=false`(불리언)를 주지 않는다 → 글자라 `<if>`가 늘 참. 분기 있는 조회는 `yunhee api`로 확인.
 - `yunhee grep`에 `-l -n -r --max-count`가 없다 → 모르는 옵션은 `--help`부터.
+- `yunhee api`를 `-u` 없이(=`admin` → `YUNHEE_TEST_ADMIN_USER` 104)로 다른 회사(`-c kalpa`·`-c admin`)에 부르거나 로그인이 틀린 채 반복하지 않는다 → kfstest 104가 5회 실패로 잠긴다(2026-11-10 두 번). 회사 관리자는 `YUNHEE_TEST_ADMIN_USER=admin YUNHEE_TEST_ADMIN_PASS=1111 yunhee api … -u admin -c <회사>`, 잠기면 그 회사 관리자로 `PUT /api/v1/sys/passwords/persons/{id}/unlock`. 로그인 실패가 한 번 나면 같은 계정으로 다시 부르지 않는다.
 - `sleep N` 뒤 `tail` 같은 대기는 훅이 막는다 → 배포는 `run_in_background` 완료 알림을 기다린다.
 - 한 줄 수정에 `sed -i`를 쓰지 않는다 → `Edit`.
 - `yunhee port-save` 결과의 열 이름을 믿지 않는다 → `yunhee table`로 열을 보고 손으로 맞춘다.
