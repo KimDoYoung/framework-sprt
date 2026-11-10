@@ -109,7 +109,7 @@ export const Ast09_Tab_DepositBookPeriod: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L153) → retrieve(), [E2] searchText.KeyPress [Enter] (L144) → retrieve() */}
         <SearchBar onSearch={retrieve} onReset={sp.reset} loading={loading} extra={<Button type="view" onClick={depositUpdate}>예금잔고정리</Button>}>
           <SearchBar.Field label="조회일자">

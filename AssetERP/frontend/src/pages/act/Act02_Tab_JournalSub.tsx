@@ -204,7 +204,7 @@ export const Act02_Tab_JournalSub: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E9] retrieveButton[조회].Select (L315) / [E8] searchText.KeyPress [Enter] (L306) → retrieve() */}
         <SearchPanel onSearch={retrieve} loading={loading} fieldsWidth={1200}>
           <SearchPanel.Row>

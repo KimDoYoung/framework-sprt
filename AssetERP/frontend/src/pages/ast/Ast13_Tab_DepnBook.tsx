@@ -203,7 +203,7 @@ export const Ast13_Tab_DepnBook: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E4] retrieveButton[조회].Select (L179) → retrieve(), [E3] searchText.KeyPress [Enter] (L167) → retrieve() */}
         <SearchBar onSearch={() => retrieve()} loading={loading} extra={<><Button type="download" onClick={downLoad}>출력/다운로드</Button><span style={{ fontSize: 12, color: '#456EA6', fontWeight: 'bold', marginLeft: 8 }}>※ 자산명 더블클릭시 불공제세액 관리 팝업창이 열립니다</span></>}>
           <SearchBar.Field label="보유일자">

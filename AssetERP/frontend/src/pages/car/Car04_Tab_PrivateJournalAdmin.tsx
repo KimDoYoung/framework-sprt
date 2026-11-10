@@ -241,7 +241,7 @@ export const Car04_Tab_PrivateJournalAdmin: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E5] retrieveButton[조회].Select (L185), [E3] stdMonth.KeyPress [Enter] (L154) → retrieve() */}
         <SearchBar
           onSearch={() => void retrieve()}

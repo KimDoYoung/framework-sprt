@@ -147,7 +147,7 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
       {/* [E1] retrieveButton[조회].Select (L103) → retrieve(). 초기화는 UX-02 */}
       <SearchBar onSearch={crud.retrieve} onReset={sp.reset} loading={crud.loading} extra={<>
         {/* [E2] insertButton[등록].Select (L109) → insertRow() L266-274 */}

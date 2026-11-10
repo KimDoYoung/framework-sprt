@@ -113,7 +113,7 @@ export const Bbs02_Tab_NoticeView: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E6] retrieveButton[조회].Select (L192) → retrieve() */}
         <SearchBar onSearch={() => void retrieve()} searchText="조회" loading={loading}>
           <SearchBar.Field label="공지구분">

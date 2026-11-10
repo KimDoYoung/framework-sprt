@@ -189,7 +189,7 @@ export const Apr10_Tab_Stamp: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E2] retrieveButton[조회].Select (L113) → retrieve() */}
           <Button type="search" onClick={crud.retrieve}>조회</Button>

@@ -198,7 +198,7 @@ export const Ast09_Tab_DepositBook: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L171) → retrieve(), [E1] searchText.KeyPress [Enter] (L155) → retrieve(), [E2] holdDate.ValueChange (L164) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}

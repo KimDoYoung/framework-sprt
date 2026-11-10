@@ -155,7 +155,7 @@ export const Car04_Tab_PublicJournal: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E0] 화면 열림 (생성자 L63-89) → settings() — 열 때 조회하지 않는다 */}
         {/* [E3] retrieveButton[조회].Select (L135), [E1] stdMonth.KeyPress [Enter] (L99) → retrieve() */}
         <SearchBar

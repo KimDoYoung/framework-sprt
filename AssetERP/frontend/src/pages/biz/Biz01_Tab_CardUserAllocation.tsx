@@ -89,7 +89,7 @@ export const Biz01_Tab_CardUserAllocation: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] retrieveButton[조회].Select (L79) → retrieve() · [E1] dataYMText.KeyPress [Enter] (L71) → retrieve() · [E4] dataYMText.KeyPress [Enter] (L102) → retrieve() (두 핸들러가 같은 일) */}
         <SearchBar
           onSearch={retrieve}

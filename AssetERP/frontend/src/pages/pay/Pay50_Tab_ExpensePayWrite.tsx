@@ -299,7 +299,7 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E8] retrieveButton[조회].Select (L239) / [E4] searchText.KeyPress [Enter] (L201) → retrieve() */}
         <SearchBar
           onSearch={() => void crud.retrieve()}

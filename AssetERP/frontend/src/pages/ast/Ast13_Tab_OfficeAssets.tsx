@@ -226,7 +226,7 @@ export const Ast13_Tab_OfficeAssets: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E8] retrieveButton[조회].Select (L239) → retrieve(), [E3] searchText.KeyPress [Enter] (L171) → retrieve() */}
         <SearchBar onSearch={() => retrieve()} loading={loading} extra={<Button type="download" onClick={downLoad}>출력/다운로드</Button>}>
           <SearchBar.Field label="보유일자">
