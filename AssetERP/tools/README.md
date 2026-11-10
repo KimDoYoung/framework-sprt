@@ -43,6 +43,12 @@
 |:---|:---|
 | `yunhee-benchmark.sh` + `yunhee-benchmark/` | 토큰 절감·정확성 벤치마크. 시나리오 `cases/`(17개), `lib.sh`, `report.py`, 결과 누적 (`--list`·`--history`·`--fast`) |
 
+## 정리 (삭제)
+
+| 파일 | 용도 |
+|:---|:---|
+| `clean-up.sh` | 쌓인 산출물 삭제. `--backup-db`(`data/backup/db`의 `*.dump` 전부), `--screen-capture`(`.yunhee/screen-capture` 하위 전부, 폴더는 남김), `--all`(둘 다). 대상 목록·크기를 보이고 `[y/N]`로 물은 뒤 지운다(`-y`면 묻지 않음). 옵션 없거나 모르는 옵션이면 도움말 + 종료코드 1 |
+
 ## 주의
 
 - 브라우저 화면 시험 도구(`screens/`, `smoke-frame.js`, `menus.sh`)는 2026-11-04에 삭제했다(git 이력에 있음). 시험 방법은 `테스트` 작업에서 정립한 뒤 새로 만든다. 그 전까지 ID 변환 중에는 브라우저 스크립트를 쓰지 않는다(`../docs/1-변환/06-결과확인.md` "화면시험 지연").
