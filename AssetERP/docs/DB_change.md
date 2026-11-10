@@ -194,3 +194,62 @@ CREATE INDEX sys55_menu_guide_company_idx01 ON public.sys55_menu_guide_company U
 
   COMMIT;
 ```  
+
+---
+
+```sql
+-- DROP FUNCTION public.f_check_use_org_id(numeric);
+
+CREATE OR REPLACE FUNCTION public.f_check_use_org_id(p_org_id numeric)
+ RETURNS numeric
+ LANGUAGE plpgsql
+AS $function$
+-----------------------------------------------------------------------------------------
+DECLARE
+    c_DATA      RECORD;
+    v_SQL       TEXT;
+    v_COUNT     NUMERIC := 0;
+    v_TCOUNT    NUMERIC := 0;
+-----------------------------------------------------------------------------------------
+BEGIN
+    -------------------------------------------------------------------------------------
+    FOR c_DATA IN ( SELECT table_name, column_name
+                      FROM information_schema.COLUMNS
+                     WHERE table_catalog = current_database()
+                       AND column_name LIKE '%org_id'
+                       AND table_name  NOT LIKE '%_back'
+                       AND table_name  NOT LIKE SUBSTR(table_name,1,3)||'bak%'
+                     ORDER BY 1,2
+    ) LOOP
+        ---------------------------------------------------------------------------------
+        v_SQL := 'SELECT COUNT(*)'
+               ||'  FROM '||c_DATA.table_name
+               ||' WHERE '||c_DATA.column_name||' = '||p_org_id;
+        ---------------------------------------------------------------------------------
+        --RAISE NOTICE 'v_SQL : %', v_SQL;
+        ---------------------------------------------------------------------------------
+        IF v_SQL IS NOT NULL THEN
+            EXECUTE v_SQL INTO v_COUNT;
+        END IF;
+        ---------------------------------------------------------------------------------
+        IF v_COUNT IS NULL THEN
+            v_COUNT := 0;
+        END IF;
+        ---------------------------------------------------------------------------------
+        IF v_COUNT > 0 THEN
+            RAISE NOTICE 'SQL(%건) : %', v_COUNT, v_SQL;
+            --RAISE NOTICE 'table_name : % / column_name : % / COUNT : %', c_DATA.table_name, c_DATA.column_name, v_COUNT;
+            --RETURN 1;
+        END IF;
+        ---------------------------------------------------------------------------------
+        v_TCOUNT := v_TCOUNT + v_COUNT;
+
+    END LOOP;
+    -------------------------------------------------------------------------------------
+    RETURN v_TCOUNT;
+-----------------------------------------------------------------------------------------
+EXCEPTION WHEN OTHERS THEN RETURN 0;
+END;
+$function$
+;
+```
