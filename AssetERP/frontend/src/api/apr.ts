@@ -1183,3 +1183,56 @@ export const aprRelateStampApi = {
     return res.data.data ?? 0;
   },
 };
+
+/** PDF 미리보기 요청 — AS-IS makePreviewPDF의 임시 문서(Apr01_ApprTemp.insert) 칸 + PDFViewer 인자. 서버는 PDF 시뮬레이터(AprPdfService) */
+export interface AprPdfPreviewReq {
+  apprId: number | null;
+  classTreeId: number | null;
+  formType: string | null;
+  /** 사내문서 "시스템에서 제공하는 기본 양식을 적용" [예] */
+  checkFlag: boolean;
+  inOutTypeCode: string;
+  title: string | null;
+  content: string | null;
+  effectDate: string | null;
+  regDate: string | null;
+  receiveName: string | null;
+  referenceName: string | null;
+  signCompany: string | null;
+  signCeo: string | null;
+  stampName: string | null;
+  stampPosition: string | null;
+  steps: { stepTypeName: string | null; empName: string | null; titleName: string | null }[];
+}
+
+/** 결재문서 PDF 미리보기 (AS-IS PDFViewer + apr.Apr10_StampPDF7) — `/api/v1/apr/pdfs` */
+export const aprPdfApi = {
+  /** dcr.Dcr30_Link.selectByClassTreeId → 링크코드 첫 글자(없으면 A) */
+  getFormType: async (classTreeId: number): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/apr/pdfs/form-type', { params: { classTreeId } });
+    return res.data.data || 'A';
+  },
+  /** apr.Apr10_Stamp.selectByPDFId — 결재완료 문서의 제목 파일 ID(없으면 null) */
+  getTitleFileId: async (apprId: number): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>(`v1/apr/pdfs/${apprId}/title-file`);
+    return res.data.data ?? null;
+  },
+  /** 화면 값으로 만든 미리보기 PDF */
+  preview: async (req: AprPdfPreviewReq): Promise<Blob> => {
+    try {
+      const res = await apiClient.post<Blob>('v1/apr/pdfs/preview', req, { responseType: 'blob' });
+      return res.data;
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+  /** 저장된 문서의 PDF (제목 파일이 없을 때 — 저장하지 않는다) */
+  docPdf: async (apprId: number, formType?: string): Promise<Blob> => {
+    try {
+      const res = await apiClient.get<Blob>(`v1/apr/pdfs/${apprId}`, { params: { formType }, responseType: 'blob' });
+      return res.data;
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+};

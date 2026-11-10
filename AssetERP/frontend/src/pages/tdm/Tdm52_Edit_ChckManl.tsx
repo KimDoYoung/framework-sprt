@@ -5,12 +5,12 @@
  *   오른쪽 = 점검상태·점검자·점검일자·점검결과(콤보 TdmCheckResult0001 + [조치계획등록] + [AI])·점검의견(310)
  * view(model) L101-114: 읽기 전용(점검완료·완료취소·저장·AI 숨김, 조치계획 단추 문구 "조치계획확인") / edit(model, cb) L116-130: 점검일자·점검결과·점검의견만 편집(점검일자가 비면 오늘)
  * [증빙자료(n건)]은 증빙자료 창(Tdm00_Lookup_RelateAppr "tdm52")을 연다(2026-11-05 연결, 13-누락대장 2번 — 창 안 [불러오기]는 보류, Com01_Lookup_RelateAppr 머리 참고).
- * 다음 단계: [AI] 점검의견 자동 작성(BotService 외부 AI 서버)은 안내만
+ * [AI] 점검의견 자동 작성(BotService 외부 AI 서버)은 2026-11-10 연결 — 개발 서버는 AI 시뮬레이터(tools/run-ext-server.sh)가 답한다
  * UX보강(10): 해당 없음
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { DatePicker, Input, Modal, Space, Typography, message } from 'antd';
+import { DatePicker, Input, Modal, Space, Spin, Typography, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
@@ -94,10 +94,21 @@ export const Tdm52_Edit_ChckManl: React.FC<Props> = ({ target, onChanged, onClos
     setInsuff({ manl: flush(), mode: isReadOnly ? 'view' : 'edit', stdDate });
   };
 
-  // [E3] botButton[AI].Select (L204) → callBot() L458-484 — 다음 단계: 점검결과가 없으면 안내, 있으면 AI 서버 연동 전 안내
-  const callBot = () => {
-    if (!resultCode) { message.warning('점검결과를 선택해주세요'); return; }
-    message.info('AI 점검의견 작성(BotService)은 다음 단계에서 연결됩니다');
+  // [E3] botButton[AI].Select (L204) → callBot() L458-484: 점검결과가 없으면 안내, 있으면 점검의견 칸을 "작성중"으로 가리고
+  //   tdm.Tdm52_ChckManl.getBotCheckCmnt(점검항목·점검방법·점검결과 이름) → 성공이면 점검의견 칸을 AI 글로 바꾼다(저장은 [저장]). 개발은 tools/ext-simulator
+  const [botBusy, setBotBusy] = useState(false);
+  const callBot = async () => {
+    const m = flush();
+    if (!m.checkResultCode) { message.warning('점검결과를 선택해주세요'); return; }
+    setBotBusy(true);
+    try {
+      const text = await tdmApi.getBotCheckCmnt({ checkItem: m.checkItem ?? null, checkHow: m.checkHow ?? null, checkResultName: m.checkResultName ?? null });
+      setCmnt(text ?? '');
+    } catch (err) {
+      message.warning(errorMessage(err, 'ai 점검의견 작성중 오류발생'));
+    } finally {
+      setBotBusy(false);
+    }
   };
 
   // [E4] fileButton[증빙자료(n건)].Select (L212) → lookupFile() L400-424: 읽기 전용이면 view("tdm52", chckManlId, null),
@@ -214,7 +225,10 @@ export const Tdm52_Edit_ChckManl: React.FC<Props> = ({ target, onChanged, onClos
               </Space>
             </Row>
             <Row label="점검의견" blue top>
-              <Input.TextArea readOnly={!editable} style={{ height: 310, resize: 'none' }} value={cmnt} onChange={e => setCmnt(e.target.value)} />
+              {/* checkCmnt.mask("작성중") L466 */}
+              <Spin spinning={botBusy} tip="작성중">
+                <Input.TextArea readOnly={!editable} style={{ height: 310, resize: 'none' }} value={cmnt} onChange={e => setCmnt(e.target.value)} />
+              </Spin>
             </Row>
           </div>
         </div>

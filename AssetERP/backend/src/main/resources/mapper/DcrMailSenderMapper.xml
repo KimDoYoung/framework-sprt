@@ -108,6 +108,22 @@
                , #{req.titleText}, #{req.bodyText} )
     </insert>
 
+    <!-- AS-IS tmp_token.deleteByPersonId L46 (IDMS-IC) — TokenService.returnToken: 그 사원의 옛 SSO 토큰을 지운다 -->
+    <delete id="deleteTokenByPersonId">
+        DELETE FROM tmp_token
+         WHERE token_person_id = #{personId}
+    </delete>
+
+    <!-- AS-IS tmp_token.insertByToken L36 (IDMS-IC) — 새 메일 시스템(assetMail)이 sso_token으로 사원을 확인한다 -->
+    <insert id="insertToken">
+        INSERT INTO tmp_token
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{personId}
+             , #{token}
+             , f_sysdate()
+    </insert>
+
     <!-- AS-IS dcr11_mail_file_history.insertMailFileHistory -->
     <insert id="insertMailFileHistory">
         INSERT INTO dcr11_mail_file_history ( dcr11_mail_file_history_id, dcr11_mail_history_id, dcr11_file_id )

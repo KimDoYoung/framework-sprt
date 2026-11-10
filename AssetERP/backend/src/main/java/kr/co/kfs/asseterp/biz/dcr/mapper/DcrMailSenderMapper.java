@@ -40,6 +40,12 @@ public interface DcrMailSenderMapper {
     /** AS-IS dcr10_mail_history.insertMailHistory */
     int insertMailHistory(@Param("id") Long id, @Param("personId") Long personId, @Param("req") kr.co.kfs.asseterp.biz.dcr.dto.DcrMailHistorySaveReq req);
 
+    /** AS-IS tmp_token.deleteByPersonId (TokenService.returnToken) */
+    int deleteTokenByPersonId(@Param("personId") Long personId);
+
+    /** AS-IS tmp_token.insertByToken (TokenService.returnToken) */
+    int insertToken(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("token") String token);
+
     /** AS-IS dcr11_mail_file_history.insertMailFileHistory */
     int insertMailFileHistory(@Param("mailHistoryId") Long mailHistoryId, @Param("fileId") Long fileId);
 }

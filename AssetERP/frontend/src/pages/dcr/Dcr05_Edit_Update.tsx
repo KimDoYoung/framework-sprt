@@ -6,7 +6,10 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Input, message, Space } from 'antd';
+import dayjs from 'dayjs';
 import { dcrApi } from '@/api/dcr';
+import { aprPdfApi } from '@/api/apr';
+import { PDFViewer, PDFViewerTarget } from '@/components/pdf/PDFViewer';
 import { errorMessage } from '@/api/client';
 import { DcrDocType } from '@/types/dcr';
 import { Button } from '@/components/button';
@@ -32,6 +35,7 @@ const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
 export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, companyId, onSaved, onClose }) => {
   const [f, setF] = useState<DcrDocType | null>(model);
   const [saving, setSaving] = useState(false);
+  const [pdfTarget, setPdfTarget] = useState<PDFViewerTarget | null>(null);
   useEffect(() => setF(model), [model]);
   if (!f || !model) return null;
   const set = <K extends keyof DcrDocType>(k: K, v: DcrDocType[K]) => setF(prev => prev && { ...prev, [k]: v });
@@ -54,11 +58,23 @@ export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, co
     }
   };
 
-  // [E2] pdfButton[미리보기].Select (L107) → makePreviewPDF() L220-273: 미리보기용 결재문서(apr.Apr01_ApprTemp.insert, 상태 99)를 만들고 PDF 뷰어(apr.Apr10_StampPDF7)를 연다.
-  //   PDF 생성(RD 리포트/도장 PDF) 연동이 TOBE에 없어 자리만 둔다 (E11 재생성과 같은 결정)
-  const makePreviewPDF = () => message.info('PDF 미리보기는 아직 지원하지 않습니다 (PDF 생성 연동 전).');
+  // [E2] pdfButton[미리보기].Select (L107) → makePreviewPDF() L220-273: 미리보기용 결재문서(apr.Apr01_ApprTemp.insert, 제목 "문서양식 미리보기", 상태 99, 사내문서, 양식 A)를 만들고
+  //   PDFViewer.open(…Apr10_StampPDF7…, "A") — 2026-11-10 PDF 시뮬레이터로 연결(서버 AprPdfService, 임시 문서를 DB에 넣지 않는다. 원본 PDF와 모양이 다르다)
+  const makePreviewPDF = () => {
+    const html = `<p>${(f.content ?? '').replaceAll('text-decoration-line', 'text-decoration').replaceAll("'", '"')}</p>`;
+    const today = dayjs().format('YYYY-MM-DD');
+    setPdfTarget({
+      formType: 'A',
+      hideFormBar: true,   // open(param, "A") → 양식 줄 숨김
+      load: () => aprPdfApi.preview({
+        apprId: null, classTreeId: 0, formType: 'A', checkFlag: false, inOutTypeCode: '20', title: '문서양식 미리보기', content: html,
+        effectDate: today, regDate: today, receiveName: null, referenceName: null, signCompany: null, signCeo: null, stampName: null, stampPosition: null, steps: [],
+      }),
+    });
+  };
 
   return (
+    <>
     <EditModal
       open
       title="상세 보기"
@@ -87,5 +103,7 @@ export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, co
         </EditField>
         <EditField labelWidth={50} label="비 고"><Input.TextArea rows={5} readOnly={readOnly} value={f.note ?? ''} onChange={e => set('note', e.target.value)} /></EditField>
     </EditModal>
+    <PDFViewer target={pdfTarget} onClose={() => setPdfTarget(null)} />
+    </>
   );
 };

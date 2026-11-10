@@ -26,6 +26,7 @@
 |:---|:---|
 | `run-rd-server.sh` + `rd-simulator/` | Crownix RD Reporting Server 흉내(호출 계약·호출 기록). `start/stop/status/logs/calls`, 포트 5151 |
 | `run-notice-server.sh` + `notice-simulator/` | 알림 3종(talk·sms·mail) 흉내. `start/stop/status/logs/calls/reset`, 포트 5161·SMTP 2525 |
+| `run-ext-server.sh` + `ext-simulator/` | AI 점검의견(BotService)·새 메일 시스템(assetMail 쓰기창) 흉내. `start/stop/status/logs/calls/reset`, 포트 5171 |
 
 각 시뮬레이터의 자세한 설정은 폴더의 `README.md`.
 

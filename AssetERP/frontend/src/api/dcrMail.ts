@@ -22,6 +22,12 @@ export const dcrMailSenderApi = {
     return res.data.data;
   },
 
+  /** AS-IS client/utils/AssetMailSend — 새 메일 시스템(assetMail) 쓰기창 주소(open_url). header·content는 사용료 청구만 */
+  openAssetMail: async (apprId: number, header: string | null, content: string | null): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/dcr/mail-sender/asset-mail', { apprId, header, content });
+    return res.data.data;
+  },
+
   /** AS-IS dcr.Dcr10_MailHistory.insertMailHistory → 새 기록 ID */
   saveHistory: async (req: DcrMailHistorySaveReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/dcr/mail-sender/history', req);

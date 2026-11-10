@@ -1210,6 +1210,12 @@ export const tdmApi = {
     return res.data.data;
   },
 
+  /** AS-IS tdm.Tdm52_ChckManl.getBotCheckCmnt — AI 점검의견(외부 AI 서버). 작성한 의견 글 */
+  getBotCheckCmnt: async (req: { checkItem: string | null; checkHow: string | null; checkResultName: string | null }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/tdm/check-manls/bot-check-cmnt', req);
+    return res.data.data;
+  },
+
   /** AS-IS tdm.Tdm52_ChckManl.updateComplete — 점검완료(P)·완료취소(C) → 다시 읽은 점검항목 */
   completeCheckManl: async (chckManlId: number, req: { actionType: 'P' | 'C'; checkDate?: string | null; checkResultCode?: string | null; checkResultName?: string | null; checkCmnt?: string | null }): Promise<TdmCheckManlDetail> => {
     const res = await apiClient.put<ApiResponse<TdmCheckManlDetail>>(`v1/tdm/check-manls/${chckManlId}/complete`, req);

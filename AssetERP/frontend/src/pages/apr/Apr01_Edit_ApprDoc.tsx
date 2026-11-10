@@ -1,10 +1,11 @@
 /**
  * 전자결재 문서 상세 (V01 문서 읽기 + V02 결재 처리 + V07 상신·임시저장) — 결재선·연관 그리드·첨부를 보고, 내 차례면 [승인][반려], 승인한 문서면 [승인취소], 아무도 결재 안 한 내 문서면 [상신취소].
- * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 불러오기·양식·첨부 등록·옵션(V05), 미리보기 PDF(V11), 날인신청(V14), 링크코드 본문(V15)은 다음 ID.
+ * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 불러오기·양식·첨부 등록·옵션(V05), 날인신청(V14), 링크코드 본문(V15)은 다음 ID.
  * V13 연관 설정: 연관 탭 [등록]·삭제·설정(Apr03_Page_Relate)의 화면 내용 전체를 [저장]·[결재요청]에 relates로 함께 보낸다(Apr01_Appr.update L172-232).
  * AS-IS: myApp/client/vi/apr/Apr01_Edit_ApprDoc.java (5864줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L339-507: 1600×870 모달 "문서상세"(닫기 X 없음), 머리 오른쪽 [열람기록][댓글(n)], 위 150 = 왼쪽 문서구분·상신제목(getApprovalForm01 L4648-4704) + 오른쪽 시행일자·상신일자·인감종류·대표회사·대표서명·수신·참조·비고(getApprovalForm02 L4706-4794),
  *   가운데 = 왼쪽 상신내용(getHtmlForm L4796-4817) + 오른쪽 Apr03_Page_Relate(탭 7개 + 결재선), 푸터 가운데 [미리보기][닫기] + 북마크 별
+ * V11 미리보기 PDF(2026-11-10, 사용자 결정 "PDF는 시뮬레이터로 진행"): [미리보기]·대외문서 [결재요청] 앞 PDF 확인(beforePDFChk) → 공통 PDFViewer. PDF는 서버 PDF 시뮬레이터(AprPdfService)가 만든다 — 원본 Apr10_StampPDF7(iText 인감·로고 합성)과 모양이 다르고, 임시 문서(Apr01_ApprTemp.insert)를 DB에 넣지 않는다.
  * V12: 인감종류 [E32] findLookupStamp·대표회사 [E33] 조회창 → resetApprStep(인감 줄을 넣은 결재선 다시 만들기), 새 문서의 기본 인감 retrieveRoleStamp.
  * 열기: retrieveApproval(apprId | apprModel, adminFlag, callback) L510-525 → getApprModel L535-560(selectById, 임시저장·관리자가 아니면 열람기록, 북마크 조회) → retrieveApproval L643-728
  * 조회창 규격(11a)·12 원칙: LookupModal, 머리 아래 선·푸터 위 선, 안쪽 스크롤은 그리드·상신내용 하나씩. 상신내용은 읽기 전용 HtmlView(AS-IS는 CKEditor — 수정은 V04 오타수정)
@@ -14,7 +15,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Space } from 'antd';
 import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
+import { aprActionApi, aprDetailApi, aprExtraApi, aprPdfApi, aprWriteApi } from '@/api/apr';
+import { fileApi } from '@/api/file';
+import { PDFViewer, PDFViewerTarget } from '@/components/pdf/PDFViewer';
 import { errorMessage } from '@/api/client';
 import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprRelateSelect, AprLinkRelateAdv, AprLinkRelateAppr, AprLinkRelateFund, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
@@ -241,7 +244,76 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apprId, treeId, icsClassTreeId, link?.linkCode, link?.refId, JSON.stringify(link?.args ?? null), reloadKey]);
 
-  const next = (text: string) => message.info(text);
+  // ── V11 PDF 미리보기 (PDF 시뮬레이터 — 서버 AprPdfService가 간이 PDF를 만든다, 원본 Apr10_StampPDF7과 모양이 다르다) ──
+  const [pdfTarget, setPdfTarget] = useState<PDFViewerTarget | null>(null);
+  /** formType 칸 — PDF Viewer [결재요청]이 고른 양식(callback → formType.setValue). 결재요청 본문에 넣는다 */
+  const formTypeRef = useRef<string | null>(null);
+  /** checkStamp() L5012-5018: 인감이 없으면 true */
+  const checkStamp = () => !form.stampId || !form.stampName;
+  /** preCheck() L5402-5450 */
+  const preCheck = (): string | null => {
+    if (!form.title) return '상신제목은 필수입력 항목입니다';
+    if (form.title.length > 200) return '상신제목의 글자수가 초과하였습니다';
+    if (!form.effectDate) return '시행일은 필수입력 항목입니다';
+    if (!form.regDate) return '상신일은 필수입력 항목입니다';
+    if (!form.content) return '내용은 필수입력 항목입니다';
+    return null;
+  };
+  /** makePreviewPDF(callback) L5452-5591 — callback이 있으면 PDF Viewer에 [결재요청]이 생기고, 누르면 고른 양식을 formType에 넣고 callback */
+  const makePreviewPDF = async (checkFlag: boolean, callback?: () => void) => {
+    if (!doc) return;
+    const out = form.inOutTypeCode === '10';
+    if (out && !form.signCompany) { message.warning('대외문서에 대표회사는 필수입력항목입니다.'); return; }
+    const pre = preCheck();
+    if (pre) { message.warning(pre); return; }
+    if (checkStamp() && out) { message.warning('인감을 선택해주세요'); return; }
+    if (out && !form.receiveName) { message.warning('수신자는 필수입력 항목입니다'); return; }
+    // 결재완료된 문서 미리보기 L5488-5517: apr.Apr10_Stamp.selectByPDFId → 제목 파일이 있으면 그 파일, 없으면 createPDF7 뒤 viewPDF() — view(): 양식 줄 없음
+    if (!isNew && doc.statusCode === '30' && out) {
+      try {
+        const fileId = await aprPdfApi.getTitleFileId(doc.apprId);
+        setPdfTarget({ hideFormBar: true, load: () => (fileId != null ? fileApi.fetchBlob(fileId) : aprPdfApi.docPdf(doc.apprId)) });
+      } catch (err) {
+        message.error(errorMessage(err, '오류가 발생했습니다'));
+      }
+      return;
+    }
+    // 임시 문서(Apr01_ApprTemp.insert) 대신 화면 값을 그대로 보낸다. 본문은 원본처럼 text-decoration-line → text-decoration, ' → ", <p>로 감싼다
+    const html = `<p>${form.content.replaceAll('text-decoration-line', 'text-decoration').replaceAll("'", '"')}</p>`;
+    let formType = 'A';
+    try {
+      formType = await aprPdfApi.getFormType(doc.classTreeId);   // dcr.Dcr30_Link.selectByClassTreeId L5537-5556
+    } catch (err) {
+      message.error(errorMessage(err, '오류가 발생했습니다'));
+      return;
+    }
+    const base = {
+      apprId: isNew ? null : doc.apprId, classTreeId: doc.classTreeId, checkFlag, inOutTypeCode: form.inOutTypeCode,
+      title: form.title, content: html, effectDate: form.effectDate || null, regDate: form.regDate || null,
+      receiveName: form.receiveName || null, referenceName: form.referenceName || null, signCompany: form.signCompany || null,
+      signCeo: form.signCeo || null, stampName: form.stampName || null, stampPosition: form.stampPosition || null,
+      steps: stepsRef.current.map(st => ({ stepTypeName: st.stepTypeName ?? null, empName: st.empKorName ?? null, titleName: st.titleName ?? null })),
+    };
+    setPdfTarget({
+      formType,
+      // PDFViewer.open(param, formType…) L101·L130: A·X·D 양식이거나 사내문서(inoutTypeCode=20)면 양식 줄을 숨긴다
+      hideFormBar: ['A', 'X', 'D'].includes(formType) || form.inOutTypeCode === '20',
+      load: ft => aprPdfApi.preview({ ...base, formType: ft }),
+      onSend: callback ? ft => { formTypeRef.current = ft; callback(); } : undefined,
+    });
+  };
+  // [E4] pdfButton[미리보기].Select (L461-492): 사내문서면 "시스템에서 제공하는 기본 양식을 적용하여 보시겠습니까?" [E5] 예 → checkFlag=true · 아니오 → false, 대외문서면 false
+  const pdfPreview = () => {
+    if (form.inOutTypeCode === '20') {
+      Modal.confirm({
+        title: '사내문서(품의·보고)', content: '시스템에서 제공하는 기본 양식을 적용하여 보시겠습니까?', width: 450, okText: '예', cancelText: '아니오',
+        onOk: () => { void makePreviewPDF(true); },
+        onCancel: () => { void makePreviewPDF(false); },
+      });
+      return;
+    }
+    void makePreviewPDF(false);
+  };
 
   /** resetApprStep L5197-5210: 인감 줄(인감책임자·준법감시인·컴플라이언스)까지 넣은 결재선으로 바꾼다. 새 문서는 다시 그릴 때도 이 결재선을 쓰도록 seed도 바꾼다 */
   const applyStampLine = (res: AprStampLine) => {
@@ -377,7 +449,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       regDate: form.regDate ? `${form.regDate}T00:00:00` : null,
       stampId: form.stampId, receiveName: form.receiveName || null, referenceName: form.referenceName || null,
       inOutTypeCode: form.inOutTypeCode, signCompany: form.signCompany || null, signCeo: form.signCeo || null,
-      stampPosition: form.stampPosition || null, formType: null,
+      stampPosition: form.stampPosition || null, formType: formTypeRef.current,
       steps: stepsRef.current.map(s => ({
         apprStepId: s.apprStepId, stepTypeCode: s.stepTypeCode, seq: s.seq ?? '001', stepStatusCode: s.stepStatusCode ?? null,
         stepEmpId: s.stepEmpId, lockYn: s.lockYn ? 'true' : 'false', addEmpId: null,
@@ -469,11 +541,16 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     if (!stepsRef.current.some(st => st.stepTypeCode === '10' || st.stepTypeCode === '20')) {
       Modal.confirm({
         title: '확인', content: '결재선에 상신자 외 결재권자가 없습니다. 계속 진행하시겠습니까?', width: 490, okText: '예', cancelText: '아니오',
-        onOk: () => { confirmedStepLine.current = true; setRequestNoteOpen(true); },
+        onOk: () => { confirmedStepLine.current = true; beforePDFChk(); },
       });
       return;
     }
     confirmedStepLine.current = false;
+    beforePDFChk();
+  };
+  /** beforePDFChk() L4445-4472: 대외문서는 PDF를 만들어 보여 주고 [결재요청]을 누르면 updateChk(결재의견 창), 사내문서는 바로 updateChk */
+  const beforePDFChk = () => {
+    if (form.inOutTypeCode === '10') { void makePreviewPDF(false, () => setRequestNoteOpen(true)); return; }
     setRequestNoteOpen(true);
   };
 
@@ -576,8 +653,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
               {/* [E18] makeDisposalListButton[문서폐기 신청] (L4144) — 결재완료·반려 문서의 상신자 본인 (L706-716) */}
               {!isNew && doc != null && (doc.statusCode === '30' || doc.statusCode === '40') && doc.regEmpId === user.userId
                 && <Button type="delete" onClick={() => void disposal()}>문서폐기 신청</Button>}
-              {/* [E4] pdfButton[미리보기].Select (L461) → 대외문서면 makePreviewPDF(null), 사내문서(품의·보고)면 "시스템에서 제공하는 기본 양식을 적용하여 보시겠습니까?" 확인 [E5] 뒤 PDF — PDFViewer는 V04 */}
-              <Button type="view" onClick={() => next('PDF 미리보기는 V11에서 연결합니다.')}>미리보기</Button>
+              {/* [E4] pdfButton[미리보기].Select (L461) → pdfPreview() — 대외문서면 makePreviewPDF(null), 사내문서면 확인 [E5] 뒤 PDF Viewer(PDF 시뮬레이터) */}
+              <Button type="view" onClick={pdfPreview}>미리보기</Button>
               {/* [E13] cancelButton[상신취소] — myTurnCheck(true) L1116-1118: 아무도 결재하지 않은 내 문서 */}
               {state?.canCancelRequest && <Button type="cancel" onClick={() => void cancelRequest()}>상신취소</Button>}
               </>}
@@ -742,6 +819,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       />
       <Apr50_Lookup_PersonList apprId={bookmarkOpen && apprId != null ? apprId : null} onChanged={refreshBookmark} onClose={() => setBookmarkOpen(false)} />
       {/* V04: 열람기록·댓글 창 */}
+      {/* V11 PDF Viewer (PDF 시뮬레이터) */}
+      <PDFViewer target={pdfTarget} onClose={() => setPdfTarget(null)} />
       <Apr41_Lookup_OpenHistory apprId={historyOpen && apprId != null ? apprId : null} onClose={() => setHistoryOpen(false)} />
       <Apr42_Lookup_Comment apprId={commentOpen && apprId != null ? apprId : null} onChanged={refreshCommentSize} onClose={() => setCommentOpen(false)} />
     </LookupModal>

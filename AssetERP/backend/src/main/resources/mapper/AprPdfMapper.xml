@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 결재문서 PDF 미리보기 (PDF 시뮬레이터, 2026-11-10) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprPdfMapper">
+
+    <!-- AS-IS apr10_stamp.selectByPDFId (IDMS-IC) — 원본은 SELECT * 목록(회사 조건 없음). TOBE는 로그인 회사 문서의 첫 제목 파일 ID만 -->
+    <select id="selectTitleFileId" resultType="long">
+        SELECT sys10_file_id
+          FROM apr01_appr
+               INNER JOIN sys10_file ON apr01_appr_id = sys10_parent_id
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+           AND sys10_title_yn = 'true'
+         ORDER BY sys10_file_id
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dcr30_link.selectByClassTreeId (IDMS-IC) — Apr01_Edit_ApprDoc.makePreviewPDF는 첫 행 linkCode의 첫 글자를 양식으로 쓴다 -->
+    <select id="selectLinkCode" resultType="string">
+        SELECT dcr30_link_cd
+          FROM dcr30_link
+         WHERE dcr30_company_id = #{companyId}
+           AND dcr30_class_tree_id = #{classTreeId}
+         LIMIT 1
+    </select>
+
+    <select id="selectDoc" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprPdfDocRow">
+        SELECT a.apr01_appr_id                              AS appr_id
+             , a.apr01_class_tree_id                        AS class_tree_id
+             , a.apr01_status_cd                            AS status_code
+             , a.apr01_inout_cd                             AS in_out_type_code
+             , a.apr01_form_type                            AS form_type
+             , a.apr01_title                                AS title
+             , a.apr01_content                              AS content
+             , to_char(a.apr01_effect_date, 'YYYY.MM.DD')   AS effect_date
+             , to_char(a.apr01_reg_date, 'YYYY.MM.DD')      AS reg_date
+             , a.apr01_receive_nm                           AS receive_name
+             , a.apr01_reference_nm                         AS reference_name
+             , a.apr01_sign_company                         AS sign_company
+             , a.apr01_sign_ceo                             AS sign_ceo
+             , s.apr10_stamp_nm                             AS stamp_name
+             , a.apr01_stamp_position                       AS stamp_position
+          FROM apr01_appr a
+               LEFT JOIN apr10_stamp s ON s.apr10_stamp_id = a.apr01_stamp_id
+         WHERE a.apr01_appr_id = #{apprId}
+           AND a.apr01_company_id = #{companyId}
+    </select>
+
+    <select id="selectCompanyLoc" resultType="string">
+        SELECT sys01_loc_nm
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+</mapper>

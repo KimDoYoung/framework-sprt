@@ -9,6 +9,8 @@ import kr.co.kfs.asseterp.biz.tdm.dto.CheckManlIdsReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.CheckManlRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.CheckManlSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.CheckStatusReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.CheckBotCmntReq;
+import kr.co.kfs.asseterp.biz.tdm.service.TdmCheckBotService;
 import kr.co.kfs.asseterp.biz.tdm.service.TdmCheckManlService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import java.util.List;
 public class TdmCheckManlController {
 
     private final TdmCheckManlService service;
+    private final TdmCheckBotService botService;
 
     /** AS-IS tdm.Tdm52_ChckManl.selectByChckOrgId */
     @GetMapping
@@ -83,6 +86,12 @@ public class TdmCheckManlController {
     public ApiResponse<CheckManlDetailRes> updateComplete(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long chckManlId,
                                                           @RequestBody CheckCompleteReq req) {
         return ApiResponse.ok(service.updateComplete(principal, chckManlId, req));
+    }
+
+    /** AS-IS tdm.Tdm52_ChckManl.getBotCheckCmnt — AI 점검의견(외부 AI 서버, 개발은 tools/ext-simulator). 작성한 의견 글을 돌려준다 */
+    @PostMapping("/bot-check-cmnt")
+    public ApiResponse<String> getBotCheckCmnt(@RequestBody CheckBotCmntReq req) {
+        return ApiResponse.ok(botService.getBotCheckCmnt(req));
     }
 
     /** AS-IS tdm.Tdm52_ChckManl.batchCheckComplete */

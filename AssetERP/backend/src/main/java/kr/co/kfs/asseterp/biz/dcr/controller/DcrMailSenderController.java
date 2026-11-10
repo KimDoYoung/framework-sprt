@@ -6,6 +6,8 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrMailSendReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrMailSendRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrMailSenderInitRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrPublicMailRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrAssetMailReq;
+import kr.co.kfs.asseterp.biz.dcr.service.DcrAssetMailService;
 import kr.co.kfs.asseterp.biz.dcr.service.DcrMailSenderService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import java.util.List;
 public class DcrMailSenderController {
 
     private final DcrMailSenderService service;
+    private final DcrAssetMailService assetMailService;
 
     /** 열 때: 본인 메일 · 공용메일 권한 · 첨부 목록(sys.Sys10_File.selectApprRelateDoc) */
     @GetMapping("/init")
@@ -44,6 +47,12 @@ public class DcrMailSenderController {
     @PostMapping("/send")
     public ApiResponse<DcrMailSendRes> send(@AuthenticationPrincipal UserPrincipal principal, @RequestBody DcrMailSendReq req) {
         return ApiResponse.ok(service.send(principal, req));
+    }
+
+    /** AS-IS client/utils/AssetMailSend (Dcr10_Lookup_MailSender [예]) — 새 메일 시스템 쓰기창 주소(open_url). 개발은 tools/ext-simulator */
+    @PostMapping("/asset-mail")
+    public ApiResponse<String> assetMail(@AuthenticationPrincipal UserPrincipal principal, @RequestBody DcrAssetMailReq req) {
+        return ApiResponse.ok(assetMailService.openMailWrite(principal, req));
     }
 
     /** AS-IS dcr.Dcr10_MailHistory.insertMailHistory → 새 기록 ID */
