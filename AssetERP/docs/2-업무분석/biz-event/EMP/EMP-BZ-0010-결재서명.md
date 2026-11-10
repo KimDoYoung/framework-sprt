@@ -8,7 +8,7 @@
 | 언제 | 처음 한 번, 서명을 바꿀 때 |
 | 먼저 있어야 하는 것 | EMP-BZ-0001, SYS-BZ-0012(직원 비밀번호) |
 | 다음 이벤트 | APR 결재(결재 때 "사용" 서명이 찍힘) |
-| 실제 실행 | kalpa, 2026-11-10 — `401 김사원`으로 서명 2줄 등록 → 사용 바꾸기 → 삭제 (그림 올리기는 안 함) |
+| 실제 실행 | kalpa, 2026-11-10 — `401 김사원`으로 서명 2줄 등록 → 사용 바꾸기 → 삭제 (그림 올리기는 안 함). 같은 날 저녁(집 DB) `정자 서명`(사용) 1줄을 다시 만들고 `data/samples/서명1.png` 복사본(`sign-401-jeongja.png`)을 올렸다 — 이 줄은 APR 결재에 쓰도록 남겨 둠 |
 | 메뉴 | 실행 때 kalpa(상품 S1)에는 #1501 메뉴가 없어 API로만 했다. 그 뒤 2026-11-10에 kalpa에 열었다([메뉴 범위](EMP-업무흐름.md#가상-회사-kalpa의-메뉴-범위)) |
 
 ## 따라 하기
@@ -28,7 +28,7 @@
 | 테이블 | 무엇 | 변화 |
 |:---|:---|---|
 | `emp60_sign` | 서명(사원 · 사용여부 · 비고) | 단계 2·4마다 +1, 단계 7 -1 |
-| `sys10_file`·`sys11_relate_file` | 서명 그림 파일(부모 = 서명 ID, 종류 image) | 단계 3에서 +1씩 |
+| `sys10_file` | 서명 그림 파일(부모 = 서명 ID). `sys11_relate_file`은 쓰지 않는다(원본 `FileUpload` L125도 `sys10_file.insert`만, 2026-11-10 실행 확인) | 단계 3에서 +1 |
 | (`apr04_appr_step.apr04_sign_id`) | 결재할 때 이 서명 ID가 남는다 | APR 이벤트 |
 
 ## 결과를 볼 수 있는 화면
@@ -40,7 +40,8 @@
 - "사용"은 **한 사람에 하나**: 화면에 보이는 줄 + DB에 있는 나머지 내 서명을 합쳐 센다(원본 `update` L162-213 → `emp60_sign.notSignIdList`). TOBE는 같은 검사를 **서버에서** 한다(`EmpSignService.save` L33-52).
 - 삭제 검사 "결재에 쓰였는가"(`apr04_appr_step.signIdListChk`)는 원본은 화면에서만 부르지만, TOBE는 삭제 API에서도 다시 막는다(`EmpSignService.delete` L61-66).
 - 본인 것만 다룬다: 다른 직원(`402`)으로 로그인하면 목록 0줄, 401의 서명 ID로 삭제를 보내도 0건(실행 확인).
-- 확인 못 한 것: **서명 그림 올리기**(`data/samples`에 그림 파일이 없음 — 넣어 주시면 확인), **결재에 쓰인 서명 삭제 거부**(kalpa에 아직 결재가 없음 → APR 이벤트 뒤).
+- 서명 그림 올리기(2026-11-10 확인): `POST /api/v1/sys/files?parentId={signId}`(파일 `file`) → `sys10_file` +1 → 목록의 `signFileId`가 채워지고 `GET /api/v1/sys/files/image?parentId={signId}`가 PNG를 돌려준다(화면 "서명" 칸이 이 주소). 서버 로그의 "감사 로그 DB 기록 실패(`sys71_security_audit_log` 없음)"는 로컬 DB의 기존 문제다.
+- 확인 못 한 것: **결재에 쓰인 서명 삭제 거부**(kalpa에 아직 결재가 없음 → APR 이벤트 뒤).
 - 클래스 대조(`yunhee analysis ui --tobe`): 버튼 4/4 · 이벤트 7/7 · 그리드 1/1. 빠진 것 없음.
 
 <details>
@@ -55,6 +56,10 @@ steps:
     api: PUT /api/v1/emp/signs
     body: [{ useYn: "true", note: "정자 서명" }, { useYn: "false", note: "약식 서명" }]
     expect: { table: emp60_sign, delta: +2 }
+  - no: 3
+    api: POST /api/v1/sys/files?parentId=<정자>
+    form: { file: "data/samples/서명1.png 복사본" }
+    expect: [{ table: sys10_file, delta: +1 }, { field: signFileId, notNull: true }]
   - no: 5
     api: PUT /api/v1/emp/signs
     body: [{ signId: "<약식>", useYn: "true", note: "약식 서명" }]
@@ -82,5 +87,5 @@ steps:
 - AS-IS 화면: `Emp60_Tab_Sign`(#1501) — [조회] E2 · [등록] E3 · [저장] E4 `update` L162-213 → `updateFinal` L215-227 · [삭제] E5 `deleteChk` L244-270 → E6 · 그림 올리기 E1(`fileUpdownForm`, `FileUpload?fileType=image&parentId={signId}`)
 - AS-IS 서버: `emp.Emp60_Sign.selectByPersonId`·`notSignIdList`·`update`·`deleteChk` L48-63·`delete`
 - TOBE: `GET·PUT·DELETE /api/v1/emp/signs`, `POST /api/v1/emp/signs/used`(`EmpSignService`), 그림 `POST /api/v1/sys/files`
-- TOBE 상태(2026-11-10): **실행(API, 직원 401)** — 등록·사용 하나 검사·사용 바꾸기·사용 여부·삭제·다른 직원 차단. 그림·결재 사용 삭제 거부는 미확인. 화면 눈 확인은 `대기`.
+- TOBE 상태(2026-11-10): **실행(API, 직원 401)** — 등록·사용 하나 검사·사용 바꾸기·사용 여부·삭제·다른 직원 차단·그림 올리기/보기. 결재 사용 삭제 거부는 미확인. 화면 눈 확인은 `대기`.
 </details>

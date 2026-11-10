@@ -32,7 +32,7 @@ export const Emp21_Tab_PersonList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [classPick, setClassPick] = useState<{ row: MyUnLeave; classTreeId: number | null } | null>(null);
-  const [link, setLink] = useState<{ classTreeId: number; linkCode: string; refId: number } | null>(null);
+  const [link, setLink] = useState<{ classTreeId: number; linkCode: string; refId: number; args: { stdYear: string } } | null>(null);
   const yearRef = useRef(year);
   yearRef.current = year;
 
@@ -91,7 +91,8 @@ export const Emp21_Tab_PersonList: React.FC = () => {
   const onClassResult = (classTreeId: number | null) => {
     const pick = classPick;
     setClassPick(null);
-    if (pick && classTreeId != null) setLink({ classTreeId, linkCode: LINK_CODE, refId: pick.row.unLeaveId });
+    // A15 제공자(UnLeaveLinkSeedProvider)는 args.stdYear로 통보 행을 다시 읽는다 — 없으면 "미사용휴가 정보가 없습니다" (EMP-BZ-0015에서 찾음)
+    if (pick && classTreeId != null) setLink({ classTreeId, linkCode: LINK_CODE, refId: pick.row.unLeaveId, args: { stdYear: yearRef.current } });
   };
 
   // updateApprId() L265-281: emp.Emp21_UnLeave.update(expectApprId) → 성공하면 retrieve()
