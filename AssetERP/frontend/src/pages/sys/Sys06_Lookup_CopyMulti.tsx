@@ -6,7 +6,7 @@
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, message, Modal, Space } from 'antd';
+import { Checkbox, Divider, message, Modal, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
@@ -22,13 +22,13 @@ const gb2 = gbFor<CompanyCopy>();
 
 /** AS-IS buildGrid01() L218-225 */
 const buildGrid01 = () => [
-  gb1.text('parentPathNm', 300, '경로'),  // L222
+  gb1.text('parentPathNm', 270, '경로'),  // L222
   gb1.text('menuNoPlusNm', 210, '매뉴명'),  // L223
 ];
 
 /** AS-IS buildGrid02() L227-238 */
 const buildGrid02 = () => [
-  gb2.text('companyNm', 290, '고객명'),  // L231
+  gb2.text('companyNm', 220, '고객명'),  // L231
   gb2.textCenter('erpProductCd', 50, '상품'),  // L232
   gb2.booleanYn2('assetYn', 50, '운용'),  // L233
   gb2.booleanYn2('advisYn', 50, '자문'),  // L234
@@ -109,7 +109,7 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
     <LookupModal
       open={open}
       title="일괄복사"
-      width={1200}
+      width={1250}
       closable={false}
       maskClosable={false}
       keyboard={false}
@@ -127,7 +127,7 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
       }
     >
       <div style={{ display: 'flex', height: 520 }}>
-        <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* [E4] retrieveButton01[조회].Select (L151) → retrieve01(). 체크는 원본처럼 조회 뒤 */}
           <SearchBar style={{ height: 42 }} onSearch={() => retrieve01()}
             extra={<Checkbox checked={menuNameYn} onChange={e => setMenuNameYn(e.target.checked)}>매뉴명만 검색</Checkbox>}>
@@ -140,7 +140,9 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
             <MultiGrid<MenuCopy> rowClick gridRef={grid01} rowData={menus} columnDefs={cols01} getRowId={p => String(p.data.menuId)} />
           </div>
         </div>
-        <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* 좌(매뉴)·우(회사) 그리드 구분선 — 사용자 요청 2026-11-10 */}
+        <Divider type="vertical" style={{ height: '100%', margin: '0 12px' }} />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* [E5] retrieveButton02[조회].Select (L157) → retrieve02(). 초기화는 UX-02(자동 조회 없음) */}
           <SearchBar style={{ height: 42 }} onSearch={() => retrieve02()} onReset={sp02.reset}>
             <SearchBar.Field label="검색">
