@@ -47,4 +47,14 @@ public interface IcsChecklistStatusMapper {
     long selectTotal(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("cycleType") String cycleType,
                      @Param("checklistLClassId") Long checklistLClassId, @Param("checklistMClassId") Long checklistMClassId,
                      @Param("searchText") String searchText, @Param("unCheckYn") boolean unCheckYn, @Param("unConfirmYn") boolean unConfirmYn);
+
+    /** AS-IS dbConfig.getSeq — RD 출력 묶음 ID */
+    long selectNextPrintId();
+
+    /** AS-IS sys99_print.deleteByPersonId — 이 사원·화면의 지난 출력 자료 */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS Sys99_Print.insertRdChecklistDetail L1440-1457 → sys99_print.insert — 상세 한 행 */
+    int insertPrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName,
+                    @Param("groupId") long groupId, @Param("row") IcsChecklistStatusDetailRes row, @Param("confirmYnName") String confirmYnName);
 }

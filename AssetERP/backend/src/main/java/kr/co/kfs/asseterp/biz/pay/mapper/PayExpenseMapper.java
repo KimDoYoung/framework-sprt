@@ -87,6 +87,12 @@ public interface PayExpenseMapper {
     /** AS-IS updateConfirmSmsYn */
     int updateConfirmSmsYn(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId);
 
+    /** AS-IS getRejectSendMessageList — #1385 반려건 받는 사람(요청자·확인자)별 건수 */
+    List<ExpenseConfirmSendRow> selectRejectSendList(@Param("companyId") Long companyId);
+
+    /** AS-IS updateRejectSmsYn */
+    int updateRejectSmsYn(@Param("companyId") Long companyId);
+
     // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · Pay50_Lookup_ExpenseRequestInsert ──
 
     /** AS-IS selectByDate (등록일 기준, PASS 제외) */

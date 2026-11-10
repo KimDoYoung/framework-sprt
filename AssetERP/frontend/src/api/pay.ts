@@ -1017,6 +1017,12 @@ export const payApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS pay.Pay50_Expense.rejectSendMessage — #1385 지출결의서(경영관리) [반려건 일괄 알림발송]. 돌려주는 값 = 받는 사람 수("N건이 발송완료되었습니다"의 N) */
+  sendExpenseRejectNotices: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/reject-notices');
+    return res.data.data ?? 0;
+  },
+
   // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
   /** AS-IS pay.Pay50_Expense.selectByDate — 요청자는 로그인 사원(서버) */
   searchExpenseMine: async (p: { startDate: string; closeDate: string }): Promise<PayExpenseMine[]> => {

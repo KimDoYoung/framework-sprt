@@ -286,21 +286,34 @@ public class AprNoticeService {
      * SMS(회사 메일·SMS 발송 둘 다 + 번호 + 차단 아님 — AS-IS는 SMS 블록이 메일 블록 안에 들어 있다). 수신설정 코드는 셋 다 A02.
      */
     public List<AprNoticeCall> planExpenseReject(Long companyId, Long regEmpId, int count) {
+        return planExpense(companyId, regEmpId, "사업비요청 " + count + "건이 반려되었습니다", "사업비 요청 반려", "A02", true);
+    }
+
+    /**
+     * 지출결의서(경영관리) #1385 [반려건 일괄 알림발송] — pay.Pay50_Expense.rejectSendMessage L814-924: 받는 사람 한 명에게 "지출결의 N건이 반려되었습니다".
+     * 앱알림 제목 "지출결의 반려", 수신설정 코드 A03. 메일·SMS 조건은 planExpenseReject와 같다(메일은 이메일 유무 — AS-IS는 비밀번호 유무).
+     * AS-IS 그대로: 메일·SMS 수신차단 검사(sendCheckMail·sendCheckSms)에 expenseModel.getRegEmpId()를 넘기는데 목록 SQL(getRejectSendMessageList)이
+     * 그 열을 돌려주지 않아 늘 null이다 — 메일·SMS는 차단 설정과 상관없이 보낸다(앱알림만 받는 사람으로 검사)
+     */
+    public List<AprNoticeCall> planExpenseRejectByManager(Long companyId, Long empId, int count) {
+        return planExpense(companyId, empId, "지출결의 " + count + "건이 반려되었습니다", "지출결의 반려", "A03", false);
+    }
+
+    private List<AprNoticeCall> planExpense(Long companyId, Long personId, String msg, String talkTitle, String noticeCode, boolean checkMailSmsBlock) {
         List<AprNoticeCall> out = new ArrayList<>();
-        AprNoticePerson p = person(regEmpId);
+        AprNoticePerson p = person(personId);
         if (p == null) {
             return out;
         }
         String loc = mapper.selectCompanyLoc(companyId);
-        String msg = "사업비요청 " + count + "건이 반려되었습니다";
-        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "A02") == 0) {
-            out.add(new AprNoticeCall("talk", p.emailAddress(), "사업비 요청 반려", msg));
+        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), noticeCode) == 0) {
+            out.add(new AprNoticeCall("talk", p.emailAddress(), talkTitle, msg));
         }
         if (props.mailEnabled(loc)) {
-            if (p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "A02") == 0) {
+            if (p.emailAddress() != null && (!checkMailSmsBlock || mapper.countMailBlocked(p.personId(), noticeCode) == 0)) {
                 out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP 전자결재", msg));
             }
-            if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "A02") == 0) {
+            if (props.smsEnabled(loc) && p.mobileTelNo() != null && (!checkMailSmsBlock || mapper.countSmsBlocked(p.personId(), noticeCode) == 0)) {
                 out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
             }
         }

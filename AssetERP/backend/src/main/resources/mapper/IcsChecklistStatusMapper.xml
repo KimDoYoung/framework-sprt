@@ -268,4 +268,29 @@
         <include refid="pagingCondition"/>
     </select>
 
+    <!-- ===== #1230 Ics16_Lookup_RelateAppr [미리보기] — AS-IS Sys99_Print.insertRdChecklistDetail L1417-1469 (IDMS-IC) ===== -->
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextPrintId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert — insertRdChecklistDetail이 채우는 열만(long01 체크리스트 id, string01 대분류·02 중분류·04 체크결과·05 담당부서·06 담당자·07 확인자·08 확인여부) -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_string01, sys99_string02, sys99_string04, sys99_string05
+               , sys99_string06, sys99_string07, sys99_string08 )
+        VALUES ( f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.checklistId}, #{row.checkLClassName}, #{row.checkMClassName}, #{row.reason}, #{row.orgName}
+               , #{row.personName}, #{row.confirmerName}, #{confirmYnName} )
+    </insert>
+
 </mapper>

@@ -190,6 +190,26 @@ public class PayExpenseService {
         return rows.size();
     }
 
+    /**
+     * AS-IS rejectSendMessage L814-924 — #1385 지출결의서(경영관리) [반려건 일괄 알림발송]: 회사의 미발송 반려건을 받는 사람(요청자·확인자)별로 묶어 알림을 보낸다.
+     * 발송 표시(reject_sms_yn)는 AS-IS처럼 회사 메일 발송이 켜져 있고 받는 사람(사원 행)이 한 명이라도 있을 때만 남긴다(AS-IS는 그 사람마다 같은 UPDATE). 알림은 커밋 뒤에 보낸다.
+     * @return 받는 사람 수(AS-IS 메시지 "N건이 발송완료되었습니다"의 N — expenseList.size())
+     */
+    @Transactional
+    public int sendRejectNotices(UserPrincipal user) {
+        Long companyId = user.getCompanyId();
+        List<ExpenseConfirmSendRow> rows = mapper.selectRejectSendList(companyId);
+        List<AprNoticeCall> calls = new ArrayList<>();
+        for (ExpenseConfirmSendRow row : rows) {
+            calls.addAll(noticeService.planExpenseRejectByManager(companyId, row.regEmpId(), row.count()));
+        }
+        if (!rows.isEmpty() && noticeService.mailEnabled(companyId)) {
+            mapper.updateRejectSmsYn(companyId);
+        }
+        noticeService.dispatchAfterCommit(calls);
+        return rows.size();
+    }
+
     // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
 
     /** AS-IS 바로등록(PASS) 때 클라이언트가 넣던 값 */

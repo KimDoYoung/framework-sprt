@@ -695,7 +695,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
   Pay10_Tab_PersonListManager, // S21 (S20의 RD 폼 Pay10_Rd_PersonList 공용 + 사원찾기 Emp00_Lookup_SelectSingle)
   Pay50_Tab_Expense, // Y10 (메뉴 #1407. 하위 Pay50_Edit_Expense(U03)·Pay50_Lookup_ExpenseRequestInsert(Y08) 재사용)
-  Pay50_Tab_ExpenseManager, // U03 (메뉴 #1385. 하위 Pay50_Edit_Expense·Pay51_Lookup_ExpenseForm·Pay50_Lookup_RejectReason·Pay50_Lookup_ExpenseRequestList·Pay52_Lookup_AccountCode·Pay50_Lookup_Content·Sys17_Lookup_Account. 바로등록 Pay50_Lookup_ExpenseRequestInsert. 1단계: 알림발송은 안내만)
+  Pay50_Tab_ExpenseManager, // U03 (메뉴 #1385. 하위 Pay50_Edit_Expense·Pay51_Lookup_ExpenseForm·Pay50_Lookup_RejectReason·Pay50_Lookup_ExpenseRequestList·Pay52_Lookup_AccountCode·Pay50_Lookup_Content·Sys17_Lookup_Account. 바로등록 Pay50_Lookup_ExpenseRequestInsert. 반려건 알림발송 2026-11-10 연결)
   Pay50_Tab_ExpensePayWrite, // U07 (메뉴 #1386. 하위 Pay50_Lookup_UpdateDeposit·Pay50_Lookup_NewExpenseApprList·Sys15_Lookup_TelInfo·Ast01_Lookup_CorpAccount. 1단계: 상신·문서보기는 안내만)
   Pay50_Tab_ExpensePay, // U08 (메뉴 #1400. 하위 Sys15_Lookup_TelInfo. 1단계: 문서보기는 안내만)
   Pay50_Tab_ExpenseJournal, // U09 (메뉴 #1387. 하위 Pay50_Lookup_ExpenseUnJournal·Pay50_Lookup_UpdateAccount·Pay52_Lookup_AccountCode·Act02_Grid_CreateJournal. 연관문서 Act80_Lookup_RelateAppr·전표수정 Act02_Lookup_CreateJournal)
@@ -852,7 +852,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys81_Tab_AdminUserHistory, // A23
   Sys95_Tab_Manual, // A33
   Sys95_Tab_ManualAdmin, // A34
-  Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
+  Sys53_Tab_SpecificMenuRequestAdmin, // A28 (문서보기 → Apr01_Edit_ApprDoc, 2026-11-10)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
   Fbx01_Tab_Document, // F11 (메뉴 #1116 파일등록 + Fbx01_TabPage_DocList·Fbx02_Popup_History. 미리보기는 Sys10_Lookup_FileViewer 재사용)
   Fbx01_Tab_Search, // F12 (메뉴 #1122 파일조회 + Fbx01_Grid_DocList. Fbx02_Popup_History·Sys10_Lookup_FileViewer 재사용)

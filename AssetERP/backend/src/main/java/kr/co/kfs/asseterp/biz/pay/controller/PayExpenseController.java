@@ -98,6 +98,12 @@ public class PayExpenseController {
         return ApiResponse.ok(service.sendConfirmRejectNotices(principal));
     }
 
+    /** pay.Pay50_Expense.rejectSendMessage — #1385 지출결의서(경영관리) [반려건 일괄 알림발송] */
+    @PostMapping("/reject-notices")
+    public ApiResponse<Integer> sendRejectNotices(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.sendRejectNotices(principal));
+    }
+
     // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
 
     /** pay.Pay50_Expense.selectByDate */

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequestAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L56-75: 툴바(고객사·구분·특정업무구분 콤보·조회·저장) + 셀 편집 그리드(행번호, 체크박스 단일)
  * UX보강(10) 시범(B11): 툴바 = SearchBar(UX-01 조회 로딩·UX-02 초기화), 저장 = 저장(n)(UX-03)
- * 문서보기 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)는 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
+ * 문서보기 아이콘 → 전자결재 문서 창 Apr01_Edit_ApprDoc (2026-11-10 연결, 전엔 안내만 — 13-누락대장). 로그인 회사 문서만 열린다
  * 스타일: CG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
@@ -16,6 +16,10 @@ import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
+import type { AxiosError } from 'axios';
+import { errorMessage } from '@/api/client';
+import { aprDetailApi } from '@/api/apr';
+import { Apr01_Edit_ApprDoc } from '@/pages/apr/Apr01_Edit_ApprDoc';
 
 type Row = SpecificMenuRequestAdmin;
 const gb = gbFor<Row>();
@@ -31,7 +35,7 @@ const buildGrid = (states: Code[], viewDocument: (r: Row) => void) => [
   gb.textStatus('aprStatusNm', 100, '문서상태'),
   gb.text('confirmNm', 200, '처리자', { editor: 'text' }),
   gb.date('confirmDate', 100, '처리일', { editor: 'date' }),
-  // [E4] stateComboBox[SpecificStateCode].Collapse (L153-160) → addChange(stateCode, getCode()) + addChange(stateName, getName())
+  // [E5] stateComboBox[SpecificStateCode].Collapse (L153-160) → addChange(stateCode, getCode()) + addChange(stateName, getName())
   gb.textStatus('stateNm', 100, '처리상태', {
     editor: 'select',
     values: states.map(c => c.name),
@@ -63,13 +67,22 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
   crudRef.current = crud;
 
   // 문서보기 아이콘 (buildGrid L121-148): apr.Apr01_Appr.selectById(apprId) → 없으면 '연관문서가 존재하지않습니다',
-  // 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false). 전자결재는 다른 도메인이라 아직 없음
-  const viewDocument = useCallback((r: Row) => {
+  // 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false) (2026-11-10 연결, 전엔 안내만).
+  // AS-IS와 다른 점: 문서 상세 API(selectById)는 로그인 회사의 문서만 읽는다(원본은 회사 조건 없음) — 다른 회사 문서는 "연관문서가 존재하지않습니다"
+  // [E4] actionCell (ImageCell).callbackOnCreate (L140) → 인라인 L140-145: 문서 창을 닫으면 grid.unmask() — TOBE는 마스크가 없어 창 닫기만
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const viewDocument = useCallback(async (r: Row) => {
     if (r.apprId == null) {
       message.warning('연관문서가 존재하지않습니다');
       return;
     }
-    message.info('전자결재 화면(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
+    try {
+      await aprDetailApi.getDetail(r.apprId);
+      setViewApprId(r.apprId);
+    } catch (err) {
+      if ((err as AxiosError)?.response?.status === 404) message.warning('연관문서가 존재하지않습니다');
+      else message.error(errorMessage(err, '조회 실패'));
+    }
   }, []);
 
   const columnDefs = useMemo(() => buildGrid(states, viewDocument), [states, viewDocument]);
@@ -108,6 +121,7 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
         <CellEditGrid<Row> crud={crud} columnDefs={columnDefs} sortable={false}
           rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
       </div>
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

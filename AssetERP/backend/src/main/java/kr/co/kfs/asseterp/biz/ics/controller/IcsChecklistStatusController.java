@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,6 +57,17 @@ public class IcsChecklistStatusController {
                                                                     @RequestParam boolean unCheckYn, @RequestParam boolean unConfirmYn,
                                                                     @RequestParam int offset, @RequestParam int limit) {
         return ApiResponse.ok(service.search(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn, offset, limit));
+    }
+
+    /**
+     * #1230 [상신] 창(Ics16_Lookup_RelateAppr) [미리보기] — AS-IS sys.Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail).
+     * windowClassName은 원본이 넘기는 값("Ics15_Tab_ChecklistConfirm") 그대로 서버가 정한다
+     */
+    @PostMapping("/details/rd-print")
+    public ApiResponse<String> insertRdPrint(@AuthenticationPrincipal UserPrincipal principal,
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                             @RequestParam String cycleType, @RequestParam Long checklistLClassId) {
+        return ApiResponse.ok(service.insertRdPrint(principal, "Ics15_Tab_ChecklistConfirm", stdDate, cycleType, checklistLClassId, null, "%", false, false));
     }
 
     /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdChecklistDetail + RD 리포트 Ics15_Rd_ChecklistDetail → 한 시트 xlsx) */

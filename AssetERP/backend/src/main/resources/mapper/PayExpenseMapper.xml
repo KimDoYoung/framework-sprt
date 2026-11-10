@@ -392,6 +392,46 @@
            AND pay50_confirm_status_cd = '30'
     </update>
 
+    <!-- AS-IS pay50_expense.getRejectSendMessageList (IDMS-IC) — #1385 지출결의서 [반려건 일괄 알림발송]. 받는 사람(요청자·확인자) 열 pay50_emp_id를 reg_emp_id로 받는다(ExpenseConfirmSendRow 재사용) -->
+    <select id="selectRejectSendList" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow">
+        SELECT pay50_emp_id            AS reg_emp_id
+             , SUM(pay50_count)        AS count
+          FROM (SELECT pay50_reg_emp_id      AS pay50_emp_id
+                     , COUNT(*)              AS pay50_count
+                  FROM pay50_expense
+                  LEFT OUTER JOIN apr01_appr apr1 ON apr1.apr01_appr_id = pay50_expense_appr_id
+                 WHERE pay50_company_id = #{companyId}
+                   AND (COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '')
+                   AND pay50_confirm_status_cd = '20'  /*(20:승인)*/
+                   AND pay50_appr_emp_id IS NOT NULL
+                   AND COALESCE(pay50_reject_sms_yn,'false') != 'true'
+                 GROUP BY pay50_reg_emp_id
+                 UNION ALL
+                SELECT pay50_confirmer_id     AS pay50_emp_id
+                     , COUNT(*)               AS pay50_count
+                  FROM pay50_expense
+                  LEFT OUTER JOIN apr01_appr apr1 ON apr1.apr01_appr_id = pay50_expense_appr_id
+                 WHERE pay50_company_id = #{companyId}
+                   AND (COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '')
+                   AND pay50_confirm_status_cd = '20'  /*(20:승인)*/
+                   AND pay50_appr_emp_id IS NOT NULL
+                   AND COALESCE(pay50_reject_sms_yn,'false') != 'true'
+                   AND pay50_reg_emp_id != pay50_confirmer_id
+                 GROUP BY pay50_confirmer_id) AS total
+         GROUP BY pay50_emp_id
+    </select>
+
+    <!-- AS-IS pay50_expense.updateRejectSmsYn (IDMS-IC) -->
+    <update id="updateRejectSmsYn">
+        UPDATE pay50_expense
+           SET pay50_reject_sms_yn = 'true'
+         WHERE pay50_company_id = #{companyId}
+           AND pay50_confirm_status_cd = '20'  /*(20:승인)*/
+           AND pay50_appr_emp_id IS NOT NULL
+           AND COALESCE(pay50_reject_sms_yn,'false') != 'true'
+           AND COALESCE(pay50_reject_reason,'') != ''
+    </update>
+
     <!-- ===== Y08 Pay50_Tab_ExpenseRequest (사업비 지출요청) · Pay50_Lookup_ExpenseRequestInsert ===== -->
     <!-- AS-IS pay50_expense.selectByDate (IDMS-IC) — 바깥 SELECT 열 목록을 이 화면 그리드가 쓰는 열로 줄였다(같은 FROM·JOIN·WHERE·정렬) -->
     <select id="selectExpenseMine" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineRes">

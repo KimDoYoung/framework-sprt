@@ -3,8 +3,8 @@
  * AS-IS: myApp/client/vi/ics/Ics16_Lookup_RelateAppr.java (538줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L106-132: 모달 710×350, 툴바(분기(월): 기준년도 · 월/분기 콤보 · [조회]) / 그리드(대분류별 전체건수·확인건수·미리보기·결재상태·결재요청·문서보기) / [닫기].
  * 1단계: 조회·상신 전 검사(건수 일치, 결재상태 안내). V19: [결재요청]의 문서분류 선택 → 결재 편집창(A27) → 상신 연결 기록(updateApprId, 이전 문서 폐기)과 [문서보기](결재 편집창)를 연결했다.
- * 남은 것(다음 단계): [미리보기](RD)와 createRd()의 RD 첨부 PDF 만들기 — TOBE에는 RD 리포트·PDF 엔진이 없다. AS-IS도 파일 저장 경로가 없는 환경(개발계)에서는
- * PDF 없이 바로 결재 편집창을 여는데(createRd L462-463) TOBE는 그 경로만 간다.
+ * [미리보기]는 sys99_print 적재(POST ics/checklist-status/details/rd-print) → RD 뷰어(Ics15_Rd_ChecklistDetail)로 연결했다(2026-11-10, 13-누락대장).
+ * 남은 것: createRd()의 RD 첨부 PDF 만들기 — AS-IS도 파일 저장 경로가 없는 환경(개발계)에서는 PDF 없이 바로 결재 편집창을 여는데(createRd L462-463) TOBE는 그 경로만 간다.
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useRef, useState } from 'react';
@@ -21,6 +21,8 @@ import { dcrApi } from '@/api/dcr';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { getDate } from './icsComplyPeriod';
+import { rdApi } from '@/api/rd';
+import { RdViewer } from '@/components/lookup/RdViewer';
 
 const gb = gbFor<IcsChecklistRelateAppr>();
 const LINK_CODE = 'A27';  // linkCheck()의 dcr.Dcr30_Link.selectByLinkCode · insertLinkApproval(…, "A27", …)
@@ -156,13 +158,39 @@ export const Ics16_Lookup_RelateAppr: React.FC<Props> = ({ target, onClose }) =>
     setViewApprId(row.apprId);
   };
 
+  // viewRd() L384-428: sys.Sys99_Print.insertRdChecklistDetail(windowClassName "Ics15_Tab_ChecklistConfirm", 기준일 getDate(), 고른 행의 대분류,
+  //   중분류 null, 체크주기, 검색어 "%", 미체크·미확인 false) → 성공이면 RDViewer.viewer(mrd Ics15_Rd_ChecklistDetail · options "/rhtmlimportopt [2]"
+  //   · rv rdGroupId·companyId·personId·year(기준년도 칸)·period(월/분기 콤보의 글자)). companyId·personId는 서버가 채운다(rd.ts)
+  const [rd, setRd] = useState<string | null>(null);
+  const viewRd = async (row: IcsChecklistRelateAppr) => {
+    const cycleType = target?.cycleType;
+    if (!cycleType) return;
+    const std = getDate(view.current.year, view.current.period, cycleType);
+    if (!std) { message.warning('기준년도를 4자리 숫자로 입력하세요.'); return; }
+    setLoading(true);  // mask(true)
+    try {
+      const groupId = await icsApi.insertChecklistDetailRdPrint(std.format('YYYY-MM-DD'), cycleType, row.checklistLClassId);
+      const res = await rdApi.buildUrl({
+        kind: 'viewer',
+        mrd: 'Ics15_Rd_ChecklistDetail',
+        options: '/rhtmlimportopt [2]',
+        rv: { rdGroupId: groupId, year: view.current.year, period: view.current.periodName },
+      });
+      setRd(res.url);
+    } catch (err) {
+      message.error(errorMessage(err, '미리보기 실패'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // buildGrid() L152-209 — 열 순서·폭·제목은 원본 그대로
   const columnDefs = [
     gb.text('checkLClassName', 220, '대분류'),
     gb.long('totalCount', 80, '전체건수'),
     gb.long('confirmCount', 80, '확인건수'),
-    // rdViewCell L153 → viewRd(): insertRdChecklistDetail → RD 뷰어 (다음 단계)
-    iconCell<IcsChecklistRelateAppr>('view', 'rdViewCell', 60, '미리보기', () => { message.info('미리보기 리포트(RD)는 다음 단계에서 연결합니다.'); }),
+    // rdViewCell L153 → viewRd() L384-428: insertRdChecklistDetail → RD 뷰어
+    iconCell<IcsChecklistRelateAppr>('view', 'rdViewCell', 60, '미리보기', row => { void viewRd(row); }),
     gb.textCenter('statusName', 80, '결재상태'),
     iconCell<IcsChecklistRelateAppr>('edit', 'apprCell', 60, '결재요청', row => { void requestAppr(row); }),
     iconCell<IcsChecklistRelateAppr>('view', 'viewCell', 60, '문서보기', viewAppr),
@@ -234,6 +262,7 @@ export const Ics16_Lookup_RelateAppr: React.FC<Props> = ({ target, onClose }) =>
         onClosed={() => void retrieve()}
         onClose={() => { setViewApprId(null); setLinkDoc(null); }}
       />
+      <RdViewer url={rd} title="내부통제 체크리스트" onClose={() => setRd(null)} />
     </LookupModal>
   );
 };

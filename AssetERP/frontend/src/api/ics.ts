@@ -804,6 +804,12 @@ export const icsApi = {
     await downloadXlsx('v1/ics/checklist-status/details/excel', { ...params, fileName }, `${fileName}.xlsx`);
   },
 
+  /** #1230 상신 창 [미리보기] — AS-IS Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail) */
+  insertChecklistDetailRdPrint: async (stdDate: string, cycleType: string, checklistLClassId: number): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/ics/checklist-status/details/rd-print', null, { params: { stdDate, cycleType, checklistLClassId } });
+    return res.data.data;
+  },
+
   // ── K03 내부통제 준수보고(준감인) (Ics31_Tab_ComplianceReport) ──
 
   /** AS-IS sys.Sys99_Print.insertComplianceState: 재직 사원별 준수항목 결과·미준수 사유 (stdDate = 기준 분기(월)의 말일) */

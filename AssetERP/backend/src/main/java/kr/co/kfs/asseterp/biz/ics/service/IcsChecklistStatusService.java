@@ -98,6 +98,27 @@ public class IcsChecklistStatusService {
         return IcsExcelWriter.write("내부통제내역 상세", List.of("대분류", "중분류", "체크결과", "담당부서", "담당자", "확인자", "확인여부"), rows);
     }
 
+    /**
+     * #1230 내부통제내역 확인(부서장) → [상신] 창 Ics16_Lookup_RelateAppr [미리보기] (viewRd L384-428) — AS-IS Sys99_Print.insertRdChecklistDetail L1417-1469:
+     * ① 이 사원·화면의 지난 출력 자료를 지우고 ② 상세 목록(selectChecklistStatusPaging 전체)을 sys99_print에 한 행씩 넣고 ③ 묶음 ID를 돌려준다(RD 리포트 Ics15_Rd_ChecklistDetail의 rdGroupId).
+     * AS-IS 메시지 "groupId/tempFileId"의 tempFileId는 미리보기에서 쓰지 않아 만들지 않는다. 화면이 넘기는 조건 그대로: 중분류 없음, 검색어 "%", 미체크·미확인 false
+     */
+    @Transactional
+    public String insertRdPrint(UserPrincipal user, String windowClassName, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
+                                String searchText, boolean unCheckYn, boolean unConfirmYn) {
+        Long companyId = user.getCompanyId();
+        long groupId = mapper.selectNextPrintId();
+        mapper.deletePrint(companyId, user.getUserId(), windowClassName);
+        long limit = mapper.selectTotal(companyId, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn);
+        if (limit > 0) {
+            for (IcsChecklistStatusDetailRes r : mapper.selectPaging(companyId, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText,
+                    unCheckYn, unConfirmYn, 0, limit)) {
+                mapper.insertPrint(companyId, user.getUserId(), windowClassName, groupId, r, Boolean.TRUE.equals(r.confirmYn()) ? "확인" : "");
+            }
+        }
+        return String.valueOf(groupId);
+    }
+
     private static final class Row {
         final IcsChecklistStatusCount count;
         final long[] unCheck = new long[12];
