@@ -2,9 +2,15 @@
 
 2026-10-29에 `05-작업방법.md` §7의 긴 버전 문단을 분리했다. 기준 버전·세션 시작 절차는 `변환-가이드.md` 5절에 있고, 이 문서는 버전별 한계·새 기능을 확인해야 할 때(막힐 때, 버전이 바뀔 때)만 연다. 새 버전 기록은 맨 위에 더한다.
 
+## 0.8.5 (2026-11-10, 업무분석 EMP-BZ-0014 시작에 `changelog --since 0.8.4`로 확인)
+
+- **`trace-crud`·`trace-pair`(0.8.5~)**: 0.8.4에 남은 오탐 두 가지(수정사항052)가 해결됐다 — ① API 객체 안의 다른 함수를 거쳐 부르는 호출(`fileApi.xxx`·`this.xxx`)과 서비스가 주입한 다른 서비스 호출(1~2단계)을 따라간다 ② AS-IS 서블릿 `FileDelete`(→ `sys10_file` RD)·`FileUpload`(→ C)를 센다(#1298·#1353 오탐 해소).
+- **속도**: 매퍼 XML·TOBE 색인을 `.yunhee/cache/`에 파일 mtime 기준으로 캐시해 화면 하나 약 24초 → 약 3~7초. `trace-crud --screen '#1032,#1033,#1034'`처럼 쉼표로 여러 화면을 한 번에(세 화면 6.8초).
+- 아직 보이는 오탐(EMP-BZ-0014에서 봄): #1032 `sys01_company: ASIS RU` — 색인이 서버 `Sys01_Company.selectById` 호출에 `sys01_company.updateMainImageId`를 함께 붙여 U가 나온다(휴가 화면은 회사 정보를 읽기만 한다). `sms02_history: ASIS C / TOBE -` — TOBE는 `SmsSender`로 보내 매퍼 쓰기가 없어 안 보인다.
+
 ## 0.8.4 (2026-11-10, 업무분석 SYS-BZ-0021 뒤 `changelog --since 0.7.3`로 확인)
 
-- **`trace-crud`·`trace-pair`(0.8.4~)**: 수정사항051의 오탐(`save:`/`remove:`로 넘긴 API, 매퍼 쓰기 문장)이 해결됐다 — #1077·#1078·#1197·#1360·#1353·#1500·#1302·#1304·#1404가 실제 실행(`api --track`)과 일치. **남은 오탐(수정사항052)**: ① API 함수가 같은 객체의 다른 함수를 거쳐 부르면 놓친다(`fileApi.checkFileDelete` → `checkFileDeleteResult` — #1298 `sys11_relate_file ⚠ TOBE에 D 없음`은 틀림, 같은 꼴 15화면) ② AS-IS 서블릿(`FileDelete`·`FileUpload`) 쓰기를 못 세 `sys10_file`이 "TOBE에 D 추가"·"TOBE에만"으로 나온다. 화면 하나에 약 24초 — 여러 화면은 나눠 돌리거나 `run_in_background`.
+- **`trace-crud`·`trace-pair`(0.8.4~)**: 수정사항051의 오탐(`save:`/`remove:`로 넘긴 API, 매퍼 쓰기 문장)이 해결됐다 — #1077·#1078·#1197·#1360·#1353·#1500·#1302·#1304·#1404가 실제 실행(`api --track`)과 일치. **남은 오탐(수정사항052)**: ① API 함수가 같은 객체의 다른 함수를 거쳐 부르면 놓친다(`fileApi.checkFileDelete` → `checkFileDeleteResult` 꼴. 이 래퍼는 2026-11-10에 지워 지금 TOBE에는 해당 화면이 없다 — #1298이 `RD/RD`로 바로 나옴. 새로 이런 래퍼를 만들면 같은 오탐이 난다) ② AS-IS 서블릿(`FileDelete`·`FileUpload`) 쓰기를 못 세 `sys10_file`이 "TOBE에 D 추가"·"TOBE에만"으로 나온다. 화면 하나에 약 24초 — 여러 화면은 나눠 돌리거나 `run_in_background`.
 - **`api`(0.8.4~)**: `-c <회사>`만으로 그 회사 서브도메인에 접속(전에는 `-t`도 필요). 응답 필터 `--fields a,b`(TSV)·`--where k=v`·`--count-by k`, 세션 새로 `--fresh`. `api --log`에 500의 가장 안쪽 원인 한 줄.
 - **`screen-desc <번호,번호…>`(0.8.3~)**: 화면번호로 메뉴·TOBE 파일·SID·조회조건·버튼·그리드·팝업·API·SQL·테이블·AS-IS 서비스·이벤트를 한 번에(`-s` 요약, `--section`). 업무분석·변환의 첫 조사로 쓴다. `useGridCrud`로 넘긴 API는 "호출 API 없음"으로 나올 수 있다(#1302 — trace-pair는 찾음).
 - **`analysis method <클래스>`(0.8.4~)**: 메서드 없이 주면 메서드 목록. 겹치는 이름은 `'Cls.m#2'`로 고른다. 모든 명령에 `-h`.
