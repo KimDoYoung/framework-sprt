@@ -4,14 +4,14 @@
  * 레이아웃(생성자 L92-131, CG): 툴바(해당 연도 · 구분 · [조회][저장][삭제][생성] + 안내 글) + 셀 편집 그리드(체크 다중) + 아래 문서분류 줄(문서분류 · [상신][문자발송])
  * 연차 탭과 다른 점: 구분 콤보는 코드그룹 unLeaveCode002 + 맨 앞 "전체", 조회는 selectByUnLeaveCode2, [생성]은 구분 창 없이 바로 insert2(기준년도만).
  * 1단계(사용자 결정 2026-10-28)는 [상신]의 결재문서 생성·[문자발송]·상세보기를 확인창까지만 했다. V39(2026-11-01)에서 [상신](서버가 결재문서 일괄 생성, emp.Emp21_UnLeave.insertAppr2)과 상세보기(Apr01_Edit_ApprDoc)를 연결했다.
- * [문자발송](sendMessage)은 다음 단계.
+ * [문자발송](sendMessage)은 2026-11-10 연결했다(POST emp/un-leaves/sms — 연차 탭과 같은 서버 메서드, 문구도 "연차" 그대로. EMP-BZ-0015).
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Input, Modal, message } from 'antd';
 import dayjs from 'dayjs';
 import { empUnLeaveApi } from '@/api/emp';
-import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
+import { dcrApi } from '@/api/dcr';
 import { UnLeave } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
@@ -154,8 +154,15 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
       width: 380,
       okText: '예',
       cancelText: '아니오',
-      // [E12] msgBox.DialogHide [YES] (L465) → 서비스 emp.Emp21_UnLeave.sendMessage(companyId, 선택 행), 성공 "문자알림이 발송되었습니다" / "문자발송 기능을 미신청한 고객사입니다…" — 다음 단계
-      onOk: () => { message.info('문자발송은 아직 변환 전입니다(다음 단계).'); },
+      // [E12] msgBox.DialogHide [YES] (L465) → 서비스 emp.Emp21_UnLeave.sendMessage(companyId, 선택 행) → 상태 > 0 "문자알림이 발송되었습니다" / 아니면 미신청 문구 (L478-483)
+      onOk: async () => {
+        try {
+          const status = await empUnLeaveApi.sendMessage(selected.map(r => r.unLeaveId as number));
+          Modal.info({ title: '확인', content: status > 0 ? '문자알림이 발송되었습니다' : '문자발송 기능을 미신청한 고객사입니다. 관리자에게 문의해주세요', okText: '확인' });
+        } catch (err) {
+          message.error(errorMessage(err, '문자발송 실패'));
+        }
+      },
     });
   };
 

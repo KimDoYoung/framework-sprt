@@ -1310,6 +1310,12 @@ export const empUnLeaveApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS emp.Emp21_UnLeave.sendMessage (연차·월차 탭 [문자발송]) → 1 발송 / -1 문자발신 서비스 미신청 고객사 */
+  sendMessage: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves/sms', ids);
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS emp.Emp21_UnLeave.insertAppr2 (월차 탭 [상신]) → 만든 결재문서 수 */
   createMonthAppr: async (stdYear: string, classTreeId: number, ids: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves/month/appr', { stdYear, classTreeId, ids });

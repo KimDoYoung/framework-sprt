@@ -365,6 +365,21 @@ SELECT	row_number() over()                                          AS emp01_per
         <foreach collection="unLeaveIds" item="unLeaveId" open="(" separator="," close=")">#{unLeaveId}</foreach>
     </delete>
 
+    <!-- ───── [문자발송] (AS-IS Emp21_UnLeave.sendMessage L615-664) ───── -->
+
+    <!-- AS-IS emp01_person.selectById L637 (IDMS-IC): 고른 행의 사원 이름·휴대폰번호. AS-IS는 행 모델의 personId를 화면에서 받았다 — TOBE는 행 ID를 받아 로그인 회사 안에서 다시 읽는다 -->
+    <select id="selectSmsTargets" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveSmsTarget">
+        SELECT emp21_un_leave_id   AS un_leave_id
+             , emp01_person_id     AS person_id
+             , emp01_kor_nm        AS kor_name
+             , emp01_mobile_telno  AS mobile_tel_no
+          FROM emp21_un_leave
+               INNER JOIN emp01_person ON emp01_person_id = emp21_person_id
+         WHERE emp21_company_id = #{companyId}
+           AND emp21_un_leave_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <!-- ───── V39 [상신]: 결재문서 일괄 생성 (AS-IS Emp21_UnLeave.insertAppr·insertAppr2) ───── -->
 
     <!-- 그리드 조회 SQL(yearQuery·monthQuery)의 같은 열을 선택한 행 ID로 다시 읽는다. AS-IS는 행 모델을 화면에서 받았다 -->

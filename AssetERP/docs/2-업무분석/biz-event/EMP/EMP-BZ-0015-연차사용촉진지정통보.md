@@ -32,7 +32,7 @@
 | 2 | 〃 | 〃 | [생성] → 생성 창에서 구분 확인 | 대상 직원이 한 줄씩 생긴다. **창(1~10일) 밖이면 0건**이고 아무 일도 없다 |
 | 3 | 〃 | 〃 | (필요하면) 발생·사용·잔여 칸을 고쳐 [저장] | |
 | 4 | 〃 | 〃 | 문서분류 돋보기 → `휴가/잔여 연차휴가 통지서` → 직원 체크 → [상신] → 확인 | 직원마다 **결재 완료 문서 1건**(제목 `미사용 연차유급휴가일수 통지서_김사원_연차 사용촉진`)이 바로 생긴다. 결재선: 상신·승인 = 과장, **참조 = 그 직원**. 사용촉진통보 칸 `완료` |
-| 5 | 〃 | 〃 | [문자발송] | 원본은 직원에게 SMS. **TOBE는 "아직 변환 전"** 안내만(아래 부족) |
+| 5 | 〃 | 〃 | 직원 체크 → [문자발송] → "김사원 외 1인에게 문자를 발송하시겠습니까?" → 예 | "문자알림이 발송되었습니다". 직원 휴대폰에 `[Asset-ERP] 김사원님의 미사용 연차유급휴가일수 통지서가 도착했습니다. {오늘+10일}까지 … 사용시기를 제출하여 …`. 문자발신 미신청 회사면 "문자발송 기능을 미신청한 고객사입니다. 관리자에게 문의해주세요" |
 | 6 | 직원 | **#1184** 신청 > 01. 외출/출장/휴가 > 연월차휴가 지정통보 | 해당 연도 → [조회] | 내 행(통지일·구분·잔여·지정통보문서·결재상태) |
 | 7 | 〃 | 〃 | 01 행의 [상신] 칸 → 문서분류 `휴가/연차휴가 사용시기 지정통보` → 결재문서 창 | 제목 `미사용 연차유급휴가 사용 시기 지정통보서_김사원_연차 사용촉진`(고정), 본문은 발생·의무사용·사용·미사용 표 + 월별 사용 계획 칸(직원이 채움). 통지일 10일이 지났으면 "사용시기 지정통보 기간이 지났습니다. (통지일로부터 10일이내에만 가능)" |
 | 8 | 〃 | 결재문서 창 | 결재: 팀장 → [결재요청] | #1184 결재상태 `상신`, #1185 지정통보 칸 `상신` |
@@ -53,7 +53,7 @@
 | `emp21_un_leave` | 직원·구분·통지일(`start_date`)·발생·사용·잔여, 통지 문서(`emp21_appr_id`), 직원 지정통보서(`emp21_expect_appr_id`) | 2·10 +직원 수, 4·11 `appr_id`, 8 `expect_appr_id` |
 | `apr01_appr` | 통지서(상태 30 완료, 사내 20) · 지정통보서(10 상신 → 30) | 4·11 +직원 수, 8 +1 |
 | `apr04_appr_step` | 통지서: 00 상신(승인) + 30 참조(직원, 상신자 본인이면 없음) · 지정통보서: 00 + 10 결재 | 4·11 +2씩(본인 -1), 8 +2 |
-| (SMS 기록) | 원본 `SendSMSAPIFunction.sendPromoMessage` | 5 (TOBE 없음) |
+| `sms02_history` | 보낸 문자(회사·본문·번호) | 5 +직원 수(보내기 성공한 사람만) |
 
 ## 결과를 볼 수 있는 화면
 
@@ -74,7 +74,8 @@
 
 - **고침 — 의무사용율이 빈 회사에서 [상신]이 500.** `UnLeaveNoticeRow.dutyRt()`가 null이라 `UnLeaveNoticeHtml.html1_01` L109에서 NPE(로그 trace `6d29935ef4c0694b`). 원본처럼 null이면 100으로 돌려주게 고쳤다(`UnLeaveNoticeRow`·`UnLeaveLinkRow` — A15 지정통보서도 같은 이유로 "의무사용 비율이 없어 통보서를 만들 수 없습니다"였다). 배포 뒤 7건 생성 확인.
 - **고침 — #1184 [상신]이 "미사용휴가 정보가 없습니다".** 결재창을 A15로 열 때 `args.stdYear`를 넘기지 않아 `UnLeaveLinkSeedProvider` L47-49가 거부했다(API로 재현: `link-seed`에 `stdYear` 없으면 400, 있으면 200). `Emp21_Tab_PersonList.tsx`가 해당 연도를 넘기게 고쳤다(`tsc` 통과, 배포 필요).
-- ⚠ **부족 — [문자발송]이 아직 없다.** 연차·월차 탭 모두 확인창 뒤 "문자발송은 아직 변환 전입니다(다음 단계)."(`Emp21_TabPage_UnLeaveList1.tsx` L149). 원본 `Emp21_UnLeave.sendMessage` L615-672는 회사 SMS 사용(`getSMSFlag`) 확인 뒤 `"[Asset-ERP] " + 이름 …` 문자를 `sendPromoMessage`로 보낸다. SMS 시뮬레이터가 연결됐으니 옮길 수 있다.
+- **만듦 — [문자발송].** 전에는 확인창 뒤 "문자발송은 아직 변환 전입니다"만 보였다. 원본 `Emp21_UnLeave.sendMessage` L615-672를 `POST /api/v1/emp/un-leaves/sms`(body: 고른 행 ID, `EmpUnLeaveService.sendMessage`)로 옮기고 연차·월차 탭에 연결했다. 회사 문자발신 신청(`asseterp.notice.sms-companies`, 원본 `{위치}.SMSok`)이 아니면 -1, 아니면 사원마다 `SmsSender`로 보내고 1. 한 사람이 실패해도(번호 없음 등) 원본처럼 로그만 남기고 다음 사람에게 보낸다. 월차 탭도 같은 서버 메서드라 문구가 "연차" 그대로다(원본 그대로). 확인: kalpa 2명 → 시뮬레이터 2건·`sms02_history` +2, kova(미신청) → -1·발송 0.
+- 환경 메모: 집 서버(omen 프로파일)는 시뮬레이터를 `NOTICE_SIM_HOST=0.0.0.0 tools/run-notice-server.sh start`로 켜야 Tomcat(docker)이 192.168.0.130:5161로 닿는다. 그냥 켜면 "SMS 발송 실패(sim): null".
 - 실행하지 않은 것: 월차 탭(03~06, 입사 1년 안 직원 — kalpa 직원은 모두 2020년 입사), 출력, 화면 눈 확인(`대기`).
 
 ## 실행 기록 (2026-11-10, 집 DB)
@@ -88,6 +89,7 @@
 | 6~9 | 401: `GET my-un-leaves` → `link-seed`(A15, stdYear) → `PUT apprs/{id}`(결재 김과장) → `PUT my-un-leaves/{id}/expect-appr-id` → 301 승인 | 지정통보 `상신` → `완료` |
 | 10 | `POST /api/v1/emp/un-leaves` 구분 02 | **6건, 401 빠짐**. 다시 누르면 0 |
 | 11 | `POST /api/v1/emp/un-leaves/appr` 분류 `연차휴가 사용시기 지정통보` | 6건, 영업일 63일(10/1~12/31)에서 배정, 박부장·최사원 중복 |
+| 5 | `POST /api/v1/emp/un-leaves/sms` 최사원·김사원 01 행 | `1`, 시뮬레이터 SMS 2건(0101000402·0101000401, 기한 2026년 11월 20일), `sms02_history` +2. kova 과장 → `-1` |
 
 <details>
 <summary>시나리오 데이터 (자동 시험용)</summary>
@@ -137,5 +139,5 @@ steps:
 - AS-IS 화면: `Emp21_Tab_UnLeaveList`(#1185) = `Emp21_TabPage_UnLeaveList1`(연차: [생성] `insert` L319-330 → `Emp21_Lookup_Insert`, [상신] `insertApprCheck` L426-462 → `insertAppr` L464-485, [문자발송] `sendMessage` L487-540, 문서분류 기본 `defaultName` L202-238 B07/B08) · `Emp21_TabPage_UnLeaveList2`(월차). `Emp21_Tab_PersonList`(#1184: [상신] 칸 L99-120 → `findLinkCode` L213-239 → `insertAppr` L252-263(A15) → `updateApprId` L265-281)
 - AS-IS 서버: `emp.Emp21_UnLeave.insert`(L95, `emp01_person.selectByUnLeaveCode`)·`insertAppr`(L159-385)·`insertAppr2`(L387-603)·`sendMessage`(L615-672)·`selectByPersonId`·`update`·`delete`
 - TOBE: `/api/v1/emp/un-leaves`(`GET`·`/month`·`POST`·`/month`·`PUT`·`DELETE`·`/appr`·`/month/appr` — `EmpUnLeaveService`·`EmpUnLeaveApprService`), `/api/v1/emp/my-un-leaves`(`GET`·`PUT /{id}/expect-appr-id` — `EmpMyUnLeaveService`), 결재창 A15 `UnLeaveLinkSeedProvider`. 변환 ID S08·V36·V39·Y03
-- TOBE 상태(2026-11-10): **실행(API, 과장 301 → 직원 401 → 팀장 301, 집 DB)** — 1차 통지서 상신(행은 직접 입력)·직원 지정통보서 결재·2차 생성(지정통보 낸 직원 제외)·2차 통지서 상신. 고친 것 2(의무사용율 기본 100, #1184 연도 전달), 부족 1(문자발송). 화면 눈 확인 `대기`.
+- TOBE 상태(2026-11-10): **실행(API, 과장 301 → 직원 401 → 팀장 301, 집 DB)** — 1차 통지서 상신(행은 직접 입력)·직원 지정통보서 결재·2차 생성(지정통보 낸 직원 제외)·2차 통지서 상신. 고친 것 2(의무사용율 기본 100, #1184 연도 전달), 만든 것 1(문자발송 API). 화면 눈 확인 `대기`.
 </details>

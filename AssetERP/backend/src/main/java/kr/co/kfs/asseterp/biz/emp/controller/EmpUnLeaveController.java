@@ -68,6 +68,12 @@ public class EmpUnLeaveController {
         return ApiResponse.ok(service.delete(principal, ids));
     }
 
+    /** AS-IS emp.Emp21_UnLeave.sendMessage ([문자발송], 연차·월차 탭) — body: 고른 행 ID. 1 발송 / -1 문자발신 서비스 미신청 */
+    @PostMapping("/sms")
+    public ApiResponse<Integer> sendMessage(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.sendMessage(principal, ids));
+    }
+
     /** AS-IS emp.Emp21_UnLeave.insertAppr ([상신], 연차 탭) → 만든 결재문서 수 */
     @PostMapping("/appr")
     public ApiResponse<Integer> createYearAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody UnLeaveApprReq req) {

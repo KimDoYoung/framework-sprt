@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.emp.mapper;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveEtcRange;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveNoticeRow;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveRes;
+import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveSmsTarget;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -29,6 +30,10 @@ public interface EmpUnLeaveMapper {
                       @Param("remainDays") Double remainDays);
 
     int deleteUnLeaves(@Param("companyId") Long companyId, @Param("unLeaveIds") List<Long> unLeaveIds);
+
+    // ───── [문자발송] ─────
+
+    List<UnLeaveSmsTarget> selectSmsTargets(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);
 
     // ───── V39 [상신] ─────
 
