@@ -30,6 +30,9 @@ public interface AprNoticeMapper {
     /** AS-IS emp92_sms_notice.sendCheckSms */
     int countSmsBlocked(@Param("personId") Long personId, @Param("noticeCode") String noticeCode);
 
+    /** AS-IS apr01_appr.selectById 중 제목 */
+    String selectApprTitle(@Param("apprId") Long apprId);
+
     /** AS-IS apr04_appr_step.selectByApprId 중 알림에 쓰는 열 (정렬 f_to_number(seq), 단계코드, ID) */
     List<AprNoticeStep> selectSteps(@Param("apprId") Long apprId);
 

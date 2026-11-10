@@ -11,6 +11,9 @@ import java.util.List;
 
 @Mapper
 public interface EmpLeaveMapper {
+    /** AS-IS emp20_leave.cancelUpdate L501 — 취소 표시 (회사 조건 추가) */
+    int cancelUpdate(@Param("companyId") Long companyId, @Param("leaveId") Long leaveId);
+
 
     List<LeaveRes> selectLeaves(@Param("personId") Long personId, @Param("stdYear") String stdYear);
 

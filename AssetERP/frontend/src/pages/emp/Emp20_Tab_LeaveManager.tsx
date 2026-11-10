@@ -3,8 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp20_Tab_LeaveManager.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L98-191, SG): 테두리 박스 = 툴바(기준연도 · 사원명 · [조회][엑셀다운로드][휴가취소] · 초과휴가 [승인][반려][취소] ····· [기본설정][문서분류지정][초기설정 휴가일수])
  *   + 휴가 그리드(체크 단일, 2단 헤더 "초과휴가") + 아래 요약 두 줄(유급휴가 총/사용/잔여/기간 · 포상휴가 총/사용/잔여 + 안내 아이콘)
- * 1단계(사용자 결정 2026-10-28): [휴가취소]의 결재문서 삭제(emp.Emp20_Leave.cancelUpdate → apr01_appr.insertApprDel/deleteAppr)와
- *   알림톡·메일·SMS 발송(emp92_sms_notice.*)은 다음 단계 — 원본의 선택·상태 검사와 확인창까지만 한다
+ * [휴가취소]: 1단계(2026-10-28)는 확인창까지였고, 2026-11-10(사용자 결정)에 서버까지 변환했다 — 결재문서 폐기(apr99)·취소 표시·알림(앱·메일·SMS)
  * 스타일: SG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -152,8 +151,15 @@ export const Emp20_Tab_LeaveManager: React.FC = () => {
       cancelText: '아니오',
       width: 300,
       // [E13] msgBox.DialogHide [YES] (L372) → 서비스 emp.Emp20_Leave.cancelUpdate(companyId, leaveId, apprId, targetEmpId, empId), 성공이면 "취소처리가 완료되었습니다."
-      //   결재문서 삭제·알림 발송은 다음 단계 — 아직 변환 전이라 서버를 부르지 않는다
-      onOk: () => { message.info('결재문서 삭제와 알림 발송(emp.Emp20_Leave.cancelUpdate)은 아직 변환 전입니다.'); },
+      //   (원본은 성공 뒤 다시 조회하지 않는다 — 같게 둔다)
+      onOk: async () => {
+        try {
+          await empLeaveApi.cancelLeave(sel.leaveId);
+          message.success('취소처리가 완료되었습니다.');
+        } catch (err) {
+          message.error(errorMessage(err, '취소 실패'));
+        }
+      },
     });
   };
 

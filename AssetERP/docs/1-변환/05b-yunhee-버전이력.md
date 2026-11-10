@@ -6,7 +6,7 @@
 
 - **`trace-crud`·`trace-pair`(0.8.5~)**: 0.8.4에 남은 오탐 두 가지(수정사항052)가 해결됐다 — ① API 객체 안의 다른 함수를 거쳐 부르는 호출(`fileApi.xxx`·`this.xxx`)과 서비스가 주입한 다른 서비스 호출(1~2단계)을 따라간다 ② AS-IS 서블릿 `FileDelete`(→ `sys10_file` RD)·`FileUpload`(→ C)를 센다(#1298·#1353 오탐 해소).
 - **속도**: 매퍼 XML·TOBE 색인을 `.yunhee/cache/`에 파일 mtime 기준으로 캐시해 화면 하나 약 24초 → 약 3~7초. `trace-crud --screen '#1032,#1033,#1034'`처럼 쉼표로 여러 화면을 한 번에(세 화면 6.8초).
-- 아직 보이는 오탐(EMP-BZ-0014에서 봄): #1032 `sys01_company: ASIS RU` — 색인이 서버 `Sys01_Company.selectById` 호출에 `sys01_company.updateMainImageId`를 함께 붙여 U가 나온다(휴가 화면은 회사 정보를 읽기만 한다). `sms02_history: ASIS C / TOBE -` — TOBE는 `SmsSender`로 보내 매퍼 쓰기가 없어 안 보인다.
+- 아직 보이는 오탐(EMP-BZ-0014에서 봄): #1032 `sys01_company: ASIS RU` — 색인이 서버 `Sys01_Company.selectById` 호출에 `sys01_company.updateMainImageId`를 함께 붙여 U가 나온다(휴가 화면은 회사 정보를 읽기만 한다). `sms02_history: ASIS C / TOBE -` — 2026-11-10 `NoticeSmsSender`가 매퍼로 기록하게 되어 이제 TOBE에도 있다. #1033 `apr99_appr_del: ASIS CR / TOBE C` — AS-IS R은 `apr01_appr.xml` L1027-1039의 **주석 처리된** SQL을 센 것이다(오탐).
 
 ## 0.8.4 (2026-11-10, 업무분석 SYS-BZ-0021 뒤 `changelog --since 0.7.3`로 확인)
 

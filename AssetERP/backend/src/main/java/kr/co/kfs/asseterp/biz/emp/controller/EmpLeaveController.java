@@ -57,6 +57,13 @@ public class EmpLeaveController {
         return ApiResponse.ok(service.updateOverConfirm(principal, leaveId, req));
     }
 
+    /** AS-IS emp.Emp20_Leave.cancelUpdate ([휴가취소]) */
+    @PostMapping("/leaves/{leaveId}/cancel")
+    public ApiResponse<Void> cancelLeave(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long leaveId) {
+        service.cancelLeave(principal, leaveId);
+        return ApiResponse.ok(null);
+    }
+
     /** AS-IS sys.Sys99_Print.insertRdLeaveManager → rdGroupId */
     @PostMapping("/leaves/rd-download")
     public ApiResponse<String> rdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody LeaveDownloadReq req) {

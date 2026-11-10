@@ -7,7 +7,7 @@
   AS-IS(IDMS-IC) server/emp/mapper/emp20_leave.xml selectByPersonId(L102)·selectByDays(L303)·selectById·updateOverConfirm
   + emp22_etc_leave.xml selectByDays(L85)·selectByPersonId + sys/Sys99_Print insertRdLeaveManager(L4244).
   휴가관리(경영관리팀, Emp20_Tab_LeaveManager)의 조회·요약·초과휴가 승인·엑셀 출력 자료.
-  [휴가취소](emp20_leave.cancelUpdate · apr01_appr.insertApprDel/deleteAppr · emp92_sms_notice.*)는 다음 단계.
+  [휴가취소] emp20_leave.cancelUpdate — 결재문서 폐기(apr01_appr.insertApprDel/deleteAppr)·알림(emp92_sms_notice.*)은 서비스가 AprApprActionMapper·AprNoticeService로 한다(2026-11-10).
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpLeaveMapper">
 
@@ -175,6 +175,14 @@
     </update>
 
     <!-- AS-IS emp20_leave.selectById (그리드 열만) -->
+    <!-- AS-IS emp20_leave.cancelUpdate L501 (IDMS-IC) — 회사 조건 추가 -->
+    <update id="cancelUpdate">
+        UPDATE emp20_leave
+           SET emp20_cancel     = 'true'
+         WHERE emp20_leave_id   = #{leaveId}
+           AND emp20_company_id = #{companyId}
+    </update>
+
     <select id="selectLeaveById" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveRes">
         SELECT emp20_leave_id                                                             AS leave_id
              , emp20_person_id                                                            AS person_id

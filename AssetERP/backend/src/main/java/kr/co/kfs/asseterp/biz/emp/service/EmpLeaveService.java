@@ -1,5 +1,8 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeCall;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprApprActionMapper;
+import kr.co.kfs.asseterp.biz.apr.service.AprNoticeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.LeaveDaysRes;
@@ -17,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 
-/** AS-IS server/emp/Emp20_Leave.java (selectByPersonId·selectByDays·updateOverConfirm) · Emp22_EtcLeave · sys/Sys99_Print.insertRdLeaveManager */
+/** AS-IS server/emp/Emp20_Leave.java (selectByPersonId·selectByDays·updateOverConfirm·cancelUpdate) · Emp22_EtcLeave · sys/Sys99_Print.insertRdLeaveManager */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,7 +30,12 @@ public class EmpLeaveService {
     /** 초과휴가 승인상태 (10:신청/20:승인/30:반려) */
     private static final Set<String> OVER_STATUS = Set.of("10", "20", "30");
 
+    /** [휴가취소]가 되는 결재상태 (20:진행 / 30:완료) — AS-IS cancel L361 */
+    private static final Set<String> CANCELABLE_APPR_STATUS = Set.of("20", "30");
+
     private final EmpLeaveMapper mapper;
+    private final AprApprActionMapper actionMapper;
+    private final AprNoticeService noticeService;
 
     /** AS-IS selectByPersonId(personId, stdYear, managerYn=true) */
     public List<LeaveRes> searchLeaves(UserPrincipal user, Long personId, String stdYear) {
@@ -56,6 +64,27 @@ public class EmpLeaveService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return mapper.selectLeaveById(user.getCompanyId(), leaveId);
+    }
+
+    /**
+     * AS-IS Emp20_Tab_LeaveManager.cancel L353-367 → cancelMessage L369-405 → emp.Emp20_Leave.cancelUpdate L124-239:
+     * 결재선 모두에게 휴가취소 알림(앱·메일·SMS)을 보내고, 결재문서를 폐기문서(apr99)로 옮겨 지우고, 휴가를 취소로 표시한다.
+     * 결재상태 20(진행)·30(완료)만 — 원본은 화면에서만 막지만 TOBE는 서버도 막는다. 알림은 커밋된 뒤에 보낸다(롤백되면 안 간다)
+     */
+    @Transactional
+    public void cancelLeave(UserPrincipal user, Long leaveId) {
+        LeaveRes row = mapper.selectLeaveById(user.getCompanyId(), leaveId);
+        if (row == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (row.apprId() == null || row.apprStatusCode() == null || !CANCELABLE_APPR_STATUS.contains(row.apprStatusCode())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "해당 문서는 취소가 불가능합니다");
+        }
+        List<AprNoticeCall> calls = noticeService.planLeaveCancel(user.getCompanyId(), row.apprId());
+        actionMapper.insertApprDel(row.apprId(), user.getUserId());
+        actionMapper.deleteAppr(row.apprId());
+        mapper.cancelUpdate(user.getCompanyId(), leaveId);
+        noticeService.dispatchAfterCommit(calls);
     }
 
     /** AS-IS Sys99_Print.insertRdLeaveManager L4244: ① 내 출력 자료 정리 ② 선택 사원의 휴가 목록을 sys99_print 에 삽입 ③ 새 groupId 반환 */

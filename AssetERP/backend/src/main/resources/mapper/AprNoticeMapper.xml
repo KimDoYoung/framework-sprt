@@ -59,6 +59,11 @@
       , apr04_appr_date      AS appr_date
     </sql>
 
+    <!-- AS-IS apr01_appr.selectById 중 apr01_title (휴가취소 알림 문구) -->
+    <select id="selectApprTitle" resultType="string">
+        SELECT apr01_title FROM apr01_appr WHERE apr01_appr_id = #{apprId}
+    </select>
+
     <select id="selectSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep">
         SELECT <include refid="stepColumns"/>
           FROM apr04_appr_step

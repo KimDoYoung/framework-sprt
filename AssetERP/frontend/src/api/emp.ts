@@ -1223,6 +1223,11 @@ export const empLeaveApi = {
     return res.data.data;
   },
 
+  /** AS-IS emp.Emp20_Leave.cancelUpdate ([휴가취소]): 결재문서 폐기·취소 표시·알림 */
+  cancelLeave: async (leaveId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`v1/emp/leaves/${leaveId}/cancel`);
+  },
+
   /** AS-IS sys.Sys99_Print.insertRdLeaveManager → rdGroupId */
   rdDownload: async (personId: number, stdYear: string): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/emp/leaves/rd-download', { personId, stdYear });

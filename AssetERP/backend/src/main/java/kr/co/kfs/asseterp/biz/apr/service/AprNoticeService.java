@@ -247,6 +247,34 @@ public class AprNoticeService {
         return out;
     }
 
+    /**
+     * [휴가취소] 전 — emp.Emp20_Leave.cancelUpdate L124-219: 결재선의 모든 사람(상신자 포함)에게 "'제목' 취소되었습니다".
+     * 앱알림(이메일 있고 T02 차단 아님, 제목 "휴가취소") · 메일(회사 메일 발송 + 이메일 + 차단 아님) · SMS(회사 SMS 발송 + 번호 + 차단 아님).
+     * 메일·SMS 본문은 "[Asset-ERP] 제목 취소되었습니다." (AS-IS는 접속 주소를 붙이지 않는다). 결재문서를 지우기 전에 불러야 한다
+     */
+    public List<AprNoticeCall> planLeaveCancel(Long companyId, Long apprId) {
+        List<AprNoticeCall> out = new ArrayList<>();
+        String title = mapper.selectApprTitle(apprId);
+        String loc = mapper.selectCompanyLoc(companyId);
+        String msg = "[Asset-ERP] " + title + " 취소되었습니다.";
+        for (AprNoticeStep s : mapper.selectSteps(apprId)) {
+            AprNoticePerson p = person(s.stepEmpId());
+            if (p == null) {
+                continue;
+            }
+            if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "T02") == 0) {
+                out.add(new AprNoticeCall("talk", p.emailAddress(), "휴가취소", "'" + title + "' 취소되었습니다."));
+            }
+            if (props.mailEnabled(loc) && p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "T02") == 0) {
+                out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP", msg));
+            }
+            if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "T02") == 0) {
+                out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
+            }
+        }
+        return out;
+    }
+
     /** 회사 메일 발송 여부 (AS-IS getMailFlag(회사 위치)) — 사업비 반려 알림이 이 값으로 발송 표시를 남길지 정한다 */
     public boolean mailEnabled(Long companyId) {
         return props.mailEnabled(mapper.selectCompanyLoc(companyId));
