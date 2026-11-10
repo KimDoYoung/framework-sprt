@@ -131,10 +131,7 @@ export const fileApi = {
   /** AS-IS FileDownload?fileType=monitoring&parentId= — MainFrame 상단 프로필 사진 주소 (사진이 없으면 noimage.jpg) */
   monitoringUrl: (parentId: number): string => `${API_BASE_URL}/v1/sys/files/monitoring?parentId=${parentId}`,
 
-  /** AS-IS sys.Sys11_RelateFile.checkFileDelete → FILE_DELETE_STATUS */
-  checkFileDelete: async (fileId: number, parentId: number): Promise<number> => (await fileApi.checkFileDeleteResult(fileId, parentId)).status,
-
-  /** checkFileDelete + 상태 2일 때 서버 문구 (AS-IS result.getMessage(): 상신문서 사용 중 / 사용중인 파일 두 가지) */
+  /** AS-IS sys.Sys11_RelateFile.checkFileDelete → FILE_DELETE_STATUS + 상태 2일 때 서버 문구 (AS-IS result.getMessage(): 상신문서 사용 중 / 사용중인 파일 두 가지) */
   checkFileDeleteResult: async (fileId: number, parentId: number): Promise<{ status: number; message: string | null }> => {
     const res = await apiClient.post<ApiResponse<number>>(`v1/sys/files/${fileId}/check-delete`, null, { params: { parentId } });
     return { status: res.data.data, message: res.data.data === FILE_DELETE_STATUS.IN_USE ? res.data.message : null };

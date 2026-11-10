@@ -50,7 +50,7 @@ DB 함수 `find_orphan_sys10_files()`가 정한다. 둘 중 하나면 미사용�
 - **목록에 있어도 못 지우는 파일이 있다.** 목록은 `sys10_file.parentId`만 보고, 연관파일(`sys11_relate_file`)로 다른 글에 붙은 것은 보지 않는다. 그런 파일이 지금 7개(연결 11건)다 — 삭제를 누르면 판정 2로 막힌다. 부모 테이블 칸이 빈 연결은 늘 "사용중"으로 본다(AS-IS 그대로).
 - **전 회사 공통**이다. KFS 관리자가 모든 고객사의 파일을 보고 지운다. 경로(`…/{회사}/{년월}`)로 회사를 알 수 있다.
 - 목록은 DB의 모든 테이블 기본키를 모아 비교하므로 느리다(지금 약 2.5초).
-- **TOBE에서 고친 것(2026-11-10):** 판정 2일 때 화면이 늘 "다른 상신문서에서 사용 중" 문구를 보였다. AS-IS처럼 서버 문구(`result.getMessage()`)를 보이게 고쳤다(`Sys10_Tab_TrashFileList.tsx` `checkFileDelete`). **같은 꼴(고정 문구)이 파일을 지우는 다른 화면 15곳에 있다** — `Com01_Lookup_RelateFile`, `Bbs02·07·15`, `Biz05`, `Com01_Grid_RelateFile`, `Emp18`, `Ics01·17·20`, `Pay50`, `Rpt02`, `Sys10_Lookup_ListFileViewer`, `Sys90_Grid_ApprFile`, `Sys95_Tab_ManualAdmin`(사용자 결정 대기).
+- **TOBE에서 고친 것(2026-11-10):** 판정 2일 때 화면이 늘 "다른 상신문서에서 사용 중" 문구를 보였다. AS-IS처럼 서버 문구(`result.getMessage()`)를 보이게 고쳤다(`Sys10_Tab_TrashFileList.tsx` `checkFileDelete`). **같은 꼴(고정 문구)이 파일을 지우는 다른 화면 15곳에 있다** — `Com01_Lookup_RelateFile`, `Bbs02·07·15`, `Biz05`, `Com01_Grid_RelateFile`, `Emp18`, `Ics01·17·20`, `Pay50`, `Rpt02`, `Sys10_Lookup_ListFileViewer`, `Sys90_Grid_ApprFile`, `Sys95_Tab_ManualAdmin` — AS-IS 원본 15개 모두 `SimpleMessage(result.getMessage())`임을 확인하고 같은 날 모두 고쳤다(사용자 결정 2026-11-10, 쓰지 않게 된 `fileApi.checkFileDelete`는 지움).
 
 <details>
 <summary>시나리오 데이터 (자동 시험용)</summary>

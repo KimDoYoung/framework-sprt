@@ -76,11 +76,12 @@ export const Sys95_Tab_ManualAdmin: React.FC = () => {
   // [E11] msgBox.DialogHide [YES] (L240) → checkFileDelete() L333-362: sys.Sys11_RelateFile.checkFileDelete → 1이면 조회, 2면 안내, 3이면 파일 삭제 + sys.Sys95_Manual.delete
   const checkFileDelete = async (row: Manual) => {
     try {
-      const status = await fileApi.checkFileDelete(row.fileId, row.manualId);
+      // 상태 2 문구는 서버 것(AS-IS SimpleMessage(result.getMessage())) — 상신문서 사용 중 / 사용중인 파일 두 가지
+      const { status, message: inUseMessage } = await fileApi.checkFileDeleteResult(row.fileId, row.manualId);
       if (status === FILE_DELETE_STATUS.RELATE_DELETED) {
         await retrieve();
       } else if (status === FILE_DELETE_STATUS.IN_USE) {
-        message.warning('해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
+        message.warning(inUseMessage ?? '해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
       } else if (status === FILE_DELETE_STATUS.DELETABLE) {
         await fileApi.deleteFile(row.fileId);  // [E3] fileDeleteForm.SubmitComplete (L112) → retrieve()
         await sysApi.deleteManuals([row.manualId]);

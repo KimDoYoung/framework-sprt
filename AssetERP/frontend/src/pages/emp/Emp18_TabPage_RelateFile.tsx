@@ -65,9 +65,10 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
   //   1·3의 retrieve()는 이어지는 행 삭제가 목록에서 행을 빼는 것으로 결과가 같다
   const checkFileDelete = async (deleteModel: Row) => {
     try {
-      const status = await fileApi.checkFileDelete(deleteModel.fileId!, deleteModel.relateFileId);
+      // 상태 2 문구는 서버 것(AS-IS SimpleMessage(result.getMessage())) — 상신문서 사용 중 / 사용중인 파일 두 가지
+      const { status, message: inUseMessage } = await fileApi.checkFileDeleteResult(deleteModel.fileId!, deleteModel.relateFileId);
       if (status === FILE_DELETE_STATUS.IN_USE) {
-        message.warning('해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
+        message.warning(inUseMessage ?? '해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
       } else if (status === FILE_DELETE_STATUS.DELETABLE) {
         await fileApi.deleteFile(deleteModel.fileId!);
       }

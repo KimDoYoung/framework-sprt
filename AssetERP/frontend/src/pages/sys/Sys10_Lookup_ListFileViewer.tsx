@@ -52,9 +52,10 @@ export const Sys10_Lookup_ListFileViewer: React.FC<Props> = ({ parentId, onClose
   // checkFileDelete() L322-347 — Sys90_Grid_ApprFile과 같다
   const checkFileDelete = async (row: FileInfo) => {
     try {
-      const status = await fileApi.checkFileDelete(row.fileId, row.parentId);
+      // 상태 2 문구는 서버 것(AS-IS SimpleMessage(result.getMessage())) — 상신문서 사용 중 / 사용중인 파일 두 가지
+      const { status, message: inUseMessage } = await fileApi.checkFileDeleteResult(row.fileId, row.parentId);
       if (status === FILE_DELETE_STATUS.IN_USE) {
-        message.warning('해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
+        message.warning(inUseMessage ?? '해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다');
         return;
       }
       if (status === FILE_DELETE_STATUS.DELETABLE) await fileApi.deleteFile(row.fileId);  // [E6] fileDeleteForm.SubmitComplete (L146)
