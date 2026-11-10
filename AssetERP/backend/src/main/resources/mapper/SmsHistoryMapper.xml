@@ -86,4 +86,28 @@
          LIMIT #{limit}
     </select>
 
+    <!-- AS-IS sms02_history.insert (historyId = dbConfig.getEtcSeq, sendDate = new Date()) -->
+    <insert id="insertHistory">
+        INSERT INTO sms02_history
+        (
+                sms02_history_id
+            ,   sms02_company_id
+            ,   sms02_send_date
+            ,   sms02_content
+            ,   sms02_note
+        )
+        VALUES
+        (
+                CAST(to_char(f_today(),'9yyymmdd') as numeric) * 10000000000 + CAST(lpad(CAST(nextval('etcseq') as varchar),10,'0') as numeric)
+            ,   #{companyId}
+            ,   now()::timestamp
+            ,   #{content}
+            ,   #{note}
+        )
+    </insert>
+
+    <select id="selectCompanyLoc" resultType="string">
+        SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
 </mapper>

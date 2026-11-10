@@ -16,13 +16,13 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpMyLeaveService;
-import kr.co.kfs.asseterp.biz.sms.service.DisabledSmsSender;
+import kr.co.kfs.asseterp.biz.sms.RefusingSmsSender;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 
 /** Y01 휴가신청 — 저장·수정·삭제·기간 계산·초과사용 승인요청 규칙을 asseterpdb에서 확인한다(테스트 트랜잭션 롤백) */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({EmpMyLeaveService.class, DisabledSmsSender.class})
+@Import({EmpMyLeaveService.class, RefusingSmsSender.class})
 class EmpMyLeaveDbTest {
 
     @Autowired EmpMyLeaveService service;
@@ -78,7 +78,7 @@ class EmpMyLeaveDbTest {
     }
 
     @Test
-    void 초과사용_승인요청은_발송_연동이_없으면_상태를_바꾸지_않는다() {
+    void 초과사용_승인요청은_문자를_보내지_못하면_상태를_바꾸지_않는다() {
         LocalDate d = LocalDate.of(2031, 5, 6);
         MyLeaveRes saved = service.save(user(), req(-1L, "01", d, d, 1.0, "010-1111-2222"));
         assertThrows(BusinessException.class, () -> service.requestOverConfirm(user(), saved.leaveId(), 29035L));

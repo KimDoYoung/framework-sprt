@@ -133,7 +133,7 @@ public class BbsNoticeAdminService {
 
     /**
      * AS-IS sms.Sms03_GroupSend.sendNoticeMessage: 고른 사원마다 "[Asset-ERP] " + 내용을 보낸다(회사 ID 0).
-     * 실제 발송은 {@link SmsSender}가 하고 기본 구현은 보내지 않는다(사용자 지시). 번호가 없는 사원은 건너뛴다
+     * 실제 발송·기록(sms02_history)은 {@link SmsSender}가 한다(개발은 알림 시뮬레이터). 번호가 없는 사원은 건너뛴다
      */
     public void sendNoticeMessage(UserPrincipal user, String message, List<Long> personIds) {
         user.requireSysAdmin();

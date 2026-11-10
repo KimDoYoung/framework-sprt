@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.PreApproveSendTargetRow;
+
 import kr.co.kfs.asseterp.biz.flt.dto.PreApproveRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,8 +32,11 @@ public interface FltPreApproveMapper {
     /** UpdateDataModel(flt10_tr) — 사유만 */
     int updateRejectReason(@Param("companyId") Long companyId, @Param("trId") Long trId, @Param("rejectReason") String rejectReason);
 
-    /** AS-IS flt10_tr.getSendMessageList 행 수 */
-    int selectSendMessageCount(@Param("companyId") Long companyId);
+    /** AS-IS flt10_tr.getSendMessageList — 알림 미발송 승인·반려 건이 있는 사원과 건수 */
+    List<PreApproveSendTargetRow> selectSendMessageList(@Param("companyId") Long companyId);
+
+    /** AS-IS flt10_tr.updateConfirmSmsYn (회사 조건 추가) */
+    int updateConfirmSmsYn(@Param("companyId") Long companyId, @Param("personId") Long personId);
 
     Boolean selectInvestLimitUnvisibleYn(@Param("companyId") Long companyId, @Param("toDay") String toDay);
 

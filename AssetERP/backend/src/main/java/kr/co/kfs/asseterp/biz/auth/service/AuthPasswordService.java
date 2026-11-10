@@ -48,7 +48,7 @@ public class AuthPasswordService {
         }
         PasswordTarget t = list.get(0);
         String code = String.valueOf(100000 + RANDOM.nextInt(900000));
-        // 문자 발송 연동이 없으면(DisabledSmsSender) 여기서 예외 — 번호를 저장하지 않는다
+        // 문자를 보내지 못하면(mode=disabled·발송 실패) 여기서 예외 — 번호를 저장하지 않는다
         smsSender.send(t.companyId(), null, t.mobileTelNo(), "[Asset-ERP] 비밀번호 재설정 인증번호는 '" + code + "' 입니다.", t.korNm());
         redis.opsForValue().set(codeKey(req.companyCode(), req.empNo()), code, CODE_TTL);
         redis.delete(attemptKey(req.companyCode(), req.empNo()));

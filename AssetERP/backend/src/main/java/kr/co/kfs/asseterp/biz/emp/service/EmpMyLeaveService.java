@@ -126,12 +126,14 @@ public class EmpMyLeaveService {
 
     /**
      * AS-IS Emp20_Edit_Leave.lookupEmpTransInfo → sendMessage → updateOverConfirm — 고른 승인자에게 문자를 보내고,
-     * 보낸 뒤에만 초과사용 승인상태를 10(신청)·승인자로 바꾼다. 발송 연동이 없으면 SmsSender가 거절하고 상태는 바뀌지 않는다.
+     * 보낸 뒤에만 초과사용 승인상태를 10(신청)·승인자로 바꾼다. AS-IS sms.Sms02_History.sendMessage L100-131처럼 회사가 문자발신 서비스를
+     * 신청하지 않았으면(SMSok) 보내지 않고 "문자발신 서비스를 미신청한 고객사입니다"(AS-IS 상태 -1). 발송에 실패해도 상태는 바뀌지 않는다.
      */
     @Transactional
     public MyLeaveRes requestOverConfirm(UserPrincipal user, Long leaveId, Long confirmerId) {
         if (confirmerId == null) throw new BusinessException(ErrorCode.INVALID_INPUT);
         requireMine(user, leaveId);
+        if (!smsSender.companyEnabled(user.getCompanyId())) throw new BusinessException(ErrorCode.INVALID_INPUT, SmsSender.NOT_SUBSCRIBED);
         String phone = mapper.selectMobileTelNo(user.getCompanyId(), confirmerId);
         if (phone == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         String label = mapper.selectRequesterLabel(user.getCompanyId(), user.getUserId());

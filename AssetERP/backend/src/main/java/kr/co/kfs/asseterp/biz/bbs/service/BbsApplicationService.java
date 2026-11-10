@@ -65,10 +65,13 @@ public class BbsApplicationService {
     }
 
     /**
-     * AS-IS Sms02_History.sendMessage — 신청자 휴대폰번호로 "[Asset-ERP] " + 문구를 보낸다.
-     * 발송 연동(SmsSender)이 없으면 SmsSender가 거절한다
+     * AS-IS Sms02_History.sendMessage L100-131 — 회사가 문자발신 서비스를 신청했으면(SMSok) 신청자 휴대폰번호로 "[Asset-ERP] " + 문구를 보낸다.
+     * 신청하지 않았으면 보내지 않고 "문자발신 서비스를 미신청한 고객사입니다"(AS-IS 상태 -1). 발송 실패는 SmsSender가 거절한다
      */
     public void sendMessage(UserPrincipal user, Long personId, String msg) {
+        if (!smsSender.companyEnabled(user.getCompanyId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, SmsSender.NOT_SUBSCRIBED);
+        }
         smsSender.send(user.getCompanyId(), null, mapper.selectMobileTelNo(personId), "[Asset-ERP] " + msg, String.valueOf(personId));
     }
 
@@ -121,6 +124,10 @@ public class BbsApplicationService {
             return 0;
         }
         String msg = "'" + user.getName() + "'님이 " + row.appTypeName() + "을(를) " + (apply ? "하였습니다." : "취소하였습니다.");
+        // AS-IS는 sms.Sms02_History.sendMessage로 보낸다 — SMSok가 아니면 상태 -1
+        if (!smsSender.companyEnabled(user.getCompanyId())) {
+            return -1;
+        }
         try {
             for (ApplicationNoticeTarget t : targets) {
                 smsSender.send(user.getCompanyId(), null, t.mobileTelno(), "[Asset-ERP] " + msg, t.korName());

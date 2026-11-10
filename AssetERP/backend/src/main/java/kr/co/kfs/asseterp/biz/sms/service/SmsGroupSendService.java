@@ -68,7 +68,7 @@ public class SmsGroupSendService {
 
     /**
      * AS-IS sendGroupMessage L97-127: 단체문자를 읽어 대상마다 "[Asset-ERP] " + 내용을 보낸다(수신자 이름 = 고객사 + " " + 사원명).
-     * 실제 발송은 {@link SmsSender}가 하고, 기본 구현은 보내지 않는다(사용자 지시). 대상이 없으면 아무것도 하지 않는다(AS-IS 같음).
+     * 실제 발송·기록(sms04_group_send_history)은 {@link SmsSender}가 한다(개발은 알림 시뮬레이터). 대상이 없으면 아무것도 하지 않는다(AS-IS 같음).
      * (AS-IS의 EUC-KR 바이트 변환은 같은 문자열로 되돌아오는 동작이라 옮기지 않는다)
      */
     public void sendGroupMessage(UserPrincipal user, Long groupSendId, List<GroupSendTargetReq> targets) {

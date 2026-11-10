@@ -218,19 +218,31 @@
            AND flt10_company_id = #{companyId}
     </update>
 
-    <!-- AS-IS(IDMS-IC) flt10_tr.getSendMessageList L2040 — 알림 발송 대상 사원 수(사원별 GROUP BY 행 수). 발송 연동이 없어 건수만 쓴다 -->
-    <select id="selectSendMessageCount" resultType="int">
-        SELECT COUNT(*) FROM (
-            SELECT flt10_person_id
-              FROM flt10_tr
-             WHERE flt10_company_id = #{companyId}
-               AND COALESCE(flt10_confirm_sms_yn, 'false') = 'false'
-               AND 'Y' = CASE WHEN flt10_add_confirmer_id IS NULL     AND COALESCE(flt10_status_cd, '00') IN ('20','30') THEN 'Y'
-                              WHEN flt10_add_confirmer_id IS NOT NULL AND COALESCE(flt10_status_cd, '00') IN ('25','30') THEN 'Y'
-                              ELSE 'N' END
-             GROUP BY flt10_person_id
-        ) t
+    <!-- AS-IS(IDMS-IC) flt10_tr.getSendMessageList L2040 — 알림 미발송 승인·반려 건이 있는 사원별 건수 (ROW_NUMBER 열은 쓰지 않아 뺐다) -->
+    <select id="selectSendMessageList" resultType="kr.co.kfs.asseterp.biz.flt.dto.PreApproveSendTargetRow">
+        SELECT flt10_person_id      AS person_id
+             , COUNT(*)             AS count
+          FROM flt10_tr
+         WHERE flt10_company_id = #{companyId}
+           AND COALESCE(flt10_confirm_sms_yn, 'false') = 'false'
+           AND 'Y' = CASE WHEN flt10_add_confirmer_id IS NULL     AND COALESCE(flt10_status_cd, '00') IN ('20','30') THEN 'Y'
+                          WHEN flt10_add_confirmer_id IS NOT NULL AND COALESCE(flt10_status_cd, '00') IN ('25','30') THEN 'Y'
+                          ELSE 'N' END
+         GROUP BY flt10_person_id
+         ORDER BY flt10_person_id
     </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateConfirmSmsYn (회사 조건 추가) -->
+    <update id="updateConfirmSmsYn">
+        UPDATE flt10_tr
+           SET flt10_confirm_sms_yn = 'true'
+         WHERE flt10_person_id  = #{personId}
+           AND flt10_company_id = #{companyId}
+           AND COALESCE(flt10_confirm_sms_yn, 'false') = 'false'
+           AND 'Y' = CASE WHEN flt10_add_confirmer_id IS NULL     AND COALESCE(flt10_status_cd, '00') IN ('20','30') THEN 'Y'
+                          WHEN flt10_add_confirmer_id IS NOT NULL AND COALESCE(flt10_status_cd, '00') IN ('25','30') THEN 'Y'
+                          ELSE 'N' END
+    </update>
 
     <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate L77 에서 이 화면이 쓰는 값(투자한도 숨김)만 -->
     <select id="selectInvestLimitUnvisibleYn" resultType="boolean">
