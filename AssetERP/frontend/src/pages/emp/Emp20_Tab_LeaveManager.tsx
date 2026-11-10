@@ -208,7 +208,7 @@ export const Emp20_Tab_LeaveManager: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, background: '#fff', boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
         <SearchBar
           onSearch={personNameCheck}
           loading={busy}

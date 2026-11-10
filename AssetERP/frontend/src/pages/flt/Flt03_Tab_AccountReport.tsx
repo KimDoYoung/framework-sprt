@@ -293,8 +293,8 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
     <div style={{ height: '100%', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="60%" min={300}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               {/* hlc01 L123-125: 왼쪽 안내 두 줄(15, 높이 50씩), 오른쪽 [보고주기 변경 및 서약서 서명](폭 250, 끝 정렬, 여백 20) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', minHeight: 80 }}>
                 <div style={{ padding: '15px 15px 0', fontSize: 14, fontWeight: 'bold', lineHeight: '30px' }}>

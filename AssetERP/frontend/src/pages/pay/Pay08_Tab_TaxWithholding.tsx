@@ -63,7 +63,7 @@ export const Pay08_Tab_TaxWithholding: React.FC = () => {
   const isPdf = selected?.fileExt?.toLowerCase() === 'pdf';
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%', border: '1px solid #d9d9d9' }}>
         <Splitter.Panel defaultSize={580} min={300}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>

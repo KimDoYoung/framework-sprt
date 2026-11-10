@@ -158,8 +158,8 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize={360} min={360} max={900}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box' }}>
               <Fnd01_Edit_FundSearch model={selected} />
             </div>
           </div>

@@ -103,8 +103,8 @@ export const Flt10_Tab_AcntTransfer: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L137) → retrieve(). [E2] searchText.KeyPress [Enter] (L128) → retrieve() */}
         <SearchBar
           onSearch={retrieve}

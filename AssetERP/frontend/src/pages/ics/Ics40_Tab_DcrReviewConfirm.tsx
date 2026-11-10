@@ -86,7 +86,7 @@ export const Ics40_Tab_DcrReviewConfirm: React.FC = () => {
   }), [skipYn]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ overflowX: 'auto' }}>
         {/* [E3] retrieveButton[조회].Select (L127) → retrieve() / [E2] searchText.KeyPress [Enter] (L118) → retrieve() */}
         <SearchBar onSearch={() => retrieve()} style={{ flexWrap: 'nowrap', minWidth: 'max-content' }}>

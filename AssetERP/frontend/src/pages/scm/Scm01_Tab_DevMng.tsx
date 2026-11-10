@@ -164,8 +164,8 @@ export const Scm01_Tab_DevMng: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel min={360}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box' }}>
               <Scm01_Edit_DevMng sr={selected} onSaved={onSaved} />
             </div>
           </div>

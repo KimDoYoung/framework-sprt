@@ -77,8 +77,8 @@ export const Emp54_Tab_ErrandManager: React.FC = () => {
   ], [viewAppr]);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E1] searchText.KeyPress [Enter] (L93) / [E2] retrieveButton[조회].Select (L102) → retrieve() */}
         <SearchBar onSearch={() => void retrieve()}>
           <SearchBar.Field label="조회기간">

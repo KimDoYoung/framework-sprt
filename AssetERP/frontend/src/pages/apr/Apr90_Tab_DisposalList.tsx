@@ -81,7 +81,7 @@ export const Apr90_Tab_DisposalList: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <SearchBar onSearch={() => void retrieve()} searchText="조회" loading={loading}>
         <SearchBar.Field label="조회기간">
           <DatePicker style={{ width: 140 }} allowClear={false} value={startDate} onChange={d => d && setStartDate(d)} />

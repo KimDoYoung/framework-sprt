@@ -265,7 +265,7 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* north: buttonBarVlc — 테두리 안 툴바 3줄 */}
       <div style={{ border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

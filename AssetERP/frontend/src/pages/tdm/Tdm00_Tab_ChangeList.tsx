@@ -43,7 +43,7 @@ export const Tdm00_Tab_ChangeList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E1] retrieveButton[조회].Select (L61) → retrieve() */}
         <SearchBar onSearch={() => retrieve()}>
           <SearchBar.Field label="기준일">

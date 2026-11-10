@@ -122,8 +122,8 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E1] retrieveButton[조회].Select (L59) → retrieve() */}
         <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
           {/* [E2] insertButton[등록].Select (L65) → insertRow() */}

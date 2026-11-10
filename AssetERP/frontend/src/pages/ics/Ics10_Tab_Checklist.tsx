@@ -193,7 +193,7 @@ export const Ics10_Tab_Checklist: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
         {/* [E3] retrieveButton[조회].Select (L143) → retrieve(). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다 */}
         <SearchBar
           onSearch={() => retrieve()}

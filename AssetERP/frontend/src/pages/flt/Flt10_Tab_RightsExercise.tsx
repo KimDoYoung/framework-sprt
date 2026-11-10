@@ -114,8 +114,8 @@ export const Flt10_Tab_RightsExercise: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E4] retrieveButton[조회].Select (L166) → retrieve(). [E3] searchText.KeyPress [Enter] (L157) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}

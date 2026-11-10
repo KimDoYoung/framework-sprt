@@ -72,7 +72,7 @@ export const Biz01_Tab_LimitCheckList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E1] yearText.KeyPress [Enter] (L82)·[E2] retrieveButton[조회].Select (L95) → retrieveTabpage() */}
         <SearchBar
           onSearch={() => void retrieveTabpage()}

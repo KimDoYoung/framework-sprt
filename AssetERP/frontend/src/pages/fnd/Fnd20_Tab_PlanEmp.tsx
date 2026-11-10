@@ -115,8 +115,8 @@ export const Fnd20_Tab_PlanEmp: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize="60%" min={120} max={900}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 8 }}>
+          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box' }}>
               <Fnd20_TabPage_PlanEmp target={target} />
             </div>
           </div>

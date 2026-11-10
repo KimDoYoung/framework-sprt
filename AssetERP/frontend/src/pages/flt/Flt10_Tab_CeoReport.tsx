@@ -168,8 +168,8 @@ export const Flt10_Tab_CeoReport: React.FC = () => {
   // [E9 생략] messageBox.DialogHide [YES] (L469) → insertLinkApproval() — RD 파일 생성 성공 확인창이라 RD가 없는 TOBE에는 없다(위 createRd)
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E4] retrieveButton[조회].Select (L160) → retrieve(). [E1] yyyyText.KeyPress [Enter] (L126) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}

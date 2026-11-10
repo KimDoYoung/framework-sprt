@@ -68,7 +68,7 @@ export const Flt10_Tab_EmpAppr: React.FC = () => {
   const onSelect = (row: FltEmpAppr | undefined) => { if (row) setSelected(row); };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* [E4] retrieveButton[조회].Select (L126) → retrieve(). [E3] searchText.KeyPress [Enter] (L117) → retrieve() */}
       <SearchBar onSearch={() => retrieve()}>
         <SearchBar.Field label="기준년월">

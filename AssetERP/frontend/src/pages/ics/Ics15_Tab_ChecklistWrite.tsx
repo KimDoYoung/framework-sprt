@@ -236,7 +236,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
   ];
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8,
         ...(cycleType == null ? { pointerEvents: 'none', opacity: 0.5 } : {}) }}>
         <SearchBar

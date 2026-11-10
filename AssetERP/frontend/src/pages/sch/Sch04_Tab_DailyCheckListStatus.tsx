@@ -119,7 +119,7 @@ export const Sch04_Tab_DailyCheckListStatus: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E6] searchButton[조회].Select (L142) → retrieve() / [E5] searchText.KeyPress [Enter] (L133) → retrieve() */}
         <SearchBar onSearch={() => retrieve()} loading={loading}>
           <SearchBar.Field label="처리일">

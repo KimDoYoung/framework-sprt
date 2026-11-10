@@ -122,7 +122,7 @@ export const Apr01_Tab_ExternalBiz: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* getEditor() L133-150: [문서분류 700] [승인신청] */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '15px 10px 30px' }}>
           <span style={labelStyle}>문서분류</span>

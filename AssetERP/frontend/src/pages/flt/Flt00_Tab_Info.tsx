@@ -126,7 +126,7 @@ export const Flt00_Tab_Info: React.FC = () => {
 
   // 레이아웃 getEditor() L1-267: north(40, 여백 10,0,0,5) 안내 문구 + center(테두리, 여백 15) 스크롤 영역
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <div style={{ margin: '10px 0 0 5px', height: 40, fontSize: 12, color: '#404040', fontWeight: 'bold' }}>
         {' '}(항목 위에서 마우스 클릭시 팝업OPEN 또는 처리 화면으로 이동합니다.){' '}
       </div>

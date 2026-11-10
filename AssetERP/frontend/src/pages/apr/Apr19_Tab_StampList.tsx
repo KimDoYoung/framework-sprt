@@ -150,7 +150,7 @@ export const Apr19_Tab_StampList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L133) → retrieve(), [E2] searchText.KeyPress [Enter] (L125) → retrieve() */}
         <SearchBar onSearch={() => void retrieve()} loading={loading} extra={<Button type="download" onClick={downLoad} loading={printing}>출력/다운로드</Button>}>
           <SearchBar.Field label="조회기간">

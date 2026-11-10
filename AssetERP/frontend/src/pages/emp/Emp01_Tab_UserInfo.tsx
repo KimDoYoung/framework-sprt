@@ -209,7 +209,7 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, background: '#fff', boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 50, flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px' }}>
           {/* [E3] retrieveButton[조회].Select (L152) → retrieve(). 초기화는 UX-02 */}
           <SearchBar onSearch={retrieve} onReset={sp.reset} extra={

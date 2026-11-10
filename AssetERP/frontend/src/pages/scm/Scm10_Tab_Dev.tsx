@@ -196,8 +196,8 @@ export const Scm10_Tab_Dev: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel min={360}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', display: 'flex', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ height: '100%', display: 'flex', boxSizing: 'border-box' }}>
               <div style={{ width: 400, flex: 'none', borderRight: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
                 <Scm11_Grid_DevStep devId={selected?.devId ?? null} reloadKey={stepReload} onSelect={onStepSelect} />
               </div>

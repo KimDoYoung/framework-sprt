@@ -162,7 +162,7 @@ export const Ics40_Tab_DcrPreConfirm: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ overflowX: 'auto' }}>
         {/* [E3] retrieveButton[조회].Select (L155) → retrieve() / [E2] searchText.KeyPress [Enter] (L146) → retrieve() */}
         <SearchBar

@@ -209,8 +209,8 @@ export const Tdm13_Tab_TaskDuty: React.FC = () => {
     <>
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel defaultSize="40%" min={150} max={1000}>
-        <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
               {/* [E4] retrieveButton[조회].Select (L146) → retrieve() 는 SearchBar의 [조회] */}
               <SearchBar onSearch={() => retrieve()}>
@@ -251,7 +251,7 @@ export const Tdm13_Tab_TaskDuty: React.FC = () => {
       </Splitter.Panel>
       <Splitter.Panel min={120} max={1000}>
         <div style={{ height: '100%', padding: '0 20px 20px', boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Space>
               <span style={{ fontWeight: 'bold' }}>▼ 관리의무</span>
               <Button type="register" onClick={insertRow}>등록</Button>

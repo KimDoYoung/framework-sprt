@@ -114,7 +114,7 @@ export const Ics01_Tab_PeriodList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <SearchBar onSearch={() => retrieve()} searchText="조회" loading={loading}>
           <SearchBar.Field label="조회월">
             {/* [E0] 화면 열림 (생성자 L71-119) → settings() L121-208: 년 = 올해, 월 콤보 = 이번 달, 읽기 전용 콤보. 년을 고치면 setDate() — 조회할 때 년·월로 기간을 만든다 [E1] year.ValueChange (L139) */}

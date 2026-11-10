@@ -117,8 +117,8 @@ export const Ics15_Tab_ChecklistStatus: React.FC = () => {
   ];
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <SearchBar onSearch={() => { void retrieve(); }} searchText="가져오기" loading={loading}
           extra={<Typography.Text type="secondary">※ 선택한 행의 '월' 또는 '분기' 더블클릭시 상세내역 확인이 가능합니다.</Typography.Text>}>
           <SearchBar.Field label="조회년도">

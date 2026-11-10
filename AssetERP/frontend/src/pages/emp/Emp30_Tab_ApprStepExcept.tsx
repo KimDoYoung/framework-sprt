@@ -72,8 +72,8 @@ export const Emp30_Tab_ApprStepExcept: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
         {/* [E1] searchTextField.KeyPress [Enter] (L62) → retrieve(), [E2] retrieveButton[조회].Select (L71) → retrieve() */}
         <div style={{ overflowX: 'auto' }}>
           <SearchBar onSearch={crud.retrieve} loading={crud.loading} style={{ flexWrap: 'nowrap' }} extra={<>

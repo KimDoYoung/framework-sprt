@@ -73,7 +73,7 @@ export const Biz90_Tab_Limit: React.FC = () => {
   ], [rcvTypes]);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E1] retrieveButton[조회].Select (L78) → retrieve() */}

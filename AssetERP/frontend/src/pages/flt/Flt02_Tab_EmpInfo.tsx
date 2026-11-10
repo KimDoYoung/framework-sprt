@@ -106,8 +106,8 @@ export const Flt02_Tab_EmpInfo: React.FC = () => {
   const baseDate = stdDate.format(DATE_FORMAT);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L138) → retrieve(). [E1] searchText.KeyPress [Enter] (L104) → retrieve() */}
         <SearchBar onSearch={retrieve} extra={<Button type="download" onClick={createRdExcel}>엑셀다운로드</Button>}>
           <SearchBar.Field label="기준일">
