@@ -14,6 +14,30 @@
 | `page-style-check.py` | `docs/page-style.md` 규칙을 정규식으로 화면×규칙 표로 점검 (견본은 전부 통과해야 함) |
 | `code-health.sh` + `code-health/` | TOBE 정적분석 일괄(PMD·CPD 중복·Checkstyle·SpotBugs+FindSecBugs) → `docs/5-테스트/정적분석/` 보고서. build.gradle 무수정(init script) |
 
+## 환경 점검 (읽기 전용)
+
+| 파일 | 용도 |
+|:---|:---|
+| `check-environment.sh` | 이 PC가 AssetERP 개발·배포에 필요한 환경을 갖췄는지 점검. 사무실(t3600)·집(omen)을 옮겨 앉았을 때, 시뮬레이터·배포가 이상할 때 먼저 돌린다 |
+
+- 사용: `./tools/check-environment.sh` (hostname 소문자로 기기 판정), `--host <omen|t3600>`(판정 덮어쓰기), `--help`.
+- 기기 판정: 스크립트 위 `HOSTS` 표(hostname → Spring 프로필). 컨테이너 이름은 `<호스트>_postgres`·`<호스트>-tomcat`, Tomcat 프로필은 `/data/docker/<호스트>-tomcat/bin/setenv.sh`. 새 기기는 표에 한 줄 추가하고 `application-<프로필>.properties`·`setenv.sh`를 만든다.
+- 점검 항목
+
+  | 절 | 내용 |
+  |:---|:---|
+  | 1 기기·프로필 | `setenv.sh`의 `spring.profiles.active`가 프로필과 같은가, `application-<프로필>.properties`의 시뮬레이터 주소(rd·notice·bot·assetmail)가 이 PC IP인가, TODO가 남았는가 |
+  | 2 Docker·DB·Tomcat | docker 데몬, postgres·tomcat 컨테이너 running, `pg_isready`, `yunhee sql`(YUNHEE_DB), `http://localhost:8082/AssetERP/`, 공유 볼륨 `/home/kdy987/tmp/asseterp-data` 쓰기 |
+  | 3 시뮬레이터 포트 | 5151(RD)·5161(talk·sms)·2525(SMTP)·5171(AI·메일)이 `0.0.0.0`에 떠 있는가, **Tomcat 컨테이너 안에서 호스트 IP:포트로 실제 연결**되는가(실패 = ufw 의심) |
+  | 4 도구 | java 21, node·npm·gradle·psql·yunhee·git, `frontend/node_modules` |
+  | 5 AS-IS 소스·색인 | `yunhee config`의 AS-IS 소스 폴더, git 원격 접속(`check-git.sh`), `docs/as-is/` 색인 유무·나이(14일 넘으면 ⚠) |
+  | 6 개발 포트 | 5173·8080·5432·8082 사용 중인지(참고만) |
+  | 7 외부 연결 | ntfy.sh 접속(알림은 보내지 않음) |
+
+- 결과: 항목마다 `✅/⚠/❌` 한 줄, 끝에 "고칠 명령"(중복 제거). ❌가 있으면 종료코드 1.
+- **아무것도 고치지 않는다.** sudo도 쓰지 않는다 — ufw 규칙이 빠졌으면 `sudo ufw allow from 172.16.0.0/12 to any port <포트> proto tcp`를 출력만 하고, 사용자가 터미널에서 직접 실행한다. ufw 규칙 목록은 `sudo ufw status | grep 172`로 본다.
+- 시뮬레이터가 꺼져 있으면 ⚠(필요할 때만 켠다), `127.0.0.1`에만 떠 있으면 ❌(컨테이너에서 못 닿음 → `*_SIM_HOST=0.0.0.0`으로 다시 켠다).
+
 ## 화면 캡쳐 보기
 
 | 파일 | 용도 |
