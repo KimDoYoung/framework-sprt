@@ -173,7 +173,10 @@ export const sysApi = {
   /** AS-IS sys.Sys01_Company.update → 저장된 행. 체크박스 값은 'true'/'false'로 보낸다 */
   updateCompanyAccount: async (row: CompanyAccount): Promise<CompanyAccount> => {
     const yn = (v: unknown) => (v == null ? null : String(v));
-    const body = { ...row, leaveYn: yn(row.leaveYn), cardRealUserYn: yn(row.cardRealUserYn), astManagerAutoYn: yn(row.astManagerAutoYn) };
+    const body = {
+      ...row, leaveYn: yn(row.leaveYn), leaveConfirmYn: yn(row.leaveConfirmYn), commuteLockYn: yn(row.commuteLockYn), commutePopupYn: yn(row.commutePopupYn),
+      cardRealUserYn: yn(row.cardRealUserYn), astManagerAutoYn: yn(row.astManagerAutoYn),
+    };
     const res = await apiClient.put<ApiResponse<CompanyAccount>>(`v1/sys/companies/${row.companyId}/account`, body);
     return res.data.data;
   },

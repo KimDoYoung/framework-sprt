@@ -137,7 +137,8 @@ public class SysCompanyController {
     @PutMapping("/{companyId}/account")
     public ApiResponse<CompanyAccountRes> updateCompanyAccount(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
                                                                @RequestBody CompanyAccountReq req) {
-        CompanyAccountReq body = new CompanyAccountReq(companyId, req.leaveMonthCd(), req.leaveYn(), req.leaveCompulsionRt(), req.taxType(),
+        CompanyAccountReq body = new CompanyAccountReq(companyId, req.leaveMonthCd(), req.leaveYn(), req.leaveConfirmYn(), req.leaveCompulsionRt(),
+                req.commuteLockYn(), req.commutePopupYn(), req.taxType(),
                 req.cardRealUserYn(), req.incomeTaxFilingCd(), req.accountCloseMonth(), req.ownerCapitalApplyCd(), req.astManagerAutoYn(),
                 req.astEvalCycleCd(), req.empEvalCycleCd(), req.empEvalMonthCd());
         return ApiResponse.ok(sysCompanyService.updateCompanyAccount(principal, body));

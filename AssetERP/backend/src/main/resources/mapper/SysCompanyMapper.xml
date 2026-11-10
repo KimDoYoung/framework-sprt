@@ -199,13 +199,16 @@
          WHERE sys01_company_id = #{companyId}
     </update>
 
-    <!-- 경영·회계 탭 (Sys01_TabPage_Info04) -->
+    <!-- 경영·회계 탭 (Sys01_TabPage_Info04 — AS-IS sys01_company.selectById 중 그리드 열, 2026-11-10 IDMS-IC 열 3개 추가: 초과사용 상신전 승인요청·근태 잠금·근태 팝업) -->
     <select id="selectCompanyAccount" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountRes">
         SELECT sys01_company_id                                                                              AS company_id,
                sys01_leave_month_cd                                                                          AS leave_month_cd,
                f_cdnm('MonthsCode', sys01_leave_month_cd, sys01_company_id, f_sysdate())                     AS leave_month_nm,
                COALESCE(sys01_leave_yn, 'false')                                                             AS leave_yn,
+               COALESCE(sys01_leave_confirm_yn, 'false')                                                     AS leave_confirm_yn,
                COALESCE(sys01_leave_compulsion_rt, 100)                                                      AS leave_compulsion_rt,
+               COALESCE(sys01_commute_lock_yn, 'false')                                                      AS commute_lock_yn,
+               COALESCE(sys01_commute_popup_yn, 'false')                                                     AS commute_popup_yn,
                sys01_tax_type                                                                                AS tax_type,
                f_cdnm('TaxType', sys01_tax_type, sys01_company_id, f_sysdate())                              AS tax_type_nm,
                COALESCE(sys01_card_real_user_yn, 'false')                                                    AS card_real_user_yn,
@@ -230,7 +233,10 @@
         UPDATE sys01_company
            SET sys01_leave_month_cd         = #{leaveMonthCd},
                sys01_leave_yn               = #{leaveYn},
+               sys01_leave_confirm_yn       = #{leaveConfirmYn},
                sys01_leave_compulsion_rt    = #{leaveCompulsionRt},
+               sys01_commute_lock_yn        = #{commuteLockYn},
+               sys01_commute_popup_yn       = #{commutePopupYn},
                sys01_tax_type               = #{taxType},
                sys01_card_real_user_yn      = #{cardRealUserYn},
                sys01_income_tax_filing_cd   = #{incomeTaxFilingCd},

@@ -49,7 +49,8 @@ class CompanyTabsDbTest {
     }
 
     private static CompanyAccountReq accountOf(CompanyAccountRes r, String leaveMonthCd) {
-        return new CompanyAccountReq(r.companyId(), leaveMonthCd, r.leaveYn(), r.leaveCompulsionRt(), r.taxType(), r.cardRealUserYn(),
+        return new CompanyAccountReq(r.companyId(), leaveMonthCd, r.leaveYn(), r.leaveConfirmYn(), r.leaveCompulsionRt(),
+                r.commuteLockYn(), r.commutePopupYn(), r.taxType(), r.cardRealUserYn(),
                 r.incomeTaxFilingCd(), r.accountCloseMonth(), r.ownerCapitalApplyCd(), r.astManagerAutoYn(), r.astEvalCycleCd(),
                 r.empEvalCycleCd(), r.empEvalMonthCd());
     }

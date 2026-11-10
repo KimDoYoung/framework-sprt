@@ -130,7 +130,10 @@ export interface CompanyAccount {
   leaveMonthCd?: string | null;
   leaveMonthNm?: string | null;
   leaveYn?: string | boolean | null;
+  leaveConfirmYn?: string | boolean | null;
   leaveCompulsionRt?: number | null;
+  commuteLockYn?: string | boolean | null;
+  commutePopupYn?: string | boolean | null;
   taxType?: string | null;
   taxTypeNm?: string | null;
   cardRealUserYn?: string | boolean | null;
