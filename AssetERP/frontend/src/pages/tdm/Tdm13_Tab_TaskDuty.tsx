@@ -1,7 +1,7 @@
 /**
  * [1413] 책무 > 01. 기본정보 > 관리의무 등록 (N06)
  * AS-IS: myApp/client/vi/tdm/Tdm13_Tab_TaskDuty.java + Tdm13_TabPage_TaskDuty.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L59-103: center(40%, 여백 20) = 툴바(기준일 · 전체보기 · 책무유형 · 검색 · [조회] / 오른쪽 [변경이력]) + 책무 세부내용 그리드(MultiGrid),
+ * 생성자 L59-103: center(40%, 여백 20) = 툴바(기준일 · 전체보기 · 책무유형 · 검색 · [조회] / 오른쪽 [변경이력]) + 책무 세부내용 그리드(SingleGrid — 원본 MULTI 체크박스는 2026-11-11 사용자 지시로 뺌),
  *   south(60%, 여백 0·20·20·20) = Tdm13_TabPage_TaskDuty(▼ 관리의무: [등록][저장][삭제] + 관리의무 CellEditGrid)
  * 함께: Tdm14_Lookup_TaskType(책무유형 고르기), Tdm95_Lookup_ChangeHistory(변경이력)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 버튼 UX-03
@@ -15,7 +15,7 @@ import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmTaskDuty, TdmTaskDutyDetail } from '@/types/tdm';
 import { Button } from '@/components/button';
-import { CellEditGrid, MultiGrid, gbFor, iconCell } from '@/components/grid';
+import { CellEditGrid, SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { SearchBar } from '@/components/search';
@@ -234,23 +234,26 @@ export const Tdm13_Tab_TaskDuty: React.FC = () => {
                 </SearchBar.Field>
               </SearchBar>
               {/* [E5] historyButton[변경이력].Select (L152) → Tdm95_Lookup_ChangeHistory.open("tdm13_task_relate_duty", null) */}
-              <Button type="change" onClick={() => setMainHistory(true)}>변경이력</Button>
+              {/* 문구 수정(사용자 지시 2026-11-11): 원본 "변경이력" — 위 그리드 옆이라 책무 세부내용의 이력으로 오해하기 쉬워 대상(관리의무 전체)을 밝힘 */}
+              <Button type="change" onClick={() => setMainHistory(true)}>관리의무 변경이력(전체)</Button>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
-              {/* [E6] grid.SelectionChanged [선택>0] (L165) → retrieveEditPage() */}
-              <MultiGrid<TdmTaskDutyDetail>
+              {/* [E6] grid.SelectionChanged [선택>0] (L165) → retrieveEditPage()
+                  수정(사용자 지시 2026-11-11): 원본은 setChecked(MULTI)(L200)지만 여러 행 선택을 쓰는 곳이 없다(retrieveEditPage는 getSelectedItem 한 행, 위 그리드에 삭제 등 일괄 버튼 없음).
+                  체크박스로만 선택되던 것을 행 클릭으로 고르게 SingleGrid로 바꿈 — #1325 제안③과 같은 판단 */}
+              <SingleGrid<TdmTaskDutyDetail>
                 gridRef={gridRef}
                 rowData={rows}
                 columnDefs={topColumns}
                 getRowId={p => String(p.data.taskRelateDetailId)}
-                onSelectionChanged={e => { const row = e.api.getSelectedRows()[0]; if (row) retrieveEditPage(row); }}
+                onSelect={row => { if (row) retrieveEditPage(row); }}
               />
             </div>
           </div>
         </div>
       </Splitter.Panel>
       <Splitter.Panel min={120} max={1000}>
-        <div style={{ height: '100%', padding: '0 20px 20px', boxSizing: 'border-box' }}>
+        <div style={{ height: '100%', padding: '0 20px 20px', boxSizing: 'border-box', marginTop: 8 }}>
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Space>
               <span style={{ fontWeight: 'bold' }}>▼ 관리의무</span>

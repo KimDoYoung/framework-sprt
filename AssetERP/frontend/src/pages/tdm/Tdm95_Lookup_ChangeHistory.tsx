@@ -85,7 +85,7 @@ export const Tdm95_Lookup_ChangeHistory: React.FC<Props> = ({ targetTable, targe
     <LookupModal
       open={!!targetTable}
       title="변경/삭제 이력"
-      width={1400}
+      width={1440}  // 원본 1400 — 오른쪽 그리드 가로 스크롤을 없애려 +20(사용자 지시 2026-11-11), 아래 경계선 몫(간격 8·여백 8·선 1) +20
       closable={false}
       maskClosable={false}
       onCancel={onClose}
@@ -120,8 +120,9 @@ export const Tdm95_Lookup_ChangeHistory: React.FC<Props> = ({ targetTable, targe
           {targetId != null && <Button type="search" onClick={() => retrieve()}>조회</Button>}
           <Typography.Text type="secondary">* '사유' 및 '변경 전/후 데이터'는 더블 클릭하여 넓은 팝업으로 볼 수 있습니다</Typography.Text>
         </Space>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-          <div style={{ width: 680 }}>
+        {/* 두 그리드 사이 경계선(사용자 지시 2026-11-11): 간격 8 + 세로선 */}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 8 }}>
+          <div style={{ width: 680, paddingRight: 8, borderRight: '1px solid #d9d9d9' }}>
             {/* [E3] grid.SelectionChanged [selectModel == null] (L127) → detailRetrieve(): 조회 뒤 첫 행 선택 (L225-228)
                 [E4] grid.CellDoubleClick [cellIndex == 5] (L137) → 사유 칸을 NoticeMessage로 */}
             <SingleGrid<TdmChangeHistory>
