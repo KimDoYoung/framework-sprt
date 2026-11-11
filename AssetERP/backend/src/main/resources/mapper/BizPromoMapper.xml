@@ -9,8 +9,9 @@
 
     <!-- AS-IS biz01_promo.selectByCard L773 (IDMS-IC) — 그리드·편집·출력에 쓰는 열만 별칭으로.
          원본 2026-11-04~06(CH-0005): 상신 문서(apr01_appr, biz01_appr_id)·카드 사용자(crd03_trans) 조인, 미상신건만(apprCheck: 상태 10·20·30 제외)·계정과목(accountId) 조건 -->
-    <select id="selectByCard" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes">
-        SELECT a.biz01_promo_id                                                                                 AS promo_id
+    <!-- selectByCard·selectByCardIds가 같이 쓰는 SELECT·FROM -->
+    <sql id="cardSelectFrom">
+        SELECT a.biz01_promo_id                                                                                AS promo_id
              , COALESCE(a.biz01_close_yn, 'false') = 'true'                                                     AS close_yn
              , CASE WHEN COALESCE(a.biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                    AS close_name
              , crd01_card_nm                                                                                    AS html_card_name
@@ -58,6 +59,18 @@
                LEFT OUTER JOIN apr01_appr e ON e.apr01_appr_id = a.biz01_appr_id
                LEFT OUTER JOIN crd03_trans f ON (    f.crd03_card_id = biz01_card_id
                                                  AND biz01_provide_date BETWEEN f.crd03_fr_dt AND COALESCE(f.crd03_to_dt,'9999-12-31') )
+    </sql>
+
+    <!-- #1131 [상신] RD 첨부 PDF 자료(AS-IS Sys99_Print.insertRdCardSimple은 화면 그리드에서 고른 행을 받는다) — 고른 내역 ID로 같은 열을 읽는다 -->
+    <select id="selectByCardIds" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes">
+        <include refid="cardSelectFrom"/>
+         WHERE biz01_company_id = #{companyId}
+           AND a.biz01_promo_id IN <foreach collection="promoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         ORDER BY b.crd02_approval_dt, a.biz01_promo_id
+    </select>
+
+    <select id="selectByCard" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes">
+        <include refid="cardSelectFrom"/>
          WHERE 1=1
            AND biz01_company_id = #{companyId}
            AND (

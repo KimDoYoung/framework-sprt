@@ -24,6 +24,7 @@ public class BizCardApprService {
 
     private final BizPromoMapper mapper;
     private final BizCardExcelService cardExcelService;
+    private final BizCardRdPdfService cardRdPdfService;
 
     /** @return 문서 ID를 넣은 내역 수 */
     @Transactional
@@ -32,6 +33,9 @@ public class BizCardApprService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "선택된 항목이 존재하지 않습니다.");
         }
         cardExcelService.createCardExcel(user, apprId, promoIds, titleName);
+        // RD 첨부 PDF "(요약) 제목.pdf" (CH-0112) — 원본 순서: createRd(자료·PDF) → 결재창 저장 때 엑셀 → cardFileSetting(PDF 첨부)
+        long groupId = cardRdPdfService.insertRdCardSimple(user, promoIds);
+        cardRdPdfService.attach(user, groupId, apprId, titleName);
         return mapper.updateApprId(user.getCompanyId(), apprId, promoIds);
     }
 }

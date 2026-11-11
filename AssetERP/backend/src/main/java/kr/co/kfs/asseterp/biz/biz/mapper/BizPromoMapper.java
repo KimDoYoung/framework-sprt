@@ -78,6 +78,9 @@ public interface BizPromoMapper {
     /** AS-IS dbConfig.getSeq와 같은 식 */
     long selectNextId();
 
+    /** #1131 [상신] RD 첨부 PDF 자료 — 고른 내역 ID로 selectByCard와 같은 열 (AS-IS insertRdCardSimple은 그리드에서 고른 행을 받는다) */
+    List<BizPromoCardRes> selectByCardIds(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
+
     /** AS-IS sys99_print.deleteByPersonId */
     int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
 

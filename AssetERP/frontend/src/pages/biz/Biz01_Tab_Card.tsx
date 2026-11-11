@@ -5,8 +5,8 @@
  *   + 카드 사용내역 그리드(체크박스 다중), east 420 = 위 `Biz01_Edit_Card`(300) + 아래 `Biz02_Grid_PersonList`(직원 · 거래상대방)
  * 원본 2026-11-04~10(0b44846d9·c0b1e1146·0c3baa89c, 대장 CH-0005·0158 외): 아래 칸(문서분류·상신상태·[상신]·[문서보기])과 그 달 상신(Biz05_RelateAppr)을 없애고
  *   고른 내역을 행 단위로 상신한다 — [상신] = checkLimit() → checkApproval() → 결재창(A41, 제목은 화면이 만든다) → 저장 뒤 내역에 문서 ID(updateByApprId) + 첨부 엑셀.
- *   그리드 첫 열 상신상태·[보기](그 행의 문서). RD 첨부 PDF(createRd → Sys99_Print.insertRdCardSimple, Biz01_Rd_CardSimple)는 #1311과 같이 하지 않는다
- *   (TOBE에 RD PDF 첨부가 없다 — 원본도 파일 경로가 없는 개발계는 PDF 없이 바로 결재창으로 간다).
+ *   그리드 첫 열 상신상태·[보기](그 행의 문서). RD 첨부 PDF(createRd → Sys99_Print.insertRdCardSimple, Biz01_Rd_CardSimple)는 결재 저장 뒤
+ *   서버(appr-link, BizCardRdPdfService)가 만들어 "(요약) 제목.pdf"로 붙인다(CH-0112, 사용자 결정 2026-11-11). RD가 꺼졌거나 실패하면 원본 개발계처럼 첨부 없이 간다.
  *   RD 출력은 `rdApi`로 주소를 받아 `RdViewer`에 띄운다(docs/RD-대책.md).
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
  * 스타일: SGHF (견본 — docs/page-style.md)
@@ -204,7 +204,7 @@ export const Biz01_Tab_Card: React.FC = () => {
 
   // checkApproval() L541-627: 고른 내역 중 상신중·결재중·완료(10·20·30)가 있으면 막는다. 승인일의 달이 둘 이상이면 막는다.
   //   제목 = "[법인카드] yyyy년 MM월 지출결의 승인 요청의건" + 계정과목(고른 순서의 첫 이름, 둘 이상이면 " 외 n") → "n건의 상신을 진행하시겠습니까?"
-  //   [YES] → createRd(): RD 첨부 PDF(Sys99_Print.insertRdCardSimple · Biz01_Rd_CardSimple)는 하지 않는다(머리 설명) → insertLinkApprovals()
+  //   [YES] → createRd(): RD 첨부 PDF(Sys99_Print.insertRdCardSimple · Biz01_Rd_CardSimple)는 결재 저장 뒤 서버가 한다(머리 설명) → insertLinkApprovals()
   const checkApproval = (list: BizPromoCard[], classTreeId: number) => {
     const accountNames: string[] = [];
     const months: string[] = [];
