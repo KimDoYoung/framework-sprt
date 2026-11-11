@@ -2,14 +2,14 @@
 
 AS-IS AssetERP는 유지보수 중이라 소스와 DB가 계속 바뀐다. 변환이 끝난 TOBE도 그 변경을 찾아 반영해야 한다.
 Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **며칠 늦는 것은 괜찮지만 빠지는 것은 안 된다.**
-빠지지 않게 하는 장치가 이 폴더의 **반영 대장**이다.
+빠지지 않게 하는 장치가 이 폴더의 **변경반영 대장**(`변경반영-대장.md`)이다.
 
 ## 파일
 
 | 파일 | 내용 |
 |:---|:---|
 | `README.md` | 이 문서 — 원칙·절차·도구 |
-| `반영대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다 |
+| `변경반영-대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다 |
 | `../../tools/make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
 
 ## 원칙
@@ -52,7 +52,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 cd AssetERP
 tools/check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
 tools/make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
-tools/make-change-docs.sh          # 반영대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
+tools/make-change-docs.sh          # 변경반영-대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
 ```
 - `make-change-docs.sh`가 하는 일: `yunhee drift --all --done-only --base baseline -o json` → 바뀐 파일을 SQL ID·메서드 단위로 나눔 → 색인·AS-IS 호출(`mapperName + ".id"`, `<include refid>`, 클라이언트 서비스 문자열)을 따라 쓰는 완료 화면 → TOBE 대응 후보 → 기준선 이후 새 파일·DB 스크립트 → 대장에 이어 붙임.
 - **처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다.** 같은 단위가 `대기`면 커밋·변경 요약·영향 화면만 고치고, 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄. 키는 마지막 `CH-` 번호에서 이어 간다.

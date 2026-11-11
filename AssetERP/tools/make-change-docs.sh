@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #============================================================================
-# tools/make-change-docs.sh - check-git.sh 다음에 돌려 변경반영 문서(반영대장)를 만든다
+# tools/make-change-docs.sh - check-git.sh 다음에 돌려 변경반영 문서(변경반영-대장)를 만든다
 #   tools/check-git.sh                 AS-IS 받아오기 + 색인
-#   tools/make-change-docs.sh          바뀐 것을 SQL ID·메서드 단위로 나눠 반영대장에 이어 붙임
+#   tools/make-change-docs.sh          바뀐 것을 SQL ID·메서드 단위로 나눠 변경반영-대장에 이어 붙임
 #   tools/make-change-docs.sh --dry-run    대장에 쓰지 않고 새로 붙을 줄만 보여 줌
 #   tools/make-change-docs.sh --reuse      drift를 다시 돌리지 않고 지난 결과(.yunhee/drift-today.json) 사용
 #   tools/make-change-docs.sh --since 2026-10-16   새 파일·DB 스크립트를 찾을 시작일
@@ -15,7 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # AssetERP/tools
 cd "$SCRIPT_DIR/.."                                         # AssetERP — 아래 경로는 여기 기준
 DRIFT_JSON=".yunhee/drift-today.json"
-LEDGER="docs/3-변경반영/반영대장.md"
+LEDGER="docs/3-변경반영/변경반영-대장.md"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; NC='\033[0m'
 info() { echo -e "${GREEN}[INFO]${NC}  $*"; }

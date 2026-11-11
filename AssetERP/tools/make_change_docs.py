@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""변경반영 문서(docs/3-변경반영/반영대장.md) 만들기 — tools/make-change-docs.sh 가 부른다.
+"""변경반영 문서(docs/3-변경반영/변경반영-대장.md) 만들기 — tools/make-change-docs.sh 가 부른다.
 
 입력: yunhee drift --all --done-only --base baseline -o json 결과(JSON 파일)
 하는 일:
@@ -16,7 +16,7 @@ yunhee drift-unit / drift-list(수정사항054)가 생기기 전의 임시 도�
 import argparse, collections, glob, json, os, re, subprocess, sys, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))           # AssetERP
-LEDGER = os.path.join(ROOT, 'docs/3-변경반영/반영대장.md')
+LEDGER = os.path.join(ROOT, 'docs/3-변경반영/변경반영-대장.md')
 ASIS = os.path.expanduser(os.environ.get('YUNHEE_ASIS_SRC_DIR', '~/work/IDMS-IC'))
 SRC_INDEX = os.path.join(ROOT, 'docs/as-is/src')
 BASELINE = os.path.join(ROOT, 'docs/baseline.json')

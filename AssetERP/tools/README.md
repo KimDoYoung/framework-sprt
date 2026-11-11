@@ -21,7 +21,7 @@
 | 파일 | 용도 |
 |:---|:---|
 | `check-git.sh` | AS-IS 원본(`YUNHEE_ASIS_SRC_DIR`) `git pull` → 색인 기준과 다르면 `index-src` 다시 만들기. `--force`·`--no-index`·`--db-index` |
-| `make-change-docs.sh` + `make_change_docs.py` | `check-git.sh` 다음에 돌려 바뀐 것을 SQL ID·메서드 단위로 나눠 `docs/3-변경반영/반영대장.md`에 이어 붙임(처리한 줄은 그대로). `--dry-run`·`--reuse`·`--since` |
+| `make-change-docs.sh` + `make_change_docs.py` | `check-git.sh` 다음에 돌려 바뀐 것을 SQL ID·메서드 단위로 나눠 `docs/3-변경반영/변경반영-대장.md`에 이어 붙임(처리한 줄은 그대로). `--dry-run`·`--reuse`·`--since` |
 
 ## 환경 점검 (읽기 전용)
 
