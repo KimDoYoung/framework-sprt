@@ -16,7 +16,6 @@ import {
   SoundOutlined,
   SettingOutlined,
   PoweroffOutlined,
-  UnorderedListOutlined,
   LayoutOutlined,
 } from '@ant-design/icons';
 import type { IJsonModel } from 'flexlayout-react';
