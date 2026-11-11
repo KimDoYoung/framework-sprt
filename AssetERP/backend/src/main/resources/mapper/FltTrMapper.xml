@@ -10,8 +10,7 @@
 <mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper">
 
     <!-- AS-IS(IDMS-IC) flt10_tr.selectByAccountId 바깥 SELECT (SELECT *를 DTO 열로 명시, 날짜 TO_CHAR, 'true'/'false' → boolean).
-         수정: status_name의 `CASE WHEN flt10_add_confirmer_id IS NOT NULL THEN (25 승인 / 20 미승인 / 코드명) ELSE 코드명 END`은 asseterpdb의 flt10_tr에
-         flt10_add_confirmer_id 열이 없어(추가승인 기능) 뺐다 — 코드명(f_cdnm)만 쓴다 -->
+         status_name: 추가승인자(flt10_add_confirmer_id)가 있으면 25 승인 / 20 부분승인(원본 2026-11-09, 전에는 미승인) / 코드명 — DB 복원으로 열이 생겨 원본대로(2026-11-11) -->
     <sql id="trColumns">
         flt10_tr_id                                                                          AS tr_id,
         flt10_company_id                                                                     AS company_id,
@@ -36,7 +35,12 @@
                                             ) THEN '펀드종목' ELSE '' END                    AS check_fund_hold,
         flt10_tr_reason                                                                      AS tr_reason,
         flt10_status_cd                                                                      AS status_code,
-        f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())            AS status_name,
+        CASE WHEN flt10_add_confirmer_id IS NOT NULL
+             THEN (CASE WHEN flt10_status_cd = '25' THEN '승인'
+                        WHEN flt10_status_cd = '20' THEN '부분승인'
+                        ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today()) END)
+             ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())
+        END                                                                                  AS status_name,
         flt10_reject_reason                                                                  AS reject_reason,
         TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                                                 AS tr_date,
         COALESCE(flt10_unfill_yn, 'false') = 'true'                                          AS unfill_yn,
@@ -97,6 +101,7 @@
           FROM ( <include refid="trInner"/>
                   WHERE flt10_company_id = #{companyId}
                     AND flt10_person_id  = #{personId}
+                    AND flt10_tr_type    IN ('10I','20O')   -- 원본 2026-11-09
                     AND flt10_tr_type    LIKE #{trType}
         <if test="accountId != null">
                     AND flt10_account_id = #{accountId}
@@ -560,6 +565,7 @@
              , COALESCE(COALESCE(flt05_tr.flt05_stk_price_yn, flt05.flt05_stk_price_yn)::varchar, 'false')           AS flt10_stk_price_yn
              , CASE WHEN COALESCE(flt10_status_cd,'00') = '00' THEN '미신고'
                     WHEN COALESCE(flt10_status_cd,'00') = '10' THEN '미승인'
+                    WHEN COALESCE(flt10_status_cd,'00') = '20' AND flt10_add_confirmer_id IS NOT NULL THEN '부분승인'   -- 원본 2026-11-09(전에는 미승인)
                     ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today()) END               AS flt10_status_nm
              , flt10_tr_amt                                                                                          AS flt10_bef_tr_amt
              , CASE WHEN flt01_appr_over_rate &lt; (flt10_tr_amt - flt10_expect_tr_amt) / f_nvl(flt10_expect_tr_amt,1) * 100
@@ -1264,7 +1270,7 @@
                              ,  flt05_tr.flt05_item_type_nm                                                                     AS flt10_tr_item_type_nm
                              ,  CASE WHEN flt10_add_confirmer_id IS NOT NULL
                                      THEN (CASE WHEN flt10_status_cd = '25' AND (coalesce(flt10_reject_reason,'') != '' OR coalesce(flt10_add_confirm_reason,'') != '') THEN '조건부승인'
-                                                WHEN flt10_status_cd = '20' THEN '미승인'
+                                                WHEN flt10_status_cd = '20' THEN '부분승인'   -- 원본 2026-11-09(전에는 미승인)
                                                 ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())
                                            END)
                                      ELSE (CASE WHEN flt10_status_cd = '20' AND coalesce(flt10_reject_reason,'') != ''

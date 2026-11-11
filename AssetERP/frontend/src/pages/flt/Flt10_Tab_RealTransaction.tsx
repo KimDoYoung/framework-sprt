@@ -32,6 +32,7 @@ import { Com50_Lookup_StkItem } from '@/components/lookup/Com50_Lookup_StkItem';
 import { Flt03_Lookup_Account, accountLabel } from './Flt03_Lookup_Account';
 import { Flt05_Lookup_ItemTypeConfirm } from './Flt05_Lookup_ItemTypeConfirm';
 import { Flt10_Lookup_Item } from './Flt10_Lookup_Item';
+import { Flt10_Lookup_ExpectTrAll } from './Flt10_Lookup_ExpectTrAll';
 import { Flt11_Lookup_BookList } from './Flt11_Lookup_BookList';
 import { Flt14_Lookup_RelateAppr } from './Flt14_Lookup_RelateAppr';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
@@ -81,6 +82,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
   const [preTr, setPreTr, preTrRef] = useStateRef(true);
   const [accountName, setAccountName] = useState('전체');
   const [apprStepName, setApprStepName] = useState('');
+  const [unFillOpen, setUnFillOpen] = useState(false);   // Flt10_Lookup_ExpectTrAll (원본 2026-11-06)
   const [noCycle, setNoCycle] = useState(false);
   const [calcTarget, setCalcTarget] = useState<string | null>(null);
   const [en, setEn] = useState<Enabled>({ retrieve: true, book: true, ins: true, excel: true, del: true, upd10: true, appr: true, apprView: true, upd12: true, stk: true, pur: true });
@@ -927,8 +929,10 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
                   <LookupInput value={accountName} width={300} disabled={noCycle} onOpen={() => setAcctLookup({ row: null })} />
                   {/* [E7] preTrYnCheckBox[사전신고 포함].ValueChange (L499) → setPreTrColumn(), retrieve() */}
                   <Checkbox checked={preTr} disabled={noCycle} onChange={e => changePreTr(e.target.checked)}>사전신고 포함</Checkbox>
+                  {/* 원본 2026-11-06 unFillButton[사전신고 미체결 지정].Select → unFillLookup(): Flt10_Lookup_ExpectTrAll.open(stdCycle, 조회기간) → 닫으면 retrieve() */}
+                  <Button type="assign" onClick={() => setUnFillOpen(true)}>사전신고 미체결 지정</Button>
                   <span style={labelStyle}>상신상태</span>
-                  <Input style={{ width: 80 }} readOnly value={apprStepName} />
+                  <Input style={{ width: 70 }} readOnly value={apprStepName} />
                   {/* [E17] apprButton[정기보고서 작성].Select (L566) → getDate(), getInvestLimit(), checkEval() */}
                   <Button type="register" disabled={!en.appr} onClick={clickAppr}>정기보고서 작성</Button>
                   {/* [E20] apprViewButton[문서보기].Select (L616) → apprView() */}
@@ -994,6 +998,8 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
         onClose={() => setAcctLookup(null)}
       />
       <Flt05_Lookup_ItemTypeConfirm open={typeConfirmGroup != null} groupCode={typeConfirmGroup} onClose={() => setTypeConfirmGroup(null)} />
+      <Flt10_Lookup_ExpectTrAll open={unFillOpen} startDate={startDateRef.current} closeDate={closeDateRef.current}
+        onClose={() => { setUnFillOpen(false); void retrieve(); }} />
       <Flt10_Lookup_Item open={itemLookup != null} stdDate={closeDateRef.current} searchText={itemLookup?.text} onResult={pickItem} onClose={() => setItemLookup(null)} />
       <Com50_Lookup_StkItem
         mode={stkLookup != null ? 'VIEW' : null}

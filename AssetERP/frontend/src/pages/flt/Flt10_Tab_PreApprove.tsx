@@ -35,7 +35,7 @@ const APPR_ITEMS = ['전체', '승인', '미승인'];
 const htmlRight = { textAlign: 'right', color: '#404040' } as const;
 const htmlCenter = { textAlign: 'center' } as const;
 
-/** buildBuyGrid() L388-428 — 열 인덱스(행번호 0, 체크 1): 승인여부 15, 승인상태 17 */
+/** buildBuyGrid() L388-428 — 열 인덱스(행번호 0, 체크 1): 승인여부 16, 승인상태 18 (원본 2026-11-06 승인자 열이 들어가 한 칸씩 밀림) */
 const buildBuyGrid = (hideInvestLimit: boolean, addConfirm: boolean) => [
   gb.textCenter('personName', 80, '신고자'),
   gb.date('regDate', 90, '매수신고일'),
@@ -50,8 +50,9 @@ const buildBuyGrid = (hideInvestLimit: boolean, addConfirm: boolean) => [
   gb.textHtml('turnoverRateStr', 100, '월매매회전율<br>(%)', { cellStyle: htmlRight }),
   gb.textCenter('checkBuyLockup', 80, '매수제한'),
   gb.textCenter('checkFundHold', 80, '펀드<br>보유종목'),
+  gb.textCenter('confirmerName', 100, '승인자'),  // 원본 2026-11-06
   gb.textHtml('statusName', 80, '승인여부', { cellStyle: { ...htmlCenter, cursor: 'pointer' } }),
-  // addHeaderGroupMap(new HeaderGroupMap(0, 16, new HeaderGroupConfig("협의승인", 1, 2)))
+  // addHeaderGroupMap(new HeaderGroupMap(0, 17, new HeaderGroupConfig("협의승인", 1, 2)))
   gb.group('협의승인', [
     gb.textCenter('addConfirmerName', 100, '승인자', { hide: !addConfirm }),
     gb.textCenter('addStatusName', 80, '승인상태', { hide: !addConfirm, cellStyle: { textAlign: 'center', cursor: 'pointer' } }),
@@ -59,7 +60,7 @@ const buildBuyGrid = (hideInvestLimit: boolean, addConfirm: boolean) => [
   gb.booleanYn('confirmSmsYn', 80, '알림발송'),
 ];
 
-/** buildSellGrid() L430-470 — 승인여부 11, 승인상태 13 */
+/** buildSellGrid() L430-470 — 승인여부 12, 승인상태 14 */
 const buildSellGrid = (addConfirm: boolean) => [
   gb.textCenter('personName', 80, '신고자'),
   gb.date('regDate', 90, '매도신고일'),
@@ -70,6 +71,7 @@ const buildSellGrid = (addConfirm: boolean) => [
   gb.textCenter('checkFundHold', 80, '펀드<br>보유종목'),
   gb.double('expectTrQty', 80, '매도수량'),
   gb.long('expectTrAmt', 110, '매도금액'),
+  gb.textCenter('confirmerName', 100, '승인자'),  // 원본 2026-11-06
   gb.textHtml('statusName', 80, '승인여부', { cellStyle: { ...htmlCenter, cursor: 'pointer' } }),
   gb.group('협의승인', [
     gb.textCenter('addConfirmerName', 100, '승인자', { hide: !addConfirm }),
@@ -314,7 +316,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
           {addConfirmYn && <Button type="assign" onClick={addConfirmer}>협의승인자 지정</Button>}
           <Button type="view" onClick={fundStock}>펀드보유종목 확인</Button>
           <Button type="send" onClick={sendMessage}>일괄 알림발송</Button>
-          <span style={{ fontSize: 12, color: '#456EA6', fontWeight: 'bold' }}>&nbsp;* 승인여부 클릭하여 매매사유 확인 및 승인/반려사유를 수정 할 수 있습니다.</span>
+          <span style={{ fontSize: 12, color: '#456EA6', fontWeight: 'bold' }}>&nbsp;* 승인여부를 클릭하여 매매사유 확인 및 승인/반려사유를 수정 할 수 있습니다.</span>
         </div>
         <div style={sectionLabel}>▶ 매 수</div>
         <div style={{ flex: 1, minHeight: 0 }}>

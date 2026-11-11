@@ -7,5 +7,5 @@ public record PreApproveRes(Long trId, Long personId, String personName, String 
                             String bookDays, String checkBuyLockup, String checkFundHold,
                             String statusCode, String statusName, String trReason, String rejectReason,
                             Long addConfirmerId, String addConfirmerName, String addStatusName, String addConfirmDatetime,
-                            String addConfirmReason, Boolean confirmSmsYn) {
+                            String addConfirmReason, Boolean confirmSmsYn, String confirmerName) {
 }

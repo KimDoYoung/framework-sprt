@@ -476,6 +476,8 @@ export interface FltPreApprove {
   addConfirmDatetime: string | null;
   addConfirmReason: string | null;
   confirmSmsYn: boolean;
+  /** 승인자(flt10_confirmer_id) — 원본 2026-11-06 */
+  confirmerName: string | null;
 }
 
 /** 사전승인 화면 설정 — 투자한도 열 숨김(기준관리)·협의승인 사용 회사 */

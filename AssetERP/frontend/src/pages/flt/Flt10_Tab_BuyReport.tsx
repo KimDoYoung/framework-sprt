@@ -115,14 +115,14 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
     return crudRef.current.retrieve();
   }, []);
 
-  // setButtonEnable() L873-881: 소급 미사용 회사이고 기준일이 오늘이 아니면 저장·등록·삭제를 막는다
+  // setButtonEnable() L873-881: 소급 미사용 회사이고 기준일이 오늘이 아니면 저장·등록을 막는다 (원본 2026-11-06: 삭제는 막지 않음 — 늘 켜 둠)
   const setButtonEnable = useCallback((yn: boolean) => {
     const ok = onlyCurrRef.current && baseDateRef.current !== todayRef.current ? false : yn;
-    setEn(prev => ({ ...prev, upd: ok, ins: ok, del: ok }));
+    setEn(prev => ({ ...prev, upd: ok, ins: ok }));
   }, []);
-  // setButtonEnable2() L883-889: 저장·등록·삭제·승인신청·신청취소
+  // setButtonEnable2() L883-889: 저장·등록·승인신청·신청취소 (원본 2026-11-06: 삭제는 빠짐)
   const setButtonEnable2 = useCallback((yn: boolean) => {
-    setEn({ upd: yn, ins: yn, del: yn, fix: yn, cancel: yn });
+    setEn(prev => ({ ...prev, upd: yn, ins: yn, fix: yn, cancel: yn }));
   }, []);
   // setOnlyCurr() L891-900: 소급 미사용 고객사는 당일에만 등록 가능
   const setOnlyCurr = useCallback(() => {

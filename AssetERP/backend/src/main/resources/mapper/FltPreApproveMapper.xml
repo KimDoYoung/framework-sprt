@@ -42,6 +42,7 @@
              , flt10_reject_reason                                                      AS reject_reason
              , flt10_add_confirmer_id                                                   AS add_confirmer_id
              , flt10_add_confirmer_nm                                                   AS add_confirmer_name
+             , flt10_confirmer_nm                                                       AS confirmer_name
              , flt10_add_status_nm                                                      AS add_status_name
              , TO_CHAR(flt10_add_confirm_datetime, 'YYYY-MM-DD HH24:MI:SS')             AS add_confirm_datetime
              , flt10_add_confirm_reason                                                 AS add_confirm_reason
@@ -92,7 +93,8 @@
                              ,  flt05.flt05_item_type_nm                                                                            AS flt10_item_type_nm
                              ,  COALESCE(COALESCE(flt05_tr.flt05_target_yn       , flt05.flt05_target_yn       )::varchar, 'false') AS flt10_target_yn
                              ,  COALESCE(COALESCE(flt05_tr.flt05_sell_pre_appr_yn, flt05.flt05_sell_pre_appr_yn)::varchar, 'false') AS flt10_sell_pre_appr_yn
-                             ,  emp01_kor_nm                                                                                        AS flt10_add_confirmer_nm
+                             ,  e1.emp01_kor_nm                                                                                     AS flt10_add_confirmer_nm
+                             ,  e2.emp01_kor_nm                                                                                     AS flt10_confirmer_nm   -- 원본 2026-11-06 승인자
                              ,  flt08_lockup_type                                                                                   AS check_buy_lockup
                              ,  f_get_floorTrRcntBuyDate( flt10_company_id, flt10_person_id, flt10_account_id
                                                         , flt10_item_type, flt10_item_nm, flt10_item_cd
@@ -131,7 +133,8 @@
                                                            ORDER BY flt01_start_date DESC
                                                            LIMIT 1
                                                         ) flt01 ON TRUE
-                                LEFT OUTER JOIN emp01_person ON emp01_person_id = flt10_add_confirmer_id
+                                LEFT OUTER JOIN emp01_person e1 ON e1.emp01_person_id = flt10_add_confirmer_id
+                                LEFT OUTER JOIN emp01_person e2 ON e2.emp01_person_id = flt10_confirmer_id
                          WHERE  1=1
                            AND  flt10_company_id = #{companyId}
                            AND  flt10_tr_type LIKE #{trType}
