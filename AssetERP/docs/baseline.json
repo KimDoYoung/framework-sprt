@@ -15923,6 +15923,18 @@
       "updated_at": "2026-11-11T15:50:19+09:00",
       "note": "해당없음(대장 비고)",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp15_cert.xml · selectByCompanyId": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:53:18+09:00",
+      "note": "경력증명서 발령내역",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp15_cert.xml · selectById": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:53:18+09:00",
+      "note": "부르는 화면 없음",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -15966,6 +15978,12 @@
       "status": "해당없음",
       "updated_at": "2026-11-11T15:50:19+09:00",
       "note": "해당없음(대장 비고)",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp15_cert.xml": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:53:18+09:00",
+      "note": "부르는 화면 없음",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }

@@ -125,28 +125,33 @@
                           WHERE emp11_person_id = cert.emp15_person_id
                             AND emp11_reward_cd = '20'
                             AND emp11_reward_dt <= cert.emp15_issue_date), '')                      AS reward_list
+             -- 발령내역: 원본 2026-11-09(0fb77f9b1 경력증명서 발령내역 수정) 그대로 — 발령마다 한 줄 → 같은 부서가 이어지는 구간을 한 줄로, 끝에 그 구간 마지막 직책(직위). 부서 비고(org02_note)는 빠짐 (CH-0019)
              , (SELECT STRING_AGG(emp03.trans_list, '<' || 'br' || '>' ORDER BY emp03.trans_list)
-                  FROM (SELECT ROW_NUMBER() OVER ()                                                 AS row_num
-                             , (TO_CHAR(e.emp03_trans_date, 'yyyy-MM-dd')::text || ' ~ ' ||
-                                (SELECT COALESCE(TO_CHAR(MIN(a.emp03_trans_date), 'yyyy-MM-dd'), TO_CHAR(cert.emp15_issue_date, 'yyyy-MM-dd'))
-                                   FROM emp03_trans a
-                                  WHERE a.emp03_person_id = cert.emp15_person_id
-                                    AND e.emp03_trans_date < a.emp03_trans_date)::text || ' ' ||
-                                f_org_nm(e.emp03_org_code_id, e.emp03_trans_date)::text ||
-                                COALESCE(' (' || (SELECT a.org02_note
-                                                    FROM org02_info a
-                                                   WHERE a.org02_code_id  = e.emp03_org_code_id
-                                                     AND a.org02_mod_date = (SELECT MAX(x.org02_mod_date)
-                                                                               FROM org02_info x
-                                                                              WHERE x.org02_code_id  = a.org02_code_id
-                                                                                AND x.org02_mod_date <= e.emp03_trans_date)
-                                                 ) || ')', '')
-                               )                                                                    AS trans_list
-                          FROM emp03_trans e
-                         WHERE e.emp03_person_id = cert.emp15_person_id
-                           AND e.emp03_trans_date <= cert.emp15_issue_date
-                           AND e.emp03_trans_cd != '900'
-                       ) emp03)                                                                     AS trans_list
+                  FROM (SELECT TO_CHAR(MIN(emp03_trans_date), 'yyyy-MM-dd')::text
+                               || ' ~ '
+                               || COALESCE(TO_CHAR((ARRAY_AGG(next_trans_date ORDER BY emp03_trans_date DESC))[1], 'yyyy-MM-dd'), TO_CHAR(cert.emp15_issue_date, 'yyyy-MM-dd'))::text
+                               || ' '
+                               || MAX(org_nm)
+                               || COALESCE((ARRAY_AGG(' ' || title_nm || '(' || pos_nm ORDER BY emp03_trans_date DESC))[1] || ')', '') AS trans_list
+                          FROM (SELECT emp03_trans_date
+                                     , next_trans_date
+                                     , org_nm
+                                     , title_nm
+                                     , pos_nm
+                                     , SUM(org_change_yn) OVER (ORDER BY emp03_trans_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS org_grp
+                                  FROM (SELECT e.emp03_trans_date
+                                             , LEAD(e.emp03_trans_date) OVER (ORDER BY e.emp03_trans_date)         AS next_trans_date
+                                             , f_org_nm(e.emp03_org_code_id, e.emp03_trans_date)::text             AS org_nm
+                                             , f_get_emptrans(emp03_person_id, e.emp03_trans_date::date, 'title_nm') AS title_nm
+                                             , f_get_emptrans(emp03_person_id, e.emp03_trans_date::date, 'pos_nm')   AS pos_nm
+                                             , CASE WHEN e.emp03_org_code_id = LAG(e.emp03_org_code_id) OVER (ORDER BY e.emp03_trans_date)
+                                                    THEN 0
+                                                    ELSE 1 END                                                     AS org_change_yn
+                                          FROM emp03_trans e
+                                         WHERE e.emp03_person_id = cert.emp15_person_id
+                                           AND e.emp03_trans_date <= cert.emp15_issue_date
+                                           AND e.emp03_trans_cd != '900') t ) g
+                         GROUP BY org_grp) emp03)                                                   AS trans_list
           FROM emp15_cert cert
                INNER JOIN sys01_company com ON cert.emp15_company_id = com.sys01_company_id
                INNER JOIN emp01_person per  ON cert.emp15_person_id  = per.emp01_person_id
