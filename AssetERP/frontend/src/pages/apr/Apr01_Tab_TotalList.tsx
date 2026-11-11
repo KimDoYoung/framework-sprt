@@ -28,9 +28,9 @@ const unprocStyle = { cellStyle: { color: UNPROC_COLOR } };
 const SUB_LIST_MENU_NO = '1011';
 
 export const Apr01_Tab_TotalList: React.FC = () => {
-  // setInitData() L133-143: 조회기간 = 이번 달 1일 ~ 말일
-  const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('month'));
-  const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs().endOf('month'));
+  // setInitData(): 조회기간 = 오늘 3개월 전 ~ 오늘 (AS-IS 81071e5c6 10-28, 전엔 이번 달 1일~말일 — CH-0151)
+  const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('day').subtract(3, 'month'));
+  const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs().startOf('day'));
   const [orgName, setOrgName] = useState('');
   const [personName, setPersonName] = useState('');
   const [rows, setRows] = useState<AprTotalList[]>([]);
