@@ -17,5 +17,6 @@
          WHERE  apr01_company_id = #{companyId}
            AND  apr01_appr_id IN
         <foreach collection="apprIdList" item="apprId" open="(" close=")" separator=",">#{apprId}</foreach>
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC   <!-- 원본 2026-11-05 (CH-0213) -->
     </select>
 </mapper>
