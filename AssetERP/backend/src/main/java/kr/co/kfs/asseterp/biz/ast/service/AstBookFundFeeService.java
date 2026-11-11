@@ -16,9 +16,15 @@ import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -40,6 +46,39 @@ public class AstBookFundFeeService {
     /** AS-IS Ast30_BookFundFee.selectByStdDate (X32 Ast30_Tab_FundMngFee) — 기준일의 펀드별 전월 잔액·당월 발생/인출·당월 잔액 */
     public List<BookFundFeeMonthRes> searchByStdDate(UserPrincipal user, LocalDate stdDate, String searchText) {
         return mapper.selectByStdDate(param(user, stdDate, null, searchText));
+    }
+
+    /** #1401 출력용 열 제목 — AS-IS Sys99_Print.insertRdBookFundMngFee의 string01·02, long01~04 순서 */
+    private static final String[] MONTH_FEE_EXCEL_HEADERS = {"펀드코드", "펀드명", "전월 잔액", "당월 발생액", "당월 인출액", "당월 잔액"};
+
+    /**
+     * #1401 [엑셀다운로드] — AS-IS Ast30_Tab_FundMngFee.downLoad() → Sys99_Print.insertRdBookFundMngFee(원본 2026-11-02, CH-0110·0152)
+     * + RD 리포트 Ast30_Rd_FundMngFee(/rxlsopt). AS-IS는 selectByStdDate 결과를 sys99_print에 쌓아 RD가 xlsx로 만든다.
+     * TOBE는 같은 조회 결과를 같은 열 순서로 xlsx에 쓴다(행 순서 = AS-IS long05 = ROW_NUMBER() OVER (ORDER BY 펀드코드)).
+     */
+    public byte[] downloadByStdDate(UserPrincipal user, LocalDate stdDate, String searchText) {
+        List<BookFundFeeMonthRes> rows = searchByStdDate(user, stdDate, searchText);
+        try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("펀드보수당월증감");
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < MONTH_FEE_EXCEL_HEADERS.length; i++) {
+                header.createCell(i).setCellValue(MONTH_FEE_EXCEL_HEADERS[i]);
+            }
+            int r = 1;
+            for (BookFundFeeMonthRes m : rows) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(m.fundCode() == null ? "" : m.fundCode());
+                row.createCell(1).setCellValue(m.fundName() == null ? "" : m.fundName());
+                row.createCell(2).setCellValue(m.preFee() == null ? 0 : m.preFee());     // checkLongNull
+                row.createCell(3).setCellValue(m.occFee() == null ? 0 : m.occFee());
+                row.createCell(4).setCellValue(m.drawFee() == null ? 0 : m.drawFee());
+                row.createCell(5).setCellValue(m.fee() == null ? 0 : m.fee());
+            }
+            wb.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
+        }
     }
 
     /** AS-IS Ast30_BookFundFee.selectByHoldDatePaging (L42) — 기간의 일자·운용사별 합계 (페이지 행 + 전체 건수) */

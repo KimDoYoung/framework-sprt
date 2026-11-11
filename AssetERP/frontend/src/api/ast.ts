@@ -1104,6 +1104,23 @@ export const astApi = {
     return res.data.data ?? [];
   },
 
+  /** #1401 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdBookFundMngFee + RD Ast30_Rd_FundMngFee → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadBookFundFeeMonthsExcel: async (params: { stdDate: string; searchText: string }, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/ast/book-fund-fees/month-fees/excel', { params, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
   /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging (X26): 기간의 일자·운용사별 합계 (페이지 행 + 전체 건수) */
   /** AS-IS ast.Ast30_BookFundFee.selectFundFeeBook (X31): 기간의 일자·펀드별 보수원장. fundCode가 없으면 전체 */
   searchFundFeeBook: async (params: { startDate: string; closeDate: string; fundCode?: string | null; searchText: string }): Promise<AstBookFundFeeState[]> => {

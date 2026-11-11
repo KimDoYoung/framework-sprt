@@ -1,11 +1,11 @@
 /**
  * [1401] 관리회계 > 30. 펀드운용보수관리 > 펀드보수현황 (X32)
  * AS-IS: myApp/client/vi/ast/Ast30_Tab_FundMngFee.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L39-68: 위 = 툴바(기준일 100 · 검색 200 "펀드코드/펀드명" · [조회]), 아래 = 그리드 하나(행번호 + 6열, 체크박스 없음, 페이징 없음)
+ * 생성자 L39-68: 위 = 툴바(기준일 100 · 검색 200 "펀드코드/펀드명" · [조회] · [엑셀다운로드](원본 2026-11-02)), 아래 = 그리드 하나(행번호 + 6열, 체크박스 없음, 페이징 없음)
  * 열 때 setting(), retrieve() — 화면을 열면 곧바로 어제 기준으로 조회한다
  * 스타일: SG (견본 docs/page-style/SG/Tdm01_Tab_Hr.tsx)
  * UX보강(10): 툴바 = SearchBar(UX-01). 조건이 2개라 초기화(UX-02)는 넣지 않는다
- * 버튼 type: 조회 `search`
+ * 버튼 type: 조회 `search`, 엑셀다운로드 `download`
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DatePicker, message } from 'antd';
@@ -15,6 +15,8 @@ import { errorMessage } from '@/api/client';
 import { AstBookFundFeeMonth } from '@/types/ast';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { Button } from '@/components/button';
+import { useLoginUser } from '@/hooks/useLoginUser';
 
 const FORMAT = 'YYYY-MM-DD';
 const gb = gbFor<AstBookFundFeeMonth>();
@@ -30,6 +32,7 @@ const columnDefs = [
 ];
 
 export const Ast30_Tab_FundMngFee: React.FC = () => {
+  const user = useLoginUser();
   // setting() L70-95: 기준일 어제
   const [stdDate, setStdDate] = useState<Dayjs>(() => dayjs().subtract(1, 'day'));
   const [searchText, setSearchText] = useState('');
@@ -55,10 +58,24 @@ export const Ast30_Tab_FundMngFee: React.FC = () => {
   // [E0] 화면 열림 (생성자 L39-68) → setting(), retrieve()
   useEffect(() => { void retrieve(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
 
+  // [E3] excelDownloadButton[엑셀다운로드].Select (L108) → downLoad() L146-196 (원본 2026-11-02, CH-0110·0152):
+  //   sys.Sys99_Print.insertRdBookFundMngFee → RD Ast30_Rd_FundMngFee xlsx "펀드보수당월증감(yyyy-MM-dd)_회사명.xlsx" (RD 대신 서버가 xlsx를 만든다)
+  const downLoad = async () => {
+    setLoading(true);  // grid.mask("Loading")
+    try {
+      const date = stdDate.format(FORMAT);
+      await astApi.downloadBookFundFeeMonthsExcel({ stdDate: date, searchText }, `펀드보수당월증감(${date})_${user.companyName}.xlsx`);
+    } catch (err) {
+      message.error(errorMessage(err, '다운로드 실패'));  // AS-IS SimpleMessage(result.getMessage())
+    } finally {
+      setLoading(false);  // grid.unmask()
+    }
+  };
+
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <SearchBar onSearch={retrieve} loading={loading}>
+        <SearchBar onSearch={retrieve} loading={loading} extra={<Button type="download" onClick={downLoad}>엑셀다운로드</Button>}>
           <SearchBar.Field label="기준일">
             <DatePicker style={{ width: 120 }} allowClear={false} value={stdDate} onChange={d => d && setStdDate(d)} />
           </SearchBar.Field>

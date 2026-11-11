@@ -13,6 +13,10 @@ import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -46,6 +51,19 @@ public class AstBookFundFeeController {
                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
                                                                   @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchByStdDate(principal, stdDate, searchText));
+    }
+
+    /** #1401 [엑셀다운로드] (AS-IS sys.Sys99_Print.insertRdBookFundMngFee + RD Ast30_Rd_FundMngFee → xlsx). 파일 "펀드보수당월증감(기준일)_회사명.xlsx" */
+    @GetMapping("/month-fees/excel")
+    public ResponseEntity<byte[]> downloadByStdDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                    @RequestParam(defaultValue = "") String searchText) {
+        byte[] body = service.downloadByStdDate(principal, stdDate, searchText);
+        String fileName = "펀드보수당월증감(" + stdDate + ")_" + principal.getCompanyName() + ".xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
     }
 
     /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging — 기간의 일자·운용사별 합계 (X26 #1249) */
