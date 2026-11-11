@@ -16,9 +16,9 @@ public class TdmCheckBotService {
     private final BotClient botClient;
 
     public String getBotCheckCmnt(CheckBotCmntReq req) {
-        // 원본 문구 그대로("점점항목" 오타 포함), null은 원본처럼 "null" 글자로 이어 붙는다
+        // 원본 문구 그대로(원본 2026-10-30에 "점점항목" 오타를 "점검항목"으로 고침), null은 원본처럼 "null" 글자로 이어 붙는다
         String taskType = "책무구조이행점검";
-        String userPrompt = "[점점항목]: " + req.checkItem() + "\n"
+        String userPrompt = "[점검항목]: " + req.checkItem() + "\n"
                 + "[점검방법]: " + req.checkHow() + "\n"
                 + "[검토결과]: " + req.checkResultName();
         BotClient.BotResult r = botClient.call(userPrompt, taskType);

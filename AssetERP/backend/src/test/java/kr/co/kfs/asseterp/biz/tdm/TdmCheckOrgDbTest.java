@@ -80,6 +80,19 @@ class TdmCheckOrgDbTest {
     }
 
     @Test
+    void 이미_확정했으면_다시_확정할_수_없고_점검대기가_아니면_확정취소할_수_없다() {
+        // 원본 2026-10-30(CH-0118): 두 사용자가 동시에 [확정] / 확정취소 전 모든 항목이 점검대기(10)인지 확인
+        orgService.updateFix(USER, ORG_READY, "P");
+        assertThatThrownBy(() -> orgService.updateFix(USER, ORG_READY, "P"))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 확정이 완료되어 있습니다");
+
+        jdbc.update("update tdm52_chck_manl set tdm52_check_status_cd = '11' where tdm52_chck_manl_id = "
+                + "(select min(tdm52_chck_manl_id) from tdm52_chck_manl where tdm52_chck_org_id = ?)", ORG_READY);
+        assertThatThrownBy(() -> orgService.updateFix(USER, ORG_READY, "C"))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("'점검대기'중인 경우에만 취소가 가능합니다");
+    }
+
+    @Test
     void 승인요청은_점검완료_항목을_승인요청으로_바꾸고_이력을_남기며_취소하면_되돌린다() {
         orgService.updateFix(USER, ORG_READY, "P");
         // 점검이 끝난 것으로 만든다(점검완료 19)

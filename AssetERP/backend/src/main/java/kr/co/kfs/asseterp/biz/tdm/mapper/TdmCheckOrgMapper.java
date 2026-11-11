@@ -38,6 +38,12 @@ public interface TdmCheckOrgMapper {
     /** AS-IS tdm58_chck_appr_step.selectRetireEmp — 점검시작일에 퇴직한 승인자·점검자 이름 */
     String selectRetireEmp(@Param("chckOrgId") Long chckOrgId);
 
+    /** AS-IS tdm60_chck_manl_appr.countByChckOrgId (원본 2026-10-30) */
+    int countManlApprByChckOrgId(@Param("chckOrgId") Long chckOrgId);
+
+    /** AS-IS tdm52_chck_manl.checkStatus10Yn (원본 2026-10-30) */
+    boolean checkStatus10Yn(@Param("chckOrgId") Long chckOrgId);
+
     /** AS-IS tdm60_chck_manl_appr.insertByTdm58 */
     int insertManlApprByApprStep(@Param("chckOrgId") Long chckOrgId, @Param("companyId") Long companyId);
 

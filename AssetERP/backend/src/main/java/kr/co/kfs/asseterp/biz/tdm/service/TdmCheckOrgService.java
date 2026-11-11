@@ -58,11 +58,19 @@ public class TdmCheckOrgService {
             if (retireEmps != null) {
                 throw fail("승인자 또는 점검자에 퇴사자(" + retireEmps + ")가 지정되어 있습니다 ");
             }
+            // 확정여부 체크 (원본 2026-10-30 CH-0118: 두 사용자가 각자 화면에서 동시에 [확정]을 누르는 경우)
+            if (mapper.countManlApprByChckOrgId(chckOrgId) != 0) {
+                throw fail("이미 확정이 완료되어 있습니다");
+            }
             // 1.점검항목별 승인내역(tdm60) insert
             mapper.insertManlApprByApprStep(chckOrgId, org.companyId());
             // 2.점검상태(tdm52_check_status_cd)를 '점검대기(10)'로 일괄 update
             mapper.updateCheckStatusByChckOrgId(chckOrgId, "10", user.getName());
         } else if ("C".equals(actionType)) {
+            // 모든 항목이 '점검대기'인지 최종 확인 (원본 2026-10-30 CH-0118)
+            if (!mapper.checkStatus10Yn(chckOrgId)) {
+                throw fail("모든 항목의 진행상태가 '점검대기'중인 경우에만 취소가 가능합니다");
+            }
             // 1.점검항목별 승인내역(tdm60) delete
             mapper.deleteManlApprByChckOrgId(chckOrgId);
             // 2.점검상태(tdm52_check_status_cd)를 'null'로 일괄 update

@@ -242,6 +242,23 @@
     </insert>
 
     <!-- AS-IS(IDMS-IC) tdm60_chck_manl_appr.deleteByChckOrgId -->
+    <!-- AS-IS tdm60_chck_manl_appr.countByChckOrgId (원본 2026-10-30 CH-0083) — 이미 확정(승인내역 tdm60)이 있으면 0이 아니다 -->
+    <select id="countManlApprByChckOrgId" resultType="int">
+        SELECT count(*)
+          FROM tdm52_chck_manl
+               INNER JOIN tdm60_chck_manl_appr ON tdm60_chck_manl_id = tdm52_chck_manl_id
+         WHERE tdm52_chck_org_id = #{chckOrgId}
+    </select>
+
+    <!-- AS-IS tdm52_chck_manl.checkStatus10Yn (원본 2026-10-30 CH-0080) — 모든 항목이 점검대기(10)인가 -->
+    <select id="checkStatus10Yn" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) = 0 THEN false
+                    WHEN COUNT(*) = SUM(CASE WHEN tdm52_check_status_cd = '10' THEN 1 ELSE 0 END) THEN true
+                    ELSE false END
+          FROM tdm52_chck_manl
+         WHERE tdm52_chck_org_id = #{chckOrgId}
+    </select>
+
     <delete id="deleteManlApprByChckOrgId">
         DELETE
           FROM tdm60_chck_manl_appr

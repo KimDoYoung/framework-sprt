@@ -269,7 +269,12 @@ public class TdmCheckApprService {
         List<CheckApprInsuffRes> insuffs = pick(mapper.selectInsuffs(chckApprCmntId, user.getCompanyId(), firstDay(model.checkYm()), null, false),
                 req.chckInsuffIds(), CheckApprInsuffRes::chckInsuffId);
 
-        // 점검항목
+        // 점검항목 — 원본 2026-10-30(CH-0119): 처리 전 DB의 실제 상태 확인(새로고침 안 된 화면에서의 처리 걸러내기). manls는 방금 DB에서 읽은 값
+        for (CheckApprManlRes manl : manls) {
+            if (start && !"20".equals(manl.checkStatusCode())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "승인요청 대상이 아닌 점검항목이 존재합니다. 상단의 [조회]버튼을 클릭하여 점검상태를 다시 확인해 주세요");
+            }
+        }
         for (CheckApprManlRes manl : manls) {
             orgMapper.updateCheckStatusById(manl.chckManlId(), start ? "21" : "20", user.getName());
             mapper.updateManlApprByManlId(manl.chckManlId(), "10", null);
