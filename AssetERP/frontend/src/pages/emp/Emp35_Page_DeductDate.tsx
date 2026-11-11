@@ -95,7 +95,7 @@ export const Emp35_Page_DeductDate: React.FC<{ personId: number | null | undefin
       </div>
 
       {/* 우 85%: DeductInsert 폼 */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid #f0f0f0' }}>
         <Emp35_TabPage_DeductInsert
           deduct={selectedDeduct}
           onSaved={onDeductSaved}

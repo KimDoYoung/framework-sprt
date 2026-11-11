@@ -241,7 +241,8 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
           </div>
         </div>
       </Splitter.Panel>
-      <Splitter.Panel defaultSize={450} max={900} min={100}>
+      {/* min 430 = 탭 머리(46+아래 여백 16) + 기본정보·기타정보 본문(사진 300+위아래 10) + 저장줄(48): 세로 스크롤이 안 생기는 가장 작은 높이 (사용자 지시 2026-11-11) */}
+      <Splitter.Panel defaultSize={450} max={900} min={430}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0 12px', boxSizing: 'border-box' }}>
           <Tabs
             activeKey={activeTab}

@@ -114,10 +114,10 @@ export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowCh
     <div style={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', flex: 1 }}>
         {/* [E1 생략]·[E2 생략]·[E3 생략] image.Click → FileUpload(mode=emp01, image) → 사진 다시 읽기 — 파일 공통(B10) 뒤. 자리만 둔다 */}
-        <div style={{ width: 245, height: 315, margin: 30, flex: 'none', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb' }}>
+        <div style={{ width: 245, height: 300, margin: 10, flex: 'none', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb' }}>
           <UserOutlined style={{ fontSize: 80 }} />
         </div>
-        <div style={{ paddingTop: 30 }}>
+        <div style={{ paddingTop: 10 }}>
           <FormRow>
             <Field label="한자명">{text('chnName')}</Field>
             <Field label="성별">{code('genderCode', 'EmpGenderCode', true)}</Field>
@@ -144,9 +144,12 @@ export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowCh
           <FormRow>
             <Field label="생년월일"><DatePicker style={{ width: '100%' }} value={birthday} format="YYYY-MM-DD" placeholder="0000-00-00" disabled /></Field>
             <Field label="병역구분">{code('militaryCode', 'EmpMilitaryCode')}</Field>
-            <Field label="비고" width={550}>
-              <Input.TextArea style={{ height: 150, resize: 'none' }} value={f?.note ?? ''} disabled={disabled} onChange={e => set('note', e.target.value)} />
-            </Field>
+            {/* 사용자 지시 2026-11-11: 세로 스크롤 없게 — 비고(150)는 행 높이를 32로 두고 아래 3행(세 번째 칸이 빈 자리)으로 내려 그린다 */}
+            <div style={{ height: 32, flex: 'none' }}>
+              <Field label="비고" width={550}>
+                <Input.TextArea style={{ height: 150, resize: 'none' }} value={f?.note ?? ''} disabled={disabled} onChange={e => set('note', e.target.value)} />
+              </Field>
+            </div>
           </FormRow>
           <FormRow>
             <Field label="음력구분">{code('lunarCode', 'EmpLunarCode')}</Field>

@@ -88,6 +88,12 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
     setAddDeductOpen(true);
   };
 
+  // 사용자 지시 2026-11-11: 첫 칸 라벨 폭을 하나로(가장 긴 라벨 기준) 맞춰 입력란 시작을 줄 맞춘다
+  const ROW: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center', minHeight: 32 };
+  const COL1: React.CSSProperties = { width: 390, flex: 'none', display: 'flex', alignItems: 'center', gap: 8 };
+  const LABEL1: React.CSSProperties = { width: 230, flex: 'none', textAlign: 'right' };
+  const INPUT1: React.CSSProperties = { width: 150 };
+
   const isActive = !!deduct;
   const toNum = (v: unknown) => (v == null ? undefined : Number(v));
   const checked = (v: string | null | undefined) => v === 'true';
@@ -100,15 +106,17 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
         {/* [E2] */}
         <Button type="delete" onClick={deleteChk} disabled={!isActive}>삭제</Button>
       </Space>
+      {/* 사용자 지시 2026-11-11: 버튼줄과 폼 사이 가로선 */}
+      <div style={{ borderTop: '1px solid #f0f0f0' }} />
 
       {!isActive ? (
         <div style={{ padding: 24, color: '#888' }}>급여공제 항목을 선택하세요.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
           {/* Row01: 적용시작일 | — | 4대보험가입여부 */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Typography.Text style={{ width: 110, textAlign: 'right' }}>적용시작일</Typography.Text>
+          <div style={ROW}>
+            <div style={COL1}>
+              <Typography.Text style={LABEL1}>적용시작일</Typography.Text>
               <Typography.Text style={{ flex: 1 }}>{form.startDate ?? ''}</Typography.Text>
             </div>
             <div style={{ width: 350 }} />
@@ -121,11 +129,11 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row02: 공제대상 가족수 | [추가인적공제여부+아이콘] | 대표자여부 */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Typography.Text style={{ width: 190, textAlign: 'right' }}>공제대상 가족수(본인포함)</Typography.Text>
+          <div style={ROW}>
+            <div style={COL1}>
+              <Typography.Text style={LABEL1}>공제대상 가족수(본인포함)</Typography.Text>
               <InputNumber
-                style={{ width: 140 }}
+                style={INPUT1}
                 value={toNum(form.basicDeductCnt)}
                 min={0}
                 onChange={v => setField('basicDeductCnt', v)}
@@ -148,11 +156,11 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row03: 자녀 수 | — | 4대보험 신고정보 */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Typography.Text style={{ width: 190, textAlign: 'right' }}>공제대상 8세이상 20세이하 자녀 수</Typography.Text>
+          <div style={ROW}>
+            <div style={COL1}>
+              <Typography.Text style={LABEL1}>공제대상 8세이상 20세이하 자녀 수</Typography.Text>
               <InputNumber
-                style={{ width: 140 }}
+                style={INPUT1}
                 value={toNum(form.childDeductCnt)}
                 min={0}
                 onChange={v => setField('childDeductCnt', v)}
@@ -170,11 +178,11 @@ export const Emp35_TabPage_DeductInsert: React.FC<DeductFormProps> = ({ deduct, 
           </div>
 
           {/* Row04: 원천징수비율 */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ width: 350, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Typography.Text style={{ width: 110, textAlign: 'right' }}>원천징수비율(%)</Typography.Text>
+          <div style={ROW}>
+            <div style={COL1}>
+              <Typography.Text style={LABEL1}>원천징수비율(%)</Typography.Text>
               <InputNumber
-                style={{ width: 220 }}
+                style={INPUT1}
                 value={toNum(form.withHoldRate)}
                 min={0}
                 onChange={v => setField('withHoldRate', v)}

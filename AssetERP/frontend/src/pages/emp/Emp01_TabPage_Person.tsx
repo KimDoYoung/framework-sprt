@@ -130,13 +130,13 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
   // [E1]·[E2] hireName[채용구분]·applyName[지원경로] Collapse → 코드 저장 (L124-135): SystemCodeComboBox가 코드를 바로 준다
   return (
     <div style={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', gap: 30, padding: '20px 30px', flex: 1 }}>
+      <div style={{ display: 'flex', gap: 20, padding: '10px 10px', flex: 1 }}>
         {/* [E3]~[E5 생략] 사진(245×315) 클릭·업로드 — 2단계(파일 B10). 자리만 둔다 */}
-        <div style={{ width: 245, height: 315, flex: 'none', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb' }}>
+        <div style={{ width: 245, height: 300, flex: 'none', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb' }}>
           <UserOutlined style={{ fontSize: 80 }} />
         </div>
-        <Row gutter={30} wrap={false} style={{ flex: 1, alignItems: 'flex-start' }}>
-          <Col flex="350px">
+        <Row wrap={false} style={{ flex: 1, alignItems: 'flex-start', gap: 30 }}>
+          <Col flex="320px">
             <Space direction="vertical" size={8} style={{ width: '100%' }}>
               <Field label="사원번호"><Input value={f.empNo} readOnly /></Field>
               <Field label="출력순서"><Input value={f.orderSeq} placeholder="미입력시 자동정렬" onChange={e => set('orderSeq', e.target.value)} /></Field>
@@ -145,7 +145,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
               <Field label="지원경로"><SystemCodeComboBox kindCd="EmpApplyCode" style={{ width: '100%' }} value={f.applyCd} onChange={v => set('applyCd', v)} /></Field>
             </Space>
           </Col>
-          <Col flex="350px">
+          <Col flex="320px">
             <Space direction="vertical" size={8} style={{ width: '100%' }}>
               <Field label="입사일">
                 <Space.Compact block>
@@ -162,10 +162,10 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
               <Field label="근속년수"><Input value={row ? getWorkYear(f.hireDate) : ''} disabled /></Field>
             </Space>
           </Col>
-          <Col flex="350px">
+          <Col flex="1 1 320px">
             <Space.Compact block style={{ alignItems: 'flex-start' }}>
               <Typography.Text style={{ width: 100, flex: 'none', textAlign: 'right', paddingRight: 8 }}>특이사항</Typography.Text>
-              <Input.TextArea style={{ height: 270, resize: 'none' }} value={f.note} onChange={e => set('note', e.target.value)} />
+              <Input.TextArea style={{ flex: 1, minWidth: 0, height: 270, resize: 'none' }} value={f.note} onChange={e => set('note', e.target.value)} />
             </Space.Compact>
           </Col>
         </Row>
