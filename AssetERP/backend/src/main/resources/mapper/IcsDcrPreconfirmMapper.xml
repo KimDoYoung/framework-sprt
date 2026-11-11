@@ -211,7 +211,8 @@
            AND sys99_window_class_nm LIKE #{windowClassName}
     </delete>
 
-    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdDcrPreConfirm이 채우는 열만 -->
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdDcrPreConfirm이 채우는 열만.
+         원본 2026-11-04(CH-0115): 글자 열은 checkNull(null·'undefined'·'null' → '') 을 거쳐 넣는다. 날짜·ID는 그대로 -->
     <insert id="insertPrint">
         INSERT INTO sys99_print
                ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
@@ -221,10 +222,25 @@
                , sys99_date03, sys99_date04, sys99_string11, sys99_string12, sys99_string13
                , sys99_long01 )
         VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
-               , #{row.regDate}, #{row.dcrTypeName}, #{row.apprNoPrefix}, #{row.provideCo}, #{row.content}
-               , #{row.personName}, #{row.confirmerName}, #{row.confirmDate}, #{row.statusName}, #{row.confirmMsg}
-               , #{row.regEmpMsg}, #{row.adTypeName}, #{row.mediaTypeName}, #{row.adItemName}, #{row.adContent}
-               , #{row.startDate}, #{row.closeDate}, #{row.spec}, #{row.qtyCnt}, #{row.preApprNo}
+               , #{row.regDate}
+               , COALESCE(NULLIF(NULLIF(#{row.dcrTypeName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.apprNoPrefix}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.provideCo}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.content}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.personName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.confirmerName}::text, 'undefined'), 'null'), '')
+               , #{row.confirmDate}
+               , COALESCE(NULLIF(NULLIF(#{row.statusName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.confirmMsg}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.regEmpMsg}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.adTypeName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.mediaTypeName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.adItemName}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.adContent}::text, 'undefined'), 'null'), '')
+               , #{row.startDate}, #{row.closeDate}
+               , COALESCE(NULLIF(NULLIF(#{row.spec}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.qtyCnt}::text, 'undefined'), 'null'), '')
+               , COALESCE(NULLIF(NULLIF(#{row.preApprNo}::text, 'undefined'), 'null'), '')
                , #{row.dcrPreconfirmId} )
     </insert>
 
