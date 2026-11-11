@@ -96,6 +96,7 @@
              , CAST(fnd00_start_date AS date)  AS start_date
              , fnd00_emp1_nm                   AS emp_name1
              , fnd00_note                      AS note
+             , fnd02_fund_full_nm              AS fund_full_name
           FROM fnd00_fund_sysdate
                INNER JOIN fnd08_org_auth ON fnd08_fund_code_id = fnd00_fund_id
          WHERE fnd08_auth_yn      = 'true'

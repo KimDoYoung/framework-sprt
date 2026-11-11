@@ -33,6 +33,9 @@ public interface FndTermsDetailMapper {
     int countRevisionNo(@Param("termsId") Long termsId, @Param("revisionNo") Long revisionNo, @Param("originRevisionNo") Long originRevisionNo);
 
     /** AS-IS fnd25_terms.selectByFundId (originFundId가 있으면 그 펀드는 뺀다) */
+    /** AS-IS fnd26_terms_detail.selectByCompanyId (원본 2026-10-28) — #1503 [엑셀다운로드] */
+    List<kr.co.kfs.asseterp.biz.fnd.dto.TermsExcelRow> selectByCompanyId(@Param("companyId") Long companyId);
+
     int countByFundId(@Param("fundId") Long fundId, @Param("originFundId") Long originFundId);
 
     /** 규약이 있으면 그 회사 ID, 없으면 null (UpdateDataModel의 IsNewData + 회사 확인) */

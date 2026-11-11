@@ -8,7 +8,7 @@ public record TermsViewRes(
         String termsTypeName,
         String termsName,
         String ksdFundCode,
-        String fundName,
+        String fundFullName,
         String trustBankName,
         LocalDate fundStartDate,
         String kofiaFundTypeName,

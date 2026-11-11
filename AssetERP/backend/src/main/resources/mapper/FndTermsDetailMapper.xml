@@ -15,6 +15,7 @@
                    FROM sys10_file
                   WHERE sys10_parent_id = fnd26_terms_detail_id ) AS file_cnt
              , fnd26_content           AS content
+             , fnd26_note              AS note      -- 원본 2026-10-28(CH-0174): 내용 아래 비고
           FROM fnd25_terms
                INNER JOIN fnd26_terms_detail ON fnd25_terms_id = fnd26_terms_id
          WHERE fnd25_terms_id   = #{termsId}
@@ -23,22 +24,24 @@
          ORDER BY fnd26_revision_no DESC
     </select>
 
-    <!-- AS-IS fnd26_terms_detail.selectBySearchText (IDMS-IC) — 규약마다 사용 중인 최신 개정(DISTINCT ON). 열은 P12 왼쪽 그리드와 수정 창이 쓰는 것만 -->
+    <!-- AS-IS fnd26_terms_detail.selectBySearchText (IDMS-IC) — 규약마다 사용 중인 최신 개정(DISTINCT ON). 열은 P12 왼쪽 그리드와 수정 창이 쓰는 것만.
+         원본 2026-10-28(CH-0034): 개정 열(규약명·제개정일·개정회차)을 내보내지 않고(TOBE는 제개정일·개정회차를 남김 — #231), 펀드명은 정식명(fund_full_nm)·만기일 추가, 개정이 없는 규약도 나오게 LEFT JOIN.
+         검색·정렬은 여전히 개정의 규약명과 펀드명(fund_nm)을 쓴다(원본 그대로) -->
     <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TermsRes">
         SELECT  fnd25.fnd25_terms_id                                                                    AS terms_id
              ,  fnd25.fnd25_terms_type                                                                  AS terms_type
              ,  f_cdnm('FundTermsType', fnd25.fnd25_terms_type, fnd25.fnd25_company_id, f_sysdate())    AS terms_type_name
-             ,  fnd26.fnd26_terms_nm                                                                    AS terms_name
              ,  fnd25.fnd25_seq                                                                         AS seq
              ,  fnd25.fnd25_fund_id                                                                     AS fund_id
              ,  fnd01.fnd02_ksd_fund_cd                                                                 AS ksd_fund_code
-             ,  fnd01.fnd02_fund_nm                                                                     AS fund_name
+             ,  fnd01.fnd02_fund_full_nm                                                                AS fund_full_name
              ,  fnd09.fnd09_trust_bank_nm                                                               AS trust_bank_name
              ,  fnd01.fnd01_start_date                                                                  AS fund_start_date
-             ,  fnd26.fnd26_revision_date                                                               AS revision_date
+             ,  fnd01.fnd02_end_expect_date                                                             AS end_expect_date
+             ,  fnd26.fnd26_revision_date                                                               AS revision_date  -- 원본은 내보내지 않아 그리드가 빈칸(원본-이상한점 #231) — TOBE는 보인다
              ,  fnd26.fnd26_revision_no                                                                 AS revision_no
           FROM  fnd25_terms fnd25
-                INNER JOIN (SELECT DISTINCT ON (fnd26_terms_id) fnd26_terms_id
+                LEFT OUTER JOIN (SELECT DISTINCT ON (fnd26_terms_id) fnd26_terms_id
                                  , fnd26_terms_detail_id
                                  , fnd26_terms_nm
                                  , fnd26_content
@@ -73,6 +76,7 @@
              ,  fnd25_seq                                                               AS seq
              ,  fnd01.fnd01_fund_code_id                                                AS fund_id
              ,  fnd01.fnd02_ksd_fund_cd                                                 AS ksd_fund_code
+             ,  fnd01.fnd02_fund_full_nm                                                AS fund_full_name  -- 원본 2026-10-28 (CH-0035)
              ,  fnd26_revision_date                                                     AS revision_date
              ,  fnd26_revision_no                                                       AS revision_no
              ,  ( SELECT COUNT(*)
@@ -104,7 +108,7 @@
              ,  f_cdnm('FundTermsType', fnd25_terms_type, fnd25_company_id, f_sysdate())                AS terms_type_name
              ,  fnd26.fnd26_terms_nm                                                                    AS terms_name
              ,  fnd01.fnd02_ksd_fund_cd                                                                 AS ksd_fund_code
-             ,  fnd01.fnd02_fund_nm                                                                     AS fund_name
+             ,  fnd01.fnd02_fund_full_nm                                                                AS fund_full_name  -- 원본 2026-10-28 (CH-0031)
              ,  fnd09.fnd09_trust_bank_nm                                                               AS trust_bank_name
              ,  fnd01.fnd01_start_date                                                                  AS fund_start_date
              ,  f_cdnm('IcamFundType', fnd01.fnd02_kofia_fund_type_cd, fnd01.fnd01_company_id, f_sysdate()) AS kofia_fund_type_name
@@ -135,6 +139,37 @@
            AND  fnd25_terms_type LIKE #{termsType}
            AND  CONCAT(fnd26.fnd26_terms_nm) ILIKE #{searchText}
          ORDER BY fnd25_seq, fnd26.fnd26_terms_nm, fnd25_terms_type, fnd26.fnd26_revision_date
+    </select>
+
+    <!-- AS-IS fnd26_terms_detail.selectByCompanyId (IDMS-IC, 원본 2026-10-28 CH-0032) — #1503 [엑셀다운로드](Sys99_Print.insertRdFundTermsManager)가 쓰는 열만.
+         회사의 모든 규약·개정(사용 여부와 무관), 정렬 조회순서·규약·개정회차·제개정일 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TermsExcelRow">
+        SELECT  f_cdnm('FundTermsType', fnd25_terms_type, fnd25_company_id, f_sysdate())    AS terms_type_name
+             ,  fnd01.fnd02_ksd_fund_cd                                                 AS ksd_fund_code
+             ,  fnd01.fnd02_fund_full_nm                                                AS fund_full_name
+             ,  fnd09.fnd09_trust_bank_nm                                               AS trust_bank_name
+             ,  fnd01.fnd01_start_date                                                  AS fund_start_date
+             ,  fnd01.fnd02_end_expect_date                                             AS end_expect_date
+             ,  fnd26_revision_date                                                     AS revision_date
+             ,  fnd26_revision_no                                                       AS revision_no
+             ,  ( SELECT COUNT(*)
+                    FROM sys10_file
+                   WHERE sys10_parent_id = fnd26_terms_detail_id )                      AS file_cnt
+             ,  fnd25_close_date                                                        AS close_date
+             ,  fnd26_note                                                              AS note
+             ,  fnd26_upd_nm                                                            AS upd_name
+             ,  COALESCE(TO_CHAR(fnd26_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)    AS upd_date_str
+          FROM  fnd26_terms_detail
+                INNER JOIN fnd25_terms ON fnd25_terms_id = fnd26_terms_id
+                LEFT OUTER JOIN (SELECT *
+                                   FROM fnd01_fund_code
+                                        INNER JOIN fnd02_fund_info ON ( fnd01_company_id   = #{companyId}  AND
+                                                                        fnd02_fund_code_id = fnd01_fund_code_id AND
+                                                                        fnd02_work_date = f_max_workdate(fnd02_fund_code_id, f_trunc(f_sysdate())) )) fnd01 ON fnd01.fnd01_fund_code_id = fnd25_fund_id
+                LEFT OUTER JOIN fnd09_trust_bank fnd09  ON ( fnd09_trust_bank_cd  = fnd01.fnd02_trust_bank_cd   AND
+                                                             fnd09_company_id     = fnd01.fnd01_company_id     )
+         WHERE  fnd25_company_id = #{companyId}
+         ORDER BY fnd25_seq, fnd25_terms_id, fnd26_revision_no, fnd26_revision_date
     </select>
 
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->

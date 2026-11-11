@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.fnd.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundTermsDetailRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.TermsExcelRow;
 import kr.co.kfs.asseterp.biz.fnd.dto.TermsRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.TermsRevisionRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.TermsRevisionSaveReq;
@@ -10,10 +11,18 @@ import kr.co.kfs.asseterp.biz.fnd.dto.TermsViewRes;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndTermsDetailMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
+import kr.co.kfs.asseterp.common.util.Texts;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS server/fnd/Fnd26_TermsDetail.java · Fnd25_Terms.java */
@@ -46,6 +55,51 @@ public class FndTermsDetailService {
                 "%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** #1503 엑셀 열 — AS-IS Sys99_Print.insertRdFundTermsManager가 싣는 순서 */
+    private static final String[] EXCEL_HEADERS = {"구분", "예탁원펀드코드", "펀드명", "수탁은행", "펀드최초설정일", "펀드만기일", "제개정일", "개정회차",
+            "첨부파일", "종료일", "비고", "작성자", "작성(변경)일"};
+
+    /**
+     * #1503 [엑셀다운로드] — AS-IS Fnd25_Tab_FundTermsManager.downLoad() → Sys99_Print.insertRdFundTermsManager(원본 2026-10-28, CH-0032·0117·0177)
+     * + RD Fnd25_Rd_FundTermsManager(/rxlsopt). 회사의 모든 규약·개정을 같은 열 순서로 xlsx에 쓴다(RD 없음)
+     */
+    public byte[] download(UserPrincipal user) {
+        List<TermsExcelRow> rows = mapper.selectByCompanyId(user.getCompanyId());
+        try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("펀드규약");
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < EXCEL_HEADERS.length; i++) {
+                header.createCell(i).setCellValue(EXCEL_HEADERS[i]);
+            }
+            int r = 1;
+            for (TermsExcelRow t : rows) {
+                Row row = sheet.createRow(r++);
+                int c = 0;
+                row.createCell(c++).setCellValue(Texts.nvl(t.termsTypeName()));
+                row.createCell(c++).setCellValue(Texts.nvl(t.ksdFundCode()));
+                row.createCell(c++).setCellValue(Texts.nvl(t.fundFullName()));
+                row.createCell(c++).setCellValue(Texts.nvl(t.trustBankName()));
+                row.createCell(c++).setCellValue(date(t.fundStartDate()));
+                row.createCell(c++).setCellValue(date(t.endExpectDate()));
+                row.createCell(c++).setCellValue(date(t.revisionDate()));
+                row.createCell(c++).setCellValue(t.revisionNo() == null ? 0 : t.revisionNo());
+                row.createCell(c++).setCellValue(t.fileCnt() == null ? 0 : t.fileCnt());
+                row.createCell(c++).setCellValue(date(t.closeDate()));
+                row.createCell(c++).setCellValue(Texts.nvl(t.note()));
+                row.createCell(c++).setCellValue(Texts.nvl(t.updName()));
+                row.createCell(c).setCellValue(Texts.nvl(t.updDateStr()));
+            }
+            wb.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 파일을 만들 수 없습니다.", e);
+        }
+    }
+
+    private static String date(LocalDate d) {
+        return d == null ? "" : d.toString();
+    }
+
     /** AS-IS dbConfig.getSeq (편집 창이 열릴 때 새 개정 ID를 미리 받는다 — 첨부파일을 저장 전에 올리기 위해) */
     @Transactional
     public long nextId() {
@@ -59,7 +113,13 @@ public class FndTermsDetailService {
     @Transactional
     public void saveRevision(UserPrincipal user, TermsRevisionSaveReq req) {
         Long companyId = user.getCompanyId();
-        checkFundNotUsed(req.fundId(), req.originFundId());
+        // 원본 2026-10-28(CH-0172): 펀드규약명 대신 예탁원펀드코드가 필수. 중복 예탁원코드 검사(ksdFundCheck)는 새 규약(insert)일 때만 — new·copy·edit는 바로 저장
+        if (req.fundId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "예탁원펀드코드는 필수선택사항입니다.");
+        }
+        if (!"new".equals(req.mode()) && !"copy".equals(req.mode()) && !"edit".equals(req.mode())) {
+            checkFundNotUsed(req.fundId(), req.originFundId());
+        }
 
         boolean edit = "edit".equals(req.mode());
         Long termsId = req.termsId();
@@ -89,6 +149,9 @@ public class FndTermsDetailService {
     /** AS-IS fnd.Fnd26_TermsDetail.update mode fnd25update (P12 예탁원코드 창): 규약(fnd25)의 구분·순서·펀드·종료일만 */
     @Transactional
     public void updateTerms(UserPrincipal user, Long termsId, TermsUpdateReq req) {
+        if (req.fundId() == null) {   // 원본 2026-10-28(CH-0175) Fnd25_Lookup_FundTermsManager.update
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드코드는 필수 선택입니다.");
+        }
         checkFundNotUsed(req.fundId(), req.originFundId());
         if (mapper.updateTerms(user.getCompanyId(), termsId, req, user.getName()) == 0) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);

@@ -12,6 +12,7 @@ public record TermsRevisionRes(
         Long seq,
         Long fundId,
         String ksdFundCode,
+        String fundFullName,
         LocalDate revisionDate,
         Long revisionNo,
         Long fileCnt,

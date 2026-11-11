@@ -10,6 +10,10 @@ import kr.co.kfs.asseterp.biz.fnd.dto.TermsViewRes;
 import kr.co.kfs.asseterp.biz.fnd.service.FndTermsDetailService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /** 펀드규약 상세 (AS-IS server/fnd/Fnd26_TermsDetail · Fnd25_Terms) */
@@ -45,6 +50,17 @@ public class FndTermsDetailController {
     }
 
     /** AS-IS fnd.Fnd25_Terms.selectBySearchTextManager (P13 펀드규약 조회) */
+    /** #1503 [엑셀다운로드] (AS-IS sys.Sys99_Print.insertRdFundTermsManager + RD Fnd25_Rd_FundTermsManager → xlsx, 원본 2026-10-28). 파일 "펀드규약_회사명.xlsx" */
+    @GetMapping("/excel")
+    public ResponseEntity<byte[]> download(@AuthenticationPrincipal UserPrincipal principal) {
+        byte[] body = service.download(principal);
+        String fileName = "펀드규약_" + principal.getCompanyName() + ".xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
     @GetMapping("/list")
     public ApiResponse<List<TermsViewRes>> searchTermsView(@AuthenticationPrincipal UserPrincipal principal,
                                                            @RequestParam(required = false) String termsType,
