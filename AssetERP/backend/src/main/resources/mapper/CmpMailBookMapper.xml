@@ -47,6 +47,7 @@
     <update id="updateNote">
         UPDATE cmp10_mail_book
            SET cmp10_note = #{note}
+             , cmp10_password = #{password}   -- 원본 2026-11-02(CH-0087): 고칠 때도 비밀번호를 createPassword로 다시 넣는다
          WHERE cmp10_mail_book_id = #{mailBookId}
            AND cmp10_company_id   = #{companyId}
     </update>

@@ -16,9 +16,9 @@ export const cmpMailBookApi = {
     return res.data.data;
   },
 
-  /** AS-IS cmp.Cmp10_MailBook.modelUpdate (고친 메일): 비고만 바뀐다 */
-  updateMailBook: async (mailBookId: number, note: string): Promise<CmpMailBook> => {
-    const res = await apiClient.put<ApiResponse<CmpMailBook>>(`v1/cmp/mail-books/${mailBookId}`, { note });
+  /** AS-IS cmp.Cmp10_MailBook.modelUpdate (고친 메일): 비고와 비밀번호(원본 2026-11-02부터 다시 암호화해 저장) */
+  updateMailBook: async (mailBookId: number, note: string, decPassword: string): Promise<CmpMailBook> => {
+    const res = await apiClient.put<ApiResponse<CmpMailBook>>(`v1/cmp/mail-books/${mailBookId}`, { note, decPassword });
     return res.data.data;
   },
 

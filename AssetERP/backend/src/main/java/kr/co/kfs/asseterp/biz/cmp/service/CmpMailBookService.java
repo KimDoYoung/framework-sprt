@@ -53,10 +53,10 @@ public class CmpMailBookService {
         return mapper.selectById(user.getCompanyId(), id);
     }
 
-    /** AS-IS Cmp10_MailBook.modelUpdate L38 (고친 메일: 비고만 바뀐다) */
+    /** AS-IS Cmp10_MailBook.modelUpdate L38 (고친 메일: 비고, 원본 2026-11-02부터 비밀번호도 createPassword로 다시) */
     @Transactional
     public CmpMailBookRes update(UserPrincipal user, Long mailBookId, CmpMailBookSaveReq req) {
-        if (mapper.updateNote(user.getCompanyId(), mailBookId, req.note()) == 0) {
+        if (mapper.updateNote(user.getCompanyId(), mailBookId, req.note(), mapper.createPassword(req.decPassword())) == 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "공용메일을 찾을 수 없습니다");
         }
         return mapper.selectById(user.getCompanyId(), mailBookId);

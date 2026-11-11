@@ -50,7 +50,7 @@ export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSav
   // [E3] msgBox.DialogHide [YES] (L147) → update() L184-200: 서비스 cmp.Cmp10_MailBook.modelUpdate(password), 끝나면 callback.execute() + hide()
   const update = async () => {
     try {
-      if (mailBook) await cmpMailBookApi.updateMailBook(mailBook.mailBookId, note);
+      if (mailBook) await cmpMailBookApi.updateMailBook(mailBook.mailBookId, note, decPassword);  // password = decPassword.getValue()
       else await cmpMailBookApi.createMailBook(emailAddr, decPassword, note);
       onSaved();
       onClose();

@@ -20,7 +20,8 @@ public interface CmpMailBookMapper {
     int insertMailBook(@Param("id") Long id, @Param("companyId") Long companyId, @Param("emailAddr") String emailAddr,
                        @Param("password") String password, @Param("note") String note);
 
-    int updateNote(@Param("companyId") Long companyId, @Param("mailBookId") Long mailBookId, @Param("note") String note);
+    int updateNote(@Param("companyId") Long companyId, @Param("mailBookId") Long mailBookId, @Param("note") String note,
+                   @Param("password") String password);
 
     int deleteRolesByMailBookId(@Param("companyId") Long companyId, @Param("mailBookId") Long mailBookId);
 
