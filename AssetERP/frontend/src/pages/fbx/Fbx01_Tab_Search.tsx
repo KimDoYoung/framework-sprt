@@ -56,13 +56,16 @@ export const Fbx01_Tab_Search: React.FC = () => {
   // [E5] msgBox.DialogHide [YES] (L199) → fbx.Fbx01_Box.delete — deleteRow() L192-217 안에 있고 deleteRow()를 부르는 버튼이 없다. 옮기지 않음
   // buildGrid() L121-152 (체크박스 단일 선택, 읽기 전용)
   const columnDefs = useMemo(() => [
-    gb.date('crtDate', 100, '등록일'),  // L144
-    gb.textCenter('statusName', 80, '상태'),  // L145
-    gb.text('title', 550, '제목'),  // L146
-    gb.text('note', 450, '비고'),  // L147
-    gb.long('fileCount', 80, '파일갯수'),  // L148
+    // 원본 2026-11-04: 상태 열 뺌, 제목 500·비고 400·기록 70, 변경일시·변경자·부서 더함
+    gb.date('crtDate', 100, '등록일'),
+    gb.text('title', 500, '제목'),
+    gb.text('note', 400, '비고'),
+    gb.long('fileCount', 80, '파일갯수'),
     // L135-142 HistoryCell("History") → Fbx02_Popup_History.open(boxId)
-    iconCell<FbxBox>('history', 'actionCell', 80, '기록', row => setHistoryBoxId(row.boxId)),  // L149
+    iconCell<FbxBox>('history', 'actionCell', 70, '기록', row => setHistoryBoxId(row.boxId)),
+    gb.dateTime('actDate', 150, '변경일시'),
+    gb.textCenter('actEmpName', 100, '변경자'),
+    gb.text('actOrgName', 100, '부서'),
   ], []);
 
   return (

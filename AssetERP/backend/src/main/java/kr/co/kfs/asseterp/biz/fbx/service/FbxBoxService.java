@@ -5,15 +5,19 @@ import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.fbx.dto.FbxBoxRes;
 import kr.co.kfs.asseterp.biz.fbx.dto.FbxBoxSaveReq;
 import kr.co.kfs.asseterp.biz.fbx.mapper.FbxBoxMapper;
+import kr.co.kfs.asseterp.biz.fbx.mapper.FbxHistoryMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** AS-IS server/fbx/Fbx01_Box.java selectByCompanyId L30, update L59, delete L64 (Fbx01_Tab_Document 위 그리드) */
 @Service
@@ -22,6 +26,7 @@ import java.util.List;
 public class FbxBoxService {
 
     private final FbxBoxMapper mapper;
+    private final FbxHistoryMapper historyMapper;
     private final EmpTransInfoService transInfoService;
 
     /** AS-IS selectByCompanyId L30: 로그인 회사, 제목 "%검색어%"(빈 글자면 %%) */
@@ -47,19 +52,55 @@ public class FbxBoxService {
             Long id = isNew ? mapper.selectNextId() : row.boxId();
             if (isNew) {
                 mapper.insertBox(id, user.getCompanyId(), orgIdOf(user), user.getUserId(), row);
-            } else if (mapper.updateBox(user.getCompanyId(), row) == 0) {
-                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            } else {
+                FbxBoxRes before = mapper.selectById(id);
+                if (mapper.updateBox(user.getCompanyId(), row) == 0) {
+                    throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+                }
+                insertHistory(user, before, row);
             }
             saved.add(mapper.selectById(id));
         }
         return saved;
     }
 
-    /** AS-IS deleteRow() L381-406: 생성자만 지울 수 있다("삭제권한이 없습니다") — 원본은 화면이 첫 행만 검사했다(그리드가 단일 체크라 같은 뜻). 지운 건수 */
+    /**
+     * AS-IS 화면 update() L358-378 → insertHistory(filedName, 바뀌기 전 모델) L380-410 (원본 2026-11-04): 바뀐 칸마다 fbx.Fbx02_History.insertByDocument
+     * — 제목 06·비고 07·등록일 08, 내용 "(변경전) " + 바뀌기 전 값(null은 원본처럼 "null", 등록일은 yyyy-MM-dd). 원본은 그리드가 고친 칸(Change)으로, TOBE는 저장 전 값과 비교로 가린다
+     */
+    private void insertHistory(UserPrincipal user, FbxBoxRes before, FbxBoxSaveReq after) {
+        if (before == null) {
+            return;
+        }
+        Long orgId = null;
+        if (!Objects.equals(before.title(), after.title())) {
+            orgId = orgIdOf(user);
+            historyMapper.insertHistory(before.boxId(), "06", user.getUserId(), "(변경전) " + before.title(), orgId);
+        }
+        if (!Objects.equals(before.note(), after.note())) {
+            orgId = orgId != null ? orgId : orgIdOf(user);
+            historyMapper.insertHistory(before.boxId(), "07", user.getUserId(), "(변경전) " + before.note(), orgId);
+        }
+        LocalDate beforeDate = before.crtDate() == null ? null : before.crtDate().toLocalDate();
+        LocalDate afterDate = after.crtDate() == null ? null : after.crtDate().toLocalDate();
+        if (!Objects.equals(beforeDate, afterDate)) {
+            orgId = orgId != null ? orgId : orgIdOf(user);
+            historyMapper.insertHistory(before.boxId(), "08", user.getUserId(),
+                    "(변경전) " + (beforeDate == null ? "null" : beforeDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))), orgId);
+        }
+    }
+
+    /**
+     * AS-IS deleteChk() L426-441 (원본 2026-11-04): 등록된 파일이 있으면 "등록된 파일이 존재합니다" →
+     * deleteRow() L445-470: 생성자만 지울 수 있다("삭제권한이 없습니다") — 원본은 화면이 첫 행만 검사했다(그리드가 단일 체크라 같은 뜻). 지운 건수
+     */
     @Transactional
     public int delete(UserPrincipal user, List<Long> boxIds) {
         if (boxIds == null || boxIds.isEmpty()) {
             return 0;
+        }
+        if (mapper.countFiles(boxIds) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "등록된 파일이 존재합니다");
         }
         for (Long crtEmpId : mapper.selectCrtEmpIds(user.getCompanyId(), boxIds)) {
             if (!user.getUserId().equals(crtEmpId)) {

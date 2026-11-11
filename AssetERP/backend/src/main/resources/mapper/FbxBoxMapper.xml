@@ -6,6 +6,14 @@
 <!-- AS-IS(IDMS-IC) server/fbx/mapper/fbx01_box.xml selectByCompanyId·selectById (F11, Fbx01_Tab_Document). insert·update·delete는 UpdateDataModel이 만드는 동적 SQL을 명시 SQL로 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.fbx.mapper.FbxBoxMapper">
 
+    <!-- 원본 2026-11-04: 마지막 변경(제목 06·비고 07·등록일 08) 기록 — 그리드 변경일시·변경자·부서 -->
+    <sql id="lastChange">
+               LEFT OUTER JOIN ( SELECT DISTINCT ON (fbx02_box_id) *
+                                   FROM fbx02_history
+                                  WHERE COALESCE(fbx02_act_cd, '99') IN ('06','07','08')
+                                  ORDER BY fbx02_box_id, fbx02_history_id DESC ) c ON a.fbx01_box_id = c.fbx02_box_id
+    </sql>
+
     <!-- AS-IS fbx01_box.selectByCompanyId L38 (IDMS-IC) — a.*·문서분류 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로 -->
     <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fbx.dto.FbxBoxRes">
         SELECT a.fbx01_box_id                                                                AS box_id
@@ -16,7 +24,11 @@
              , a.fbx01_status_cd                                                             AS status_cd
              , f_cdnm('FbxBoxStatus', a.fbx01_status_cd, a.fbx01_company_id, f_sysdate())    AS status_name
              , (SELECT coalesce(count(*), 0) FROM fbx03_file WHERE fbx03_box_id = a.fbx01_box_id) AS file_count
+             , c.fbx02_act_date                                                              AS act_date
+             , f_emp_kor_nm(c.fbx02_act_emp_id)                                              AS act_emp_name
+             , f_org_nm(c.fbx02_act_org_code_id, c.fbx02_act_date)                           AS act_org_name
           FROM fbx01_box a
+               <include refid="lastChange"/>
          WHERE 1=1
            AND fbx01_company_id = #{companyId}
            AND fbx01_title LIKE #{searchText}
@@ -34,7 +46,11 @@
              , a.fbx01_status_cd                                                             AS status_cd
              , f_cdnm('FbxBoxStatus', a.fbx01_status_cd, a.fbx01_company_id, f_sysdate())    AS status_name
              , (SELECT coalesce(count(*), 0) FROM fbx03_file WHERE fbx03_box_id = a.fbx01_box_id) AS file_count
+             , c.fbx02_act_date                                                              AS act_date
+             , f_emp_kor_nm(c.fbx02_act_emp_id)                                              AS act_emp_name
+             , f_org_nm(c.fbx02_act_org_code_id, c.fbx02_act_date)                           AS act_org_name
           FROM fbx01_box a
+               <include refid="lastChange"/>
          WHERE fbx01_box_id = #{boxId}
     </select>
 
@@ -59,6 +75,14 @@
          WHERE fbx01_box_id     = #{r.boxId}
            AND fbx01_company_id = #{companyId}
     </update>
+
+    <!-- AS-IS fbx03_file.deleteChk (원본 2026-11-04) — 보관함에 등록된 파일 수 -->
+    <select id="countFiles" resultType="long">
+        SELECT count(*)
+          FROM fbx03_file
+         WHERE fbx03_box_id IN
+        <foreach collection="boxIds" item="boxId" open="(" separator="," close=")">#{boxId}</foreach>
+    </select>
 
     <select id="selectCrtEmpIds" resultType="long">
         SELECT fbx01_crt_emp_id

@@ -37,18 +37,19 @@ export const Fbx02_Popup_History: React.FC<Props> = ({ boxId, onClose }) => {
   }, [boxId]);
 
   const columnDefs = useMemo(() => [
-    gb.dateTime('actDate', 150, '일자'),
-    gb.textCenter('actName', 80, '동작'),
-    gb.text('actContent', 320, '내용'),
-    gb.text('actEmpName', 100, '생성자'),
-    gb.text('actOrgName', 100, '부서'),
+    // 원본 2026-11-04: 창 1000, 일시·동작 100·내용 350·생성(변경)자 가운데·부서 200
+    gb.dateTime('actDate', 150, '일시'),
+    gb.textCenter('actName', 100, '동작'),
+    gb.text('actContent', 350, '내용'),
+    gb.textCenter('actEmpName', 100, '생성(변경)자'),
+    gb.text('actOrgName', 200, '부서'),
   ], []);
 
   return (
     <LookupModal
       open={boxId != null}
       title="기록"
-      width={850}
+      width={1000}
       closable={false}
       maskClosable={false}
       footer={

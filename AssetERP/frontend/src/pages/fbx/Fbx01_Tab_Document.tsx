@@ -14,10 +14,8 @@ import dayjs from 'dayjs';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { fbxApi } from '@/api/fbx';
-import { sysApi } from '@/api/sys';
 import { DcrClassTree } from '@/types/dcr';
 import { FbxBox } from '@/types/fbx';
-import { Code } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
@@ -79,7 +77,6 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const user = useLoginUser();
   // searchText.setEmptyText("") L88 — 제목 빈칸
   const sp = useSearchParams(() => ({ searchText: '' }));
-  const [statusCodes, setStatusCodes] = useState<Code[]>([]);
   const [historyBoxId, setHistoryBoxId] = useState<number | null>(null);
   // 문서분류 트리 (getMenuTree L260-296, getServiceResult L333-346, addChild L298-307)
   const [classRows, setClassRows] = useState<DcrClassTree[]>([]);
@@ -94,30 +91,24 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const selectFirst = useRef(false);
   const treeSeq = useRef(0);
 
-  // buildGrid() L227-258 (체크박스 단일 선택, 셀 편집)
+  // buildGrid() L227-258 (체크박스 단일 선택, 셀 편집). 원본 2026-11-04: 상태 열(FbxBoxStatus 콤보) 뺌, 제목 500·비고 400·기록 70, 변경일시·변경자·부서 더함
   const columnDefs = useMemo(() => [
-    gb.date('crtDate', 100, '등록일', { editor: 'date' }),  // L250
-    gb.textCenter('statusName', 80, '상태', {  // L251 — [E12] statusComboBox[FbxBoxStatus].Collapse (L233-239): 고른 코드를 그 행의 statusCode에 반영
-      editor: 'select',
-      values: statusCodes.map(c => c.name),
-      valueSetter: p => {
-        p.data.statusName = p.newValue;
-        p.data.statusCd = statusCodes.find(c => c.name === p.newValue)?.code ?? p.data.statusCd;
-        return true;
-      },
-    }),
-    gb.text('title', 550, '제목', { editor: 'text' }),  // L252
-    gb.text('note', 450, '비고', { editor: 'text' }),  // L253
-    gb.long('fileCount', 80, '파일갯수'),  // L254
-    // L241-248 HistoryCell("History") → Fbx02_Popup_History.open(boxId)
-    iconCell<FbxBox>('history', 'actionCell', 80, '기록', row => setHistoryBoxId(row.boxId)),  // L255
-  ], [statusCodes]);
+    gb.date('crtDate', 100, '등록일', { editor: 'date' }),
+    gb.text('title', 500, '제목', { editor: 'text' }),
+    gb.text('note', 400, '비고', { editor: 'text' }),
+    gb.long('fileCount', 80, '파일갯수'),
+    // HistoryCell("History") → Fbx02_Popup_History.open(boxId)
+    iconCell<FbxBox>('history', 'actionCell', 70, '기록', row => setHistoryBoxId(row.boxId)),
+    gb.dateTime('actDate', 150, '변경일시'),
+    gb.textCenter('actEmpName', 100, '변경자'),
+    gb.text('actOrgName', 100, '부서'),
+  ], []);
 
   const crud = useGridCrud<FbxBox>({
     idField: 'boxId',
     // retrieve() L348-361: fbx.Fbx01_Box.selectByCompanyId(companyId, searchText) — 끝나면 첫 행을 고른다
     search: useCallback(() => fbxApi.searchBoxes(sp.current.current.searchText), [sp.current]),  // eslint-disable-line react-hooks/exhaustive-deps
-    // update() L363-366: GridUpdate → fbx.Fbx01_Box.update
+    // update() L358-378: 바뀐 칸마다 변경 기록(제목 06·비고 07·등록일 08, 서버 FbxBoxService.insertHistory) 뒤 GridUpdate → fbx.Fbx01_Box.update
     save: useCallback((rows: FbxBox[]) => fbxApi.updateBoxes(rows.map(r => ({
       boxId: r.boxId, crtDate: r.crtDate, title: r.title, note: r.note || null, statusCd: r.statusCd,
     }))), []),
@@ -135,7 +126,6 @@ export const Fbx01_Tab_Document: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L82-85) → retrieve(), init()
   useEffect(() => {
-    sysApi.searchCodes('FbxBoxStatus').then(setStatusCodes).catch(() => undefined);
     void retrieve();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -197,9 +187,14 @@ export const Fbx01_Tab_Document: React.FC = () => {
     if (row) retrieveDocList(row);
   };
 
-  // [E5] deleteButton[삭제].Select (L116) → deleteRow() L381-406: 생성자만 지울 수 있다 → 확인창 → [E13] msgBox.DialogHide [YES] (L388) → fbx.Fbx01_Box.delete
+  // [E5] deleteButton[삭제].Select → deleteChk() L426-441 (원본 2026-11-04): 등록된 파일이 있으면 "등록된 파일이 존재합니다"(서버도 검사) →
+  //   deleteRow() L445-470: 생성자만 지울 수 있다 → 확인창 → msgBox.DialogHide [YES] → fbx.Fbx01_Box.delete
   const deleteRow = () => {
     const checked = crud.gridRef.current?.api?.getSelectedRows() ?? [];
+    if (checked.length > 0 && (checked[0].fileCount ?? 0) > 0) {
+      message.warning('등록된 파일이 존재합니다');
+      return;
+    }
     if (checked.length > 0 && checked[0].crtEmpId !== user.userId) {
       message.warning('삭제권한이 없습니다');
       return;

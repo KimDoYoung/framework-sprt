@@ -26,6 +26,9 @@ public interface FbxBoxMapper {
     /** AS-IS UpdateDataModel UPDATE */
     int updateBox(@Param("companyId") Long companyId, @Param("r") FbxBoxSaveReq req);
 
+    /** AS-IS fbx03_file.deleteChk — 보관함에 등록된 파일 수 */
+    long countFiles(@Param("boxIds") List<Long> boxIds);
+
     /** 삭제 대상의 생성자 (AS-IS는 화면이 첫 행만 검사) */
     List<Long> selectCrtEmpIds(@Param("companyId") Long companyId, @Param("boxIds") List<Long> boxIds);
 

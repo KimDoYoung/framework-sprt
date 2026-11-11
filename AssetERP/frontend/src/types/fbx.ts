@@ -8,6 +8,10 @@ export interface FbxBox {
   statusCd: string;
   statusName: string;
   fileCount?: number | null;
+  /** 마지막 변경(제목·비고·등록일) 기록 — 원본 2026-11-04 변경일시·변경자·부서 */
+  actDate?: string | null;
+  actEmpName?: string | null;
+  actOrgName?: string | null;
 }
 
 /** 파일보관함 저장 한 행 (boxId가 없거나 0 이하면 새 행) */
