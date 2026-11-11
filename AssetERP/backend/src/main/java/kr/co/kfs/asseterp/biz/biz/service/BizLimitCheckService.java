@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.biz.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.biz.dto.BizLimitCheckParam;
+import kr.co.kfs.asseterp.biz.biz.dto.BizLimitCheckReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizLimitCompanyYearRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizLimitPersonDayRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizLimitPersonYearRes;
@@ -38,18 +40,25 @@ public class BizLimitCheckService {
     private final BizLimitCheckMapper mapper;
 
     /** 인별 1회 초과건 */
-    public List<BizLimitPersonDayRes> searchPersonDay(UserPrincipal user, String yearText, String provideRcvType) {
-        return mapper.selectByPersonDay(user.getCompanyId(), yearText, rcvType(provideRcvType));
+    public List<BizLimitPersonDayRes> searchPersonDay(UserPrincipal user, BizLimitCheckReq req) {
+        return mapper.selectByPersonDay(param(user, req));
     }
 
     /** 인별 연간 초과건 */
-    public List<BizLimitPersonYearRes> searchPersonYear(UserPrincipal user, String yearText, String provideRcvType) {
-        return mapper.selectByPersonYear(user.getCompanyId(), yearText, rcvType(provideRcvType));
+    public List<BizLimitPersonYearRes> searchPersonYear(UserPrincipal user, BizLimitCheckReq req) {
+        return mapper.selectByPersonYear(param(user, req));
     }
 
     /** 회사별 연간 초과건 */
-    public List<BizLimitCompanyYearRes> searchCompanyYear(UserPrincipal user, String yearText, String provideRcvType) {
-        return mapper.selectByCompanyYear(user.getCompanyId(), yearText, rcvType(provideRcvType));
+    public List<BizLimitCompanyYearRes> searchCompanyYear(UserPrincipal user, BizLimitCheckReq req) {
+        return mapper.selectByCompanyYear(param(user, req));
+    }
+
+    /** 로그인 회사 + 화면 조건. overCheck가 안 오면 원본 기본값 true(체크 켜짐), limitCheck는 false */
+    private BizLimitCheckParam param(UserPrincipal user, BizLimitCheckReq req) {
+        return new BizLimitCheckParam(user.getCompanyId(), req.yearText(), rcvType(req.provideRcvType()),
+                req.overCheck() == null || req.overCheck(), Boolean.TRUE.equals(req.limitCheck()),
+                req.limit1(), req.limit2(), req.limit3());
     }
 
     /** 제공/수령 콤보 코드 — 안 골랐으면(null·"null"·빈 글자) 전체 '%' (ExcelDownload L1358) */
@@ -61,10 +70,10 @@ public class BizLimitCheckService {
      * AS-IS ExcelDownload.getBiz01List L1278-1541 — 시트 3개("0_인별 1회 초과건"·"1_인별 연간 초과건"·"2_회사별 연간 초과건"), 제목 줄 + 데이터.
      * 제목은 회색 바탕·굵은 테두리, 내용은 가는 테두리, 금액 열은 #,##0 오른쪽 정렬
      */
-    public byte[] downloadExcel(UserPrincipal user, String yearText, String provideRcvType) {
-        List<BizLimitPersonDayRes> day = searchPersonDay(user, yearText, provideRcvType);
-        List<BizLimitPersonYearRes> person = searchPersonYear(user, yearText, provideRcvType);
-        List<BizLimitCompanyYearRes> company = searchCompanyYear(user, yearText, provideRcvType);
+    public byte[] downloadExcel(UserPrincipal user, BizLimitCheckReq req) {
+        List<BizLimitPersonDayRes> day = searchPersonDay(user, req);
+        List<BizLimitPersonYearRes> person = searchPersonYear(user, req);
+        List<BizLimitCompanyYearRes> company = searchCompanyYear(user, req);
         try (HSSFWorkbook wb = new HSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             HSSFCellStyle header = wb.createCellStyle();
             header.setVerticalAlignment(VerticalAlignment.CENTER);

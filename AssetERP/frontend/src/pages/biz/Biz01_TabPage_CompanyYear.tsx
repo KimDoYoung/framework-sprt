@@ -18,7 +18,7 @@ export const Biz01_TabPage_CompanyYear: React.FC<Props> = ({ rows, loading }) =>
   const columnDefs = useMemo(() => [
     gb.textCenter('provideRcvTypeName', 150, '제공/수령'),
     gb.textCenter('targetCompanyName', 250, '제공(수령) 회사명'),
-    gb.long('averagePrice', 120, '경제적가치'),
+    gb.long('averagePrice', 120, '연간 합계액'),  // 원본 2026-11-04 '경제적가치' → '연간 합계액' (CH-0155)
   ], []);
   return <SingleGrid<BizLimitCompanyYear> rowData={rows} columnDefs={columnDefs} loading={loading} />;
 };

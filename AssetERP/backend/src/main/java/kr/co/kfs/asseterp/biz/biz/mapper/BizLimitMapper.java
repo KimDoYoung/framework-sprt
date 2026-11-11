@@ -13,6 +13,9 @@ public interface BizLimitMapper {
     /** AS-IS biz90_limit.selectByCompanyId */
     List<BizLimitRes> selectByCompanyId(@Param("companyId") Long companyId);
 
+    /** AS-IS biz90_limit.getLimit — 기준년도 말일 기준 가장 최근의 이익제공(1) 한도 한 행 (#1133 한도액 기본값) */
+    BizLimitRes selectProvideLimit(@Param("companyId") Long companyId, @Param("stdYear") String stdYear);
+
     /** AS-IS biz90_limit.selectById — 저장 결과 한 행 */
     BizLimitRes selectById(@Param("companyId") Long companyId, @Param("limitId") Long limitId);
 

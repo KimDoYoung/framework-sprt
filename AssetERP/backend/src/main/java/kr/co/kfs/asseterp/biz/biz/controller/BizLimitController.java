@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,6 +29,12 @@ public class BizLimitController {
     @GetMapping
     public ApiResponse<List<BizLimitRes>> search(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.search(principal));
+    }
+
+    /** AS-IS biz.Biz90_Limit.getLimit — 기준년도의 이익제공 한도(#1133 한도초과현황 [한도액 복구]) */
+    @GetMapping("/provide")
+    public ApiResponse<BizLimitRes> getProvideLimit(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdYear) {
+        return ApiResponse.ok(service.getProvideLimit(principal, stdYear));
     }
 
     /** AS-IS biz.Biz90_Limit.update → 저장된 행 */

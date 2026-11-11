@@ -28,6 +28,17 @@
          ORDER BY biz90_start_date DESC
     </select>
 
+    <!-- AS-IS biz90_limit.getLimit (IDMS-IC 2026-11-06, CH-0012) — #1133 한도초과현황의 [임의점검] 한도액 기본값 -->
+    <select id="selectProvideLimit" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM biz90_limit
+         WHERE biz90_company_id = #{companyId}
+           AND biz90_provide_rcv_type = '1'
+           AND biz90_start_date <![CDATA[<=]]> (#{stdYear}||'-12-31')::date
+         ORDER BY biz90_start_date DESC
+         LIMIT 1
+    </select>
+
     <!-- AS-IS biz90_limit.selectById (IDMS-IC) 저장 결과 한 행 -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitRes">
         SELECT <include refid="limitColumns"/>

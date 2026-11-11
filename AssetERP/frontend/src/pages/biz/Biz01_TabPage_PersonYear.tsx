@@ -19,7 +19,7 @@ export const Biz01_TabPage_PersonYear: React.FC<Props> = ({ rows, loading }) => 
     gb.textCenter('provideRcvTypeName', 150, '제공/수령'),
     gb.textCenter('targetCompanyName', 250, '제공(수령) 회사명'),
     gb.textCenter('targetEmpName', 150, '제공(수령) 성명'),
-    gb.long('averagePrice', 120, '경제적가치'),
+    gb.long('averagePrice', 120, '연간 합계액'),  // 원본 2026-11-04 '경제적가치' → '연간 합계액' (CH-0157)
   ], []);
   return <SingleGrid<BizLimitPersonYear> rowData={rows} columnDefs={columnDefs} loading={loading} />;
 };

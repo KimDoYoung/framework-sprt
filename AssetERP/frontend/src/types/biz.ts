@@ -219,6 +219,19 @@ export interface BizRelateAppr {
   regEmpName?: string | null;
 }
 
+/** #1133 이익제공 한도초과현황 조회 조건 (AS-IS retrieveTabpage param, 2026-10-29 조회조건 추가). provideRcvType '%' = 전체 */
+export interface BizLimitCheckCond {
+  yearText: string;
+  provideRcvType: string;
+  /** [이익제공 편익 기준액 적용] */
+  overCheck: boolean;
+  /** [임의점검 이익제공 편익상대방 한도액] — 켜면 limit1~3(인별 1회·인별 연간·회사별 연간)을 회사 한도 대신 */
+  limitCheck: boolean;
+  limit1: number | null;
+  limit2: number | null;
+  limit3: number | null;
+}
+
 /** 이익제공 한도초과현황 — 인별 1회 초과건 한 행 (AS-IS Biz01_PromoModel 중 Biz01_TabPage_PersonDay 그리드 열, L07) */
 export interface BizLimitPersonDay {
   provideRcvTypeName?: string | null;

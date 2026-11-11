@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizEntertmCompany, BizEntertmHistory, BizEntertmMonth, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
+  BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizEntertmCompany, BizEntertmHistory, BizEntertmMonth, BizLimit, BizLimitCheckCond, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
   BizWithCorp, FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
@@ -15,6 +15,11 @@ export const bizLimitApi = {
   searchLimits: async (): Promise<BizLimit[]> => {
     const res = await apiClient.get<ApiResponse<BizLimit[]>>('v1/biz/limits');
     return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz90_Limit.getLimit — 기준년도의 이익제공 한도(#1133 [한도액 복구]). 없으면 null */
+  getProvideLimit: async (stdYear: string): Promise<BizLimit | null> => {
+    const res = await apiClient.get<ApiResponse<BizLimit | null>>('v1/biz/limits/provide', { params: { stdYear } });
+    return res.data.data ?? null;
   },
   /** AS-IS biz.Biz90_Limit.update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
   saveLimits: async (rows: BizLimit[]): Promise<BizLimit[]> => {
@@ -463,25 +468,25 @@ function saveBlob(blob: Blob, fileName: string) {
 /** L07 AS-IS Biz01_Tab_LimitCheckList (이익제공 한도초과현황) → server Biz01_Promo.selectByPersonDay·PersonYear·CompanyYear. provideRcvType 없으면 전체 */
 export const bizLimitCheckApi = {
   /** 인별 1회 초과건 */
-  searchPersonDay: async (yearText: string, provideRcvType?: string): Promise<BizLimitPersonDay[]> => {
-    const res = await apiClient.get<ApiResponse<BizLimitPersonDay[]>>('v1/biz/limit-checks/person-day', { params: { yearText, provideRcvType } });
+  searchPersonDay: async (cond: BizLimitCheckCond): Promise<BizLimitPersonDay[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitPersonDay[]>>('v1/biz/limit-checks/person-day', { params: cond });
     return res.data.data ?? [];
   },
   /** 인별 연간 초과건 */
-  searchPersonYear: async (yearText: string, provideRcvType?: string): Promise<BizLimitPersonYear[]> => {
-    const res = await apiClient.get<ApiResponse<BizLimitPersonYear[]>>('v1/biz/limit-checks/person-year', { params: { yearText, provideRcvType } });
+  searchPersonYear: async (cond: BizLimitCheckCond): Promise<BizLimitPersonYear[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitPersonYear[]>>('v1/biz/limit-checks/person-year', { params: cond });
     return res.data.data ?? [];
   },
   /** 회사별 연간 초과건 */
-  searchCompanyYear: async (yearText: string, provideRcvType?: string): Promise<BizLimitCompanyYear[]> => {
-    const res = await apiClient.get<ApiResponse<BizLimitCompanyYear[]>>('v1/biz/limit-checks/company-year', { params: { yearText, provideRcvType } });
+  searchCompanyYear: async (cond: BizLimitCheckCond): Promise<BizLimitCompanyYear[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitCompanyYear[]>>('v1/biz/limit-checks/company-year', { params: cond });
     return res.data.data ?? [];
   },
   /** AS-IS ExcelDownload?actionCode=biz01List: 세 탭을 시트 3개로 — "이익제공 한도초과현황(연도).xls" */
-  downloadExcel: async (yearText: string, provideRcvType?: string): Promise<void> => {
+  downloadExcel: async (cond: BizLimitCheckCond): Promise<void> => {
     try {
-      const res = await apiClient.get<Blob>('v1/biz/limit-checks/excel', { params: { yearText, provideRcvType }, responseType: 'blob' });
-      saveBlob(res.data, `이익제공 한도초과현황(${yearText}).xls`);
+      const res = await apiClient.get<Blob>('v1/biz/limit-checks/excel', { params: cond, responseType: 'blob' });
+      saveBlob(res.data, `이익제공 한도초과현황(${cond.yearText}).xls`);
     } catch (err) {
       throw await readBlobError(err);
     }

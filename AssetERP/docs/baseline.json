@@ -15941,6 +15941,66 @@
       "updated_at": "2026-11-11T15:53:58+09:00",
       "note": "TOBE 이미 공통 RD 다운로드",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_Tab_LimitCheckList.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz90_limit.xml · getLimit": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_PersonDay.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectByPersonYear": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_PersonYear.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_CompanyYear.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectByCompanyYear": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectBase": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectByPersonDay": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/Biz90_Limit.java · getLimit": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -15996,6 +16056,36 @@
       "status": "해당없음",
       "updated_at": "2026-11-11T15:53:58+09:00",
       "note": "TOBE 이미 공통 RD 다운로드",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_Tab_LimitCheckList.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_PersonDay.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_PersonYear.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_TabPage_CompanyYear.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/Biz90_Limit.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:07:06+09:00",
+      "note": "#1133 조회조건",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }

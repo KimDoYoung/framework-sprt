@@ -26,6 +26,11 @@ public class BizLimitService {
         return mapper.selectByCompanyId(user.getCompanyId());
     }
 
+    /** AS-IS biz.Biz90_Limit.getLimit(companyId, stdYear) — 없으면 null(화면이 0으로 채운다) */
+    public BizLimitRes getProvideLimit(UserPrincipal user, String stdYear) {
+        return mapper.selectProvideLimit(user.getCompanyId(), stdYear);
+    }
+
     /** AS-IS update → UpdateDataModel. 저장된 행을 요청과 같은 순서로 돌려준다 */
     @Transactional
     public List<BizLimitRes> save(UserPrincipal user, List<BizLimitSaveReq> rows) {

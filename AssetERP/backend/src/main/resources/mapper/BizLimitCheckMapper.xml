@@ -5,7 +5,9 @@
 
 <!--
   AS-IS(IDMS-IC) server/biz/mapper/biz01_promo.xml selectByPersonDay L163 · selectByPersonYear L232 · selectByCompanyYear L399
-  (L07 Biz01_Tab_LimitCheckList 이익제공 한도초과현황). SELECT a.* 는 그리드 열만 별칭으로. 주석 처리된 가지·overCheck·personId 조건은 원본도 쓰지 않는다(2025.08.19 회사한도 초과건만 조회)
+  (L07 Biz01_Tab_LimitCheckList 이익제공 한도초과현황). SELECT a.* 는 그리드 열만 별칭으로. 주석 처리된 가지·personId 조건은 원본도 쓰지 않는다.
+  원본 2026-10-29(77b1a76ea 조회조건 추가)·11-06(c0b1e1146 selectBase): overCheck(편익 기준액 적용)·limitCheck(임의점검 한도액, limit1~3) 조건, 이익수령은 기준액 없이 회사 한도로만 (CH-0004·0006·0008·0009).
+  원본의 `#{limitCheck} = 'true'`·`f_nvl(#{limitN},0)`은 &lt;choose&gt;·COALESCE로 같은 뜻 (불리언 파라미터를 글자와 비교하지 않으려고)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizLimitCheckMapper">
 
@@ -56,7 +58,25 @@
                                                                       AND biz90_provide_rcv_type = biz01_provide_rcv_type
                                                                       AND biz90_start_date       <![CDATA[<=]]> biz01_provide_date ) )
          WHERE 1=1
-           AND biz01_average_price <![CDATA[>]]> biz90_company_limit1
+           AND ( ( /*** 1:이익제공 한도체크 ***/
+                   biz01_provide_rcv_type = '1' AND
+                 <choose>
+                   <when test="overCheck">  /* 편익 기준액 적용 */
+                   biz01_average_price <![CDATA[>]]> CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                          THEN biz90_sale_rule_limit1        /* 일반 */
+                                                          ELSE biz90_sale_rule_limit2 END    /* 경조 */
+                   </when>
+                   <when test="limitCheck">
+                   biz01_average_price <![CDATA[>]]> COALESCE(#{limit1,jdbcType=NUMERIC}, 0)
+                   </when>
+                   <otherwise>
+                   biz01_average_price <![CDATA[>]]> biz90_company_limit1
+                   </otherwise>
+                 </choose>
+                 ) OR
+                 ( /*** 2:이익수령 한도체크 ***/
+                   biz01_provide_rcv_type = '2' AND
+                   biz01_average_price <![CDATA[>]]> biz90_company_limit1 ) )
          ORDER BY biz01_provide_date
     </select>
 
@@ -89,7 +109,16 @@
            AND SUBSTR(biz01_provide_pur_cd,1,1) in ('1','2')  /* 10:판매(일반)/11:판매(경조)/20:운용(일반)/21:운용(경조)/50:관리(일반) */
     </sql>
 
-    <!-- AS-IS(IDMS-IC) biz01_promo.selectByPersonYear L232 — 인별 연간 초과건 -->
+    <!-- 이익제공 기준액(일반·경조) 초과 — overCheck일 때만 (원본 <choose><when test="overCheck == true">) -->
+    <sql id="saleRuleOver">
+        <if test="overCheck">
+                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                                THEN biz90_sale_rule_limit1        /* 일반 */
+                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
+        </if>
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) biz01_promo.selectByPersonYear — 인별 연간 초과건 -->
     <select id="selectByPersonYear" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitPersonYearRes">
         WITH BIZ_BASE AS ( <include refid="bizBase"/> ),
         BIZ AS ( /*--- 이익제공 ---*/
@@ -102,9 +131,7 @@
                         LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
                   WHERE biz01_provide_rcv_type = '1'
                     AND COALESCE(biz02_emp_yn,'false') != 'true'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
+                    <include refid="saleRuleOver"/>
                  /*--- 이익제공(거래상대방 미등록) ---*/
                   UNION ALL
                  SELECT biz01_provide_rcv_type
@@ -114,9 +141,7 @@
                       , biz90_company_limit2
                    FROM BIZ_BASE
                   WHERE biz01_provide_rcv_type = '1'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
+                    <include refid="saleRuleOver"/>
                     AND NOT EXISTS (SELECT 1
                                       FROM biz02_person
                                      WHERE biz02_promo_id = biz01_promo_id
@@ -132,10 +157,6 @@
                         LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
                   WHERE biz01_provide_rcv_type = '2'
                     AND COALESCE(biz02_emp_yn,'false') = 'true'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
-
                  /*--- 이익수령(직원정보 미등록) ---*/
                   UNION ALL
                  SELECT biz01_provide_rcv_type
@@ -145,9 +166,6 @@
                       , biz90_company_limit2
                    FROM BIZ_BASE
                   WHERE biz01_provide_rcv_type = '2'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
                     AND NOT EXISTS (SELECT 1
                                       FROM biz02_person
                                      WHERE biz02_promo_id = biz01_promo_id
@@ -168,13 +186,16 @@
                          , biz01_target_emp_nm
                          , biz90_company_limit2
                ) a
-         WHERE biz01_average_price <![CDATA[>]]> biz90_company_limit2
+         WHERE ( ( biz01_provide_rcv_type = '1' AND
+                   biz01_average_price <![CDATA[>]]> <choose><when test="limitCheck">COALESCE(#{limit2,jdbcType=NUMERIC}, 0)</when><otherwise>biz90_company_limit2</otherwise></choose> ) OR
+                 ( biz01_provide_rcv_type = '2' AND
+                   biz01_average_price <![CDATA[>]]> biz90_company_limit2 ) )
          ORDER BY biz01_provide_rcv_type
                 , biz01_target_company_nm collate "ko_KR.utf8" asc
-                , biz01_target_emp_nm
+                , biz01_target_emp_nm collate "ko_KR.utf8"
     </select>
 
-    <!-- AS-IS(IDMS-IC) biz01_promo.selectByCompanyYear L399 — 회사별 연간 초과건 -->
+    <!-- AS-IS(IDMS-IC) biz01_promo.selectByCompanyYear — 회사별 연간 초과건 -->
     <select id="selectByCompanyYear" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitCompanyYearRes">
         WITH BIZ_BASE AS ( <include refid="bizBase"/> ),
         BIZ AS ( /*--- 이익제공 ---*/
@@ -186,9 +207,7 @@
                         LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
                   WHERE biz01_provide_rcv_type = '1'
                     AND COALESCE(biz02_emp_yn,'false') != 'true'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
+                    <include refid="saleRuleOver"/>
                  /*--- 이익제공(거래상대방 미등록) ---*/
                   UNION ALL
                  SELECT biz01_provide_rcv_type
@@ -197,9 +216,7 @@
                       , biz90_company_limit3
                    FROM BIZ_BASE
                   WHERE biz01_provide_rcv_type = '1'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
+                    <include refid="saleRuleOver"/>
                     AND NOT EXISTS (SELECT 1
                                       FROM biz02_person
                                      WHERE biz02_promo_id = biz01_promo_id
@@ -214,10 +231,6 @@
                         LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
                   WHERE biz01_provide_rcv_type = '2'
                     AND COALESCE(biz02_emp_yn,'false') = 'true'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
-
                  /*--- 이익수령(직원정보 미등록) ---*/
                   UNION ALL
                  SELECT biz01_provide_rcv_type
@@ -226,9 +239,6 @@
                       , biz90_company_limit3
                    FROM BIZ_BASE
                   WHERE biz01_provide_rcv_type = '2'
-                    AND biz01_average_price <![CDATA[>]]> (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
-                                                                THEN biz90_sale_rule_limit1        /* 일반 */
-                                                                ELSE biz90_sale_rule_limit2 END)   /* 경조 */
                     AND NOT EXISTS (SELECT 1
                                       FROM biz02_person
                                      WHERE biz02_promo_id = biz01_promo_id
@@ -246,7 +256,10 @@
                          , biz01_target_company_nm
                          , biz90_company_limit3
                ) a
-         WHERE biz01_average_price <![CDATA[>]]> biz90_company_limit3
+         WHERE ( ( biz01_provide_rcv_type = '1' AND
+                   biz01_average_price <![CDATA[>]]> <choose><when test="limitCheck">COALESCE(#{limit3,jdbcType=NUMERIC}, 0)</when><otherwise>biz90_company_limit3</otherwise></choose> ) OR
+                 ( biz01_provide_rcv_type = '2' AND
+                   biz01_average_price <![CDATA[>]]> biz90_company_limit3 ) )
          ORDER BY biz01_provide_rcv_type, biz01_target_company_nm collate "ko_KR.utf8" asc
     </select>
 
