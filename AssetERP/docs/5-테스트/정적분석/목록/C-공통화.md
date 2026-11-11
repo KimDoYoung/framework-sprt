@@ -1,4 +1,4 @@
-# C 공통화 후보 (2026-11-07, 77건)
+# C 공통화 후보 (2026-11-11, 77건)
 CPD 중복 블록. 점수 = 줄 수 × (출현-1) × (도메인 간이면 2). 한 후보씩, 사용자 승인 뒤 진행:
 util/공통 서비스 작성 → 쓰는 곳 교체 → `bm.sh compile` → 영향 API 를 `yunhee api` 로 확인.
 
@@ -1351,27 +1351,6 @@ public record FundRes(
     @GetMapping("/{relateStampId}/stamp-date")
 ```
 
-## CH-cpd-4047be74 — 컨트롤러 반복 · 같은 도메인 · 11줄×2곳 (점수 11)
-
-- 권고: 공통 컨트롤러 메서드/인자 해석기로
-- 도메인: ics
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:39-49`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:52-62`
-
-```java
-    public ApiResponse<PageRes<IcsChecklistConfirmRes>> search(@AuthenticationPrincipal UserPrincipal principal,
-                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
-                                                               @RequestParam String cycleType, @RequestParam(required = false) Long checklistLClassId,
-                                                               @RequestParam(required = false) Long checklistMClassId, @RequestParam(defaultValue = "") String searchText,
-                                                               @RequestParam boolean unCheckYn, @RequestParam boolean unConfirmYn,
-                                                               @RequestParam int offset, @RequestParam int limit) {
-        return ApiResponse.ok(service.search(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn, offset, limit));
-    }
-
-    /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdChecklistConfirm + RD 리포트 Ics15_Rd_ChecklistConfirm → 한 시트 xlsx) */
-    @GetMapping("/excel")
-```
-
 ## CH-cpd-d50f7590 — 기타 로직 · 같은 도메인 · 11줄×2곳 (점수 11)
 
 - 권고: 공통 메서드로 뽑을지 판단(같은 업무 규칙인지 먼저 확인)
@@ -1391,6 +1370,27 @@ public record FundRes(
             return res.statusCode() / 100 == 2 ? res.body().trim() : "HTTP " + res.statusCode();
         } catch (IOException e) {
             log.error("RD 서버 호출 실패 url={}", rdProperties.url(), e);
+```
+
+## CH-cpd-4047be74 — 컨트롤러 반복 · 같은 도메인 · 11줄×2곳 (점수 11)
+
+- 권고: 공통 컨트롤러 메서드/인자 해석기로
+- 도메인: ics
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:39-49`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:53-66`
+
+```java
+    public ApiResponse<PageRes<IcsChecklistConfirmRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                               @RequestParam String cycleType, @RequestParam(required = false) Long checklistLClassId,
+                                                               @RequestParam(required = false) Long checklistMClassId, @RequestParam(defaultValue = "") String searchText,
+                                                               @RequestParam boolean unCheckYn, @RequestParam boolean unConfirmYn,
+                                                               @RequestParam int offset, @RequestParam int limit) {
+        return ApiResponse.ok(service.search(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn, offset, limit));
+    }
+
+    /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdChecklistConfirm + RD 리포트 Ics15_Rd_ChecklistConfirm → 한 시트 xlsx) */
+    @GetMapping("/excel")
 ```
 
 ## CH-cpd-3cd163eb — 컨트롤러 반복 · 같은 도메인 · 11줄×2곳 (점수 11)
@@ -1458,7 +1458,7 @@ public record FundRes(
 - 권고: 공통 컨트롤러 메서드/인자 해석기로
 - 도메인: ics
 - `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistConfirmController.java:49-57`
-- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:62-70`
+- `backend/src/main/java/kr/co/kfs/asseterp/biz/ics/controller/IcsChecklistStatusController.java:74-82`
 
 ```java
     @GetMapping("/excel")

@@ -232,7 +232,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, userSelect: 'none' }}>
             <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
-              Asset-ERP
+              Asset-ERP 2.0
             </span>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 400 }}>
               All-in-One System
