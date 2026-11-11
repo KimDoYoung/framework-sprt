@@ -122,6 +122,16 @@ class AprIcsLinkSeedDbTest {
     }
 
     @Test
+    void A53_작성자_준수확인서_제목과_본문을_만든다() {
+        // 원본 2026-11-05 Apr01_Edit_ApprDoc A53 · ComplianceWriteHtmlData.getHtmlContent3 (호출 Ics31_Tab_ComplianceWrite [결재요청])
+        AprLinkSeedRes res = seedService.seed(user(), 1L, "A53", null,
+                Map.of("stdDate", "2024-10-31", "cycleType", "M", "yyyy", "2024", "cycleName", "10월"));
+        assertThat(res.title()).isEqualTo("2024년 10월_임직원 내부통제 준수확인서 - " + orgName() + " 시험");
+        assertThat(res.titleReadOnly()).isFalse();
+        assertThat(res.content()).contains("다음과 같이 임직원 내부통제 준수내역을 보고합니다.").contains("준수항목").contains("준수여부");
+    }
+
+    @Test
     void A52_상신_연결은_로그인_사원별_구분_2로_따로_만든다() {
         Long a32 = reportService.createRelateAppr(user(), "2099.03", "M", "1");
         Long a52 = reportService.createRelateAppr(user(), "2099.03", "M", "2");

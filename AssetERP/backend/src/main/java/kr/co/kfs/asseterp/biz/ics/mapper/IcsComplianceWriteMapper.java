@@ -58,5 +58,24 @@ public interface IcsComplianceWriteMapper {
                         @Param("cycleType") String cycleType);
 
     /** AS-IS UpdateDataModel.deleteModel(ics31_compliance_write) — 내 작성 행만 */
+    /** 회사 설정 임직원준수점검 상신자 (1 = 작성자, 원본 2026-11-04) */
+    String selectApprRegEmpType(@Param("companyId") Long companyId);
+
+    /** AS-IS ics32_relate_appr.selectApprCheck (A53) — 없으면 null */
+    kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteApprRes selectApprCheck(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                                                          @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+
+    /** AS-IS ics32_relate_appr.selectApprList (A53) — 문서 ID 최근 순 */
+    List<Long> selectApprIds(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+
+    /** AS-IS ics32_relate_appr.selectLastAppr — 최근 상신 문서의 문서분류, 없으면 null */
+    Long selectLastClassTreeId(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    /** AS-IS ics32_relate_appr.insertApprId */
+    int insertApprId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("yyyymm") String yyyymm,
+                     @Param("cycleType") String cycleType, @Param("apprId") Long apprId);
+
+    int countA53Appr(@Param("companyId") Long companyId, @Param("apprId") Long apprId);
+
     int deleteById(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("complianceWriteId") Long complianceWriteId);
 }

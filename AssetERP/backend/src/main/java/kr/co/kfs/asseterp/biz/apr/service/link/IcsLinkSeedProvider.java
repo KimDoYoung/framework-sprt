@@ -9,6 +9,7 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 
 import kr.co.kfs.asseterp.biz.apr.dto.IcsWriterLinkRow;
+import kr.co.kfs.asseterp.biz.apr.dto.IcsWriterReportRow;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprIcsWriterLinkMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -23,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * - A27 법규통제 체크리스트 L2100-2111 · client/htmlData/ChecklistWriteHtmlData.getHtmlContent (호출 Ics16_Lookup_RelateAppr)
  * - A32 임직원 내부통제 준수 점검 L2113-2125 · client/htmlData/ComplianceWriteHtmlData.getHtmlContent (호출 Ics31_Tab_ComplianceReport)
  * 둘 다 제목을 고칠 수 있고(`title.setReadOnly(false)`) [저장]은 감춘다. 본문 표는 원본 문자열 순서 그대로 만든다(`tdStNone`의 `</strong>`도 그대로).
- * A52(부서장)는 호출 화면이 TOBE에 없어 다음 ID로 넘겼다.
+ * A52(부서장) · A53(작성자, 원본 2026-11-05 Ics31_Tab_ComplianceWrite) — ComplianceWriteHtmlData.getHtmlContent2·3
  */
 @Component
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
 
     @Override
     public Set<String> linkCodes() {
-        return Set.of("A27", "A32", "A52");
+        return Set.of("A27", "A32", "A52", "A53");
     }
 
     @Override
@@ -74,6 +75,12 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
             List<IcsWriterLinkRow> list = writerMapper.selectWriterList(user.getCompanyId(), user.getUserId(), arg(args, "cycleType"), stdDate(args));
             String title52 = yyyy + "년 " + cycleName + "_임직원 내부통제 준수확인서 - " + orgName + " " + user.getName();
             return new Seed(title52, complianceWriteHtml2(list), null, false, false);
+        }
+        if ("A53".equals(linkCode)) {
+            // Apr01_Edit_ApprDoc A53: 제목 `stdDateStr(yyyy년 주기이름)_임직원 내부통제 준수확인서 - 조직명 사원명`(고칠 수 있음), 본문 ComplianceWriteHtmlData.getHtmlContent3
+            List<IcsWriterReportRow> list = writerMapper.selectWriterReport(user.getCompanyId(), user.getUserId(), arg(args, "cycleType"), stdDate(args));
+            String title53 = yyyy + "년 " + cycleName + "_임직원 내부통제 준수확인서 - " + orgName + " " + user.getName();
+            return new Seed(title53, complianceWriteHtml3(list), null, false, false);
         }
         String title = yyyy + "년 " + cycleName + "_임직원 내부통제 준수보고";
         return new Seed(title, complianceHtml(yyyy, cycleName), null, false, false);
@@ -142,6 +149,26 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
                     + tdColor(2, 1, 1, "center", 12, String.valueOf(m.posName()), "none")
                     + tdColor(7, 1, 1, "left", 12, String.valueOf(m.complianceResult()), "none")
                     + tdColor(4, 1, 1, "left", 12, "", "none") + TR_CLOSE);
+        }
+        return t.append(TBODY_CLOSE + TABLE_CLOSE).toString();
+    }
+
+    /** ComplianceWriteHtmlData.getHtmlContent3 (원본 2026-11-05) — 준수항목 · 준수여부(준수가 아니면 결과 + " - 사유") · 비고(빈칸) */
+    private static String complianceWriteHtml3(List<IcsWriterReportRow> list) {
+        StringBuilder t = new StringBuilder(TABLE_START_NOTO + TBODY_START
+                + TR_START + tdStNone(20, 1, "left", 14, "다음과 같이 임직원 내부통제 준수내역을 보고합니다.") + TR_CLOSE
+                + TR_START + tdEmpty(20, 1, 0) + TR_CLOSE
+                + TR_START + tdStNone(20, 1, "center", 14, "- 다 음 -") + TR_CLOSE
+                + TR_START + tdEmpty(20, 1, 0) + TR_CLOSE
+                + TR_START + tdColor(6, 1, 1, "center", 12, "준수항목", "#EAEFF4")
+                + tdColor(11, 1, 1, "center", 12, "준수여부", "#EAEFF4")
+                + tdColor(3, 1, 1, "center", 12, "비고", "#EAEFF4") + TR_CLOSE);
+        for (IcsWriterReportRow m : list) {
+            // 원본: 준수면 결과만, 아니면 결과 + getComplianceWriteModel().getReason() (사유가 없으면 GWT 문자열 이음이라 "null"이 붙는다 — 그대로)
+            String resultReason = "준수".equals(m.complianceResult()) ? m.complianceResult() : m.complianceResult() + m.reason();
+            t.append(TR_START + tdColor(6, 1, 1, "left", 12, String.valueOf(m.complianceTypeName()), "none")
+                    + tdColor(11, 1, 1, "left", 12, resultReason, "none")
+                    + tdColor(3, 1, 1, "left", 12, "", "none") + TR_CLOSE);
         }
         return t.append(TBODY_CLOSE + TABLE_CLOSE).toString();
     }

@@ -7,6 +7,8 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteCreateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteFixReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteApprRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteApprIdReq;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceWriteMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -38,6 +40,42 @@ public class IcsComplianceWriteService {
     /** AS-IS settings()의 Sys01_Company.selectById — 체크주기 M(월)/Q(분기), 설정이 없으면 null */
     public String cycleType(UserPrincipal user) {
         return mapper.selectCycleType(user.getCompanyId());
+    }
+
+    /** 회사 설정 임직원준수점검 상신자 — '1'이면 작성자가 [결재요청](A53), 아니면 [제출]·[제출취소] (원본 2026-11-04·05) */
+    public String apprRegEmpType(UserPrincipal user) {
+        return mapper.selectApprRegEmpType(user.getCompanyId());
+    }
+
+    private static String yyyymm(LocalDate stdDate) {
+        if (stdDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 분기(월) 정보가 올바르지 않습니다.");
+        }
+        return stdDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM"));
+    }
+
+    /** AS-IS apprChk() → ics.Ics32_RelateAppr.selectApprCheck(apprType 2, linkCode A53) — 없으면 null(미상신) */
+    public IcsComplianceWriteApprRes appr(UserPrincipal user, LocalDate stdDate, String cycleType) {
+        return mapper.selectApprCheck(user.getCompanyId(), user.getUserId(), yyyymm(stdDate), cycleType);
+    }
+
+    /** AS-IS apprView() → ics.Ics32_RelateAppr.selectApprList (A53) — 문서 ID 최근 순 */
+    public List<Long> apprIds(UserPrincipal user, LocalDate stdDate, String cycleType) {
+        return mapper.selectApprIds(user.getCompanyId(), user.getUserId(), yyyymm(stdDate), cycleType);
+    }
+
+    /** AS-IS lastDcrChk() → ics.Ics32_RelateAppr.selectLastAppr(apprType 2) — 최근 상신 문서의 문서분류, 없으면 null */
+    public Long lastClassTreeId(UserPrincipal user) {
+        return mapper.selectLastClassTreeId(user.getCompanyId(), user.getUserId());
+    }
+
+    /** AS-IS updateApprId() → ics.Ics32_RelateAppr.insertApprId(apprType 2) — 로그인 회사의 A53 문서만 */
+    @Transactional
+    public void insertApprId(UserPrincipal user, IcsComplianceWriteApprIdReq req) {
+        if (req.apprId() == null || mapper.countA53Appr(user.getCompanyId(), req.apprId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신 문서를 찾을 수 없습니다.");
+        }
+        mapper.insertApprId(user.getCompanyId(), user.getUserId(), yyyymm(req.stdDate()), req.cycleType(), req.apprId());
     }
 
     /** AS-IS Ics30_Compliance.selectByPersonId (searchText "%") */

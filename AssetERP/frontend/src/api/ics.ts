@@ -659,6 +659,35 @@ export const icsApi = {
     return res.data.data ?? null;
   },
 
+  /** 회사 설정 임직원준수점검 상신자(LoginUser.getCompanyModel().getComplyApprRegEmpType()) — '1'이면 작성자가 [결재요청](A53), 원본 2026-11-04·05 */
+  getComplianceApprRegEmpType: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/ics/compliance-writes/appr-reg-emp-type');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.selectApprCheck (A53) — 그 달 내 상신 상태, 없으면 null(미상신) */
+  getComplianceWriteAppr: async (stdDate: string, cycleType: string): Promise<{ apprId: number | null; statusCode: string | null; statusName: string | null } | null> => {
+    const res = await apiClient.get<ApiResponse<{ apprId: number | null; statusCode: string | null; statusName: string | null } | null>>('v1/ics/compliance-writes/appr', { params: { stdDate, cycleType } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.selectApprList (A53) — 그 달 내 상신 문서 ID(최근 순) */
+  searchComplianceWriteApprIds: async (stdDate: string, cycleType: string): Promise<number[]> => {
+    const res = await apiClient.get<ApiResponse<number[]>>('v1/ics/compliance-writes/appr-ids', { params: { stdDate, cycleType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.selectLastAppr — 최근 상신 문서의 문서분류 ID, 없으면 null */
+  getComplianceWriteLastClassTreeId: async (): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>('v1/ics/compliance-writes/last-class-tree-id');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.insertApprId (A53 상신 뒤) */
+  insertComplianceWriteApprId: async (stdDate: string, cycleType: string, apprId: number): Promise<void> => {
+    await apiClient.post('v1/ics/compliance-writes/appr-id', { stdDate, cycleType, apprId });
+  },
+
   /** AS-IS ics.Ics30_Compliance.selectByPersonId: stdDate = 기준 분기(월)의 말일, checkBox = 미체크 보기 */
   searchComplianceWrites: async (stdDate: string, cycleType: string, checkBox: boolean): Promise<IcsComplianceWrite[]> => {
     const res = await apiClient.get<ApiResponse<IcsComplianceWrite[]>>('v1/ics/compliance-writes', { params: { stdDate, cycleType, checkBox } });

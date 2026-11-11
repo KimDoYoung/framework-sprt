@@ -3,6 +3,8 @@ package kr.co.kfs.asseterp.biz.ics.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmerRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteAnswerReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteApprIdReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteApprRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteCreateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteFixReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem;
@@ -43,6 +45,39 @@ public class IcsComplianceWriteController {
     @GetMapping("/cycle-type")
     public ApiResponse<String> cycleType(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.cycleType(principal));
+    }
+
+    /** 회사 설정 임직원준수점검 상신자(LoginUser.getCompanyModel().getComplyApprRegEmpType()) — '1' = 작성자 결재요청(A53), 원본 2026-11-04·05 */
+    @GetMapping("/appr-reg-emp-type")
+    public ApiResponse<String> apprRegEmpType(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.apprRegEmpType(principal));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.selectApprCheck (A53) — 그 달 내 상신 상태, 없으면 null */
+    @GetMapping("/appr")
+    public ApiResponse<IcsComplianceWriteApprRes> appr(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate, @RequestParam String cycleType) {
+        return ApiResponse.ok(service.appr(principal, stdDate, cycleType));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.selectApprList (A53) — 그 달 내 상신 문서 ID들 */
+    @GetMapping("/appr-ids")
+    public ApiResponse<List<Long>> apprIds(@AuthenticationPrincipal UserPrincipal principal,
+                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate, @RequestParam String cycleType) {
+        return ApiResponse.ok(service.apprIds(principal, stdDate, cycleType));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.selectLastAppr — 최근 상신 문서의 문서분류 ID, 없으면 null */
+    @GetMapping("/last-class-tree-id")
+    public ApiResponse<Long> lastClassTreeId(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.lastClassTreeId(principal));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.insertApprId (A53 상신 뒤) */
+    @PostMapping("/appr-id")
+    public ApiResponse<Void> insertApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsComplianceWriteApprIdReq req) {
+        service.insertApprId(principal, req);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS ics.Ics30_Compliance.selectByPersonId — stdDate = 기준 분기(월)의 말일 */
