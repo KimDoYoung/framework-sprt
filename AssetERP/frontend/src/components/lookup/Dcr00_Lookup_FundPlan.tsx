@@ -6,7 +6,7 @@
  * 폭: 문서분류찾기 그리드 열 합계 900+60+130 = 1090 (03 원칙 21 — AS-IS 1000보다 작게 하지 않는다)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Space, Tabs, Tree } from 'antd';
+import { message, Space, Tabs } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
@@ -15,7 +15,7 @@ import { DcrClassTree, DcrFundPlanLookup } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
-import { toTree } from '@/pages/dcr/dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from '@/pages/dcr/dcr01Tree';
 
 const gb = gbFor<DcrFundPlanLookup>();
 
@@ -154,7 +154,9 @@ export const Dcr00_Lookup_FundPlan: React.FC<Props> = ({ open, onResult, onClose
                   {/* getMenuTree() L104-138: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick) */}
                   <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
                     {treeData.length > 0 && (
-                      <Tree
+                      <DcrTree
+                        showIcon
+                        icon={dcrTreeIcon}
                         treeData={treeData}
                         expandedKeys={expanded}
                         onExpand={keys => setExpanded(keys)}

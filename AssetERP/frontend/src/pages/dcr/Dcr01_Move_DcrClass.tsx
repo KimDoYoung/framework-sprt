@@ -4,8 +4,7 @@
  * 생성자 L57-134: 모달 "문서분류 변경" 500×700, 툴바(문서분류 · 입력 250 · [찾기]) + 트리(서비스 dcr.Dcr01_ClassTree.selectByCompanyId, typeCode %) + [변경]·[닫기]
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Input, message, Space, Tree, Typography } from 'antd';
-import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Input, message, Space, Typography } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { aprApi } from '@/api/apr';
 import { dcrApi } from '@/api/dcr';
@@ -13,7 +12,7 @@ import { errorMessage } from '@/api/client';
 import { AprDoc } from '@/types/apr';
 import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
-import { toTree } from './dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
@@ -102,11 +101,11 @@ export const Dcr01_Move_DcrClass: React.FC<Props> = ({ apprList, onMoved, onClos
           {view === 'list' ? (
             <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
           ) : treeData.length > 0 && (
-            <Tree
+            <DcrTree
               treeData={treeData}
               showIcon
               blockNode
-              icon={p => (p.isLeaf ? <UnorderedListOutlined /> : p.expanded ? <FolderOpenOutlined /> : <FolderOutlined />)}
+              icon={dcrTreeIcon}
               expandedKeys={expanded}
               onExpand={keys => setExpanded(keys)}
               selectedKeys={selected == null ? [] : [selected.classTreeId]}

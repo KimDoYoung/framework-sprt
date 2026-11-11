@@ -5,7 +5,7 @@
  * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Space, Tree } from 'antd';
+import { Input, message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
@@ -13,7 +13,7 @@ import { errorMessage } from '@/api/client';
 import { DcrClassTree, DcrCopyCompany } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
-import { toTree } from './dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
@@ -113,7 +113,9 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
             {view === 'list' ? (
               <DcrClassSearchList rows={rows} query={searchText} onSelect={setSelected} />
             ) : !loadingTree && treeData.length > 0 && (
-              <Tree
+              <DcrTree
+                showIcon
+                icon={dcrTreeIcon}
                 treeData={treeData}
                 expandedKeys={expanded}
                 onExpand={keys => setExpanded(keys)}

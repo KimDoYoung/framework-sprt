@@ -8,14 +8,14 @@
  * 트리를 어디서 읽는지만 자식 클래스가 바꾼다(DcrUser.retrieve() L36-51) → loadTree 로 받는다
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Input, message, Splitter, Tree } from 'antd';
+import { Input, message, Splitter } from 'antd';
 import { FileTextOutlined, FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { errorMessage } from '@/api/client';
 import { dcrApi } from '@/api/dcr';
 import { DcrWriteTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { Apr01_Grid_DocList } from '../apr/Apr01_Grid_DocList';
-import { toTree } from './dcr01Tree';
+import { toTree, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
@@ -99,7 +99,7 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
               {view === 'list' ? (
                 <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
               ) : !loading && treeData.length > 0 && (
-                <Tree
+                <DcrTree
                   treeData={treeData}
                   showIcon
                   blockNode

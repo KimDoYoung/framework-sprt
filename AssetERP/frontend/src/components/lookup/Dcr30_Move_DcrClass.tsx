@@ -21,7 +21,7 @@ import { TreeListControlButtons } from '@/components/button/TreeListControlButto
 import { SearchBar } from '@/components/search';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { LookupModal } from './LookupModal';
-import { toTree } from '@/pages/dcr/dcr01Tree';
+import { toTree, DcrTree } from '@/pages/dcr/dcr01Tree';
 
 const gb = gbFor<{ classTreeId: number; fullName: string }>();
 
@@ -186,7 +186,7 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
             onRowDoubleClicked={() => void update()}
           />
         ) : treeData.length > 0 && (
-          <Tree
+          <DcrTree
             ref={treeRef}
             height={treeHeight}
             treeData={treeData}

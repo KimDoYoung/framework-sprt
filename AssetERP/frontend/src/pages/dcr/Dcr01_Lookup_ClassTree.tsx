@@ -6,13 +6,13 @@
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { message, Space, Tree } from 'antd';
+import { message, Space } from 'antd';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrResearchTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
-import { toTree } from './dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 
 interface Props {
   open: boolean;
@@ -71,7 +71,9 @@ export const Dcr01_Lookup_ClassTree: React.FC<Props> = ({ open, onResult, onClos
         {/* [E1] retrieveButton[조회].Select (L48) → retrieve() */}
         <div><Button type="search" loading={loading} onClick={() => void retrieve()}>조회</Button></div>
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid #d9d9d9' }}>
-          <Tree
+          <DcrTree
+            showIcon
+            icon={dcrTreeIcon}
             treeData={treeData}
             selectedKeys={selected == null ? [] : [selected]}
             onSelect={(keys, info) => setSelected(keys.length ? Number(keys[0]) : Number(info.node.key))}

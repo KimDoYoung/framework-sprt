@@ -14,7 +14,7 @@ import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { LookupModal } from '@/components/lookup/LookupModal';
-import { toTree } from './dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
@@ -128,7 +128,9 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
         {view === 'list' ? (
           <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
         ) : treeData.length > 0 && (
-          <Tree
+          <DcrTree
+            showIcon
+            icon={dcrTreeIcon}
             ref={treeRef}
             height={560}
             treeData={treeData}

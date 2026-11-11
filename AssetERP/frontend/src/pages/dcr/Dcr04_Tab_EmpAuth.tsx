@@ -6,8 +6,7 @@
  *   center = 테두리 박스(Dcr04_TabPage_EmpAuth, 여백 20/20/20/0). 한 번 눌러도 노드가 열리고 닫힌다. 트리 모양은 Dcr03_Tab_DcrAuth(EE06)와 같다
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Input, message, Splitter, Tree, Typography } from 'antd';
-import { FolderOpenOutlined, FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Input, message, Splitter, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -17,7 +16,7 @@ import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 import { Dcr04_TabPage_EmpAuth } from './Dcr04_TabPage_EmpAuth';
-import { toTree } from './dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
@@ -92,12 +91,12 @@ export const Dcr04_Tab_EmpAuth: React.FC = () => {
               {view === 'list' ? (
                 <DcrClassSearchList rows={rows} query={docSearch} onSelect={r => setSelectedKeys(r ? [r.classTreeId] : [])} />
               ) : !loading && treeData.length > 0 && (
-                <Tree
+                <DcrTree
                   treeData={treeData}
                   multiple
                   showIcon
                   blockNode
-                  icon={p => (p.isLeaf ? <UnorderedListOutlined /> : p.expanded ? <FolderOpenOutlined /> : <FolderOutlined />)}
+                  icon={dcrTreeIcon}
                   expandedKeys={expanded}
                   onExpand={keys => setExpanded(keys)}
                   selectedKeys={selectedKeys}

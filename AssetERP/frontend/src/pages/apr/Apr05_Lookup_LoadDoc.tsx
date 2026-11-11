@@ -19,7 +19,7 @@ import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
-import { toTree } from '../dcr/dcr01Tree';
+import { toTree, DcrTree } from '../dcr/dcr01Tree';
 import { DcrClassSearchList } from '../dcr/DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 import { Apr05_Grid_RelateAprList } from './Apr05_Grid_RelateAprList';
@@ -136,7 +136,7 @@ export const Apr05_Lookup_LoadDoc: React.FC<Props> = ({ open, onResult, onClose 
             {view === 'list' ? (
               <DcrClassSearchList rows={rows} query={docSearch} onSelect={onListSelect} />
             ) : treeData.length > 0 && (
-              <Tree
+              <DcrTree
                 ref={treeRef}
                 showIcon
                 height={560}

@@ -7,9 +7,9 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 원본에 초기화가 없어 UX-02는 넣지 않는다
  * 스타일: TO (yunhee page-style 판별 — docs/page-style.md)
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Splitter, Tree, message } from 'antd';
-import { FileTextOutlined, FolderOpenOutlined, FolderOutlined } from '@ant-design/icons';
+import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { Splitter, message } from 'antd';
+import type { DataNode, TreeProps } from 'antd/es/tree';
 import dayjs from 'dayjs';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -24,7 +24,7 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
-import { toTree } from '@/pages/dcr/dcr01Tree';
+import { toTree, DcrTree } from '@/pages/dcr/dcr01Tree';
 import { DcrClassSearchList } from '@/pages/dcr/DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 import { Fbx01_TabPage_DocList, Fbx01_TabPage_DocListHandle } from './Fbx01_TabPage_DocList';
@@ -32,6 +32,48 @@ import { Fbx02_Popup_History } from './Fbx02_Popup_History';
 
 const gb = gbFor<FbxBox>();
 const NOW = () => dayjs().format('YYYY-MM-DDTHH:mm:ss');
+
+/**
+ * 문서분류 트리 — 펼침 상태를 이 안에 둔다: 삼각형을 눌러도 화면 전체(보관함 그리드·파일 목록)는 다시 그리지 않는다.
+ * 부모는 handle로 펼칠 키만 알려 준다. 가상 스크롤·애니메이션 끔·아이콘은 공용 DcrTree(UX-19)
+ */
+interface DocClassTreeHandle {
+  setExpanded: (keys: React.Key[]) => void;
+  toggle: (key: React.Key) => void;
+}
+interface DocClassTreeProps {
+  treeData: DataNode[];
+  selectedKey: number | null;
+  hidden: boolean;
+  onSelect: NonNullable<TreeProps['onSelect']>;
+}
+const DocClassTree = memo(forwardRef<DocClassTreeHandle, DocClassTreeProps>(({ treeData, selectedKey, hidden, onSelect }, ref) => {
+  const [expanded, setExpanded] = useState<React.Key[]>([]);
+  useImperativeHandle(ref, () => ({
+    setExpanded,
+    toggle: key => setExpanded(prev => (prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])),
+  }), []);
+  return (
+    <div style={{ marginTop: 8, flex: 1, minHeight: 0, overflow: 'hidden', padding: '0 4px', display: hidden ? 'none' : undefined }}>
+      {treeData.length > 0 && (
+        <DcrTree
+          treeData={treeData}
+          expandedKeys={expanded}
+          onExpand={keys => setExpanded(keys)}
+          selectedKeys={selectedKey == null ? [] : [selectedKey]}
+          onSelect={onSelect}
+        />
+      )}
+    </div>
+  );
+}));
+
+/** 오른쪽 파일 목록 — 부모가 다시 그려져도(트리 선택 등) 따라 그리지 않는다. ref는 바뀌지 않는다 */
+const DocListPanel = memo(({ listRef }: { listRef: React.Ref<Fbx01_TabPage_DocListHandle> }) => (
+  <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <Fbx01_TabPage_DocList ref={listRef} />
+  </div>
+));
 
 export const Fbx01_Tab_Document: React.FC = () => {
   const user = useLoginUser();
@@ -41,7 +83,6 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const [historyBoxId, setHistoryBoxId] = useState<number | null>(null);
   // 문서분류 트리 (getMenuTree L260-296, getServiceResult L333-346, addChild L298-307)
   const [classRows, setClassRows] = useState<DcrClassTree[]>([]);
-  const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [docSearch, setDocSearch] = useState('');
   // 보기 방식: 트리(보관함을 고를 때마다) / 리스트([찾기] 결과 — UX보강)
@@ -49,6 +90,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
   const treeData = useMemo(() => toTree(classRows), [classRows]);
   const selectedBox = useRef<FbxBox | undefined>(undefined);
   const docList = useRef<Fbx01_TabPage_DocListHandle>(null);
+  const tree = useRef<DocClassTreeHandle>(null);
   const selectFirst = useRef(false);
   const treeSeq = useRef(0);
 
@@ -108,7 +150,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
       setSelectedClass(null);
       setView('tree');
       const parents = new Set(list.map(r => r.parentTreeId));
-      setExpanded(list.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
+      tree.current?.setExpanded(list.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
     } catch (err) {
       if (my === treeSeq.current) {
         setClassRows([]);
@@ -118,21 +160,21 @@ export const Fbx01_Tab_Document: React.FC = () => {
   };
 
   // retrieveDocList() L309-316: 고른 보관함·문서분류로 docList.retrieve(classTreeId, boxId) + setDcrTypeCode
-  const retrieveDocList = (row: DcrClassTree) => {
+  const retrieveDocList = useCallback((row: DcrClassTree) => {
     const box = selectedBox.current;
     if (!box) return;
     docList.current?.retrieve(row.classTreeId, box.boxId, row.typeCode);
-  };
+  }, []);
 
   // [E9] tree.Selection (L160) → retrieveDocList(). Tree.onClick → super.onDoubleClick: 한 번 눌러도 노드가 열리고 닫힌다
-  const onTreeSelect = (keys: React.Key[], info: { node: { key: React.Key } }) => {
+  const onTreeSelect = useCallback((keys: React.Key[], info: { node: { key: React.Key } }) => {
     const id = keys.length ? Number(keys[0]) : Number(info.node.key);
     const row = classRows.find(r => r.classTreeId === id);
     if (!row) return;
     setSelectedClass(id);
-    setExpanded(prev => (prev.includes(info.node.key) ? prev.filter(k => k !== info.node.key) : [...prev, info.node.key]));
+    tree.current?.toggle(info.node.key);
     retrieveDocList(row);
-  };
+  }, [classRows, retrieveDocList]);
 
   // [E10] docSearch.KeyPress [Enter] (L186) · [E11] searchButton[찾기].Select (L194) → search() L409-429:
   // 선택을 풀고 모두 닫은 뒤, 이름에 검색어가 든 분류의 부모를 펼쳐 고른다(여럿이면 마지막 것이 선택으로 남는다)
@@ -146,7 +188,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
   // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다 — [E6] expandAll[+] (L122) → tree.expandAll()
   const expandAll = () => {
     const parents = new Set(classRows.map(r => r.parentTreeId));
-    setExpanded(classRows.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
+    tree.current?.setExpanded(classRows.filter(r => parents.has(r.classTreeId)).map(r => r.classTreeId));
   };
 
   // 리스트에서 고른 분류 — 트리 선택(onTreeSelect)과 같게 문서 목록을 읽는다
@@ -165,8 +207,6 @@ export const Fbx01_Tab_Document: React.FC = () => {
     crud.deleteChecked();
   };
 
-  const icon = (p: { expanded?: boolean; isLeaf?: boolean }) =>
-    p.isLeaf ? <FileTextOutlined /> : p.expanded ? <FolderOpenOutlined /> : <FolderOutlined />;
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
@@ -174,7 +214,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
         {/* northLayoutData: 높이 200, 분할 */}
         <Splitter.Panel defaultSize={200} min={120} max={1000}>
           <div style={{ height: '100%', paddingBottom: 10, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               {/* [E1] searchText.KeyPress [Enter] (L89) · [E2] retrieveButton[조회].Select (L98) → retrieve() */}
               <SearchBar
                 onSearch={retrieve}
@@ -193,7 +233,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
                   <SearchBar.Input style={{ width: 350 }} value={sp.values.searchText} onChange={e => sp.set('searchText', e.target.value)} />
                 </SearchBar.Field>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 <CellEditGrid<FbxBox>
                   crud={crud}
                   columnDefs={columnDefs}
@@ -220,36 +260,26 @@ export const Fbx01_Tab_Document: React.FC = () => {
             <Splitter style={{ height: '100%' }}>
               {/* westLayoutData: 가운데 hlc의 cp 400 */}
               <Splitter.Panel defaultSize={400} min={250} max={1000}>
-                <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
                   <SearchBar onSearch={search} searchText="찾기"
                     // [E6] expandAll[+] (L122)·[E7] collapseAll[-] (L129) → 보기 전환과 한 묶음(TreeListControlButtons)
-                    extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />}
+                    extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => tree.current?.setExpanded([])} expandDisabled={treeData.length === 0} />}
                   >
-                    <SearchBar.Field label="문서분류">
-                      <SearchBar.Input style={{ width: 90 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
+                    <SearchBar.Field label="">
+                      <SearchBar.Input placeholder='문서분류 검색...' style={{ width: 150 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
                     </SearchBar.Field>
                   </SearchBar>
-                  <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', padding: view === 'list' ? 0 : '0 4px' }}>
-                    {view === 'list' ? (
+                  {view === 'list' && (
+                    <div style={{ marginTop: 8, flex: 1, minHeight: 0, overflow: 'hidden' }}>
                       <DcrClassSearchList rows={classRows} query={docSearch} onSelect={onListSelect} />
-                    ) : treeData.length > 0 && (
-                      <Tree
-                        showIcon
-                        icon={icon}
-                        treeData={treeData}
-                        expandedKeys={expanded}
-                        onExpand={keys => setExpanded(keys)}
-                        selectedKeys={selectedClass == null ? [] : [selectedClass]}
-                        onSelect={onTreeSelect}
-                      />
-                    )}
-                  </div>
+                    </div>
+                  )}
+                  {/* 리스트로 볼 때도 트리는 숨겨 둔 채 남긴다 — 펼침 상태 유지 */}
+                  <DocClassTree ref={tree} treeData={treeData} selectedKey={selectedClass} hidden={view === 'list'} onSelect={onTreeSelect} />
                 </div>
               </Splitter.Panel>
               <Splitter.Panel>
-                <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
-                  <Fbx01_TabPage_DocList ref={docList} />
-                </div>
+                <DocListPanel listRef={docList} />
               </Splitter.Panel>
             </Splitter>
           </div>

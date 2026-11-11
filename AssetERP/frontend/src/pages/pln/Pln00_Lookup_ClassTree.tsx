@@ -7,14 +7,14 @@
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { message, Tree } from 'antd';
+import { message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrClassTree, DcrFundPlanLookup } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
-import { toTree } from '../dcr/dcr01Tree';
+import { toTree, dcrTreeIcon, DcrTree } from '../dcr/dcr01Tree';
 
 const gb = gbFor<DcrFundPlanLookup>();
 
@@ -79,7 +79,9 @@ export const Pln00_Lookup_ClassTree = forwardRef<Pln00ClassTreeHandle, { active:
           <Button type="search" onClick={() => void retrieve()}>조회</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid #d9d9d9' }}>
-          <Tree
+          <DcrTree
+            showIcon
+            icon={dcrTreeIcon}
             treeData={treeData}
             selectedKeys={selectedClass == null ? [] : [selectedClass]}
             onSelect={(keys, info) => {
