@@ -10,7 +10,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 |:---|:---|
 | `README.md` | 이 문서 — 원칙·절차·도구 |
 | `반영대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다 |
-| `../../make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
+| `../../tools/make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
 
 ## 원칙
 
@@ -26,7 +26,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 
 | 종류 | 무엇 | 확인 도구(지금) | 반영 |
 |:---|:---|:---|:---|
-| `DB` | 테이블·열·함수·트리거 | `./check-git.sh --db-index`, `yunhee sql`(information_schema), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인 |
+| `DB` | 테이블·열·함수·트리거 | `tools/check-git.sh --db-index`, `yunhee sql`(information_schema), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인 |
 | `SQL` | 매퍼 XML의 SQL ID | `yunhee analysis sql <ns.id>`, AS-IS `git diff` | `yunhee port-sql`로 다시 옮기고 `sql-check --tobe`·`compare`·`mapper-run --compare`로 결과 대조 |
 | `LOGIC` | 서버 Java 메서드(검사·분기·메시지·호출 순서) | `yunhee analysis method <클래스>.<메서드> -o code` | TOBE 서비스·컨트롤러에 옮김. 업무 테스트(`5-테스트`)가 있으면 늘린다 |
 | `MODEL` | 모델·DTO 필드 | `analysis model` | TOBE record·TS 타입에 필드 추가 |
@@ -50,9 +50,9 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 
 ```bash
 cd AssetERP
-./check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
-./make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
-./make-change-docs.sh          # 반영대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
+tools/check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
+tools/make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
+tools/make-change-docs.sh          # 반영대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
 ```
 - `make-change-docs.sh`가 하는 일: `yunhee drift --all --done-only --base baseline -o json` → 바뀐 파일을 SQL ID·메서드 단위로 나눔 → 색인·AS-IS 호출(`mapperName + ".id"`, `<include refid>`, 클라이언트 서비스 문자열)을 따라 쓰는 완료 화면 → TOBE 대응 후보 → 기준선 이후 새 파일·DB 스크립트 → 대장에 이어 붙임.
 - **처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다.** 같은 단위가 `대기`면 커밋·변경 요약·영향 화면만 고치고, 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄. 키는 마지막 `CH-` 번호에서 이어 간다.
@@ -76,7 +76,7 @@ cd AssetERP
 
 ## 도구
 
-지금은 `./check-git.sh`(pull·색인), `yunhee drift`(화면 단위 감지), 그 위에서 단위로 나누는 임시 도구 `./make-change-docs.sh`다.
+지금은 `tools/check-git.sh`(pull·색인), `yunhee drift`(화면 단위 감지), 그 위에서 단위로 나누는 임시 도구 `tools/make-change-docs.sh`다.
 yunhee에 **`drift-` 명령군**을 제안했다(`~/work/yunhee-cli/docs/수정사항/수정사항054.md`). `trace-*`가 업무분석용이듯 `drift-*`는 변경반영용이다.
 
 | 명령(제안) | 하는 일 | 대장에서 쓰는 곳 |

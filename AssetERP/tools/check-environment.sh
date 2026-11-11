@@ -227,7 +227,7 @@ for f in docs/as-is/src/menus.md docs/as-is/menus.tsv docs/as-is/db; do
     if [[ -e "$ROOT/$f" ]]; then
         age=$(( ( $(date +%s) - $(stat -c %Y "$ROOT/$f") ) / 86400 ))
         if (( age > 14 )); then
-            warn "$f ${age}일 전 — ./check-git.sh 로 갱신"
+            warn "$f ${age}일 전 — tools/check-git.sh 로 갱신"
             case "$f" in
                 */menus.md|*/menus.tsv) autofix "메뉴·소스 색인 다시 만들기 (menus.tsv → index-src, 몇 분 걸림)" \
                     "cd '$ROOT/..' && yunhee sql --builtin menus -o tsv --no-header --out AssetERP/docs/as-is/menus.tsv && yunhee index-src -t AssetERP/docs/as-is/src" ;;

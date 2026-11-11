@@ -14,6 +14,15 @@
 | `page-style-check.py` | `docs/page-style.md` 규칙을 정규식으로 화면×규칙 표로 점검 (견본은 전부 통과해야 함) |
 | `code-health.sh` + `code-health/` | TOBE 정적분석 일괄(PMD·CPD 중복·Checkstyle·SpotBugs+FindSecBugs) → `docs/5-테스트/정적분석/` 보고서. build.gradle 무수정(init script) |
 
+## 변경반영 (AS-IS 원본 변경 따라가기)
+
+`AssetERP`에서 차례로 돌린다. 규칙·대장은 `docs/3-변경반영/README.md`. 2026-11-11 AssetERP 바로 아래에서 여기로 옮겼다.
+
+| 파일 | 용도 |
+|:---|:---|
+| `check-git.sh` | AS-IS 원본(`YUNHEE_ASIS_SRC_DIR`) `git pull` → 색인 기준과 다르면 `index-src` 다시 만들기. `--force`·`--no-index`·`--db-index` |
+| `make-change-docs.sh` + `make_change_docs.py` | `check-git.sh` 다음에 돌려 바뀐 것을 SQL ID·메서드 단위로 나눠 `docs/3-변경반영/반영대장.md`에 이어 붙임(처리한 줄은 그대로). `--dry-run`·`--reuse`·`--since` |
+
 ## 환경 점검 (읽기 전용)
 
 | 파일 | 용도 |

@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
 #============================================================================
-# check-git.sh - AS-IS 원본(YUNHEE_ASIS_SRC_DIR) git pull 후 바뀌었으면 index-src 재실행
-#   ./check-git.sh                  pull, 색인 기준과 다르면 재색인
-#   ./check-git.sh --force          변경이 없어도 재색인
-#   ./check-git.sh --no-index       pull만 (재색인 안 함)
-#   ./check-git.sh --db-index[=true|false]
+# tools/check-git.sh - AS-IS 원본(YUNHEE_ASIS_SRC_DIR) git pull 후 바뀌었으면 index-src 재실행
+#   tools/check-git.sh                  pull, 색인 기준과 다르면 재색인
+#   tools/check-git.sh --force          변경이 없어도 재색인
+#   tools/check-git.sh --no-index       pull만 (재색인 안 함)
+#   tools/check-git.sh --db-index[=true|false]
 #                                   DB 색인(dbml → index-db)도 다시 만듦 (기본 false)
 #                                   DB 색인을 다시 만들면 소스 색인도 다시 만든다
 #                                   (소스 색인의 테이블 링크·⚠DB없음 판정이 DB 색인을 쓴다)
-#   ./check-git.sh -h | --help      도움말
+#   tools/check-git.sh -h | --help      도움말
 # 다음 단계: 변경반영 문서(반영대장) 만들기
-#   ./make-change-docs.sh   (docs/3-변경반영/README.md)
+#   tools/make-change-docs.sh   (docs/3-변경반영/README.md)
 #============================================================================
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # AssetERP/tools
+APP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"                       # AssetERP
+REPO_ROOT="$(cd "$APP_DIR/.." && pwd)"
+cd "$APP_DIR"   # yunhee value 가 AssetERP/.env.yunhee 를 읽도록
 INDEX_DIR="AssetERP/docs/as-is/src"
 DB_INDEX_DIR="AssetERP/docs/as-is/db"
 DBML_FILE="AssetERP/.yunhee/asseterp-dbml.md"
@@ -33,7 +35,7 @@ die()  { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
 
 usage() {
     cat <<USAGE
-사용법: ./check-git.sh [--force] [--no-index] [--db-index[=true|false]] [-h|--help]
+사용법: tools/check-git.sh [--force] [--no-index] [--db-index[=true|false]] [-h|--help]
 
 AS-IS 원본(YUNHEE_ASIS_SRC_DIR)을 git pull 하고, 색인 기준 커밋과 다르면 소스 색인을 다시 만든다.
 
@@ -47,7 +49,7 @@ AS-IS 원본(YUNHEE_ASIS_SRC_DIR)을 git pull 하고, 색인 기준 커밋과 �
   -h, --help               이 도움말
 
 다음 단계 — 변경반영 문서(반영대장) 만들기:
-  (cd AssetERP && ./make-change-docs.sh)
+  (cd AssetERP && tools/make-change-docs.sh)
 USAGE
 }
 
@@ -121,4 +123,4 @@ fi
 info "재색인: 색인 기준 ${indexed:0:7} → ${after:0:7}"
 cd "$REPO_ROOT"
 yunhee index-src -t "$INDEX_DIR" --menus "$MENUS_TSV"
-info "완료. 다음: (cd AssetERP && ./make-change-docs.sh)  — 반영대장에 이어 붙임"
+info "완료. 다음: (cd AssetERP && tools/make-change-docs.sh)  — 반영대장에 이어 붙임"

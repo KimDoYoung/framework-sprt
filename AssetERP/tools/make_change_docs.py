@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""변경반영 문서(docs/3-변경반영/반영대장.md) 만들기 — make-change-docs.sh 가 부른다.
+"""변경반영 문서(docs/3-변경반영/반영대장.md) 만들기 — tools/make-change-docs.sh 가 부른다.
 
 입력: yunhee drift --all --done-only --base baseline -o json 결과(JSON 파일)
 하는 일:
