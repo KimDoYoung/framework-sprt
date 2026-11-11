@@ -16,6 +16,7 @@
              , emp00_org_code_id                                    AS appr_org_id
              , emp00_org_code_nm                                    AS appr_org_name
              , ROW_NUMBER() OVER(ORDER BY tdm58_appr_seq) || '차 승인자'   AS appr_step_info
+             , emp00_emp_no                                         AS appr_emp_no      -- 원본 2026-10-30 (CH-0081)
           FROM tdm58_chck_appr_step
                INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm58_chck_org_id
                INNER JOIN tdm50_chck_job ON ( tdm50_company_id = tdm51_company_id   AND

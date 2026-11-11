@@ -998,13 +998,18 @@ export interface TdmChckOrg {
   orgName?: string | null;
   orgManagerId?: number | null;
   orgManagerName?: string | null;
-  dutyCnt?: number | null;
-  manlCnt?: number | null;
   monthManlCnt?: number | null;
   monthManlDoneCnt?: number | null;
   monthManlUndoneCnt?: number | null;
   orgStatusCode?: string | null;
   orgStatusName?: string | null;
+  /** 단계 Y/N (원본 2026-10-30): 점검자확정·점검시작·점검완료·승인요청·승인시작·승인완료 */
+  statusFixYn?: boolean | null;
+  statusCheckStartYn?: boolean | null;
+  statusCheckEndYn?: boolean | null;
+  statusApprRequestYn?: boolean | null;
+  statusApprStartYn?: boolean | null;
+  statusApprEndYn?: boolean | null;
 }
 
 /** 이행점검 연결 상신문서 (AS-IS Tdm56_ChckRelateApprModel) */
@@ -1090,6 +1095,7 @@ export interface TdmChckApprStep {
   apprSeq?: string | null;
   apprEmpId: number;
   apprEmpName?: string | null;
+  apprEmpNo?: string | null;  // 사번 (원본 2026-10-30)
   apprOrgId?: number | null;
   apprOrgName?: string | null;
   apprStepInfo?: string | null;

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.tdm.dto;
 
-/** 승인선 한 행 (AS-IS Tdm58_ChckApprStepModel — tdm58_chck_appr_step.selectByChckOrgId) */
+/** 승인선 한 행 (AS-IS Tdm58_ChckApprStepModel — tdm58_chck_appr_step.selectByChckOrgId). apprEmpNo = 사번(원본 2026-10-30) */
 public record CheckApprStepRes(Long chckApprStepId, Long chckOrgId, String apprSeq, Long apprEmpId,
-                               String apprEmpName, Long apprOrgId, String apprOrgName, String apprStepInfo) {
+                               String apprEmpName, Long apprOrgId, String apprOrgName, String apprStepInfo,
+                               String apprEmpNo) {
 }

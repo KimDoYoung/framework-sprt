@@ -59,8 +59,10 @@ export const Tdm58_Lookup_ChckApprStep: React.FC<Props> = ({ target, onClose }) 
   const changeRowRef = useRef<(row: TdmChckApprStep, code: 'up' | 'down') => void>(() => undefined);
   const columnDefs = useMemo(() => [
     gb.textCenter('apprStepInfo', 120, '구분'),  // L187
-    gb.text('apprEmpName', 80, '성명'),  // L188 addTextFixCenter
-    gb.text('apprOrgName', 200, '부서명'),  // L189 addTextFix
+    // 원본 2026-10-30(CH-0197): 사번 열 추가, 성명 100 가운데, 창 폭 700
+    gb.textCenter('apprEmpNo', 100, '사번'),
+    gb.textCenter('apprEmpName', 100, '성명'),  // L188
+    gb.text('apprOrgName', 200, '부서명'),  // L189
     ...(readOnly ? [] : [
       moveCell('up', '위로', '▲', r => changeRowRef.current(r, 'up')),  // L190
       moveCell('down', '아래로', '▼', r => changeRowRef.current(r, 'down')),  // L191

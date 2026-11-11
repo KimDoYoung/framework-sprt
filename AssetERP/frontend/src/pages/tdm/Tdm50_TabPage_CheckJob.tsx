@@ -26,6 +26,7 @@ import { Apr01_Lookup_ApprLink } from '../apr/Apr01_Lookup_ApprLink';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { dynamicViewCell } from './tdmGridCells';
 import { Tdm55_Lookup_ChckRecord } from './Tdm55_Lookup_ChckRecord';
+import { ChckApprStepTarget, Tdm58_Lookup_ChckApprStep } from './Tdm58_Lookup_ChckApprStep';
 
 const gb01 = gbFor<TdmCheckExct>();
 const gb02 = gbFor<TdmChckOrg>();
@@ -34,7 +35,7 @@ const LINK_CODE = 'A94';   // 책무이행점검보고서
 const RD_MRD = 'Tdm50_Rd_CheckJob';
 const RD_OPTIONS = '/rpdflinebreak [1] /rwordbreakopt [1] /rsaveopt [2049]';
 const SUM01 = { labelField: 'roleName', label: '계', sum: ['chckManlCnt'] };                                     // getSumGrid("계", 2, 4, 4)
-const SUM02 = { labelField: 'orgManagerName', label: '계', sum: ['dutyCnt', 'manlCnt', 'monthManlCnt', 'monthManlDoneCnt', 'monthManlUndoneCnt'] };  // getSumGrid("계", 2, 3, 7)
+const SUM02 = { labelField: 'orgManagerName', label: '계', sum: ['monthManlCnt'] };  // getSumGrid("계", 2, 3, 3) — 원본 2026-10-30
 
 export interface CheckJobTabTarget {
   /** 이 탭의 보고CEO 직책 */
@@ -57,6 +58,7 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const [rdUrl, setRdUrl] = useState<string | null>(null);
   const [recordOrgId, setRecordOrgId] = useState<number | null>(null);
+  const [stepTarget, setStepTarget] = useState<ChckApprStepTarget | null>(null);   // [승인선] Tdm58_Lookup_ChckApprStep.view (원본 2026-10-30)
   // 전자결재 창: 새 문서(insertLinkApprovals, 문서분류) 또는 기존 문서(retrieveApproval) / 문서가 둘 이상이면 Apr01_Lookup_ApprLink
   const [linkClassTreeId, setLinkClassTreeId] = useState<number | null>(null);
   const [classPickOpen, setClassPickOpen] = useState(false);          // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중
@@ -119,16 +121,20 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
     const selectList = selectedRows();
     if (selectList.length === 0) return void message.warning('직책(임원)을 선택하세요');
 
+    // 원본 2026-10-30·11-06(CH-0192): 당월 점검이 0건인 직책은 대상이 아니다(잠금 대상에서 빼고, 고른 것이 모두 0건이면 안내).
+    //   잠금은 0건이어도 책무임원 제출완료를 먼저 본다. 안내 문구에 임원 이름
     const updateList: TdmCheckExct[] = [];
+    const zeroList: TdmCheckExct[] = [];
     for (const m of selectList) {
-      if (isLock) {
-        if (!m.exctApprYn) return void message.warning('승인 완료되지 않은 경우 잠금설정 할 수 없습니다');
-        if (!m.lockYn) updateList.push(m);
-      } else if (m.lockYn) {
-        updateList.push(m);
+      if (isLock && !m.exctApprYn) return void message.warning(`책무임원(${m.exctName ?? ''})의 제출완료 후 잠금설정 할 수 있습니다`);
+      if ((m.chckManlCnt ?? 0) !== 0) {
+        if (isLock ? !m.lockYn : m.lockYn) updateList.push(m);
+      } else {
+        zeroList.push(m);
       }
     }
     if (updateList.length === 0) {
+      if (zeroList.length !== 0 && zeroList.length === selectList.length) return void message.warning('대상이 아닙니다 (당월 점검건수 = 0)');
       return void message.warning(isLock
         ? '대상 직책(임원)을 선택하세요. 이미 잠금설정된 직책(임원)은 해당되지 않습니다'
         : '대상 직책(임원)을 선택하세요. 잠금설정이 안된 직책(임원)은 해당되지 않습니다');
@@ -277,29 +283,30 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
   // buildGrid01() L186-215 (setChecked(MULTI), addDynamicCell(buttonEnable, 70, "이행점검<br>보고서", actionCell, true))
   const columns01 = useMemo(() => [
     gb01.text('roleName', 200, '직책'),  // L206
-    gb01.textCenter('exctName', 100, '임원'),  // L207
-    gb01.long('chckManlCnt', 70, '당월점검'),  // L208
-    gb01.booleanYn2('exctApprYn', 70, '제출완료'),  // L209
+    gb01.textCenter('exctName', 85, '임원'),  // L207 (원본 2026-10-30 폭·제목)
+    gb01.long('chckManlCnt', 60, '당월<br>점검'),  // L208
+    gb01.booleanYn2('exctApprYn', 60, '제출<br>완료<br>#1458'),  // L209
     gb01.booleanYn2('lockYn', 60, '잠금'),  // L210
     dynamicViewCell<TdmCheckExct>('buttonEnable', 'buttonEnable', 70, '이행점검<br>보고서', row => { void onViewReport(row); }),  // L212
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
-  // buildGrid02() L217-239: 묶음 헤더 "당월 점검항목" HeaderGroupMap(0, 6, HeaderGroupConfig(…, 1, 3)) — 6번 열(완료)부터 3칸(완료·미완료·진행상태)
+  // buildGrid02() — 원본 2026-10-30(CH-0192): 묶음 헤더·관리의무·점검항목·완료·미완료 열을 빼고, 단계 Y/N 6개(어느 화면에서 하는지 #번호)와 [승인선]을 넣었다
   const columns02 = useMemo(() => [
-    gb02.text('orgName', 200, '점검부서'),  // L228
-    gb02.textCenter('orgManagerName', 80, '담당자'),  // L229
-    gb02.long('dutyCnt', 80, '관리의무'),  // L230
-    gb02.long('manlCnt', 80, '점검항목'),  // L231
-    gb02.long('monthManlCnt', 80, '대상'),  // L232
-    {
-      ...gb02.group('당월 점검항목', [
-        gb02.long('monthManlDoneCnt', 80, '완료'),  // L233
-        gb02.long('monthManlUndoneCnt', 80, '미완료'),  // L234
-        gb02.textStatus('orgStatusName', 80, '진행상태'),  // L235
-      ]),
-    },
-    iconCell<TdmChckOrg>('view', 'actionCell', 75, '승인이력', row => setRecordOrgId(row.chckOrgId)),  // L236 → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
+    gb02.text('orgName', 180, '점검부서'),
+    gb02.textCenter('orgManagerName', 85, '담당자'),
+    gb02.long('monthManlCnt', 70, '당월<br>점검'),
+    gb02.booleanYn2('statusFixYn', 60, '점검자<br>확정<br>#1456'),
+    gb02.booleanYn2('statusCheckStartYn', 60, '점검<br>시작<br>#1457'),
+    gb02.booleanYn2('statusCheckEndYn', 60, '점검<br>완료<br>#1457'),
+    gb02.booleanYn2('statusApprRequestYn', 60, '승인<br>요청<br>#1456'),
+    gb02.booleanYn2('statusApprStartYn', 60, '승인<br>시작<br>#1458'),
+    gb02.booleanYn2('statusApprEndYn', 60, '승인<br>완료<br>#1458'),
+    gb02.textStatus('orgStatusName', 85, '진행상태'),
+    // 승인선(ImageCell "View") → Tdm58_Lookup_ChckApprStep.view(chckOrgId, chckJobModel.getStartDate())
+    iconCell<TdmChckOrg>('view', 'stepCell', 55, '승인선', row => setStepTarget({ chckOrgId: row.chckOrgId, stdDate: job.startDate ?? '', mode: 'view' })),
+    iconCell<TdmChckOrg>('view', 'actionCell', 55, '승인<br>이력', row => setRecordOrgId(row.chckOrgId)),  // → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
   const apprLabel = (() => {
@@ -325,7 +332,7 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
         </span>
       </div>
       <div style={{ flex: 1, minHeight: 0, display: 'flex', borderTop: '1px solid #d9d9d9' }}>
-        <div style={{ flex: 'none', width: 650, minWidth: 0 }}>
+        <div style={{ flex: 'none', width: 610, minWidth: 0 }}>
           {/* [E5] grid01.SelectionChanged [선택>0] (L176) → retrieve02() */}
           <MultiGrid<TdmCheckExct>
             gridRef={grid01Ref}
@@ -366,6 +373,7 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
       <Apr01_Lookup_ApprLink apprIds={linkApprIds} onClosed={() => void getApprStatus()} onClose={() => setLinkApprIds(null)} />
       <RdViewer url={rdUrl} title="이행점검보고서" onClose={() => setRdUrl(null)} />
       <Tdm55_Lookup_ChckRecord chckOrgId={recordOrgId} onClose={() => setRecordOrgId(null)} />
+      <Tdm58_Lookup_ChckApprStep target={stepTarget} onClose={() => setStepTarget(null)} />
       {/* messageBox "파일 생성" (L566-594): 430×170, 진행 중 닫을 수 없고 끝나면 [닫기] — [E6] button01[닫기].Select (L582) → messageBox.hide() */}
       <Modal
         open={progress !== null}

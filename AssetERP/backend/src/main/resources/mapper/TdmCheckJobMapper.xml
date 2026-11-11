@@ -491,28 +491,32 @@
       정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
     -->
     <select id="selectOrgsByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckOrgRes">
+        <!-- 원본 2026-10-30(CH-0079 506e5ea5c·f8ef4a3c8): 관리의무·점검항목 수(tdm43 조인) 빼고, 진행상태에 반려(26), 단계 6개(Y/N) 추가 -->
         SELECT t.tdm51_chck_org_id                                                                        AS chck_org_id
              , t.tdm51_org_id                                                                             AS org_id
              , t.tdm51_org_nm                                                                             AS org_name
              , t.tdm51_org_manager_id                                                                     AS org_manager_id
              , t.tdm51_org_manager_nm                                                                     AS org_manager_name
-             , t.tdm51_duty_cnt                                                                           AS duty_cnt
-             , t.tdm51_manl_cnt                                                                           AS manl_cnt
              , t.tdm51_month_manl_cnt                                                                     AS month_manl_cnt
              , t.tdm51_month_manl_done_cnt                                                                AS month_manl_done_cnt
              , t.tdm51_month_manl_undone_cnt                                                              AS month_manl_undone_cnt
              , t.tdm51_org_status_cd                                                                      AS org_status_code
              , f_cdnm('TdmCheckStatus', t.tdm51_org_status_cd, t.tdm51_company_id, CAST(#{stdDate} AS date)) AS org_status_name
+             , t.tdm51_status_fix_yn                                                                      AS status_fix_yn
+             , t.tdm51_status_check_start_yn                                                              AS status_check_start_yn
+             , t.tdm51_status_check_end_yn                                                                AS status_check_end_yn
+             , t.tdm51_status_appr_request_yn                                                             AS status_appr_request_yn
+             , t.tdm51_status_appr_start_yn                                                               AS status_appr_start_yn
+             , t.tdm51_status_appr_end_yn                                                                 AS status_appr_end_yn
           FROM (
                 SELECT tdm51_chck_org.*
                      , org00_kor_nm                                                                             AS tdm51_org_nm                 /*점검부서*/
                      , tdm08_person_id                                                                          AS tdm51_org_manager_id         /*부서담당자ID*/
                      , f_emp_kor_nm(tdm08_person_id)                                                            AS tdm51_org_manager_nm         /*부서담당자명*/
-                     , duty_cnt                                                                                 AS tdm51_duty_cnt               /*관리의무*/
-                     , manl_cnt                                                                                 AS tdm51_manl_cnt               /*점검항목*/
                      , CASE WHEN month_manl_cnt = 0 THEN ''
                             ELSE (CASE WHEN month_manl_cnt = month_manl_25_cnt  THEN '25'
                                        WHEN month_manl_cnt = month_manl_19_cnt  THEN '19'
+                                       WHEN month_manl_26_cnt != 0              THEN '26'
                                        WHEN month_manl_21_cnt != 0              THEN '21'
                                        WHEN month_manl_20_cnt != 0              THEN '20'
                                        WHEN month_manl_19_cnt != 0              THEN '11'
@@ -523,6 +527,17 @@
                        + month_manl_21_cnt + month_manl_25_cnt )                                                AS tdm51_month_manl_done_cnt    /*당월 점검항목_완료*/
                      , month_manl_cnt - ( month_manl_19_cnt + month_manl_20_cnt
                                         + month_manl_21_cnt + month_manl_25_cnt )                               AS tdm51_month_manl_undone_cnt  /*당월 점검항목_미완료*/
+                     , CASE WHEN month_manl_cnt != 0 AND month_manl_null_cnt = 0 THEN true ELSE false END       AS tdm51_status_fix_yn          /*확정*/
+                     , CASE WHEN month_manl_cnt != 0 AND month_manl_null_cnt = 0 AND month_manl_10_cnt = 0
+                            THEN true ELSE false END                                                            AS tdm51_status_check_start_yn  /*점검시작*/
+                     , CASE WHEN month_manl_cnt != 0 AND month_manl_null_cnt = 0 AND month_manl_10_cnt = 0 AND month_manl_11_cnt = 0
+                             AND month_manl_26_cnt = 0 THEN true ELSE false END                                 AS tdm51_status_check_end_yn    /*점검완료*/
+                     , CASE WHEN month_manl_cnt != 0 AND month_manl_null_cnt = 0 AND month_manl_10_cnt = 0 AND month_manl_11_cnt = 0
+                             AND month_manl_26_cnt = 0 AND month_manl_19_cnt = 0 THEN true ELSE false END       AS tdm51_status_appr_request_yn /*승인요청*/
+                     , CASE WHEN month_manl_cnt != 0 AND month_manl_null_cnt = 0 AND month_manl_10_cnt = 0 AND month_manl_11_cnt = 0
+                             AND month_manl_26_cnt = 0 AND month_manl_19_cnt = 0 AND month_manl_20_cnt = 0
+                            THEN true ELSE false END                                                            AS tdm51_status_appr_start_yn   /*승인시작*/
+                     , CASE WHEN month_manl_cnt = month_manl_25_cnt THEN true ELSE false END                    AS tdm51_status_appr_end_yn     /*승인완료*/
                   FROM tdm51_chck_org
                        INNER JOIN tdm50_chck_job ON ( tdm50_company_id  = tdm51_company_id  AND
                                                       tdm50_check_ym    = tdm51_check_ym    )
@@ -534,21 +549,15 @@
                                                AND tdm08_org_id       = tdm51_org_id
                                                AND tdm50_start_date BETWEEN tdm08_start_date AND COALESCE(tdm08_end_date,'9999-12-31'::date)
                                           ) tdm08 ON TRUE
-                       INNER JOIN ( SELECT tdm43_manl_org_id
-                                         , COUNT(DISTINCT tdm43_task_relate_duty_id)    duty_cnt
-                                         , COUNT(*)                                     manl_cnt
-                                      FROM tdm43_manl
-                                     WHERE tdm43_company_id = #{companyId}
-                                       AND COALESCE(tdm43_start_date,'1900-01-01'::date) &lt;= (CAST(#{checkYm} AS varchar)||'.01')::date
-                                     GROUP BY tdm43_manl_org_id ) tdm43 ON tdm43_manl_org_id = tdm51_manl_org_id
                        INNER JOIN LATERAL ( SELECT COUNT(*)                                                         month_manl_cnt
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '26' THEN 1 ELSE 0 END)    month_manl_26_cnt   /*승인반려(26)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '25' THEN 1 ELSE 0 END)    month_manl_25_cnt   /*승인완료(25)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '21' THEN 1 ELSE 0 END)    month_manl_21_cnt   /*승인진행(21)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '20' THEN 1 ELSE 0 END)    month_manl_20_cnt   /*승인요청(20)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '19' THEN 1 ELSE 0 END)    month_manl_19_cnt   /*점검완료(19)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '11' THEN 1 ELSE 0 END)    month_manl_11_cnt   /*점검진행(11)*/
-                                                 , SUM(CASE WHEN tdm52_check_status_cd = '10' THEN 1 ELSE 0 END)    month_manl_10_cnt   /*점검대기(10)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '26'  THEN 1 ELSE 0 END)   month_manl_26_cnt   /*승인반려(26)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '25'  THEN 1 ELSE 0 END)   month_manl_25_cnt   /*승인완료(25)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '21'  THEN 1 ELSE 0 END)   month_manl_21_cnt   /*승인진행(21)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '20'  THEN 1 ELSE 0 END)   month_manl_20_cnt   /*승인요청(20)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '19'  THEN 1 ELSE 0 END)   month_manl_19_cnt   /*점검완료(19)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '11'  THEN 1 ELSE 0 END)   month_manl_11_cnt   /*점검진행(11)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '10'  THEN 1 ELSE 0 END)   month_manl_10_cnt   /*점검대기(10)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd IS NULL THEN 1 ELSE 0 END)   month_manl_null_cnt /*확정전*/
                                               FROM tdm52_chck_manl
                                              WHERE tdm52_chck_org_id = tdm51_chck_org_id ) tdm52 ON TRUE
                  WHERE tdm51_company_id = #{companyId}
