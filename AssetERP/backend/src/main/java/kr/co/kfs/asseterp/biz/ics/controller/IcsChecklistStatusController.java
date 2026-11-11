@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistStatusRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsChecklistStatusService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
+import kr.co.kfs.asseterp.common.util.Texts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ContentDisposition;
@@ -60,14 +61,19 @@ public class IcsChecklistStatusController {
     }
 
     /**
-     * #1230 [상신] 창(Ics16_Lookup_RelateAppr) [미리보기] — AS-IS sys.Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail).
-     * windowClassName은 원본이 넘기는 값("Ics15_Tab_ChecklistConfirm") 그대로 서버가 정한다
+     * AS-IS sys.Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail).
+     * ① #1230 [상신] 창(Ics16_Lookup_RelateAppr) [미리보기] — 대분류만(중분류 없음, 검색어 "%", 미제출·미확인 false)
+     * ② #1235 [출력/다운로드] viewRd() (원본 2026-11-04 CH-0179) — 화면 조건 그대로(검색어는 서버가 %…%)
+     * windowClassName은 원본이 넘기는 값("Ics15_Tab_ChecklistConfirm", 두 곳 같음) 그대로 서버가 정한다
      */
     @PostMapping("/details/rd-print")
     public ApiResponse<String> insertRdPrint(@AuthenticationPrincipal UserPrincipal principal,
                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
-                                             @RequestParam String cycleType, @RequestParam Long checklistLClassId) {
-        return ApiResponse.ok(service.insertRdPrint(principal, "Ics15_Tab_ChecklistConfirm", stdDate, cycleType, checklistLClassId, null, "%", false, false));
+                                             @RequestParam String cycleType, @RequestParam(required = false) Long checklistLClassId,
+                                             @RequestParam(required = false) Long checklistMClassId, @RequestParam(defaultValue = "") String searchText,
+                                             @RequestParam(defaultValue = "false") boolean unCheckYn, @RequestParam(defaultValue = "false") boolean unConfirmYn) {
+        return ApiResponse.ok(service.insertRdPrint(principal, "Ics15_Tab_ChecklistConfirm", stdDate, cycleType, checklistLClassId, checklistMClassId,
+                Texts.like(searchText), unCheckYn, unConfirmYn));
     }
 
     /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdChecklistDetail + RD 리포트 Ics15_Rd_ChecklistDetail → 한 시트 xlsx) */
