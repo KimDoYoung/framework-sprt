@@ -49,6 +49,16 @@ class AprApprNewDbTest {
         steps.stream().skip(1).filter(s -> "10".equals(s.stepTypeCode())).forEach(s -> assertThat(s.stepStatusCode()).isEqualTo("10"));
     }
 
+    @Autowired kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper mapper;
+
+    /** CH-0215(AS-IS 85d1a1874): 조직 이력(org02_info)이 여러 줄이어도 조직장은 한 번만 (29022는 이력 2줄) */
+    @Test
+    void 조직이력이_여러줄이어도_조직장은_중복되지_않는다() {
+        var heads = mapper.selectOrgHeads(28000L, null, 29022L, "10");
+        assertThat(heads).isNotEmpty();
+        assertThat(heads.stream().map(h -> h.personId() + "/" + h.orgCodeId()).distinct().count()).isEqualTo(heads.size());
+    }
+
     @Test
     void 없는_문서분류는_열_수_없다() {
         org.junit.jupiter.api.Assertions.assertThrows(kr.co.kfs.asseterp.common.error.BusinessException.class, () -> service.open(user(29035L), -1L));

@@ -152,7 +152,7 @@
           FROM ( SELECT b.org01_code_id, c.org02_level_cd
                    FROM org_list a
                         INNER JOIN org01_code b ON a.org02_code_id = b.org01_code_id
-                        INNER JOIN org02_info c ON b.org01_code_id = c.org02_code_id ) t1
+                        INNER JOIN org02_info c ON b.org01_code_id = c.org02_code_id AND a.org02_mod_date = c.org02_mod_date ) t1  <!-- AS-IS 85d1a1874(11-04) 조직 이력 중 그 시점 행만 (CH-0215) -->
                INNER JOIN emp00 t2 ON t2.emp00_org_code_id = t1.org01_code_id
                                   AND f_today() BETWEEN t2.emp00_trans_date AND COALESCE(t2.emp00_close_date, to_date('99991231','yyyyMMdd'))
                                   AND COALESCE(t2.emp00_org_head_yn, 'false') LIKE 'true'
