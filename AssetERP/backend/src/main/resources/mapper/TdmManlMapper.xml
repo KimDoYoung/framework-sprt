@@ -125,8 +125,10 @@
         <if test="useYn == 'false'">
            AND COALESCE(tdm43_start_date, '1999-01-01'::date) > COALESCE(std_date, f_today())
         </if>
-         ORDER BY tdm43_task_nm COLLATE "ko-KR-x-icu"
-                , tdm43_task_relate_detail_seq, tdm43_task_relate_duty_seq, tdm43_manl_cd
+         ORDER BY tdm43_task_nm COLLATE "ko_KR.utf8"   -- 원본 2026-10-23(CH-0075): 순번 대신 이름 한글 정렬
+                , tdm43_task_relate_detail_nm COLLATE "ko_KR.utf8"
+                , tdm43_task_relate_duty_nm COLLATE "ko_KR.utf8"
+                , tdm43_manl_cd COLLATE "ko_KR.utf8"
     </select>
 
     <!-- 삭제 대상 점검항목이 속한 부서 책무매뉴얼 확인용(TOBE 추가) -->

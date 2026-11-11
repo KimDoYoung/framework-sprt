@@ -21,8 +21,8 @@
            AND COALESCE(tdm50_end_yn,'false') != 'true'
            AND EXISTS ( SELECT 1
                           FROM tdm51_chck_org
-                               INNER JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
-                         WHERE tdm51_chck_job_id = tdm50_chck_job_id )
+                               INNER JOIN tdm52_chck_manl ON tdm52_company_id = tdm51_company_id AND tdm52_chck_org_id = tdm51_chck_org_id
+                         WHERE tdm51_company_id = tdm50_company_id AND tdm51_chck_job_id = tdm50_chck_job_id )   -- 원본 2026-11-03 회사 조건(CH-0077)
          ORDER BY tdm50_check_ym DESC
          LIMIT 1
     </select>
