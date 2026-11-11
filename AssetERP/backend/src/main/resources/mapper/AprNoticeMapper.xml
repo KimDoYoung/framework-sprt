@@ -64,6 +64,22 @@
         SELECT apr01_title FROM apr01_appr WHERE apr01_appr_id = #{apprId}
     </select>
 
+    <!-- AS-IS apr01_appr.selectById 중 apr01_title·class_tree_name_all_path (통합알림 T011·T012·T013·T02 문구, AS-IS 98d5afdd6 AlertService) -->
+    <select id="selectApprAlert" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAlertAppr">
+        SELECT apr01_title                                     AS title
+             , f_class_tree_nm_allpath(apr01_class_tree_id)    AS class_tree_name_all_path
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS sch07_alarm_record.updateInfo (sch07_alarm_record.xml:34) -->
+    <update id="updateAlarmRecordSendInfo">
+        UPDATE sch07_alarm_record
+           SET sch07_send_info      = #{sendInfo}
+             , sch07_send_date_time = f_sysdate()
+         WHERE sch07_alarm_record_id = #{alarmRecordId}
+    </update>
+
     <select id="selectSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep">
         SELECT <include refid="stepColumns"/>
           FROM apr04_appr_step

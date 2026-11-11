@@ -33,6 +33,12 @@ public interface AprNoticeMapper {
     /** AS-IS apr01_appr.selectById 중 제목 */
     String selectApprTitle(@Param("apprId") Long apprId);
 
+    /** AS-IS apr01_appr.selectById 중 제목·문서분류 전체 경로 (통합알림 T011·T012 문구) */
+    kr.co.kfs.asseterp.biz.apr.dto.AprAlertAppr selectApprAlert(@Param("apprId") Long apprId);
+
+    /** AS-IS sch07_alarm_record.updateInfo — 스케줄 알림(T04) 메일을 보낸 주소 */
+    int updateAlarmRecordSendInfo(@Param("alarmRecordId") Long alarmRecordId, @Param("sendInfo") String sendInfo);
+
     /** AS-IS apr04_appr_step.selectByApprId 중 알림에 쓰는 열 (정렬 f_to_number(seq), 단계코드, ID) */
     List<AprNoticeStep> selectSteps(@Param("apprId") Long apprId);
 

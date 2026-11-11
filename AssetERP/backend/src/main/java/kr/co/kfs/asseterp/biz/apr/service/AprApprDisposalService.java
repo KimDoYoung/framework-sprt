@@ -89,6 +89,6 @@ public class AprApprDisposalService {
         }
         disposalMapper.insertHistory(user.getCompanyId(), user.getUserId(), LocalDateTime.now(), apprId, "10");
         mapper.insertDisposal(mapper.selectNextId(), user.getCompanyId(), user.getUserId(), req.reason(), req.confirmEmpId(), apprId);
-        notice.dispatchAfterCommit(notice.planDisposalRequest(user.getCompanyId(), req.confirmEmpId(), doc.title()));
+        notice.dispatchAfterCommit(notice.planDisposalRequest(user.getCompanyId(), req.confirmEmpId(), apprId));
     }
 }

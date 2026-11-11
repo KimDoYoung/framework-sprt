@@ -150,7 +150,7 @@ public class AprApprWriteService {
         // 알림 (L417-519 참조자 / L664-826 다음 결재자) — 결재요청일 때만, 커밋 뒤에 보낸다
         if (request) {
             Long classTreeId = old != null ? old.classTreeId() : req.classTreeId();
-            notice.dispatchAfterCommit(notice.planAfterRequest(companyId, classTreeId, req.title(), user.getName(), statusCode, noticeSteps));
+            notice.dispatchAfterCommit(notice.planAfterRequest(companyId, apprId, classTreeId, req.title(), statusCode, noticeSteps));
         }
         // 바로 완료(30)의 대외문서는 AS-IS가 PDF를 만들었다(makepdf) — 미리보기 PDF와 함께 V04에서 연결한다
         return new AprApprWriteRes(true, null, apprId, statusCode, false, null);

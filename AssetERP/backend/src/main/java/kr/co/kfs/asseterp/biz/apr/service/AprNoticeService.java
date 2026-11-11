@@ -1,13 +1,13 @@
 package kr.co.kfs.asseterp.biz.apr.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprAltRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes;
@@ -17,101 +17,76 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprDetailMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprNoticeMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
-import kr.co.kfs.asseterp.common.config.properties.NoticeProperties;
-import kr.co.kfs.asseterp.common.notice.NoticeResult;
-import kr.co.kfs.asseterp.common.notice.NoticeSender;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
- * 결재 처리 뒤 알림 (AS-IS server/apr/Apr04_ApprStep.confirmUpdate L144-561 · clearApprStepId L960-1131 의 앱알림·메일·SMS 부분, AA01).
- * 두 단계: ① plan*() — DB를 읽어 "누구에게 무엇을" 정한다(쓰기 없음, 테스트 대상) ② dispatchAfterCommit() — 커밋 뒤 NoticeSender로 보낸다(롤백이면 안 보냄).
+ * 결재·폐기·휴가취소·사업비 알림 대상 정하기 (AS-IS server/apr/Apr04_ApprStep.confirmUpdate·clearApprStepId·updateList, Apr01_Appr.update,
+ * Apr90_DisposalList.modelUpdate, Emp20_Leave.cancelUpdate, Pay50_Expense.confirm/rejectSendMessage, AA01).
+ * 두 단계: ① plan*() — DB를 읽어 "누구에게" 정하고 사람마다 {@link AlertService#plan}으로 "무엇을" 정한다(쓰기 없음, 테스트 대상)
+ * ② dispatchAfterCommit() — SMS 발송 기록을 남기고 커밋 뒤 보낸다(롤백이면 안 보냄).
+ * 원본 98d5afdd6(2026-11-11, CH-0249·0256·0260·0261·0285·0312)부터 문구·발송 조건은 통합알림(AlertService) 하나로 모였다.
  * 코드: 20 다음 결재자 · 30 결재완료 · 40 반려 · 50 이전 결재자 승인취소. 수신설정 코드: T011 상신문서(결재순서) · T012 상신문서(결재완료).
- * AS-IS 문구·조건을 그대로 따른다(아래 "원본 그대로" 표시한 곳은 이상해 보여도 원본이 그렇다).
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AprNoticeService {
 
-    private static final String FOOTER = "<br/><br/>Asset-ERP 시스템에 접속 후 MyPage 메인화면에서 자세한 내용을 확인부탁드립니다.";
-
     private final AprNoticeMapper mapper;
     private final AprApprDetailMapper detailMapper;
-    private final NoticeProperties props;
-    private final NoticeSender sender;
+    private final AlertService alert;
 
     // ───────────────────────── 계획 ─────────────────────────
 
-    /** [승인]·[반려] 뒤 — docStatus: 20 결재중 · 30 완료 · 40 반려 */
+    /** [승인]·[반려] 뒤 (confirmUpdate L508-653) — docStatus: 20 결재중 · 30 완료 · 40 반려. 회사는 문서의 회사 */
     public List<AprNoticeCall> planAfterConfirm(UserPrincipal user, AprApprDetailRes doc, String docStatus) {
         List<AprNoticeCall> out = new ArrayList<>();
         Long apprId = doc.apprId();
-        AprNoticePerson reg = mapper.selectPerson(doc.regEmpId());
-        String classTreeName = mapper.selectClassTreeName(doc.classTreeId());
-        if (reg == null || classTreeName == null) {
-            return out;       // AS-IS: 상신자·분류를 못 찾으면 알림을 멈춘다
-        }
-        String title = doc.title();
-        String loc = mapper.selectCompanyLoc(user.getCompanyId());
+        Long companyId = doc.companyId();
         List<AprNoticeStep> steps = mapper.selectSteps(apprId);
 
         if ("30".equals(docStatus) || "40".equals(docStatus)) {
-            // L189-299: 결재완료/반려 — 마지막 결재자와 참조자를 뺀, 결재한 사람(상신자 포함)에게. 휴대폰 번호가 없으면 그 사람은 모든 알림을 건너뛴다(원본 그대로)
+            // L512-545: 결재완료/반려 — 마지막 결재자와 참조자를 뺀, 결재한 사람(상신자 포함)에게
             Long lastOne = mapper.selectLastStepEmp(apprId);
+            String code = "30".equals(docStatus) ? "30" : "40";
             for (AprNoticeStep m : steps) {
                 if (Objects.equals(lastOne, m.stepEmpId())) {
                     continue;
                 }
-                if (!"30".equals(m.stepTypeCode()) && m.apprDate() != null) {
-                    AprNoticePerson p = mapper.selectPerson(m.stepEmpId());
-                    if (p == null || p.mobileTelNo() == null) {
-                        continue;
-                    }
-                    // 앱알림 문구는 반려(40)여도 "30"(결재완료)으로 보낸다(원본 그대로)
-                    plan(out, p, loc, loc, "30".equals(docStatus) ? "30" : "40", "", classTreeName, title, "T012", "30");
+                if (!"30".equals(m.stepTypeCode()) && m.apprDate() != null && person(m.stepEmpId()) != null) {
+                    out.addAll(alert.plan("T012", m.stepEmpId(), companyId, params(apprId, code)));
                 }
             }
             if ("30".equals(docStatus)) {
-                // L301-398: 결재완료면 참조자에게 — 번호가 없는 참조자를 만나면 남은 참조자까지 멈춘다(원본 break)
+                // L547-567: 결재완료면 참조자에게
                 for (AprNoticeStep m : steps) {
-                    if ("30".equals(m.stepTypeCode())) {
-                        AprNoticePerson p = mapper.selectPerson(m.stepEmpId());
-                        if (p != null) {
-                            if (p.mobileTelNo() == null) {
-                                break;
-                            }
-                            plan(out, p, mapper.selectCompanyLoc(p.companyId()), mapper.selectCompanyLoc(doc.companyId()), "30", p.korName(), classTreeName, title, "T012", "30");
-                        }
+                    if ("30".equals(m.stepTypeCode()) && person(m.stepEmpId()) != null) {
+                        out.addAll(alert.plan("T012", m.stepEmpId(), companyId, params(apprId, "30")));
                     }
                 }
             }
         } else {
-            // L399-561: 결재중 — 다음 결재자에게
-            planNext(out, steps, mapper.selectLastCheck(apprId), mapper.selectNextCheck(apprId), loc, "20", reg.korName(), classTreeName, title, "T011");
+            // L568-653: 결재중 — 다음 결재자에게
+            planNext(out, steps, mapper.selectLastCheck(apprId), mapper.selectNextCheck(apprId), companyId, "20");
         }
         return out;
     }
 
     /**
-     * [결재요청] 뒤 — apr.Apr01_Appr.update(V03). 결재선에 결재·합의·인감이 없어 바로 결재완료(30)면 참조자에게 L417-519(번호 없는 참조자를 만나면 남은 참조자까지 멈춘다),
-     * 아니면 L664-826: 첫 결재·합의·인감 단계의 사원에게 "결재문서가 도착했습니다"(대결자가 아니라 단계 담당자 본인). 합의가 이어지면 다음 합의까지, 결재가 나오면 멈춘다
+     * [결재요청] 뒤 — apr.Apr01_Appr.update(V03). 바로 결재완료(30)면 참조자에게 "상신과 동시에 결재완료"(L423-448, code 99 — 문서가 아직 없어
+     * 분류명·제목을 넘긴다), 아니면 L600-638: 첫 결재·합의·인감 단계의 사원에게 "다음 결재자"(대결자가 아니라 단계 담당자 본인). 합의가 이어지면 다음 합의까지, 결재가 나오면 멈춘다
      */
-    public List<AprNoticeCall> planAfterRequest(Long companyId, Long classTreeId, String title, String regName, String docStatus, List<AprNoticeStep> steps) {
+    public List<AprNoticeCall> planAfterRequest(Long companyId, Long apprId, Long classTreeId, String title, String docStatus, List<AprNoticeStep> steps) {
         List<AprNoticeCall> out = new ArrayList<>();
-        String classTreeName = mapper.selectClassTreeName(classTreeId);
-        String loc = mapper.selectCompanyLoc(companyId);
         if ("30".equals(docStatus)) {
+            String classTreeName = mapper.selectClassTreeName(classTreeId);
             for (AprNoticeStep m : steps) {
-                if ("30".equals(m.stepTypeCode())) {
-                    AprNoticePerson p = mapper.selectPerson(m.stepEmpId());
-                    if (p != null) {
-                        if (p.mobileTelNo() == null) {
-                            break;
-                        }
-                        plan(out, p, loc, loc, "30", p.korName(), classTreeName, title, "T012", "30");
-                    }
+                if ("30".equals(m.stepTypeCode()) && person(m.stepEmpId()) != null) {
+                    Map<String, Object> p = new HashMap<>();
+                    p.put("classTreeName", classTreeName);
+                    p.put("titleName", title);
+                    p.put("code", "99");
+                    out.addAll(alert.plan("T012", m.stepEmpId(), companyId, p));
                 }
             }
             return out;
@@ -125,9 +100,8 @@ public class AprNoticeService {
             if (send && "10".equals(type)) {
                 break;
             }
-            AprNoticePerson p = person(m.stepEmpId());
-            if (p != null) {
-                plan(out, p, loc, loc, "20", regName, classTreeName, title, "T011", "20");
+            if (person(m.stepEmpId()) != null) {
+                out.addAll(alert.plan("T011", m.stepEmpId(), companyId, params(apprId, "20")));
             }
             if ("20".equals(type)) {
                 send = true;
@@ -138,19 +112,13 @@ public class AprNoticeService {
         return out;
     }
 
-    /**
-     * 결재선 수정 [저장] 뒤 — apr.Apr04_ApprStep.updateList L2125-2257(V08): 저장할 결재선에서 처음으로 대기(10)인 결재·합의 단계의 사원 한 명에게 "결재문서가 도착했습니다".
-     * SMS 문구의 보낸 사람 이름은 상신자가 아니라 받는 사람 자신의 이름이다(원본 그대로, model.getEmpPersonModel().getKorName())
-     */
-    public List<AprNoticeCall> planAfterRetouch(Long companyId, Long classTreeId, String title, List<AprNoticeStep> steps) {
+    /** 결재선 수정 [저장] 뒤 — apr.Apr04_ApprStep.updateList L1744-1769(V08): 처음으로 대기(10)인 결재·합의 단계의 사원 한 명에게 "다음 결재자". 회사는 문서의 회사 */
+    public List<AprNoticeCall> planAfterRetouch(Long companyId, List<AprNoticeStep> steps) {
         List<AprNoticeCall> out = new ArrayList<>();
-        String classTreeName = mapper.selectClassTreeName(classTreeId);
-        String loc = mapper.selectCompanyLoc(companyId);
         for (AprNoticeStep m : steps) {
             if (("10".equals(m.stepTypeCode()) || "20".equals(m.stepTypeCode())) && "10".equals(m.stepStatusCode())) {
-                AprNoticePerson p = person(m.stepEmpId());
-                if (p != null) {
-                    plan(out, p, loc, loc, "20", p.korName(), classTreeName, title, "T011", "20");
+                if (person(m.stepEmpId()) != null) {
+                    out.addAll(alert.plan("T011", m.stepEmpId(), companyId, params(m.apprId(), "20")));
                 }
                 break;
             }
@@ -158,18 +126,17 @@ public class AprNoticeService {
         return out;
     }
 
-    /** [승인취소] 전 — clearApprStepId L960-1131: 취소 직전 상태에서 아직 대기인 단계의 결재자에게 "직전 결재자의 승인 취소" (code 50) */
+    /** [승인취소] 전 — clearApprStepId L660-740: 취소 직전 상태에서 아직 대기인 단계의 결재자에게 "직전 결재자의 승인 취소"(code 50). 회사는 받는 사람의 회사 */
     public List<AprNoticeCall> planBeforeCancelApproval(UserPrincipal user, AprApprDetailRes doc) {
         List<AprNoticeCall> out = new ArrayList<>();
-        String classTreeName = mapper.selectClassTreeName(doc.classTreeId());
         List<AprNoticeStep> next = mapper.selectNextCheck(doc.apprId());
-        planNext(out, next, mapper.selectLastCheck(doc.apprId()), next, mapper.selectCompanyLoc(user.getCompanyId()), "50", user.getName(), classTreeName, doc.title(), "T011");
+        planNext(out, next, mapper.selectLastCheck(doc.apprId()), next, null, "50");
         return out;
     }
 
-    /** 다음 결재자 찾기 (confirmUpdate L408-560 / clearApprStepId L10-166 — 같은 규칙) */
+    /** 다음 결재자 찾기 (confirmUpdate L577-650 / clearApprStepId L668-740 — 같은 규칙). companyId가 null이면 받는 사람의 회사 */
     private void planNext(List<AprNoticeCall> out, List<AprNoticeStep> source, List<AprNoticeStep> lastList, List<AprNoticeStep> nextList,
-                          String loc, String code, String name, String classTreeName, String title, String noticeCode) {
+                          Long companyId, String code) {
         boolean send = false;
         int e = 0;
         for (AprNoticeStep m : source) {
@@ -195,7 +162,7 @@ public class AprNoticeService {
                 break;
             }
             if (target != null) {
-                plan(out, target, loc, loc, code, name, classTreeName, title, noticeCode, code);
+                out.addAll(alert.plan("T011", target.personId(), companyId != null ? companyId : target.companyId(), params(m.apprId(), code)));
             }
             // #.1-3: 직전이 결재(10)이고 다음 대기자가 합의(20)면 합의가 끝날 때까지 이어서 알린다
             if (!lastList.isEmpty() && !nextList.isEmpty()) {
@@ -209,180 +176,75 @@ public class AprNoticeService {
         }
     }
 
-    /** 한 사람에게 갈 알림 — 앱알림(수신설정 확인) · 메일(회사 발송 여부 + 수신설정) · SMS(회사 발송 여부 + 번호 + 수신설정) */
-    private void plan(List<AprNoticeCall> out, AprNoticePerson p, String flagLoc, String urlLoc, String code, String name,
-                      String classTreeName, String title, String noticeCode, String talkCode) {
-        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), noticeCode) == 0) {
-            out.add(new AprNoticeCall("talk", p.emailAddress(), "T012".equals(noticeCode) ? "상신문서(결재완료)" : "상신문서(결재순서)", talkMessage(talkCode, classTreeName, title)));
+    /** [문서폐기 신청] 뒤 — apr.Apr90_DisposalList.modelUpdate L132-141: 승인자에게 T013 "'제목' 문서폐기 신청이 도착했습니다…" */
+    public List<AprNoticeCall> planDisposalRequest(Long companyId, Long confirmEmpId, Long apprId) {
+        if (person(confirmEmpId) == null) {
+            return new ArrayList<>();
         }
-        if (props.mailEnabled(flagLoc) && p.emailAddress() != null && mapper.countMailBlocked(p.personId(), noticeCode) == 0) {
-            out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP 전자결재", mailHtml(code, classTreeName, title)));
-        }
-        if (props.smsEnabled(flagLoc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), noticeCode) == 0) {
-            out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", smsMessage(code, name, title, urlLoc)));
-        }
+        return new ArrayList<>(alert.plan("T013", confirmEmpId, companyId, params(apprId, null)));
     }
 
-    /**
-     * [문서폐기 신청] 뒤 — apr.Apr90_DisposalList.modelUpdate L123-226: 승인자에게 앱알림(이메일 있고 T013 차단 아님) · 메일(회사 발송 여부 + 이메일 + 수신설정) · SMS(회사 발송 여부 + 번호 + 수신설정).
-     * 문구는 세 가지 모두 "'제목' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]" (메일·SMS는 줄바꿈 + 접속 주소가 붙는다)
-     */
-    public List<AprNoticeCall> planDisposalRequest(Long companyId, Long confirmEmpId, String title) {
-        List<AprNoticeCall> out = new ArrayList<>();
-        AprNoticePerson p = person(confirmEmpId);
-        if (p == null) {
-            return out;
-        }
-        String loc = mapper.selectCompanyLoc(companyId);
-        String msg = "'" + title + "'\r\n문서폐기 신청이 도착했습니다.\r\n※ 승인처리 화면:[1490 폐기문서 승인]" + "\r\n\r\n https://" + loc + ".k-fs.co.kr:5151/";
-        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "T013") == 0) {
-            out.add(new AprNoticeCall("talk", p.emailAddress(), "상신문서(폐기문서)", "'" + title + "' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]"));
-        }
-        if (props.mailEnabled(loc) && p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "T013") == 0) {
-            out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP", msg));
-        }
-        if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "T013") == 0) {
-            out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
-        }
-        return out;
-    }
-
-    /**
-     * [휴가취소] 전 — emp.Emp20_Leave.cancelUpdate L124-219: 결재선의 모든 사람(상신자 포함)에게 "'제목' 취소되었습니다".
-     * 앱알림(이메일 있고 T02 차단 아님, 제목 "휴가취소") · 메일(회사 메일 발송 + 이메일 + 차단 아님) · SMS(회사 SMS 발송 + 번호 + 차단 아님).
-     * 메일·SMS 본문은 "[Asset-ERP] 제목 취소되었습니다." (AS-IS는 접속 주소를 붙이지 않는다). 결재문서를 지우기 전에 불러야 한다
-     */
+    /** [휴가취소] 전 — emp.Emp20_Leave.cancelUpdate L141-156: 결재선의 모든 사람(상신자 포함)에게 T02 "[Asset-ERP] 제목 취소되었습니다." 회사는 받는 사람의 회사. 결재문서를 지우기 전에 불러야 한다 */
     public List<AprNoticeCall> planLeaveCancel(Long companyId, Long apprId) {
         List<AprNoticeCall> out = new ArrayList<>();
-        String title = mapper.selectApprTitle(apprId);
-        String loc = mapper.selectCompanyLoc(companyId);
-        String msg = "[Asset-ERP] " + title + " 취소되었습니다.";
         for (AprNoticeStep s : mapper.selectSteps(apprId)) {
             AprNoticePerson p = person(s.stepEmpId());
-            if (p == null) {
-                continue;
-            }
-            if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "T02") == 0) {
-                out.add(new AprNoticeCall("talk", p.emailAddress(), "휴가취소", "'" + title + "' 취소되었습니다."));
-            }
-            if (props.mailEnabled(loc) && p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "T02") == 0) {
-                out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP", msg));
-            }
-            if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "T02") == 0) {
-                out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
+            if (p != null) {
+                out.addAll(alert.plan("T02", p.personId(), p.companyId(), params(apprId, null)));
             }
         }
         return out;
     }
 
-    /** 회사 메일 발송 여부 (AS-IS getMailFlag(회사 위치)) — 사업비 반려 알림이 이 값으로 발송 표시를 남길지 정한다 */
-    public boolean mailEnabled(Long companyId) {
-        return props.mailEnabled(mapper.selectCompanyLoc(companyId));
-    }
-
-    /**
-     * [반려건 일괄 알림발송] — pay.Pay50_Expense.confirmSendMessage L701-812: 요청자 한 사람에게 "사업비요청 N건이 반려되었습니다".
-     * 앱알림(이메일 있고 A02 차단 아님) · 메일(회사 메일 발송 + 이메일 + 차단 아님 — AS-IS는 이메일이 아니라 비밀번호 유무를 봤다) ·
-     * SMS(회사 메일·SMS 발송 둘 다 + 번호 + 차단 아님 — AS-IS는 SMS 블록이 메일 블록 안에 들어 있다). 수신설정 코드는 셋 다 A02.
-     */
-    public List<AprNoticeCall> planExpenseReject(Long companyId, Long regEmpId, int count) {
-        return planExpense(companyId, regEmpId, "사업비요청 " + count + "건이 반려되었습니다", "사업비 요청 반려", "A02", true);
-    }
-
-    /**
-     * 지출결의서(경영관리) #1385 [반려건 일괄 알림발송] — pay.Pay50_Expense.rejectSendMessage L814-924: 받는 사람 한 명에게 "지출결의 N건이 반려되었습니다".
-     * 앱알림 제목 "지출결의 반려", 수신설정 코드 A03. 메일·SMS 조건은 planExpenseReject와 같다(메일은 이메일 유무 — AS-IS는 비밀번호 유무).
-     * AS-IS 그대로: 메일·SMS 수신차단 검사(sendCheckMail·sendCheckSms)에 expenseModel.getRegEmpId()를 넘기는데 목록 SQL(getRejectSendMessageList)이
-     * 그 열을 돌려주지 않아 늘 null이다 — 메일·SMS는 차단 설정과 상관없이 보낸다(앱알림만 받는 사람으로 검사)
-     */
-    public List<AprNoticeCall> planExpenseRejectByManager(Long companyId, Long empId, int count) {
-        return planExpense(companyId, empId, "지출결의 " + count + "건이 반려되었습니다", "지출결의 반려", "A03", false);
-    }
-
-    private List<AprNoticeCall> planExpense(Long companyId, Long personId, String msg, String talkTitle, String noticeCode, boolean checkMailSmsBlock) {
-        List<AprNoticeCall> out = new ArrayList<>();
-        AprNoticePerson p = person(personId);
+    /** [반려건 일괄 알림발송] — pay.Pay50_Expense.confirmSendMessage L704-727: 요청자 한 사람에게 A02 "사업비요청 N건이 반려되었습니다". 사원이 없으면 빈 목록 */
+    public List<AprNoticeCall> planExpenseReject(Long companyId, Long regEmpId, String count) {
+        AprNoticePerson p = person(regEmpId);
         if (p == null) {
-            return out;
+            return new ArrayList<>();
         }
-        String loc = mapper.selectCompanyLoc(companyId);
-        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), noticeCode) == 0) {
-            out.add(new AprNoticeCall("talk", p.emailAddress(), talkTitle, msg));
+        Map<String, Object> m = new HashMap<>();
+        m.put("count", count);
+        return new ArrayList<>(alert.plan("A02", p.personId(), p.companyId(), m));
+    }
+
+    /**
+     * 지출결의서(경영관리) #1385 [반려건 일괄 알림발송] — pay.Pay50_Expense.rejectSendMessage L738-761: 받는 사람 한 명에게 A03.
+     * 원본 그대로: 건수를 "count()" 키로 넘겨(오타) 통합알림이 건수를 못 읽는다 → 문구가 "지출결의 null건이 반려되었습니다"(원본-이상한점)
+     */
+    public List<AprNoticeCall> planExpenseRejectByManager(Long companyId, Long empId, String count) {
+        AprNoticePerson p = person(empId);
+        if (p == null) {
+            return new ArrayList<>();
         }
-        if (props.mailEnabled(loc)) {
-            if (p.emailAddress() != null && (!checkMailSmsBlock || mapper.countMailBlocked(p.personId(), noticeCode) == 0)) {
-                out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP 전자결재", msg));
-            }
-            if (props.smsEnabled(loc) && p.mobileTelNo() != null && (!checkMailSmsBlock || mapper.countSmsBlocked(p.personId(), noticeCode) == 0)) {
-                out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
-            }
-        }
-        return out;
+        Map<String, Object> m = new HashMap<>();
+        m.put("count()", count);
+        return new ArrayList<>(alert.plan("A03", p.personId(), p.companyId(), m));
+    }
+
+    /** 알림을 받을 사원이 있는지 (AS-IS emp01_person.selectById 결과가 있을 때만 알림) */
+    public boolean personExists(Long personId) {
+        return person(personId) != null;
     }
 
     private AprNoticePerson person(Long personId) {
         return personId == null ? null : mapper.selectPerson(personId);
     }
 
-    // ───────────────────────── 문구 (AS-IS SendTalkAPI·SendSMSAPIFunction·SendMailMaster) ─────────────────────────
-
-    static String talkMessage(String code, String classTreeName, String title) {
-        String head = "결재문서 " + " '(" + classTreeName + ") " + title + "' 건";
-        return switch (code) {
-            case "20" -> head + "의 다음 결재자입니다.";
-            case "30" -> head + "이 결재완료되었습니다.";
-            case "40" -> head + "이 반려되었습니다.";
-            case "50" -> head + "이 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다.";
-            default -> " ";
-        };
-    }
-
-    static String smsMessage(String code, String name, String title, String loc) {
-        String url = "\r\n\r\n https://" + loc + ".k-fs.co.kr:5151/";
-        return switch (code) {
-            case "20" -> name + "(으)로부터 \r\n" + "'" + title + "'\r\n결재문서가 도착했습니다." + url;
-            case "30" -> "'" + title + "'\r\n해당문서가 결재완료되었습니다." + url;
-            case "40" -> "'" + title + "'\r\n해당문서가 반려되었습니다." + url;
-            case "50" -> "'" + title + "'\r\n해당문서가 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다." + url;
-            default -> null;
-        };
-    }
-
-    static String mailHtml(String code, String classTreeName, String title) {
-        String t = talkMessage(code, classTreeName, title);
-        return " ".equals(t) ? " " : t + FOOTER;
+    private static Map<String, Object> params(Long apprId, String code) {
+        Map<String, Object> p = new HashMap<>();
+        p.put("apprId", apprId);
+        if (code != null) {
+            p.put("code", code);
+        }
+        return p;
     }
 
     // ───────────────────────── 보내기 ─────────────────────────
 
-    /** 커밋된 뒤에 보낸다 — 트랜잭션이 롤백되면 알림도 가지 않는다. 트랜잭션이 없으면 바로 보낸다 */
+    /** SMS 발송 기록(AlertService ①)을 부른 쪽 트랜잭션에 남기고, 커밋 뒤에 보낸다 */
+    @Transactional
     public void dispatchAfterCommit(List<AprNoticeCall> calls) {
-        if (calls.isEmpty()) {
-            return;
-        }
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    calls.forEach(c -> send(c));
-                }
-            });
-        } else {
-            calls.forEach(this::send);
-        }
-    }
-
-    /** 한 건 보내기 — 실패는 로그만 (AS-IS도 예외를 삼켰다) */
-    NoticeResult send(AprNoticeCall c) {
-        NoticeResult r = switch (c.kind()) {
-            case "talk" -> sender.sendTalk(c.to(), c.title(), c.body());
-            case "sms" -> sender.sendSms(List.of(c.to()), c.body());
-            case "mail" -> sender.sendMail(c.to(), c.title(), c.body());
-            default -> NoticeResult.fail("알 수 없는 종류 " + c.kind());
-        };
-        if (!r.ok()) {
-            log.warn("알림 실패 {} → {}: {}", c.kind(), c.to(), r.message());
-        }
-        return r;
+        alert.record(null, calls, null);
+        alert.dispatchAfterCommit(calls);
     }
 }

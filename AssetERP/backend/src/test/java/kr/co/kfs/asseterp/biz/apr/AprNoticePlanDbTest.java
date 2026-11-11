@@ -19,7 +19,8 @@ import kr.co.kfs.asseterp.biz.apr.service.AprNoticeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.support.NoticeTestConfig;
 
-/** AA01 결재 알림: 누구에게 무엇을 보낼지(plan)를 실제 문서로 확인한다. 읽기만 하고 아무것도 보내지 않는다 */
+/** AA01 결재 알림: 누구에게 무엇을 보낼지(plan)를 실제 문서로 확인한다. 읽기만 하고 아무것도 보내지 않는다.
+ *  2026-11-12 CH-0312: 원본 98d5afdd6 통합알림(AlertService) — 앱알림·메일·SMS가 같은 문구, SMS는 + 접속 주소 */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({AprNoticeService.class, AprApprDetailService.class, NoticeTestConfig.class})
@@ -42,8 +43,10 @@ class AprNoticePlanDbTest {
     }
 
     private String classTree(AprApprDetailRes d) {
-        return jdbc.queryForObject("select dcr01_class_tree_nm from dcr01_class_tree where dcr01_class_tree_id = ?", String.class, d.classTreeId());
+        return jdbc.queryForObject("select f_class_tree_nm_allpath(?)", String.class, d.classTreeId());
     }
+
+    private static final String URL = "\r\n\r\n https://kfstest.k-fs.co.kr:5151/";
 
     private List<AprNoticeCall> of(List<AprNoticeCall> all, String kind) {
         return all.stream().filter(c -> kind.equals(c.kind())).toList();
@@ -58,18 +61,19 @@ class AprNoticePlanDbTest {
         // 앱알림·메일: 다음 대기자(김형수)의 이메일, 문구는 "다음 결재자입니다"
         assertThat(of(calls, "talk")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("wosawd@k-fs.co.kr");
-            assertThat(c.title()).isEqualTo("상신문서(결재순서)");
+            assertThat(c.title()).isEqualTo("상신문서 (결재순서)");
             assertThat(c.body()).isEqualTo(head + "의 다음 결재자입니다.");
         });
         assertThat(of(calls, "mail")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("wosawd@k-fs.co.kr");
-            assertThat(c.title()).isEqualTo("[알림] Asset-ERP 전자결재");
-            assertThat(c.body()).isEqualTo(head + "의 다음 결재자입니다.<br/><br/>Asset-ERP 시스템에 접속 후 MyPage 메인화면에서 자세한 내용을 확인부탁드립니다.");
+            assertThat(c.title()).isEqualTo("[알림] Asset-ERP");
+            assertThat(c.body()).isEqualTo(head + "의 다음 결재자입니다.");
         });
-        // SMS: 하이픈을 뺀 번호, "상신자(으)로부터 …" + 회사 주소
+        // SMS: 하이픈을 뺀 번호, 같은 문구 + 회사 주소, 발송 기록용 회사
         assertThat(of(calls, "sms")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("01094903029");
-            assertThat(c.body()).isEqualTo("정서현(으)로부터 \r\n'" + d.title() + "'\r\n결재문서가 도착했습니다.\r\n\r\n https://kfstest.k-fs.co.kr:5151/");
+            assertThat(c.body()).isEqualTo(head + "의 다음 결재자입니다." + URL);
+            assertThat(c.companyId()).isEqualTo(28000L);
         });
         assertThat(calls).hasSize(3);     // 두번째 대기자(202406201712129)에게는 아직 가지 않는다
     }
@@ -82,22 +86,23 @@ class AprNoticePlanDbTest {
         assertThat(calls).isNotEmpty().allMatch(c -> !"kimt@k-fs-test.co.kr".equals(c.to()));
         assertThat(of(calls, "talk")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("shjung@k-fs.co.kr");
-            assertThat(c.title()).isEqualTo("상신문서(결재완료)");
+            assertThat(c.title()).isEqualTo("상신문서 (결재완료)");
             assertThat(c.body()).endsWith("건이 결재완료되었습니다.");
         });
         assertThat(of(calls, "sms")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("-".replace("-", ""));       // 번호가 "-"뿐이라 하이픈을 빼면 빈 문자열(원본도 같다)
-            assertThat(c.body()).startsWith("'" + d.title() + "'\r\n해당문서가 결재완료되었습니다.");
+            assertThat(c.body()).endsWith("건이 결재완료되었습니다." + URL);
         });
     }
 
     @Test
-    void 반려도_앱알림_문구는_결재완료로_가고_메일_SMS는_반려로_간다() {
+    void 반려는_앱알림_메일_SMS_모두_반려_문구로_간다() {
         AprApprDetailRes d = doc(SIMPLE);
         List<AprNoticeCall> calls = notice.planAfterConfirm(USER, d, "40");
-        assertThat(of(calls, "talk")).singleElement().satisfies(c -> assertThat(c.body()).endsWith("건이 결재완료되었습니다."));     // 원본 그대로
-        assertThat(of(calls, "mail")).singleElement().satisfies(c -> assertThat(c.body()).contains("건이 반려되었습니다."));
-        assertThat(of(calls, "sms")).singleElement().satisfies(c -> assertThat(c.body()).contains("해당문서가 반려되었습니다."));
+        // 원본 98d5afdd6 전에는 앱알림만 "결재완료"였다(원본-이상한점 1) — 통합알림으로 같은 문구
+        assertThat(of(calls, "talk")).singleElement().satisfies(c -> assertThat(c.body()).endsWith("건이 반려되었습니다."));
+        assertThat(of(calls, "mail")).singleElement().satisfies(c -> assertThat(c.body()).endsWith("건이 반려되었습니다."));
+        assertThat(of(calls, "sms")).singleElement().satisfies(c -> assertThat(c.body()).contains("건이 반려되었습니다."));
     }
 
     @Test
@@ -107,8 +112,9 @@ class AprNoticePlanDbTest {
         List<Map<String, Object>> refs = jdbc.queryForList("select e.emp01_email_addr em, e.emp01_mobile_telno mob from apr04_appr_step s join emp01_person e on e.emp01_person_id = s.apr04_step_emp_id where s.apr04_appr_id = ? and s.apr04_step_type_cd = '30' order by s.apr04_seq", WITH_REF);
         assertThat(refs).isNotEmpty();
         Map<String, Object> first = refs.get(0);
-        if (first.get("mob") != null && first.get("em") != null) {
-            assertThat(calls).anyMatch(c -> "talk".equals(c.kind()) && first.get("em").equals(c.to()) && c.title().equals("상신문서(결재완료)"));
+        // 원본 98d5afdd6부터 휴대폰이 없는 참조자도 앱알림·메일을 받는다(원본-이상한점 2가 고쳐짐)
+        if (first.get("em") != null) {
+            assertThat(calls).anyMatch(c -> "talk".equals(c.kind()) && first.get("em").equals(c.to()) && c.title().equals("상신문서 (결재완료)"));
         }
     }
 
@@ -118,10 +124,10 @@ class AprNoticePlanDbTest {
         List<AprNoticeCall> calls = notice.planBeforeCancelApproval(USER, d);
         assertThat(of(calls, "talk")).singleElement().satisfies(c -> {
             assertThat(c.to()).isEqualTo("wosawd@k-fs.co.kr");
-            assertThat(c.title()).isEqualTo("상신문서(결재순서)");
+            assertThat(c.title()).isEqualTo("상신문서 (결재순서)");
             assertThat(c.body()).endsWith("건이 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다.");
         });
-        assertThat(of(calls, "sms")).singleElement().satisfies(c -> assertThat(c.body()).contains("해당문서가 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다."));
+        assertThat(of(calls, "sms")).singleElement().satisfies(c -> assertThat(c.body()).contains("건이 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다." + URL));
     }
 
     @Test

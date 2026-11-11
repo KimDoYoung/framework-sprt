@@ -38,7 +38,7 @@ import kr.co.kfs.asseterp.common.notice.SimNoticeSender;
  */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({AprApprActionService.class, AprApprDetailService.class, AprNoticeService.class, AprNoticeE2eDbTest.Config.class})
+@Import({AprApprActionService.class, AprApprDetailService.class, AprNoticeService.class, kr.co.kfs.asseterp.biz.apr.service.AlertService.class, AprNoticeE2eDbTest.Config.class})
 class AprNoticeE2eDbTest {
 
     private static final String BASE = "http://127.0.0.1:5161";
@@ -110,22 +110,30 @@ class AprNoticeE2eDbTest {
                 assertThat(c.path("problems")).as(c.toString()).isEmpty();
                 assertThat(c.path("result").asText()).isEqualTo("ok");
             }
-            String head = "결재문서  '(기업탐방) " + title + "' 건의 다음 결재자입니다.";
+            // 원본 98d5afdd6 통합알림(CH-0312): 세 종류 같은 문구(분류는 전체 경로), SMS는 + 접속 주소, 발송 기록 2줄(비고 없음 · 비고 = 번호)
+            String path = jdbc.queryForObject("select f_class_tree_nm_allpath(30464)", String.class);
+            String head = "결재문서  '(" + path + ") " + title + "' 건의 다음 결재자입니다.";
             JsonNode talk = get("/__calls?kind=talk").get(0);
             assertThat(talk.path("to").asText()).isEqualTo("wosawd@k-fs.co.kr");
-            assertThat(talk.path("title").asText()).isEqualTo("상신문서(결재순서)");
+            assertThat(talk.path("title").asText()).isEqualTo("상신문서 (결재순서)");
             assertThat(talk.path("body").asText()).isEqualTo(head);
             JsonNode mail = get("/__calls?kind=mail").get(0);
             assertThat(mail.path("to").asText()).isEqualTo("wosawd@k-fs.co.kr");
-            assertThat(mail.path("title").asText()).isEqualTo("[알림] Asset-ERP 전자결재");
-            assertThat(mail.path("body").asText()).contains(head);
+            assertThat(mail.path("title").asText()).isEqualTo("[알림] Asset-ERP");
+            assertThat(mail.path("body").asText()).isEqualTo(head);
             JsonNode sms = get("/__calls?kind=sms").get(0);
             assertThat(sms.path("to").asText()).isEqualTo("01094903029");
-            assertThat(sms.path("body").asText()).contains("정서현(으)로부터").contains("'" + title + "'").contains("https://kfstest.k-fs.co.kr:5151/");
+            assertThat(sms.path("body").asText()).isEqualTo(head + "\r\n\r\n https://kfstest.k-fs.co.kr:5151/");
+            TestTransaction.start();
+            assertThat(jdbc.queryForList("select sms02_note from sms02_history where sms02_content like ?", String.class, "%" + title + "%"))
+                    .containsExactlyInAnyOrder(null, "01094903029");
+            TestTransaction.flagForCommit();
+            TestTransaction.end();
         } finally {
             if (!TestTransaction.isActive()) {
                 TestTransaction.start();
             }
+            jdbc.update("delete from sms02_history where sms02_content like ?", "%" + title + "%");
             jdbc.update("delete from apr04_appr_step where apr04_appr_id = ?", apprId);
             jdbc.update("delete from apr01_appr where apr01_appr_id = ?", apprId);
             TestTransaction.flagForCommit();

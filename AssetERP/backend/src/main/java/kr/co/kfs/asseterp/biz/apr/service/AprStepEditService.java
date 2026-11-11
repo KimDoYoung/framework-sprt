@@ -173,7 +173,7 @@ public class AprStepEditService {
         for (AprRetouchStepRow r : mapper.selectStepList(apprId)) {
             noticeSteps.add(new AprNoticeStep(apprId, r.seq(), r.stepTypeCode(), r.stepStatusCode(), r.stepEmpId(), r.apprDate()));
         }
-        notice.dispatchAfterCommit(notice.planAfterRetouch(user.getCompanyId(), doc.classTreeId(), doc.title(), noticeSteps));
+        notice.dispatchAfterCommit(notice.planAfterRetouch(doc.companyId(), noticeSteps));
         return new AprApprWriteRes(true, null, apprId, doc.statusCode(), false, null);
     }
 

@@ -80,7 +80,7 @@ class PayExpenseConfirmDbTest {
 
     @Test
     void 반려_알림은_요청자에게_건수_문구로_계획한다() {
-        List<AprNoticeCall> calls = notice.planExpenseReject(28000L, APPROVER, 2);
+        List<AprNoticeCall> calls = notice.planExpenseReject(28000L, APPROVER, "2");
         assertThat(calls).isNotEmpty();
         assertThat(calls).allMatch(c -> c.body().contains("사업비요청 2건이 반려되었습니다"));
         assertThat(calls).anyMatch(c -> "talk".equals(c.kind()) && "사업비 요청 반려".equals(c.title()));

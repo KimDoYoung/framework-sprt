@@ -172,7 +172,7 @@ public class PayExpenseService {
 
     /**
      * AS-IS confirmSendMessage L701-812 — 로그인 승인자의 미발송 반려건을 요청자별로 묶어 알림을 보낸다.
-     * 발송 표시(confirm_sms_yn)는 AS-IS처럼 회사 메일 발송이 켜져 있고 요청자가 한 명이라도 있을 때만 남긴다. 알림은 커밋 뒤에 보낸다.
+     * 발송 표시(confirm_sms_yn)는 요청자 사원이 있으면 남긴다(원본 98d5afdd6 L706-727 — 통합알림 A02 뒤 그 사람마다 같은 UPDATE, CH-0260). 알림은 커밋 뒤에 보낸다.
      * @return 요청자 수(AS-IS 메시지 "N건이 발송완료되었습니다"의 N — 반려 건수가 아니라 묶음 수)
      */
     @Transactional
@@ -181,10 +181,10 @@ public class PayExpenseService {
         List<ExpenseConfirmSendRow> rows = mapper.selectConfirmSendList(companyId, user.getUserId());
         List<AprNoticeCall> calls = new ArrayList<>();
         for (ExpenseConfirmSendRow row : rows) {
-            calls.addAll(noticeService.planExpenseReject(companyId, row.regEmpId(), row.count()));
-        }
-        if (!rows.isEmpty() && noticeService.mailEnabled(companyId)) {
-            mapper.updateConfirmSmsYn(companyId, user.getUserId());
+            if (noticeService.personExists(row.regEmpId())) {
+                calls.addAll(noticeService.planExpenseReject(companyId, row.regEmpId(), String.valueOf(row.count())));
+                mapper.updateConfirmSmsYn(companyId, user.getUserId());
+            }
         }
         noticeService.dispatchAfterCommit(calls);
         return rows.size();
@@ -192,7 +192,7 @@ public class PayExpenseService {
 
     /**
      * AS-IS rejectSendMessage L814-924 — #1385 지출결의서(경영관리) [반려건 일괄 알림발송]: 회사의 미발송 반려건을 받는 사람(요청자·확인자)별로 묶어 알림을 보낸다.
-     * 발송 표시(reject_sms_yn)는 AS-IS처럼 회사 메일 발송이 켜져 있고 받는 사람(사원 행)이 한 명이라도 있을 때만 남긴다(AS-IS는 그 사람마다 같은 UPDATE). 알림은 커밋 뒤에 보낸다.
+     * 발송 표시(reject_sms_yn)는 받는 사람 사원이 있으면 남긴다(원본 98d5afdd6 L740-760 — 통합알림 A03 뒤 그 사람마다 같은 UPDATE, CH-0261). 알림은 커밋 뒤에 보낸다.
      * @return 받는 사람 수(AS-IS 메시지 "N건이 발송완료되었습니다"의 N — expenseList.size())
      */
     @Transactional
@@ -201,10 +201,10 @@ public class PayExpenseService {
         List<ExpenseConfirmSendRow> rows = mapper.selectRejectSendList(companyId);
         List<AprNoticeCall> calls = new ArrayList<>();
         for (ExpenseConfirmSendRow row : rows) {
-            calls.addAll(noticeService.planExpenseRejectByManager(companyId, row.regEmpId(), row.count()));
-        }
-        if (!rows.isEmpty() && noticeService.mailEnabled(companyId)) {
-            mapper.updateRejectSmsYn(companyId);
+            if (noticeService.personExists(row.regEmpId())) {
+                calls.addAll(noticeService.planExpenseRejectByManager(companyId, row.regEmpId(), String.valueOf(row.count())));
+                mapper.updateRejectSmsYn(companyId);
+            }
         }
         noticeService.dispatchAfterCommit(calls);
         return rows.size();
