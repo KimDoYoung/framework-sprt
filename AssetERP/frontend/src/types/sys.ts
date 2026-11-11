@@ -122,6 +122,16 @@ export interface CompanyApproval {
   icsNonStayYn?: string | boolean | null;
   fltOnlyCurrYn?: string | boolean | null;
   icsGuideYn?: string | boolean | null;
+  dcrPreconfirmSkipYn?: string | boolean | null;
+  icsCheckConfirmerType?: string | null;
+  icsCheckConfirmerNm?: string | null;
+  /** 임직원준수점검 상신자 (ApprRegEmpType 1 작성자 / 2 확인자, 원본 2026-11-04) */
+  complyApprRegEmpType?: string | null;
+  complyApprRegEmpNm?: string | null;
+  fltAddConfirmYn?: string | boolean | null;
+  tdmStartDate?: string | null;
+  /** 책무증빙자료 불러오기 연결문서만 (원본 2026-11-05) */
+  tdmEvidOnlyRelateDcrYn?: string | boolean | null;
 }
 
 /** 경영·회계 탭 행 (GET /api/v1/sys/companies/{id}/account, AS-IS Sys01_TabPage_Info04). Y/N은 'true'/'false' */

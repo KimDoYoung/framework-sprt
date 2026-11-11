@@ -45,7 +45,8 @@ class CompanyTabsDbTest {
 
     private static CompanyApprovalReq approvalOf(CompanyApprovalRes r) {
         return new CompanyApprovalReq(r.companyId(), r.apprStepLockYn(), r.companyRepNm(), r.aprManagerInfoYn(), r.dcrNumberingCd(),
-                r.dcrDetailUseYn(), r.icsCheckCycleType(), r.icsComplyCycleType(), r.icsNonStayYn(), r.fltOnlyCurrYn(), r.icsGuideYn());
+                r.dcrDetailUseYn(), r.icsCheckCycleType(), r.icsComplyCycleType(), r.icsNonStayYn(), r.fltOnlyCurrYn(), r.icsGuideYn(),
+                r.dcrPreconfirmSkipYn(), r.icsCheckConfirmerType(), r.complyApprRegEmpType(), r.fltAddConfirmYn(), r.tdmStartDate(), r.tdmEvidOnlyRelateDcrYn());
     }
 
     private static CompanyAccountReq accountOf(CompanyAccountRes r, String leaveMonthCd) {
@@ -97,6 +98,21 @@ class CompanyTabsDbTest {
         companyService.updateCompanyApproval(sysAdmin, approvalOf(nulls));
         assertThat(jdbc.queryForObject("select sys01_appr_step_lock_yn from sys01_company where sys01_company_id = ?", String.class, KFS))
                 .isEqualTo("true");
+    }
+
+    @Test
+    void 전자결재_상신자구분과_연결문서만을_저장하면_이름과_값이_바뀐다() {
+        // 원본 2026-11-04·05(CH-0183): 임직원준수점검 상신자(ApprRegEmpType 1 작성자/2 확인자)·책무증빙자료 연결문서만
+        CompanyApprovalRes before = companyService.getCompanyApproval(sysAdmin, KFS);
+        CompanyApprovalReq req = approvalOf(before);
+        CompanyApprovalReq changed = new CompanyApprovalReq(req.companyId(), req.apprStepLockYn(), req.companyRepNm(), req.aprManagerInfoYn(),
+                req.dcrNumberingCd(), req.dcrDetailUseYn(), req.icsCheckCycleType(), req.icsComplyCycleType(), req.icsNonStayYn(), req.fltOnlyCurrYn(),
+                req.icsGuideYn(), req.dcrPreconfirmSkipYn(), req.icsCheckConfirmerType(), "1", req.fltAddConfirmYn(), "2026-01-02", "true");
+        CompanyApprovalRes after = companyService.updateCompanyApproval(sysAdmin, changed);
+        assertThat(after.complyApprRegEmpType()).isEqualTo("1");
+        assertThat(after.complyApprRegEmpNm()).isEqualTo("작성자");
+        assertThat(after.tdmStartDate()).isEqualTo("2026-01-02");
+        assertThat(after.tdmEvidOnlyRelateDcrYn()).isEqualTo("true");
     }
 
     @Test

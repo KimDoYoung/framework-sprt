@@ -18,5 +18,14 @@ public record CompanyApprovalRes(
         String icsComplyCycleNm,
         String icsNonStayYn,
         String fltOnlyCurrYn,
-        String icsGuideYn) {
+        String icsGuideYn,
+        // 원본 최종(IDMS-IC 2026-11-05) 그리드 열 — 2026-11-11 변경반영 CH-0183에서 함께 맞춤
+        String dcrPreconfirmSkipYn,
+        String icsCheckConfirmerType,
+        String icsCheckConfirmerNm,
+        String complyApprRegEmpType,
+        String complyApprRegEmpNm,
+        String fltAddConfirmYn,
+        String tdmStartDate,
+        String tdmEvidOnlyRelateDcrYn) {
 }

@@ -123,7 +123,8 @@ public class SysCompanyController {
                                                                  @RequestBody CompanyApprovalReq req) {
         CompanyApprovalReq body = new CompanyApprovalReq(companyId, req.apprStepLockYn(), req.companyRepNm(), req.aprManagerInfoYn(),
                 req.dcrNumberingCd(), req.dcrDetailUseYn(), req.icsCheckCycleType(), req.icsComplyCycleType(), req.icsNonStayYn(),
-                req.fltOnlyCurrYn(), req.icsGuideYn());
+                req.fltOnlyCurrYn(), req.icsGuideYn(), req.dcrPreconfirmSkipYn(), req.icsCheckConfirmerType(), req.complyApprRegEmpType(),
+                req.fltAddConfirmYn(), req.tdmStartDate(), req.tdmEvidOnlyRelateDcrYn());
         return ApiResponse.ok(sysCompanyService.updateCompanyApproval(principal, body));
     }
 

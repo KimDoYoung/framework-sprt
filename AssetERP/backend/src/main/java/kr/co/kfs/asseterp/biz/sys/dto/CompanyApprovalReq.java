@@ -12,5 +12,11 @@ public record CompanyApprovalReq(
         String icsComplyCycleType,
         String icsNonStayYn,
         String fltOnlyCurrYn,
-        String icsGuideYn) {
+        String icsGuideYn,
+        String dcrPreconfirmSkipYn,
+        String icsCheckConfirmerType,
+        String complyApprRegEmpType,
+        String fltAddConfirmYn,
+        String tdmStartDate,
+        String tdmEvidOnlyRelateDcrYn) {
 }

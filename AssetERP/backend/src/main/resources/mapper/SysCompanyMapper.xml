@@ -179,7 +179,16 @@
                f_cdnm('IcsCheckListCycleType', sys01_ics_comply_cycle_type, sys01_company_id, f_sysdate()) AS ics_comply_cycle_nm,
                sys01_ics_non_stay_yn                                                                      AS ics_non_stay_yn,
                COALESCE(sys01_flt_only_curr_yn, 'false')                                                  AS flt_only_curr_yn,
-               COALESCE(sys01_ics_guide_yn, 'false')                                                      AS ics_guide_yn
+               COALESCE(sys01_ics_guide_yn, 'false')                                                      AS ics_guide_yn,
+               -- 원본 최종 그리드 열(심사필번호 즉시부여·체크리스트 확인자·상신자(2026-11-04)·협의승인·기산일·연결문서만(2026-11-05))
+               COALESCE(sys01_dcr_preconfirm_skip_yn, 'false')                                            AS dcr_preconfirm_skip_yn,
+               sys01_ics_check_confirmer_type                                                             AS ics_check_confirmer_type,
+               f_cdnm('IcsCheckListConfirmerType', sys01_ics_check_confirmer_type, sys01_company_id, f_sysdate()) AS ics_check_confirmer_nm,
+               sys01_comply_appr_reg_emp_type                                                             AS comply_appr_reg_emp_type,
+               f_cdnm('ApprRegEmpType', sys01_comply_appr_reg_emp_type, sys01_company_id, f_sysdate())    AS comply_appr_reg_emp_nm,
+               COALESCE(sys01_flt_add_confirm_yn, 'false')                                                AS flt_add_confirm_yn,
+               TO_CHAR(sys01_tdm_start_date, 'YYYY-MM-DD')                                                AS tdm_start_date,
+               COALESCE(sys01_tdm_evid_only_relate_dcr_yn, 'false')                                       AS tdm_evid_only_relate_dcr_yn
           FROM sys01_company
          WHERE sys01_company_id = #{companyId}
     </select>
@@ -195,7 +204,13 @@
                sys01_ics_comply_cycle_type = #{icsComplyCycleType},
                sys01_ics_non_stay_yn       = #{icsNonStayYn},
                sys01_flt_only_curr_yn      = #{fltOnlyCurrYn},
-               sys01_ics_guide_yn          = #{icsGuideYn}
+               sys01_ics_guide_yn          = #{icsGuideYn},
+               sys01_dcr_preconfirm_skip_yn      = #{dcrPreconfirmSkipYn},
+               sys01_ics_check_confirmer_type    = #{icsCheckConfirmerType},
+               sys01_comply_appr_reg_emp_type    = #{complyApprRegEmpType},
+               sys01_flt_add_confirm_yn          = #{fltAddConfirmYn},
+               sys01_tdm_start_date              = CAST(NULLIF(#{tdmStartDate}, '') AS DATE),
+               sys01_tdm_evid_only_relate_dcr_yn = #{tdmEvidOnlyRelateDcrYn}
          WHERE sys01_company_id = #{companyId}
     </update>
 
