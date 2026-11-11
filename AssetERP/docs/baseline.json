@@ -15935,6 +15935,12 @@
       "updated_at": "2026-11-11T15:53:18+09:00",
       "note": "부르는 화면 없음",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/Emp00_Lookup_PersonnelRecordCard.java": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:53:58+09:00",
+      "note": "TOBE 이미 공통 RD 다운로드",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -15984,6 +15990,12 @@
       "status": "해당없음",
       "updated_at": "2026-11-11T15:53:18+09:00",
       "note": "부르는 화면 없음",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/Emp00_Lookup_PersonnelRecordCard.java": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:53:58+09:00",
+      "note": "TOBE 이미 공통 RD 다운로드",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }
