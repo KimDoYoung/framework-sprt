@@ -135,7 +135,7 @@ export const Ast25_Tab_Price: React.FC = () => {
             <Button type="register" onClick={crud.addRow}>등록</Button>
             {/* [E5] updateButton[저장].Select (L172) → update() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRow}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
           </>
         }
       >

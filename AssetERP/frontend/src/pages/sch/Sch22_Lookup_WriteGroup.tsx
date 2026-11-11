@@ -169,7 +169,7 @@ export const Sch22_Lookup_WriteGroup: React.FC<Props> = ({ open, mode, onResult,
             <Button type="register" onClick={crud.addRow}>등록</Button>
             {/* [E3] updateButton[저장].Select (L126) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteCheck}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteCheck}>삭제</Button>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <CellEditGrid<Sch22WriteGroup> crud={crud} columnDefs={columnDefs} rowSelection={SELECTION} onSelectionChanged={retrievePage} />

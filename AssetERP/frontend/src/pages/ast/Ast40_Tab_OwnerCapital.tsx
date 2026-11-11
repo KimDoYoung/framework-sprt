@@ -69,7 +69,7 @@ export const Ast40_Tab_OwnerCapital: React.FC = () => {
               {/* [E3] insertButton[등록].Select (L107) → insertRow() */}
               <Button type="register" onClick={crud.addRow}>등록</Button>
               {/* [E4] deleteButton[삭제].Select (L113) → delete() → [E7] msgBox YES → ast.Ast40_OwnerCapital.delete */}
-              <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
               {/* [E5] updateButton[저장].Select (L119) → update() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
               {/* [E6] stopLossButton[투자한도/StopLoss 설정].Select (L125) → lookupStopLoss() L231-234 */}

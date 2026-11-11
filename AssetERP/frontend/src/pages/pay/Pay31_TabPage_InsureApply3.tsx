@@ -98,7 +98,7 @@ export const Pay31_TabPage_InsureApply3 = forwardRef<PayInsureApplyTabHandle>((_
           {/* [E7] updateButton[저장].Select (L199) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E8] deleteButton[삭제].Select (L205) → deleteRow() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </>}
       >
         <SearchBar.Field label="기준년도">

@@ -63,7 +63,7 @@ export const Pay26_TabPage_TaxCalc: React.FC<PayDetailProps> = ({ date, tick }) 
         {/* [E2] updateButton[저장].Select (L73) → update() L110-113. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E3] deleteButton[삭제].Select (L79) → deleteRow() L122-137 → [E4] messageBox.DialogHide [YES] (L125) → pay.Pay26_TaxCalcTable.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </Space>}
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<PayTaxCalc> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW_SELECTION} />

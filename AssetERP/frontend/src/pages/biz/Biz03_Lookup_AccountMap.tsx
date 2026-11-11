@@ -131,7 +131,7 @@ export const Biz03_Lookup_AccountMap: React.FC<Props> = ({ open, onClose }) => {
           {/* [E3] updateButton[저장].Select (L90) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L96) → delete() */}
-          <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', border: '1px solid #d9d9d9' }}>
           <div style={{ width: 290, minHeight: 0 }}>

@@ -104,7 +104,7 @@ export const Sys92_Tab_ManagementTeam: React.FC = () => {
         {/* [E3] updateButton[저장].Select (L89) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L95) → deleteChk(), [E6] msgBox.DialogHide [YES] (L189) → deleteRow() → sys.Sys92_ManagementTeam.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>} />
       <div style={{ flex: 1, minHeight: 0 }}>
         {editable

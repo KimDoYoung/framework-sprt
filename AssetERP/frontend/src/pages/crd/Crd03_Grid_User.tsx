@@ -136,7 +136,7 @@ export const Crd03_Grid_User: React.FC<Props> = ({ cardId }) => {
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E3] updateButton[저장].Select (L73) → update() */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<CrdCardUser> crud={crud} columnDefs={columnDefs} rowSelection={MULTI_SELECTION} />

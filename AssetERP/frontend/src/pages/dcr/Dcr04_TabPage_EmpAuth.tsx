@@ -87,7 +87,7 @@ export const Dcr04_TabPage_EmpAuth: React.FC<Props> = ({ classTree }) => {
         <Button type="search" disabled={!usable} onClick={() => void crud.retrieve()}>조회</Button>
         <Button type="register" disabled={!usable} onClick={insertRow}>등록</Button>
         <Button type="save" disabled={!usable} count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" disabled={!usable} onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!usable || !crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E6] deleteListButton[사원별 권한현황].Select (L124) → Dcr04_Lookup_DocList.open(callback: retrieve()) */}
         <Button type="view" onClick={() => setListOpen(true)}>사원별 권한현황</Button>
       </div>

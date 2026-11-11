@@ -184,7 +184,7 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             {/* [E4] updateButton[저장].Select (L137) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRows}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
           </>}
         >
           <SearchBar.Field label="기준연도">

@@ -279,7 +279,7 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
             <Button type="register" onClick={() => setLookupOpen(true)}>등록</Button>
             {/* [E6] updateButton[저장].Select (L196) → updateChk() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteChk}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
           </>
         }
       >

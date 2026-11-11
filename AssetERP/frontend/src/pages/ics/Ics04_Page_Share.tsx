@@ -77,7 +77,7 @@ export const Ics04_Page_Share: React.FC<Props> = ({ managerId }) => {
         {/* [E3] updateButton[저장].Select (L67) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         <Button type="addRow" onClick={() => setOrgOpen(true)}>부서추가</Button>
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<IcsShare> crud={crud} columnDefs={COLUMNS} />

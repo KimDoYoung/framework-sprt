@@ -278,7 +278,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
                 조회
               </Button>
               {/* [E3] deleteButton[삭제].Select */}
-              <Button type="delete" onClick={deleteRow} disabled={isDisabled}>
+              <Button type="delete" onClick={deleteRow} disabled={isDisabled || !crud.hasChecked}>
                 삭제
               </Button>
               {/* [E5] addButton[항목추가].Select */}

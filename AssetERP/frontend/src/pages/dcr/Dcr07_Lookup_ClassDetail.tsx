@@ -91,7 +91,7 @@ export const Dcr07_Lookup_ClassDetail: React.FC<Props> = ({ model, onChanged, on
           {/* [E4] updateButton[저장].Select (L84) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E3] deleteButton[삭제].Select (L78) → deleteRow(), [E6] msgBox.DialogHide [YES] (L174) → dcr.Dcr07_ClassDetail.delete */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<DcrClassDetail> crud={crud} columnDefs={columnDefs}

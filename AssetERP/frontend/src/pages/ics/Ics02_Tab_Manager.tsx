@@ -96,7 +96,7 @@ export const Ics02_Tab_Manager: React.FC = () => {
               <Button type="register" onClick={crud.addRow}>등록</Button>
               {/* [E3] updateButton[저장].Select (L136) → update(). 저장(n)은 UX-03 */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteChedk}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChedk}>삭제</Button>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <CellEditGrid<IcsManager> crud={crud} columnDefs={columnDefs} onSelectionChanged={retrieveShare} />

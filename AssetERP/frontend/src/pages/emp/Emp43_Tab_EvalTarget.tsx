@@ -311,7 +311,7 @@ export const Emp43_Tab_EvalTarget: React.FC = () => {
           <>
             <Button type="save" count={crud.changes} disabled={!canEdit} onClick={updateChk}>저장</Button>
             <Button type="register" disabled={!canEdit} onClick={insertRow}>등록</Button>
-            <Button type="delete" disabled={!canEdit} onClick={deleteChk}>삭제</Button>
+            <Button type="delete" disabled={!canEdit || !crud.hasChecked} onClick={deleteChk}>삭제</Button>
             <Button type="change" onClick={changeChk}>평가자 변경(선택)</Button>
           </>
         }

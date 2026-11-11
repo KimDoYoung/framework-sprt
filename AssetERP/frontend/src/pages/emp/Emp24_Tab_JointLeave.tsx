@@ -198,7 +198,7 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
             <>
               <Button type="register" onClick={insertRow}>등록</Button>
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteCheck}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteCheck}>삭제</Button>
               <Button type="register" onClick={insertLinkApprovals}>승인신청</Button>
               <Button type="select" onClick={openLink}>문서분류지정</Button>
             </>
@@ -223,7 +223,7 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
           <span style={{ fontSize: 14, fontWeight: 'bold', marginRight: 10 }}>▼ 제외사원</span>
           <Button type="register" onClick={exceptInsertRow}>등록</Button>
           <Button type="save" count={exceptCrud.changes} onClick={exceptCrud.saveRows}>저장</Button>
-          <Button type="delete" onClick={exceptCrud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!exceptCrud.hasChecked} onClick={exceptCrud.deleteChecked}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<JointLeaveExcept> crud={exceptCrud} columnDefs={exceptColumnDefs} />

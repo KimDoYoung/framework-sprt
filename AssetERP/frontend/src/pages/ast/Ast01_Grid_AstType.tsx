@@ -215,7 +215,7 @@ export const Ast01_Grid_AstType = forwardRef<Ast01GridAstTypeHandle, Props>(
             </Button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Button type="delete" onClick={deleteRow} disabled={!parentModel}>
+            <Button type="delete" onClick={deleteRow} disabled={!parentModel || !crud.hasChecked}>
               삭제
             </Button>
             <Button type="register" onClick={insertRow} disabled={!parentModel}>

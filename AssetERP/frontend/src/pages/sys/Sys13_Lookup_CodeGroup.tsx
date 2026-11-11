@@ -81,7 +81,7 @@ export const Sys13_Lookup_CodeGroup: React.FC<Props> = ({ open, codeKind, onClos
             {/* [E3] updateButton[저장].Select (L112) → update() */}
             <Button type="save" count={crud.changes} disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
             {/* [E4] deleteButton[삭제].Select (L118) → deleteRow(), [E7] msgBox YES → sys.Sys13_CodeGroup.deleteAll (useGridCrud 안) */}
-            <Button type="delete" disabled={!isAdminCompany} onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!isAdminCompany || !crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             {/* [E6] grid.RowClick (L137) → tabPageCode.retrieve(선택한 그룹, codeKindId). SelectionChanged 핸들러는 원본에서 주석 처리 */}

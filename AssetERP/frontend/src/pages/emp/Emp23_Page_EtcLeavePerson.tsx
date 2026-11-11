@@ -68,7 +68,7 @@ export const Emp23_Page_EtcLeavePerson: React.FC<Props> = ({ etcLeaveId }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Button type="register" onClick={insertRow}>등록</Button>
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<EtcLeavePerson> crud={crud} columnDefs={columnDefs} />

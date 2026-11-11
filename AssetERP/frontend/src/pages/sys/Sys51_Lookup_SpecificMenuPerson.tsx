@@ -122,7 +122,7 @@ export const Sys51_Lookup_SpecificMenuPerson: React.FC<Props> = ({ companyId, sp
               {/* [E3] updateButton[저장].Select (L116) → update() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
               {/* [E4] deleteButton[삭제].Select (L122) → deleteRow() */}
-              <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             </Space>
             {/* [E5] updateGroupButton[일괄 권한설정].Select (L128) → updateGroupCheck() */}
             <Button type="save" onClick={updateGroupCheck}>일괄 권한설정</Button>

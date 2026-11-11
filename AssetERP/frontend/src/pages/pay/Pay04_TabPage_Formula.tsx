@@ -231,7 +231,7 @@ export const Pay04_TabPage_Formula = forwardRef<PayTabPageHandle>((_props, ref) 
           {/* [E8] insertRowButton[행 추가].Select (L143) → insertRow() L418-444 */}
           <Button type="addRow" onClick={insertRow}>행 추가</Button>
           {/* [E9] deleteRowButton[행 삭제].Select (L148) → deleteRow() L446-450 */}
-          <Button type="removeRow" onClick={crud.deleteChecked}>행 삭제</Button>
+          <Button type="removeRow" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>행 삭제</Button>
         </Space>}
       </div>
       <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>

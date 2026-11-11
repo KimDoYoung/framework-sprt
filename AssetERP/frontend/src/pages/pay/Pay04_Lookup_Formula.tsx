@@ -153,7 +153,7 @@ export const Pay04_Lookup_Formula: React.FC<Props> = ({ open, onClose }) => {
             <Space wrap>
               <Button type="addRow" onClick={insertRow}>행 추가</Button>
               {/* [E6] deleteRowButton[행 삭제].Select (L110) → deleteRow() L291-295 */}
-              <Button type="removeRow" onClick={crud.deleteChecked}>행 삭제</Button>
+              <Button type="removeRow" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>행 삭제</Button>
             </Space>
           </div>
           <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>

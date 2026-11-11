@@ -93,7 +93,7 @@ export const Ast24_Lookup_FxRate: React.FC<Props> = ({ stdDate, onClose }) => {
           extra={<>
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </>}
         >
           <SearchBar.Field label="기준일자">

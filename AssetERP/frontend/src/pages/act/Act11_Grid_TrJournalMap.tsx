@@ -158,7 +158,7 @@ export const Act11_Grid_TrJournalMap: React.FC<Props> = ({ journalGroup, nonce }
         <Button type="register" onClick={crud.addRow}>등록</Button>
         {/* [E2] updateButton[저장].Select (L89) → preUpdate(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<JournalMap>

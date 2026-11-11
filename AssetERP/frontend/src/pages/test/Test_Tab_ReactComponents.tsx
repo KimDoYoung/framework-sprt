@@ -149,7 +149,7 @@ export const Test_Tab_ReactComponents: React.FC = () => {
         <Button type="search" onClick={crud.retrieve}>조회</Button>
         <Button type="register" onClick={crud.addRow}>등록</Button>
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </div>
       <div style={{ flex: 2, minHeight: 0 }}>
         <CellEditGrid<MockMemo> crud={crud} columnDefs={MEMO_COLUMNS} />

@@ -53,7 +53,7 @@ export const Act09_Tab_AccountNum: React.FC = () => {
           {/* [E3] updateButton[저장].Select (L76) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L83) → deleteChk() */}
-          <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<AccountNum> crud={crud} columnDefs={columnDefs} />

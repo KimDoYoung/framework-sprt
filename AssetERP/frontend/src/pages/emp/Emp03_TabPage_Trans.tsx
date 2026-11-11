@@ -174,7 +174,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
         {/* [E2] searchBarBuilder[조회].Retrieve (L78) → retrieve() */}
         <Button type="search" onClick={crud.retrieve} disabled={!personId}>조회</Button>
         <Button type="register" onClick={insertRow}>등록</Button>
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
         {/* [E5] searchBarBuilder[저장].Update (L81) → update() */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E1] gradeCodeButton[특정직위 및 알림설정].Select (L68) → lookupGradeCode() L182-190: Emp03_Lookup_Grade.open(저장 뒤 retrieve()) */}

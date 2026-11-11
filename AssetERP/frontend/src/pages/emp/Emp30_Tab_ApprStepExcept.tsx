@@ -81,7 +81,7 @@ export const Emp30_Tab_ApprStepExcept: React.FC = () => {
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             {/* [E4] updateButton[저장].Select (L85) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
           </>}>
             <SearchBar.Field label="담당자명">
               <SearchBar.Input style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />

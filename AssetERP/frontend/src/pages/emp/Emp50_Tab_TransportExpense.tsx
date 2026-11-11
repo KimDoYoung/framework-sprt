@@ -320,7 +320,7 @@ export const Emp50_Tab_TransportExpense: React.FC = () => {
               {/* [E9] updateButton[저장].Select (L223) → preCheck("update") */}
               <Button type="save" count={crud.changes} onClick={() => void preCheck('update')}>저장</Button>
               {/* [E10] deleteButton[삭제].Select (L229) → preCheck("delete") */}
-              <Button type="delete" onClick={() => void preCheck('delete')}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={() => void preCheck('delete')}>삭제</Button>
               {closed && <span style={{ color: '#0078D7', fontSize: 13, marginLeft: 8 }}>※ 신청이 마감되었습니다. 다음달에 신청하세요</span>}
             </>
           }

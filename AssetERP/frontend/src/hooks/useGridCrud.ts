@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
-import type { CellClassParams, CellValueChangedEvent, ColDef, GetRowIdParams, GridOptions, RowClassParams } from 'ag-grid-community';
+import type { CellClassParams, CellValueChangedEvent, ColDef, GetRowIdParams, GridOptions, RowClassParams, SelectionChangedEvent } from 'ag-grid-community';
 import type { ChangeCount } from '../components/button';
 import { errorMessage } from '../api/client';
 
@@ -59,6 +59,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion(v => v + 1), []);
   const [editing, setEditing] = useState(false);
+  // UX-17: 체크한 행이 있을 때만 [삭제] 활성 — `<Button type="delete" disabled={!crud.hasChecked}>`
+  const [hasChecked, setHasChecked] = useState(false);
 
   const getId = useCallback((row: T) => row[idField] as unknown as number, [idField]);
 
@@ -271,6 +273,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     onCellEditingStarted: () => setEditing(true),
     onCellEditingStopped: () => setEditing(false),
     rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false },
+    onSelectionChanged: (e: SelectionChangedEvent<T>) => setHasChecked(e.api.getSelectedRows().length > 0),
     // Enter → 아래 행 같은 컬럼, Tab → 오른쪽 셀(기본)
     enterNavigatesVertically: true,
     enterNavigatesVerticallyAfterEdit: true,
@@ -297,7 +300,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   // 반환 객체를 useMemo 로 안정시킨다 — 렌더마다 새 객체면 `[crud]` 를 useEffect·useCallback 의존성에 둘 수 없다(무한 반복).
   // rows·loading·changes 가 바뀔 때만 새 객체가 된다. 함수 필드(retrieve·saveRows 등)는 원래 useCallback 이다.
   return useMemo(
-    () => ({ gridRef, rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps }),
-    [rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps],
+    () => ({ gridRef, rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, hasChecked, gridProps }),
+    [rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, hasChecked, gridProps],
   );
 }

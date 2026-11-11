@@ -257,7 +257,7 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
           <Button type="register" onClick={() => crud.addRow()}>등록</Button>
           {/* [E3] updateButton[저장].Select (L118) → updateChk01() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-          <Button type="delete" onClick={deleteChk}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
         </Space>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>

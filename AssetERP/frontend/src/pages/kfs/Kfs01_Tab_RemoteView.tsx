@@ -87,7 +87,7 @@ export const Kfs01_Tab_RemoteView: React.FC = () => {
           extra={<>
             {/* [E3] updateButton[저장].Select (L164) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            {isManager && <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>}
+            {isManager && <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>}
             {isManager && <Button type="upload" onClick={() => excelForm.current?.click()}>엑셀업로드</Button>}
             <FileUpdownForm ref={excelForm} accept=".xlsx,.xls" onChange={onExcelFile} />
           </>}

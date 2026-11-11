@@ -121,7 +121,7 @@ export const Pay03_Lookup_PayAccount: React.FC<Props> = ({ open, onClose }) => {
           {/* [E4] updateButton[저장].Select (L88) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E3] deleteButton[삭제].Select (L82) → deleteRow() → [E8] msgBox YES → pay.Pay03_Account.delete */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<PayAccount> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />

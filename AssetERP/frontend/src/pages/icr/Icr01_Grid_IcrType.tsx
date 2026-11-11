@@ -128,7 +128,7 @@ export const Icr01_Grid_IcrType: React.FC<Props> = ({ classTreeId }) => {
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
         {/* [E3] deleteButton[삭제].Select (L90) → deleteRow() → [E6] msgBox.DialogHide [YES] (L343) → delete() */}
-        <Button type="delete" disabled={noParent} onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={noParent || !crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E4] insertButton[등록].Select (L96) → insertRow() */}
         <Button type="register" disabled={noParent} onClick={crud.addRow}>등록</Button>
         {/* [E5] updateButton[저장].Select (L102) → update(). 저장(n)은 UX-03 */}

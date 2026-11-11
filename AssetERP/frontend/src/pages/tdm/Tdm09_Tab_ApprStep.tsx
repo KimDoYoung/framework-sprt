@@ -250,7 +250,7 @@ export const Tdm09_Tab_ApprStep: React.FC = () => {
               <Button type="register" onClick={() => crud.addRow()}>등록</Button>
               {/* [E5] updateButton[저장].Select (L154) → update() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteMain}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteMain}>삭제</Button>
             </>
           }
         >

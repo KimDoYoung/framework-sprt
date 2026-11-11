@@ -216,7 +216,7 @@ export const Act11_Tab_TrJournalMap: React.FC = () => {
               <Button type="register" onClick={crud.addRow}>등록</Button>
               {/* [E5] updateButton[저장].Select (L161) → update(). 저장(n)은 UX-03 */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteRow}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
               {/* 생성자 L103-107: 관리자 회사(0)만 고객사 칸과 [기초데이터생성] */}
               {user.companyId === 0 && (
                 <>

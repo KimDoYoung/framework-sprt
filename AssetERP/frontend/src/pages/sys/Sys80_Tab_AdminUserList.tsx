@@ -57,7 +57,7 @@ export const Sys80_Tab_AdminUserList: React.FC = () => {
         {/* [E3] updateButton[저장].Select (L66) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L72) → deleteRow(), [E5] msgBox.DialogHide [YES] (L132) → sys.Sys80_AdminUserList.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>} />
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<AdminUserList> crud={crud} columnDefs={columnDefs} />

@@ -204,7 +204,8 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
           {/* [E2] grid.CellDoubleClick (L136) → callback.execute(선택 행), hide() */}
           <CellEditGrid<CodeAdmin> crud={crud} columnDefs={columnDefs} sortable={false}
             rowSelection={{ mode: 'singleRow', checkboxes: false, enableClickSelection: true }}
-            onRowDoubleClicked={e => { if (e.data) { onResult(e.data); onClose(); } }} />
+            onRowDoubleClicked={e => { if (e.data) { onResult(e.data); onClose(); } }}
+            singleClickEdit={false} /* UX-16 예외: 행 더블클릭 = 선택 */ />
         </div>
       </div>
     </LookupModal>

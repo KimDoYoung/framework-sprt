@@ -195,7 +195,7 @@ export const Biz16_TabPage_EachCont: React.FC<Props> = ({ corp, nonce, onCorpCha
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Button type="register" onClick={insertRow}>등록</Button>
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
         <Button type="save" count={crud.changes} onClick={update}>저장</Button>
         {/* [E4] dcrLinkButton[문서분류지정].Select (L80) → Dcr30_Lookup_Link.open("C01", cb{}) — 관리자(LoginUser.getIsUserManager())만 보인다 */}
         {userManager && <Button type="save" onClick={() => setLinkOpen(true)}>문서분류지정</Button>}

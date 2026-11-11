@@ -98,7 +98,7 @@ export const Sys05_Page_UserRole: React.FC<Props> = ({ roleId }) => {
         {/* [E3] updateButton[저장].Select (L66) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L73) → deleteChk() → [E6] msgBox.DialogHide [YES] (L216) → deleteRow() */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<UserRole> crud={crud} columnDefs={columnDefs} />

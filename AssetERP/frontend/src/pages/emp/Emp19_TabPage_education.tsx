@@ -92,7 +92,7 @@ export const Emp19_TabPage_education: React.FC<TransInfoTabProps> = ({ row }) =>
         <Typography.Text strong>교육사항</Typography.Text>
         <Button type="search" onClick={retrieve}>조회</Button>
         <Button type="register" onClick={insertRow}>등록</Button>
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         <span style={{ width: 16 }} />
         <Button type="register" onClick={multiInsert}>일괄등록</Button>

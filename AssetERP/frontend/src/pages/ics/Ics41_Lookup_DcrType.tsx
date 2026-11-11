@@ -151,7 +151,7 @@ export const Ics41_Lookup_DcrType: React.FC<Props> = ({ open, onClose }) => {
           <Button type="save" count={crud.changes} onClick={update}>저장</Button>
           {/* [E3] insertButton[등록].Select (L102) → insert() */}
           <Button type="register" onClick={() => crud.addRow()}>등록</Button>
-          <Button type="delete" onClick={remove}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={remove}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<IcsDcrType> crud={crud} columnDefs={columnDefs} />

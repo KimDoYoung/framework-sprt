@@ -112,7 +112,7 @@ export const Biz17_TabPage_DualManageFund: React.FC<Props> = ({ corp, nonce, onC
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E2] searchBarBuilder[삭제].Delete (L64) → deleteRow() · [E6] msgBox.DialogHide [YES] (L213) → updateTransInfoGrid() */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E3] searchBarBuilder[저장].Update (L65) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
       </div>

@@ -79,7 +79,7 @@ export const Pay21_TabPage_Rate = forwardRef<PayTabPageHandle>((_props, ref) => 
         {/* [E5] updateButton[저장].Select (L107) → update() L171-184. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E6] deleteButton[삭제].Select (L113) → deleteRow() L192-207 → [E8] messageBox.DialogHide [YES] (L195) → pay.Pay21_Rate.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>}>
         <SearchBar.Field label="율 구분">
           <SystemCodeComboBox kindCd="RateCode" altCode={['%', '전체']} style={{ width: 120 }} value={rateCode} onChange={v => setRateCode(v ?? '%')} />

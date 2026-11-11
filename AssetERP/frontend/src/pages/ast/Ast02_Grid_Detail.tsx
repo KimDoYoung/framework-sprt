@@ -323,7 +323,7 @@ export const Ast02_Grid_Detail = forwardRef<Ast02GridDetailHandle, Props>(({ onN
               {/* [E1] retrieveButton[조회].Select */}
               <Button type="search" onClick={() => retrieve()} disabled={isDisabled}>조회</Button>
               {/* [E3] deleteButton[삭제].Select */}
-              <Button type="delete" onClick={deleteRow} disabled={isDisabled}>삭제</Button>
+              <Button type="delete" onClick={deleteRow} disabled={isDisabled || !crud.hasChecked}>삭제</Button>
               {/* [E5] addButton[항목추가].Select */}
               <Button type="register" onClick={insert} disabled={isDisabled}>항목추가</Button>
             </div>

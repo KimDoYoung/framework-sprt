@@ -147,7 +147,7 @@ export const Biz50_Lookup_ErpSetup: React.FC<Props> = ({ open, onClose }) => {
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             <Button type="save" count={{ ...crud.changes, modified: crud.changes.modified + (noteDirty ? 1 : 0) }} onClick={saveAll}>저장</Button>
             {/* [E4] deleteButton[삭제].Select (L133) → deleteChk() → [E10] msgBox.DialogHide [YES] (L279) → deleteRow() */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             <span style={{ width: 16 }} />
             <Button type="view" onClick={() => void mappingSet()}>메일양식</Button>
           </Space>

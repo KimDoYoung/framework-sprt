@@ -63,7 +63,7 @@ export const Pay34_Tab_WorkTimeConfig: React.FC = () => {
         {/* [E3] updateButton[저장].Select (L88) → update() L144-147. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L94) → deleteChk() → [E5] msgBox.DialogHide [YES] (L160) → deleteRow() → pay.Pay34_WorkTimeConfig.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>} />
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<PayWorkTime> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />

@@ -165,7 +165,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E4] deleteButton[삭제].Select (L87) → deleteRow() */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         <Button type="view" onClick={openHistory}>요청이력</Button>
       </>}>
         <SearchBar.Field label="구분">

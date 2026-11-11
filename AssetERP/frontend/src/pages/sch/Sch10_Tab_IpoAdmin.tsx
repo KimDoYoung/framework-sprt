@@ -149,7 +149,7 @@ export const Sch10_Tab_IpoAdmin: React.FC = () => {
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E4] updateButton[저장].Select (L187) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-          <Button type="delete" onClick={deleteRow}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
           {/* [E11] stkItemButton[주식등록].Select (L231) → Com50_Lookup_StkItem.edit(…) */}
           <Button type="register" onClick={() => setStkItemOpen(true)}>주식등록</Button>
         </>}

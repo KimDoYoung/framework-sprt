@@ -162,7 +162,7 @@ export const Ast01_Grid_AstTypeManagement = forwardRef<Ast01GridAstTypeManagemen
         }}
       >
         <div style={{ display: 'flex', gap: 8, padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
-          <Button type="delete" onClick={deleteRow} disabled={!parentModel}>
+          <Button type="delete" onClick={deleteRow} disabled={!parentModel || !crud.hasChecked}>
             삭제
           </Button>
           <Button type="register" onClick={insertRow} disabled={!parentModel}>

@@ -73,7 +73,7 @@ export const Apr30_Tab_ApprStepGroup: React.FC = () => {
               <Button type="register" onClick={() => crud.addRow()}>등록</Button>
               {/* [E3] updateButton[저장].Select (L112) → update() L163-166 */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <CellEditGrid<AprApprStepGroup> crud={crud} columnDefs={columnDefs} rowSelection={ROW_SELECTION} onSelectionChanged={onSelectionChanged} />

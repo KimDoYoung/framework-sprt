@@ -118,7 +118,7 @@ export const Biz13_TabPage_WithCorp: React.FC<Props> = ({ corp, nonce, onCorpCha
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E2] deleteButton[삭제].Select (L90) → deleteRow() · [E7] msgBox.DialogHide [YES] (L268) → updateTransInfoGrid() */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E3] updateButton[저장].Select (L96) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] corpButton[운용사코드 등록].Select (L102) → lookupCorp() L153-156: Sys15_Lookup_Corp_OnlyKFS.open() */}

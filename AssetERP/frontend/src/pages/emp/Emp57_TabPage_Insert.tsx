@@ -86,7 +86,7 @@ export const Emp57_TabPage_Insert: React.FC<Props> = ({ parentId }) => {
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E2] updateButton[저장].Select (L72) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<EmpAddrBookMember> crud={crud} columnDefs={columnDefs} />

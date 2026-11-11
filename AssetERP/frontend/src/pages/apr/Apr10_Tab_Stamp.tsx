@@ -196,7 +196,7 @@ export const Apr10_Tab_Stamp: React.FC = () => {
           <Button type="register" onClick={() => crud.addRow()}>등록</Button>
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L131) → deleteRow() L372-393 */}
-          <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<AprStampManage> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />

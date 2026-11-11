@@ -121,7 +121,7 @@ export const Pay31_TabPage_InsureApply2 = forwardRef<PayInsureApplyTabHandle>((_
           {/* [E6] updateButton[저장].Select (L191) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E7] deleteButton[삭제].Select (L197) → deleteRow() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           {/* [E8] excelUploadButton[엑셀업로드].Select (L203) → excelUpload(): ExcelUpload?uploadType=ediUpload */}
           <Button type="upload" onClick={() => excelForm.current?.click()}>엑셀업로드</Button>
           <FileUpdownForm ref={excelForm} accept=".xlsx,.xls" onChange={onExcelFile} />

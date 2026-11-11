@@ -61,7 +61,7 @@ export const Sys04_Tab_Role: React.FC = () => {
         {/* [E3] insertButton[등록].Select (L67) */}
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E4] deleteButton[삭제].Select (L73) */}
-        <Button type="delete" onClick={deleteChk}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
       </>}>
         <SearchBar.Field label="권한명">
           <SearchBar.Input style={{ width: 180 }} value={roleName} onChange={e => setRoleName(e.target.value)} />

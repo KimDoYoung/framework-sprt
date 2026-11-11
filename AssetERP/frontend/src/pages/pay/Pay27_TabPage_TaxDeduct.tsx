@@ -99,7 +99,7 @@ export const Pay27_TabPage_TaxDeduct: React.FC<PayDetailProps> = ({ date, tick }
             {/* [E2] updateButton[저장].Select (L81) → update() L188-191. 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             {/* [E3] deleteButton[삭제].Select (L87) → delete() L200-215 → [E7] messageBox.DialogHide [YES] (L203) → pay.Pay27_TaxDeductTable.delete */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </>}
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -115,7 +115,7 @@ export const Pay27_TabPage_TaxDeduct: React.FC<PayDetailProps> = ({ date, tick }
             {/* [E5] limitUpdateButton[저장].Select (L121) → limitUpdate() L233-236. 저장(n)은 UX-03 */}
             <Button type="save" count={limitCrud.changes} onClick={limitCrud.saveRows}>저장</Button>
             {/* [E6] limitDeleteButton[삭제].Select (L127) → limitDelete() L245-260 → [E8] messageBox.DialogHide [YES] (L248) → pay.Pay28_TaxDeductLimit.delete */}
-            <Button type="delete" onClick={limitCrud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!limitCrud.hasChecked} onClick={limitCrud.deleteChecked}>삭제</Button>
           </>}
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>

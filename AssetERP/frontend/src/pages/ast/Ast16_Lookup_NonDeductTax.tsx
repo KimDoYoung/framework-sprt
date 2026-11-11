@@ -86,7 +86,7 @@ export const Ast16_Lookup_NonDeductTax: React.FC<Props> = ({ target, onSaved, on
           {/* [E4] insertRowButton[등록].Select (L97) → insertRow() */}
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E5] deleteButton[삭제].Select (L103) → delete() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<AstNonDeductTax> crud={crud} columnDefs={columnDefs} />

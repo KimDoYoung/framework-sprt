@@ -178,7 +178,7 @@ export const Fnd32_Tab_Account: React.FC = () => {
             {/* [E5] updateButton[저장].Select (L159) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             {/* [E6] deleteButton[삭제].Select (L165) → deleteChk() L426 */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             <Button type="download" onClick={downloadTemplate}>템플릿</Button>
             <Button type="upload" onClick={() => excelForm.current?.click()}>엑셀업로드</Button>
             <FileUpdownForm ref={excelForm} accept=".xlsx,.xls" onChange={onExcelFile} />

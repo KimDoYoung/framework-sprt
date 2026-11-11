@@ -232,7 +232,7 @@ export const Bmt01_Tab_Buy: React.FC = () => {
                     <Button type="register" onClick={insertRow}>등록</Button>
                     {/* [E4] updateButton[저장].Select (L164) → update() L445-477. 저장(n)은 UX-03 */}
                     <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-                    <Button type="delete" onClick={deleteRow}>삭제</Button>
+                    <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
                   </>
                 )}
               >

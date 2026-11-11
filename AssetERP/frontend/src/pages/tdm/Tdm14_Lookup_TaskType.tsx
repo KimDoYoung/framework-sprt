@@ -166,7 +166,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
               {/* [E7] updateButton[저장].Select (L195) → update() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
               {/* [E5] deleteButton[삭제].Select (L174) → "삭제하시겠습니까?" [E6] messageBox.DialogHide (L183) → delete() */}
-              <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             </>
           )}
         </Space>

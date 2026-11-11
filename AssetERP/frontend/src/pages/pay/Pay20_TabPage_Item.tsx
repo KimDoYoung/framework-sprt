@@ -96,7 +96,7 @@ export const Pay20_TabPage_Item = forwardRef<PayTabPageHandle>((_props, ref) => 
         {/* [E6] updateButton[저장].Select (L122) → update() L196-209. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E7] deleteButton[삭제].Select (L128) → deleteRow() L219-234 → [E10] messageBox.DialogHide [YES] (L222) → pay.Pay20_Item.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>}>
         <SearchBar.Field label="항목구분">
           <SystemCodeComboBox kindCd="PayItemType" altCode={['%', '전체']} style={{ width: 150 }} value={itemType} onChange={v => setItemType(v ?? '%')} />

@@ -136,7 +136,7 @@ export const Crd11_Lookup_ExcelCode: React.FC<Props> = ({ open, bankCode, bankNa
             {/* [E3] updateButton[저장].Select (L123) → update(). 저장(n)은 UX-03 */}
             <Button type="save" disabled={!custom} count={crud.changes} onClick={crud.saveRows}>저장</Button>
             <Tooltip title="전체 제거 후 조회 시 기본세팅으로 돌아갑니다.">
-              <span><Button type="delete" disabled={!custom} onClick={crud.deleteChecked}>삭제</Button></span>
+              <span><Button type="delete" disabled={!custom || !crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button></span>
             </Tooltip>
           </Space>
           <Button type="assign" onClick={customChk}>커스텀 설정</Button>

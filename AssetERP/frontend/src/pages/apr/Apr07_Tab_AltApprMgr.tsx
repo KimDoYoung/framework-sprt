@@ -137,7 +137,7 @@ export const Apr07_Tab_AltApprMgr: React.FC = () => {
         onSearch={() => void crud.retrieve()}
         extra={
           <>
-            <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           </>

@@ -90,7 +90,7 @@ export const Car02_Grid_User: React.FC<Props> = ({ infoId, enabled }) => {
         {/* [E3] updateButton[저장].Select (L83) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L89) → deleteRow() → [E6] messageBox.DialogHide [YES] (L175) */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<CarUser> crud={crud} columnDefs={columnDefs} />

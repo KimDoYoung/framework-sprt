@@ -139,7 +139,7 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
             extra={isManager ? (
               <Space>
                 <Button type="register" onClick={() => setAddOpen(true)}>추가</Button>
-                <Button type="delete" onClick={deleteAccountCode}>제거</Button>
+                <Button type="delete" disabled={!crud.hasChecked} onClick={deleteAccountCode}>제거</Button>
               </Space>
             ) : undefined}>
             <SearchBar.Field label="계정속성">
@@ -153,7 +153,8 @@ export const Pay52_Lookup_AccountCode: React.FC<Props> = ({ open, isManager, onR
           </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             <CellEditGrid<PayFavoriteAccount> crud={crud} columnDefs={columnDefs} sortable={false} rowSelection={SINGLE_CHECK}
-              onRowDoubleClicked={e => { if (e.data) confirm(e.data); }} />
+              onRowDoubleClicked={e => { if (e.data) confirm(e.data); }}
+              singleClickEdit={false} /* UX-16 예외: 행 더블클릭 = 선택 */ />
           </div>
         </div>
       </LookupModal>

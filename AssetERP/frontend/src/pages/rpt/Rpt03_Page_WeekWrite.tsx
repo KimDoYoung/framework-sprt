@@ -100,7 +100,7 @@ export const Rpt03_Page_WeekWrite: React.FC<Props> = ({ startDate, closeDate, no
         {/* [E2] updateButton[저장].Select (L77) → fixCheck(), update() */}
         <Button type="save" count={crud.changes} onClick={() => fixCheck(() => crud.saveRows())}>저장</Button>
         {/* [E3] deleteButton[삭제].Select (L84) → fixCheck(), deleteChk() → [E4] msgBox.DialogHide [YES] (L144) → delete() */}
-        <Button type="delete" onClick={() => fixCheck(() => crud.deleteChecked())}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={() => fixCheck(() => crud.deleteChecked())}>삭제</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<RptWeek> crud={crud} columnDefs={columnDefs} />

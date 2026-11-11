@@ -173,7 +173,7 @@ export const Emp55_Tab_benefitInfoManager: React.FC = () => {
                 {/* [E6] updateButton[저장].Select (L184) → update(). 저장(n)은 UX-03 */}
                 <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
                 {/* [E7] deleteButton[삭제].Select [YES] (L190) → [E8] msgBox.DialogHide [YES] (L199) → delete() L462-466 */}
-                <Button type="delete" onClick={deleteWithCheck(crud)}>삭제</Button>
+                <Button type="delete" disabled={!crud.hasChecked} onClick={deleteWithCheck(crud)}>삭제</Button>
                 <Button type="generate" onClick={initData}>기초데이터생성</Button>
               </>}>
                 <SearchBar.Field label="검색">
@@ -196,7 +196,7 @@ export const Emp55_Tab_benefitInfoManager: React.FC = () => {
                 {/* [E11] updateButton2[저장].Select (L229) → update2() */}
                 <Button type="save" count={tgtCrud.changes} onClick={updateCompany}>저장</Button>
                 {/* [E12] deleteButton2[삭제].Select [YES] (L235) → [E13] msgBox.DialogHide [YES] (L244) → delete2() L468-472 */}
-                <Button type="delete" onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
+                <Button type="delete" disabled={!tgtCrud.hasChecked} onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
               </>}>
                 <SearchBar.Field label="고객사">
                   <LookupInput width={150} value={companyName} onOpen={() => setCompanyLookup('single')}

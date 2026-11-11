@@ -91,7 +91,7 @@ export const Bmt11_TabPage_History: React.FC<Props> = ({ infoId }) => {
         <Button type="search" onClick={() => crud.retrieve()}>조회</Button>
         {/* [E2] insertButton[등록].Select (L77) → insert() */}
         <Button type="register" onClick={() => { if (infoId == null) { message.warning('장비를 먼저 선택해주세요'); return; } crud.addRow(); }}>등록</Button>
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
         {/* [E4] updateButton[저장].Select (L89) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
       </div>

@@ -87,7 +87,7 @@ export const Tdm91_Tab_CompanySetup: React.FC = () => {
               <Button type="register" onClick={copyInsertRow}>등록(복사)</Button>
               {/* [E4] updateButton[저장].Select (L99) → update() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteRow}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
             </>
           }
         />

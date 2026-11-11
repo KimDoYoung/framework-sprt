@@ -70,7 +70,7 @@ export const Pay29_TabPage_OtherSetup: React.FC<PayDetailProps> = ({ date, tick 
         {/* [E2] updateButton[저장].Select (L72) → update() L113-116. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E3] deleteButton[삭제].Select (L78) → deleteRow() L125-140 → [E4] messageBox.DialogHide [YES] (L128) → pay.Pay29_OtherSetup.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </Space>}
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<PayOtherSetup> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW_SELECTION} />

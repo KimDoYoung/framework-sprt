@@ -5,11 +5,15 @@
   font-size: 12px;
   letter-spacing: 2px; /* AS-IS 글자 간격 */
 }
-.ant-btn.erp-btn:disabled { opacity: 0.5; }
+/* UX-15 (2026-11-11): 비활성은 원래 색을 아주 흐리게(회색 바탕은 화면이 칙칙해져 쓰지 않음) */
+.ant-btn.erp-btn:disabled { opacity: 0.3; }
 .ant-btn.erp-btn-blue { background: #456ea6; }
 .ant-btn.erp-btn-blue:not(:disabled):hover { background: #597eb1; color: #fff; }
 .ant-btn.erp-btn-mint { background: #17a2b8; }
 .ant-btn.erp-btn-mint:not(:disabled):hover { background: #3cc0d5; color: #fff; }
+/* UX-15: 저장은 활성일 때 짙은 민트 — 저장(0) 흐림과 저장(1)이 한눈에 갈린다 */
+.ant-btn.erp-btn-type-save:not(:disabled) { background: #0f7f90; }
+.ant-btn.erp-btn-type-save:not(:disabled):hover { background: #138fa2; color: #fff; }
 .ant-btn.erp-btn-red { background: #dd5e5e; }
 .ant-btn.erp-btn-red:not(:disabled):hover { background: #d99191; color: #fff; }
 .ant-btn.erp-btn-orange { background: #e89646; }

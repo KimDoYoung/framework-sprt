@@ -89,7 +89,7 @@ export const Sys09_Grid_Code: React.FC<Props> = ({ isAdmin, codeKind, companyId:
           {/* [E3] insertButton[등록].Select (L69) → insertRow() */}
           <Button type="register" disabled={!editable} onClick={insertRow}>등록</Button>
           {/* [E5] deleteButton[삭제].Select (L81) → deleteRow() */}
-          <Button type="delete" disabled={!editable} onClick={deleteRow}>삭제</Button>
+          <Button type="delete" disabled={!editable || !crud.hasChecked} onClick={deleteRow}>삭제</Button>
         </>}>
           <SearchBar.Field label="상세코드구분명">
             {/* [E1] detailCodeKindName.KeyPress [Enter] (L55) → retrieve() */}

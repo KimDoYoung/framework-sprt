@@ -179,7 +179,7 @@ export const Biz52_Lookup_ErpFee: React.FC<Props> = ({ erpContCorpId, onClose })
           {/* [E3] updateButton[저장].Select (L117) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L123) → deleteChk() → [E11] msgBox.DialogHide [YES] (L367) → deleteRow() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<BizErpFee> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_CHECK} />

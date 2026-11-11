@@ -80,7 +80,7 @@ export const Sch15_Lookup_IpoItemMatching: React.FC<Props> = ({ open, onClose })
           {/* [E5] updateButton[저장].Select (L93) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L87) → deleteRow() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </>}>
           <SearchBar.Input style={{ width: 200 }} placeholder="검색어(종목코드/종목명) 입력" value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar>

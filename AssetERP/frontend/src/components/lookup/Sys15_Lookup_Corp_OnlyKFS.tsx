@@ -107,7 +107,7 @@ export const Sys15_Lookup_Corp_OnlyKFS: React.FC<Props> = ({ open, onClose }) =>
             {/* [E5] insertButton[등록].Select (L141) → insertRow() · [E6] updateButton[저장].Select (L147) → update() */}
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRow}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
           </>}
         >
           <SearchBar.Field label="구분">

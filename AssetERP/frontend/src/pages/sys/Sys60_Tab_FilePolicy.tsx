@@ -55,7 +55,7 @@ export const Sys60_Tab_FilePolicy: React.FC = () => {
         {/* [E4] updateButton[저장].Select (L99) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E5] deleteButton[삭제].Select (L105) → deleteChk(), [E6] msgBox.DialogHide [YES] (L153) → deleteRow() → sys.Sys60_FilePolicy.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </>}>
         <SearchBar.Field label="검색어">
           <SearchBar.Input style={{ width: 200 }} placeholder="확장자/MIME/비고" value={searchText} onChange={e => setSearchText(e.target.value)} />

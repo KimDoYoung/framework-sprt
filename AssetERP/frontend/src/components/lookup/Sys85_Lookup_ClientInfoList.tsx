@@ -97,7 +97,7 @@ export const Sys85_Lookup_ClientInfoList: React.FC<Props> = ({ open, onResult, o
           {/* [E3] insertButton[등록].Select (L103) → insert() */}
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E4] deleteButton[삭제].Select (L109) → delete() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           <Typography.Text style={{ color: '#4472C4' }}>※  '가나다' 순으로 정렬</Typography.Text>
         </>}>
           <SearchBar.Field label="검색">

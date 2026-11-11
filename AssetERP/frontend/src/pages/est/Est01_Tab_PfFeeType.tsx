@@ -148,7 +148,7 @@ export const Est01_Tab_PfFeeType: React.FC = () => {
           {/* [E2] insertButton[등록].Select (L95) → insertRow() L201-207 */}
           <Button type="register" onClick={crud.addRow}>등록</Button>
           <Button type="save" count={crud.changes} onClick={updateChk}>저장</Button>
-          <Button type="delete" onClick={deleteChk}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<PfFeeType> crud={crud} columnDefs={columnDefs} />

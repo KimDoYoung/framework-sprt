@@ -158,13 +158,13 @@ export const Ast41_Lookup_InvestLimit: React.FC<Props> = ({ open, onClose }) => 
             <Button type="search" onClick={retrieve}>조회</Button>
             {/* [E3] insertButton[생성].Select (L94) → insert() L242-250: Ast41_Lookup_Insert 열기, 닫힌 뒤 retrieve() */}
             <Button type="generate" onClick={() => setInsertOpen(true)}>생성</Button>
-            <Button type="delete" onClick={deleteDate}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteDate}>삭제</Button>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {/* [E5] insertRowButton[행 추가].Select (L106) → insertRow() */}
             <Button type="addRow" onClick={crud.addRow} disabled={!startDate}>행 추가</Button>
             {/* [E6] deleteRowButton[행 삭제].Select (L112) → deleteRow() */}
-            <Button type="removeRow" onClick={crud.deleteChecked}>행 삭제</Button>
+            <Button type="removeRow" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>행 삭제</Button>
           </div>
         </div>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 8 }}>

@@ -108,7 +108,7 @@ export const Pay24_TabPage_Deduct: React.FC<PayDetailProps> = ({ date, tick }) =
           {/* 저장(n)은 UX-03 — 공제한도만 바뀐 경우도 저장할 수 있게 센다 */}
           <Button type="save" count={{ ...crud.changes, modified: crud.changes.modified + (limitDirty ? 1 : 0) }} onClick={update}>저장</Button>
           {/* [E3] deleteButton[삭제].Select (L99) → deleteRow() L186-204 → [E4] messageBox.DialogHide [YES] (L188) → pay.Pay24_DeductTable.delete */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </>}
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>

@@ -141,7 +141,7 @@ export const Ast05_Tab_TrCodeAdmin: React.FC = () => {
             {/* [E4] addRowButton[등록].Select (L102) → insertRow() */}
             <Button type="register" onClick={crud.addRow}>등록</Button>
             {/* [E5] deleteRowButton[삭제].Select (L108) → deleteChk() */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             {/* [E6] windowUseButton[화면별 거래유형 등록].Select (L114) → lookupWindowUse() L270-273 */}
             <Button type="register" onClick={() => setWindowOpen(true)}>화면별 거래유형 등록</Button>
             <LookupInput value={companyText} onOpen={() => setCompanyOpen(true)} onClear={() => setCompanyList(null)} />

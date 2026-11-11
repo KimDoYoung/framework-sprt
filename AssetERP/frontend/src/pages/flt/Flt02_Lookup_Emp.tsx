@@ -270,7 +270,7 @@ export const Flt02_Lookup_Emp: React.FC<Props> = ({ open, onClose }) => {
             {/* [E3] updateButton[저장].Select (L195) → update() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             {/* [E4] deleteButton[삭제].Select (L201) → deleteRow() → [E14] msgBox.DialogHide [YES] (L542) → delete() */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </div>
           <div style={{ height: 150 }}>
             {/* setChecked(MULTI) L306 — 삭제·저장용 체크라 행 클릭 선택(rowClick)은 쓰지 않는다 (03 원칙 16 예외) */}

@@ -149,7 +149,7 @@ export const Flt05_Tab_ItemTypeAdmin: React.FC = () => {
                 {/* [E5] updateButton[저장].Select (L172) → update(). 저장(n)은 UX-03 */}
                 <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
                 {/* [E6] deleteButton[삭제].Select [YES] (L178) → deleteRow() L396-400, [E7] msgBox.DialogHide [YES] (L187) → flt.Flt05_ItemType.delete */}
-                <Button type="delete" onClick={deleteWithCheck(crud)}>삭제</Button>
+                <Button type="delete" disabled={!crud.hasChecked} onClick={deleteWithCheck(crud)}>삭제</Button>
               </>}>
                 <SearchBar.Field label="검색">
                   <SearchBar.Input style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
@@ -173,7 +173,7 @@ export const Flt05_Tab_ItemTypeAdmin: React.FC = () => {
                 {/* [E10] updateRButton[저장].Select (L216) → updateCompany() L365-368 */}
                 <Button type="save" count={tgtCrud.changes} onClick={tgtCrud.saveRows}>저장</Button>
                 {/* [E11] deleteRButton[삭제].Select [YES] (L222) → deleteRowCompany() L402-406, [E12] msgBox.DialogHide [YES] (L231) */}
-                <Button type="delete" onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
+                <Button type="delete" disabled={!tgtCrud.hasChecked} onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
               </>}>
                 <SearchBar.Field label="고객사">
                   <LookupInput width={150} value={companyName} onOpen={() => setLookupCompany(true)}

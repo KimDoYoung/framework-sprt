@@ -104,7 +104,7 @@ export const Emp33_Lookup_ExceptBiz: React.FC<Props> = ({ exceptBizCode, onClose
             <Button type="register" onClick={() => setPickOpen(true)}>등록</Button>
             {/* [E3] updateButton[저장].Select (L104) → update() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteChk}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
           </Space>
           <div style={{ flex: 1, minHeight: 0 }}>
             <CellEditGrid<ExceptBiz> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />

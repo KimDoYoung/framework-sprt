@@ -208,7 +208,7 @@ export const Ast05_Lookup_TrCode: React.FC<Props> = ({ open, mode, assetType, fi
           )}
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <CellEditGrid<TrCode> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_CLICK} onRowDoubleClicked={confirm} />
+          <CellEditGrid<TrCode> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_CLICK} onRowDoubleClicked={confirm} singleClickEdit={false} /* UX-16 예외: 행 더블클릭 = 선택 */ />
         </div>
       </div>
     </LookupModal>

@@ -195,7 +195,7 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
         extra={(
           <>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteCheck}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteCheck}>삭제</Button>
             <Button type="generate" onClick={insert}>생성</Button>
             <span style={{ color: '#4472C4', whiteSpace: 'nowrap' }}>※ 기타직은 미사용 월차휴가관리 대상자가 아니므로 생성 시 제외됩니다.</span>
           </>

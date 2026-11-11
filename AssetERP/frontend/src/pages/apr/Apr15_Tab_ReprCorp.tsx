@@ -106,7 +106,7 @@ export const Apr15_Tab_ReprCorp: React.FC = () => {
           {/* [E3] updateButton[저장].Select (L88) → updateChk() L171-204. 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L94) → deleteChk() L206-223 */}
-          <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<AprReprCorp> crud={crud} columnDefs={columnDefs} />

@@ -104,7 +104,7 @@ export const Crd11_Lookup_ExcelCodeAdmin: React.FC<Props> = ({ excelCompany, onC
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E3] updateButton[저장].Select (L107) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<CrdExcelCode> crud={crud} columnDefs={columnDefs} />

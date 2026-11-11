@@ -14,7 +14,8 @@ import './button.css';
  *
  * UX보강(docs/1-변환/10-UX보강.md):
  * - UX-01 onClick이 Promise를 돌려주면 끝날 때까지 loading(아이콘 스피너·중복 클릭 무시). `loading` prop을 주면 그 값이 우선.
- * - UX-03 `count`(useGridCrud의 `changes` 또는 숫자)를 주면 문구 `저장(3)`, 0건이면 비활성, 툴팁에 추가·수정 수.
+ * - UX-03 `count`(useGridCrud의 `changes` 또는 숫자)를 주면 문구 `저장(3)`, 0건이면 `저장`(개수 없음)·비활성, 툴팁에 추가·수정 수.
+ * - UX-15 비활성은 원래 색을 아주 흐리게(button.css), 저장(save)은 활성일 때 짙은 민트(`erp-btn-type-save`).
  */
 type Color = 'blue' | 'mint' | 'red' | 'orange' | 'green' | 'lightBlue' | 'darkGray' | 'dark' | 'mainTheme';
 
@@ -96,7 +97,8 @@ export function usePromiseLoading<A extends unknown[]>(fn: ((...args: A) => unkn
 export const Button: React.FC<ButtonProps> = ({ type, className, icon, children, onClick, loading, count, disabled, ...rest }) => {
   const [busy, run] = usePromiseLoading(onClick);
   const n = count == null ? undefined : typeof count === 'number' ? count : count.added + count.modified;
-  const label = n == null || children == null ? children : <>{children}({n})</>;
+  // 0건이면 개수 없이 `저장`만 (사용자 결정 2026-11-11 — 비활성 흐림으로 충분히 구분된다)
+  const label = n == null || n === 0 || children == null ? children : <>{children}({n})</>;
   const common = {
     ...rest,
     loading: loading ?? busy,
@@ -109,7 +111,7 @@ export const Button: React.FC<ButtonProps> = ({ type, className, icon, children,
   } else {
     const [color, typeIcon, iconOnly] = TYPES[type] as [Color, React.ReactNode, boolean?];
     button = (
-      <AntButton {...common} className={['erp-btn', `erp-btn-${color}`, className].filter(Boolean).join(' ')} icon={icon ?? typeIcon}>
+      <AntButton {...common} className={['erp-btn', `erp-btn-${color}`, `erp-btn-type-${type}`, className].filter(Boolean).join(' ')} icon={icon ?? typeIcon}>
         {iconOnly ? null : label}
       </AntButton>
     );

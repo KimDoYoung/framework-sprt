@@ -302,7 +302,7 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
             <Button type="register" onClick={() => crud.addRows([initRow()], true)}>등록</Button>
             {/* [E5] updateButton[저장].Select (L181) → updateChk() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteChk}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
           </>
         }
       >

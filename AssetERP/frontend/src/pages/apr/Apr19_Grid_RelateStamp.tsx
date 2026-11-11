@@ -91,7 +91,7 @@ export const Apr19_Grid_RelateStamp: React.FC<Props> = ({ corpDocId, nonce, onRe
         {/* [E1] insertButton[등록].Select (L69) → insertRow() · [E2] updateButton[저장].Select (L75) → update() · [E3] deleteButton[삭제].Select (L81) → deleteChk() */}
         <Button type="register" onClick={() => crud.addRow()}>등록</Button>
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={deleteChk}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<AprRelateStamp> crud={crud} columnDefs={columnDefs} />

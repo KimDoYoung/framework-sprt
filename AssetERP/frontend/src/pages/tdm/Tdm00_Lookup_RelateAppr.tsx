@@ -107,7 +107,7 @@ export const Tdm00_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
             {/* [E3] updateExtrEvidButton[저장].Select (L88) → updateExtrEvid() */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             {/* [E4] deleteExtrEvidButton[삭제].Select (L94) → deleteExtrEvid() → [E5] messageBox.DialogHide YES (L224) */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </>
         )}
       </div>

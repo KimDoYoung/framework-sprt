@@ -65,7 +65,7 @@ export const Emp10_Tab_AddrBook: React.FC = () => {
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             {/* [E4] updateButton[저장].Select (L104) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
             {/* [E6] groupButton[그룹설정].Select (L116) → new Emp57_Lookup_Insert().open() */}
             <Button type="group" onClick={() => setGroupOpen(true)}>그룹설정</Button>
           </>}>

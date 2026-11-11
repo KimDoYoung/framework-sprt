@@ -128,7 +128,7 @@ export const Sys13_TabPage_Code = forwardRef<Sys13_TabPage_CodeHandle>((_props, 
           {/* [E4] updateButton[저장].Select (L130) → update() */}
           <Button type="save" count={crud.changes} disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L136) → deleteRow() */}
-          <Button type="delete" disabled={!isAdminCompany} onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!isAdminCompany || !crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </Space>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>

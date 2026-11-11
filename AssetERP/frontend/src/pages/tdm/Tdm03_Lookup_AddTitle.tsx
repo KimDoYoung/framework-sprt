@@ -146,7 +146,7 @@ export const Tdm03_Lookup_AddTitle: React.FC<Props> = ({ person, onClose }) => {
           {/* [E3] updateButton[저장].Select (L122) → confirmSave() */}
           <Button type="save" count={active.changes} onClick={confirmSave}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L142) → deleteChecked; [E6] messageBox.DialogHide (L146) YES → deleteInterGrid(), deleteExterGrid(): "삭제하시겠습니까?" → 선택한 행, 없으면 "삭제할 내역을 선택하세요" */}
-          <Button type="delete" onClick={active.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!active.hasChecked} onClick={active.deleteChecked}>삭제</Button>
         </Space>
         {/* 탭 줄만 두고 아래 칸에 활성 탭 그리드를 둔다 (antd Tabs children 안의 그리드는 높이 0이 된다 — L07) */}
         <Tabs

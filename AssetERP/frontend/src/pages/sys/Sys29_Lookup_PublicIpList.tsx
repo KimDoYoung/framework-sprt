@@ -76,7 +76,7 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
           {/* [E3] updateButton[저장].Select (L93) */}
           <Button type="save" count={crud.changes} onClick={update}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L99) */}
-          <Button type="delete" onClick={remove}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={remove}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<LoginSecure> crud={crud} columnDefs={columnDefs} />

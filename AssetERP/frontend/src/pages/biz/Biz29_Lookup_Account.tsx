@@ -157,7 +157,7 @@ export const Biz29_Lookup_Account: React.FC<Props> = ({ open, onClose }) => {
                 {/* [E4] updateButton[저장].Select (L103) → update() */}
                 <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
                 {/* [E3] deleteButton[삭제].Select (L97) → deleteRow() → [E10] msgBox.DialogHide [YES] (L273) → biz.Biz29_Account.delete */}
-                <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+                <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
               </>
             }
           >

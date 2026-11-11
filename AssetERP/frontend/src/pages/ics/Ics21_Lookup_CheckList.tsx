@@ -128,7 +128,7 @@ export const Ics21_Lookup_CheckList: React.FC<Props> = ({ open, onClosed, onClos
             <Button type="register" onClick={crud.addRow}>등록</Button>
             {/* [E3] updateButton[저장].Select (L129) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteCheck}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteCheck}>삭제</Button>
           </Space>
           <div style={{ flex: 1, minHeight: 0 }}>
             <CellEditGrid<IcsChecklistLClass>

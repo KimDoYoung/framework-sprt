@@ -81,7 +81,7 @@ export const Fnd07_Tab_IssuingEntity: React.FC = () => {
       <SearchBar onSearch={retrieve} loading={crud.loading} extra={<>
         {/* [E3] updateButton[저장].Select (L70) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E4] fileUploadButton[파일업로드].Select (L76) → insertRow() L186-192: 숨은 파일 선택창을 연다 */}
         <Button type="upload" onClick={() => fileForm.current?.click()}>파일업로드</Button>
       </>}>

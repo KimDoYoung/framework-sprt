@@ -81,7 +81,7 @@ export const Emp93_Tabpage_SmsNoticeTargetList: React.FC<Props> = ({ smsNoticeCo
         {/* [E3] updateButton[저장].Select (L79) → update() */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L85) → deleteChk() → [YES] deleteRow() */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* setChecked(MULTI) — 삭제·저장용 체크라 행 클릭 선택(rowClick)은 쓰지 않는다 (03 원칙 16 예외) */}

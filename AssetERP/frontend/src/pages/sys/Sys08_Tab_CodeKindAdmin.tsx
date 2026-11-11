@@ -82,7 +82,7 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
                 {/* [E3] insertButton[등록].Select (L77) → insertRow() */}
                 <Button type="register" onClick={insertRow}>등록</Button>
                 {/* [E5] deleteButton[삭제].Select (L89) → deleteRow() */}
-                <Button type="delete" onClick={deleteRow}>삭제</Button>
+                <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
               </>}>
                 <SearchBar.Field label="코드구분명">
                   {/* [E1] codeKindName.KeyPress [Enter] (L63) → retrieve() */}

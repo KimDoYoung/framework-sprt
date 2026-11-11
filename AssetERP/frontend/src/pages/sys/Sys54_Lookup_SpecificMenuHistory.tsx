@@ -165,7 +165,7 @@ export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, o
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             <Button type="register" onClick={insert}>등록</Button>
             {/* [E4] deleteButton[삭제].Select (L126) → delete() */}
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             {/* 툴바의 fileDeleteForm·fileDownloadForm(보이지 않음) — 받기는 fileApi.download, 올리기는 FileUpdownForm */}
             <FileUpdownForm ref={fileUpdownForm} onChange={onFileChange} />
           </Space>

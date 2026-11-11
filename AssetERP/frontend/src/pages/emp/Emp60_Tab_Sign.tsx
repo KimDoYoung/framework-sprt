@@ -125,7 +125,7 @@ export const Emp60_Tab_Sign: React.FC = () => {
           {/* [E4] updateButton[저장].Select (L120) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L126) → deleteChk() */}
-          <Button type="delete" onClick={deleteChk}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<EmpSign> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />

@@ -168,7 +168,7 @@ export const Pay22_TabPage_SimpleTax: React.FC<PayDetailProps> = ({ date, tick }
               {/* [E6] updateButton[저장].Select (L162) → update() L253-256. 저장(n)은 UX-03 */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
               {/* [E7] deleteButton[삭제].Select (L168) → deleteRow() L265-280 → [E8] messageBox.DialogHide [YES] (L268) → pay.Pay23_SimpleTaxTableOther.delete */}
-              <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
             </>}
           </Space>
           <div style={{ flex: 1, minHeight: 0 }}>

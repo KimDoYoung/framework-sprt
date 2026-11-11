@@ -90,7 +90,7 @@ export const Cmp10_Tab_MailBookList: React.FC<Props> = ({ mailBookId }) => {
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E3] updateButton[저장].Select (L79) → update(). 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<CmpMailRole> crud={crud} columnDefs={columnDefs} />

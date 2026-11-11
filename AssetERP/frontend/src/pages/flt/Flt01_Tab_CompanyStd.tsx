@@ -132,7 +132,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
           {/* [E4] updateButton[저장].Select (L77) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L83) → deleteRow() L252-270, [E11] msgBox.DialogHide [YES] (L255) → delete() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           {/* [E6] itemTypeButton[종목유형설정].Select (L89) → Flt05_Lookup_ItemType.open() */}
           <Button type="group" onClick={() => setItemTypeOpen(true)}>종목유형설정</Button>
           {/* [E7] lockupItemButton[매수제한종목].Select (L96) → Flt08_Lookup_LockupItem.open() */}

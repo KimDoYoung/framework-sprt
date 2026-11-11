@@ -71,8 +71,21 @@ export interface CellEditGridProps<T> extends BaseGridProps<T> {
   crud: { gridRef: RefObject<AgGridReact<T> | null>; gridProps: GridOptions<T> };
 }
 
-export function CellEditGrid<T>({ crud, ...rest }: CellEditGridProps<T>) {
-  return <BaseGrid<T> gridRef={crud.gridRef} {...(crud.gridProps as BaseGridProps<T>)} {...rest} />;
+/**
+ * UX-16: 편집 칸은 한 번 클릭으로 편집(`singleClickEdit` 기본 true). 행 더블클릭에 다른 동작(선택 후 닫기 등)이 있으면 `singleClickEdit={false}`.
+ * UX-17: 화면이 `onSelectionChanged`를 줘도 `crud.hasChecked`가 갱신되게 둘 다 부른다.
+ */
+export function CellEditGrid<T>({ crud, singleClickEdit = true, onSelectionChanged, ...rest }: CellEditGridProps<T>) {
+  const own = crud.gridProps.onSelectionChanged;
+  return (
+    <BaseGrid<T>
+      gridRef={crud.gridRef}
+      {...(crud.gridProps as BaseGridProps<T>)}
+      singleClickEdit={singleClickEdit}
+      onSelectionChanged={(e: SelectionChangedEvent<T>) => { own?.(e); onSelectionChanged?.(e); }}
+      {...rest}
+    />
+  );
 }
 
 /** 1개 선택 + 행 더블클릭(또는 수정 버튼 컬럼)으로 onEdit → 모달에서 편집 */

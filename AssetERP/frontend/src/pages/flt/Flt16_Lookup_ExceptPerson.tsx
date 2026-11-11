@@ -109,7 +109,7 @@ export const Flt16_Lookup_ExceptPerson: React.FC<Props> = ({ open, onClose }) =>
             <Button type="register" onClick={() => setPickOpen(true)}>등록</Button>
             {/* [E3] updateButton[저장].Select (L99) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRows}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
           </>} />
           <div style={{ flex: 1, minHeight: 0 }}>
             <CellEditGrid<FltExceptPerson> crud={crud} columnDefs={columnDefs} />

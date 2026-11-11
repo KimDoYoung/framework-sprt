@@ -132,7 +132,7 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
         {/* [E5] insertButton[등록].Select (L122) → insertRow() */}
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E6] deleteButton[삭제].Select (L128) → deleteChk() */}
-        <Button type="delete" onClick={deleteChk}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
       </>}>
         <SearchBar.Field label="고객명">
           {/* [E1] searchText.KeyPress [Enter] (L94) → retrieve() — SearchBar.Input의 Enter */}

@@ -158,7 +158,7 @@ export const Com50_Lookup_StkItem: React.FC<Props> = ({ mode, initialSearchText,
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E5] updateButton[저장].Select (L171) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-          <Button type="delete" onClick={deleteItem}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteItem}>삭제</Button>
         </> : undefined}>
           <SearchBar.Field label="검색">
             <SearchBar.Input style={{ width: 150 }} placeholder="종목코드/명" value={searchText} onChange={e => setSearchText(e.target.value)} />
@@ -166,7 +166,7 @@ export const Com50_Lookup_StkItem: React.FC<Props> = ({ mode, initialSearchText,
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E2] grid.CellDoubleClick (L152) → confirm(). 원본은 EDIT에서도 묶지만 셀 편집(더블클릭)과 겹쳐 창이 닫혀 버리므로 VIEW에서만 묶는다 (결과확인에 사용자 확인 요청) */}
-          <CellEditGrid<Com50Item> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW} onRowDoubleClicked={edit ? undefined : confirm} />
+          <CellEditGrid<Com50Item> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW} onRowDoubleClicked={edit ? undefined : confirm} singleClickEdit={edit} /* UX-16: VIEW는 더블클릭 = 선택 */ />
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={crud.loading} onChange={getPaging} />
       </div>

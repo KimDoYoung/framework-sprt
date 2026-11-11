@@ -189,7 +189,7 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
               extra={(
                 <>
                   <Button type="register" onClick={insertRow}>등록</Button>
-                  <Button type="delete" onClick={deleteCheck}>삭제</Button>
+                  <Button type="delete" disabled={!crud.hasChecked} onClick={deleteCheck}>삭제</Button>
                   <Button type="save" count={crud.changes} onClick={preUpdate}>저장</Button>
                   <Button type="select" onClick={openLink}>문서분류지정</Button>
                 </>

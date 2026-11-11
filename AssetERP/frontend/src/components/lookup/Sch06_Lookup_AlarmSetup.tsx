@@ -188,7 +188,7 @@ export const Sch06_Lookup_AlarmSetup: React.FC<Props> = ({ target, onClosed, onC
           <Button type="register" onClick={insertRow}>등록</Button>
           {/* [E4] updateButton[저장].Select (L135) → preCheck() */}
           <Button type="save" count={isIpo ? { added: crud.changes.added + ipoCrud.changes.added, modified: crud.changes.modified + ipoCrud.changes.modified, editing: crud.changes.editing || ipoCrud.changes.editing } : crud.changes} onClick={saveAll}>저장</Button>
-          <Button type="delete" onClick={deleteRows}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
           <span style={{ color: '#527BB7', marginLeft: 4 }}>* 알람은 메일로 발송됩니다</span>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>

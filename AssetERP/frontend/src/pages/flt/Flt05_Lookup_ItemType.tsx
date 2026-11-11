@@ -114,7 +114,7 @@ export const Flt05_Lookup_ItemType: React.FC<Props> = ({ open, onClose }) => {
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E4] updateButton[저장].Select (L118) → update(). 저장(n)은 UX-03 */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-          <Button type="delete" onClick={deleteRows}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
         </>}>
           <SearchBar.Field label="검색">
             <SearchBar.Input style={{ width: 150 }} value={searchText} onChange={e => setSearchText(e.target.value)} />

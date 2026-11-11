@@ -185,7 +185,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
                     <Button type="register" onClick={crud.addRow}>등록</Button>
                     {/* [E4] updateButton[저장].Select (L110) → update(). 저장(n)은 UX-03 */}
                     <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-                    <Button type="delete" onClick={deleteRow}>삭제</Button>
+                    <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
                   </>
                 }
               >

@@ -235,7 +235,7 @@ export const Tdm40_Tab_ManlJob: React.FC = () => {
               <Button type="register" onClick={() => crud.addRows([{ regDate: dayjs().format(FORMAT), dutyEndYn: false }], true)}>등록</Button>
               {/* [E4] updateButton[저장].Select (L133) → updateChk() */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-              <Button type="delete" onClick={deleteChk}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
               <Button type="generate" onClick={checkPreCreateDuty}>관리의무생성</Button>
               {isManager && <Button type="generate" onClick={() => createDirectManl('REDEFINE_BY_ROLE')}>매뉴얼 작성</Button>}
               {isManager && <Button type="generate" onClick={() => createDirectManl('REMAKE_FROM_LATEST')}>매뉴얼 복제</Button>}

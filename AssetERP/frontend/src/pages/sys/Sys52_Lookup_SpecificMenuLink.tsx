@@ -90,7 +90,7 @@ export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, spec
           {/* [E3] updateButton[저장].Select (L95) → update() */}
           <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L101) → deleteRow() */}
-          <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* setChecked(SINGLE): 체크박스 단일 선택 */}

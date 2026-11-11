@@ -104,7 +104,7 @@ export const Sys14_Lookup_Holiday: React.FC<Props> = ({ open, onClose }) => {
               {/* [E4] updateButton[저장].Select (L108) → update(). 저장(n)은 UX-03 */}
               <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
               {/* [E5] deleteButton[삭제].Select (L114) → deleteRow(), [E9] msgBox.DialogHide [YES] (L252) → sys.Sys14_Holiday.delete */}
-              <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+              <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
               {user.companyId === 0 && <>
                 {/* [E7] companyField.TriggerClick [result != null] (L129) → Sys01_Lookup_Company: 고른 회사명·ID */}
                 <LookupInput width={150} value={companyName} onOpen={() => setLookupCompany(true)} onClear={() => { setCompanyName(''); setCompanyId(null); }} />

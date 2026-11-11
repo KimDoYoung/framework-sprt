@@ -152,7 +152,7 @@ export const Apr17_Tab_CorpDocApp: React.FC = () => {
                     <Button type="register" onClick={() => crud.addRow()}>등록</Button>
                     {/* [E7] updateButton[저장].Select (L185) → update() */}
                     <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-                    <Button type="delete" onClick={deleteChk}>삭제</Button>
+                    <Button type="delete" disabled={!crud.hasChecked} onClick={deleteChk}>삭제</Button>
                   </>
                 }
               >

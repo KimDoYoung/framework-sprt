@@ -156,7 +156,7 @@ export const Apr07_Lookup_AltAppr: React.FC<Props> = ({ open, leave, onClose }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
             <span style={{ flex: 1, minWidth: 0, color: '#1677ff' }}>{title}</span>
             {/* [E1] anchor.MouseDown (L104) → retrieve() — 새로고침 아이콘 */}
             <AntButton type="text" size="small" icon={<ReloadOutlined />} onClick={() => void crud.retrieve()} />

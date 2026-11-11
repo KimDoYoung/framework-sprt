@@ -77,7 +77,7 @@ export const Pay25_TabPage_Deduct: React.FC<PayDetailProps> = ({ date, tick }) =
         {/* [E2] updateButton[저장].Select (L73) → update() L118-121. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E3] deleteButton[삭제].Select (L79) → deleteRow() L131-146 → [E5] messageBox.DialogHide [YES] (L133) → pay.Pay25_PersonDeduct.delete */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
       </Space>}
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<PayPersonDeduct> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW_SELECTION} />

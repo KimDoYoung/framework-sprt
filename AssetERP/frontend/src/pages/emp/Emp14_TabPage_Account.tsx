@@ -79,7 +79,7 @@ export const Emp14_TabPage_Account: React.FC<TransInfoTabProps> = ({ row }) => {
         {/* [E2] searchBarBuilder[등록].Insert (L58) → insertRow() */}
         <Button type="register" onClick={crud.addRow} disabled={!row}>등록</Button>
         {/* [E3] searchBarBuilder[삭제].Delete (L59) → deleteRow() L133-155 */}
-        <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
         {/* [E4] searchBarBuilder[저장].Update (L60) → update() L106-119 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
       </Space>

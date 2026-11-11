@@ -298,7 +298,7 @@ export const Pay01_Tab_Annual: React.FC = () => {
             <Button type="register" onClick={() => crud.addRow()}>등록</Button>
             {/* [E6] updateButton[저장].Select (L294) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRows}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
             <span style={{ width: 16 }} />
             <Button type="download" onClick={downloadTemplate}>템플릿</Button>
             <Button type="upload" onClick={excelUpload}>엑셀업로드</Button>

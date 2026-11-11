@@ -95,7 +95,7 @@ export const Sys02_Tab_User: React.FC<CompanyTabProps> = ({ companyId }) => {
         {/* [E3] insertButton[등록].Select (L62) */}
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E4] deleteButton[삭제].Select (L68) */}
-        <Button type="delete" onClick={deleteRow}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRow}>삭제</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<AdminUser>

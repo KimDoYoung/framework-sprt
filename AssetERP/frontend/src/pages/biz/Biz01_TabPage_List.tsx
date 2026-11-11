@@ -138,7 +138,7 @@ export const Biz01_TabPage_List = forwardRef<Biz01_TabPage_ListHandle, Props>(({
         {/* [E2] updateButton[저장].Select (L92) → update() L174-182. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E3] deleteButton[삭제].Select (L98) → deleteRow() L222-248 */}
-        <Button type="delete" onClick={() => crud.deleteChecked()}>삭제</Button>
+        <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
         <Button type="goto" onClick={contactPoint}>상대처 관리 바로가기</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>

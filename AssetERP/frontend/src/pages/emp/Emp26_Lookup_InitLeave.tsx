@@ -95,7 +95,7 @@ export const Emp26_Lookup_InitLeave: React.FC<Props> = ({ open, year: openYear, 
           extra={<>
             <Button type="register" onClick={() => setMultiOpen(true)}>등록</Button>
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={crud.deleteChecked}>삭제</Button>
           </>}
         >
           <SearchBar.Field label="기준연도">

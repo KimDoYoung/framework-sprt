@@ -142,7 +142,7 @@ export const Flt08_Lookup_LockupItem: React.FC<Props> = ({ open, onClose }) => {
             <Button type="register" onClick={insertRow}>등록</Button>
             {/* [E5] updateButton[저장].Select (L139) → update(). 저장(n)은 UX-03 */}
             <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-            <Button type="delete" onClick={deleteRows}>삭제</Button>
+            <Button type="delete" disabled={!crud.hasChecked} onClick={deleteRows}>삭제</Button>
           </>}>
             <SearchBar.Field label="제한구분">
               {/* [E1] lockupTypeCombo[BuyLockupType].Collapse (L110) → retrieve() */}
