@@ -9,8 +9,8 @@
 #                                   DB 색인을 다시 만들면 소스 색인도 다시 만든다
 #                                   (소스 색인의 테이블 링크·⚠DB없음 판정이 DB 색인을 쓴다)
 #   ./check-git.sh -h | --help      도움말
-# 완료 화면 변경 점검은 변환을 모두 끝낸 뒤 따로 한다:
-#   yunhee drift --all --done-only --base baseline
+# 다음 단계: 변경반영 문서(반영대장) 만들기
+#   ./make-change-docs.sh   (docs/3-변경반영/README.md)
 #============================================================================
 set -euo pipefail
 
@@ -46,8 +46,8 @@ AS-IS 원본(YUNHEE_ASIS_SRC_DIR)을 git pull 하고, 색인 기준 커밋과 �
                            DB 색인을 다시 만들면 소스 색인도 다시 만든다(--no-index가 아니면)
   -h, --help               이 도움말
 
-완료 화면 변경 점검은 변환을 모두 끝낸 뒤 따로 한다:
-  (cd AssetERP && yunhee drift --all --done-only --base baseline)
+다음 단계 — 변경반영 문서(반영대장) 만들기:
+  (cd AssetERP && ./make-change-docs.sh)
 USAGE
 }
 
@@ -121,4 +121,4 @@ fi
 info "재색인: 색인 기준 ${indexed:0:7} → ${after:0:7}"
 cd "$REPO_ROOT"
 yunhee index-src -t "$INDEX_DIR" --menus "$MENUS_TSV"
-info "완료. 변환 완료 후 일괄 점검: (cd AssetERP && yunhee drift --all --done-only --base baseline)"
+info "완료. 다음: (cd AssetERP && ./make-change-docs.sh)  — 반영대장에 이어 붙임"

@@ -10,6 +10,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 |:---|:---|
 | `README.md` | 이 문서 — 원칙·절차·도구 |
 | `반영대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다 |
+| `../../make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
 
 ## 원칙
 
@@ -49,10 +50,13 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 
 ```bash
 cd AssetERP
-./check-git.sh                                   # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
-yunhee drift --all --done-only --base baseline --ignore-space -o json > .yunhee/drift-today.json
+./check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
+./make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
+./make-change-docs.sh          # 반영대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
 ```
-- 새로 바뀐 것을 `반영대장.md`에 `대기`로 추가한다(지금은 손으로 — 아래 "도구" 1번이 생기면 `drift-ledger`).
+- `make-change-docs.sh`가 하는 일: `yunhee drift --all --done-only --base baseline -o json` → 바뀐 파일을 SQL ID·메서드 단위로 나눔 → 색인·AS-IS 호출(`mapperName + ".id"`, `<include refid>`, 클라이언트 서비스 문자열)을 따라 쓰는 완료 화면 → TOBE 대응 후보 → 기준선 이후 새 파일·DB 스크립트 → 대장에 이어 붙임.
+- **처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다.** 같은 단위가 `대기`면 커밋·변경 요약·영향 화면만 고치고, 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄. 키는 마지막 `CH-` 번호에서 이어 간다.
+- `--reuse`는 drift를 다시 돌리지 않고 지난 결과(`.yunhee/drift-today.json`)를 쓴다.
 - ntfy로 `대기` 건수를 알린다.
 
 ### 주 1~2회 (묶음 처리)
@@ -72,19 +76,19 @@ yunhee drift --all --done-only --base baseline --ignore-space -o json > .yunhee/
 
 ## 도구
 
-지금은 `./check-git.sh`(pull·색인)와 `yunhee drift`(화면 단위 감지)뿐이다. 화면 단위라서 공통 파일 잡음을 사람이 걸러야 한다.
+지금은 `./check-git.sh`(pull·색인), `yunhee drift`(화면 단위 감지), 그 위에서 단위로 나누는 임시 도구 `./make-change-docs.sh`다.
 yunhee에 **`drift-` 명령군**을 제안했다(`~/work/yunhee-cli/docs/수정사항/수정사항054.md`). `trace-*`가 업무분석용이듯 `drift-*`는 변경반영용이다.
 
 | 명령(제안) | 하는 일 | 대장에서 쓰는 곳 |
 |:---|:---|:---|
 | `drift-log` | 기준 이후 AS-IS 커밋과 파일, 종류(DB·SQL·LOGIC·MODEL·UI·ETC) | 매일 — 무엇이 들어왔나 |
 | `drift-unit` | 바뀐 파일을 **SQL ID·메서드 단위**로 쪼개고, 단위마다 쓰는 화면(화면번호)과 TOBE 대응 | 매일 — 대장 한 줄의 재료, 공통 파일 잡음 제거 |
-| `drift-ledger` | `drift-unit` 결과를 대장에 `대기`로 덧붙임(이미 있는 키는 건너뜀) | 매일 — 손 기록 없앰 |
+| `drift-list` | `drift-unit` 결과를 대장에 `대기`로 덧붙임(이미 있는 키는 건너뜀) | 매일 — 지금의 `make-change-docs.sh` |
 | `drift-diff <단위>` | 한 단위의 AS-IS 전후 + 지금 TOBE 대응을 나란히 | 묶음 — 반영 판단 |
 | `drift-db` | DB 스냅샷(dbml) 전후의 테이블·열·함수 차이와 그것을 쓰는 TOBE 매퍼 | 묶음 — `DB` 종류 |
 | `drift-done <키…>` | 대장 상태를 바꾸고 **파일·단위 기준선**을 옮김(그 단위를 쓰는 화면 모두) | 묶음 끝 — `--record` 화면별 반복 없앰 |
 
-도구가 생기면 위 절차의 "손으로"를 그 명령으로 바꾼다.
+도구가 생기면 `make-change-docs.sh` 안을 `drift-unit`·`drift-list` 두 줄로 바꾼다.
 
 ## 연결되는 다른 작업
 
