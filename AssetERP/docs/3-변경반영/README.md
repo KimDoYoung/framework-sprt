@@ -26,7 +26,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 
 | 종류 | 무엇 | 확인 도구(지금) | 반영 |
 |:---|:---|:---|:---|
-| `DB` | 테이블·열·함수·트리거 | `tools/check-git.sh --db-index`, `yunhee sql`(information_schema), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인 |
+| `DB` | 테이블·열·함수·트리거 | `tools/check-git.sh --db-index`, `yunhee sql`(information_schema·`pg_proc`), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인. **함수**는 AS-IS `doc/dbSource/*.sql`과 `pg_proc.prosrc`를 대조 → 다르면 `tools/db_dump_backup.sh` 백업 → 트랜잭션으로 묶은 SQL 파일(돌려주는 형식이 바뀌면 `DROP FUNCTION IF EXISTS` 먼저, 로컬에 없는 계정 GRANT는 뺌)을 **사용자가** `! docker exec -i <컨테이너> psql -U kdy987 -d asseterpdb -X -q < 파일`로 실행(yunhee는 DDL을 막고, 에이전트의 psql 직접 실행은 훅이 막는다) → 그 함수를 쓰는 TOBE 테스트를 돌린다(처음 사례 CH-0001~0003) |
 | `SQL` | 매퍼 XML의 SQL ID | `yunhee analysis sql <ns.id>`, AS-IS `git diff` | `yunhee port-sql`로 다시 옮기고 `sql-check --tobe`·`compare`·`mapper-run --compare`로 결과 대조 |
 | `LOGIC` | 서버 Java 메서드(검사·분기·메시지·호출 순서) | `yunhee analysis method <클래스>.<메서드> -o code` | TOBE 서비스·컨트롤러에 옮김. 업무 테스트(`5-테스트`)가 있으면 늘린다 |
 | `MODEL` | 모델·DTO 필드 | `analysis model` | TOBE record·TS 타입에 필드 추가 |

@@ -188,14 +188,26 @@ class TdmCheckApprDbTest {
 
     @Test
     void 제출과_제출취소는_가능_여부를_검사하고_임원승인여부를_바꾼다() {
-        // 승인이 끝나지 않았으면 제출 불가
+        // CH-0003 (2026-11-11): DB 함수 f_get_tdmSubmitPossibleYn 이 AS-IS 새 버전(Y 또는 불가 사유 문구)이 됐다.
+        // 제출(P) 규칙: '전체 승인' 검사는 AS-IS에서 주석 처리, 대신 본인(SELF) 행이 승인(20)이고 보고의견이 있어야 한다.
+        // 본인 행이 승인 전이면 제출 불가 — 사유 문구가 그대로 온다
         setApprRow(SELF_ID, "10", "false");
         assertThatThrownBy(() -> service.submit(USER, new CheckApprSubmitReq(YM, ROLE, "P")))
-                .isInstanceOf(BusinessException.class).hasMessageContaining("제출");
+                .isInstanceOf(BusinessException.class).hasMessageContaining("보고의견이 작성되지 않았습니다");
         assertThatThrownBy(() -> service.checkSubmitPossible(USER, YM, ROLE, "C"))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class).hasMessageContaining("아직 제출 전입니다");
 
-        // 전부 승인이면 제출 가능
+        // 본인 행이 승인이어도 보고의견이 없으면 제출 불가
+        setApprRow(SELF_ID, "20", "false");
+        jdbc.update("UPDATE tdm59_chck_appr_cmnt SET tdm59_report_cmnt = NULL WHERE tdm59_chck_appr_cmnt_id = ?", SELF_ID);
+        assertThatThrownBy(() -> service.checkSubmitPossible(USER, YM, ROLE, "P"))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("보고의견이 작성되지 않았습니다");
+
+        // 본인 행 승인 + 보고의견이면, 하위부서가 승인 전이어도 제출 가능(AS-IS '미승인건' 검사 주석 처리)
+        jdbc.update("UPDATE tdm59_chck_appr_cmnt SET tdm59_report_cmnt = '보고의견' WHERE tdm59_chck_appr_cmnt_id = ?", SELF_ID);
+        setApprRow(SUB_WAITING_ID, "10", "false");
+        service.checkSubmitPossible(USER, YM, ROLE, "P");
+
         for (long id : new long[] {SELF_ID, SUB_APPROVED_ID, SUB_WAITING_ID}) {
             setApprRow(id, "20", "false");
         }
