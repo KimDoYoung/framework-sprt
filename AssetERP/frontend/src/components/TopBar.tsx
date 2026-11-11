@@ -16,8 +16,6 @@ import {
   SoundOutlined,
   SettingOutlined,
   PoweroffOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
   UnorderedListOutlined,
   LayoutOutlined,
 } from '@ant-design/icons';
@@ -222,11 +220,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             }}
             title={sidebarPinned ? '메뉴 고정 해제' : '메뉴 고정'}
           >
-            {sidebarPinned ? (
-              <MenuFoldOutlined style={{ fontSize: 18, color: '#fff' }} />
-            ) : (
-              <MenuUnfoldOutlined style={{ fontSize: 18, color: '#fff' }} />
-            )}
+            {/* favicon(종이비행기) 그대로 — 흰 면 + 회색 접힌 자국. 색 필터를 걸면 접힌 자국이 사라진다. 메뉴 고정 해제 상태는 흐리게 (2026-11-11 사용자) */}
+            <img
+              src={`${import.meta.env.BASE_URL}favicon.ico`}
+              alt=""
+              width={22}
+              height={22}
+              style={{ opacity: sidebarPinned ? 1 : 0.6, transition: 'opacity 0.15s ease' }}
+            />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, userSelect: 'none' }}>
@@ -236,7 +237,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 400 }}>
               All-in-One System
             </span>
-            <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} />
+            {/* <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} /> */}
           </div>
 
           {/* ── 화면번호/메뉴명 입력 AutoComplete 검색창 (Enter 호출 지원, Esc 로 이동 — 재설계 04)
