@@ -13,6 +13,8 @@ public record BizLimitRes(
         Long saleRuleLimit2,
         Long companyLimit1,
         Long companyLimit2,
-        Long companyLimit3
+        Long companyLimit3,
+        /** 거래상대방 필수입력 'true'/'false' (원본 2026-11-06 biz90_target_info_req_yn) */
+        String targetInfoReqYn
 ) {
 }

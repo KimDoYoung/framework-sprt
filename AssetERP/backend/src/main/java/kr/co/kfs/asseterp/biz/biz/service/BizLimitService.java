@@ -38,7 +38,7 @@ public class BizLimitService {
         return rows.stream().map(r -> {
             long id = (r.limitId() == null || r.limitId() <= 0) ? mapper.selectNextId() : r.limitId();
             BizLimitSaveReq row = new BizLimitSaveReq(id, r.startDate(), r.provideRcvType(), r.saleRuleLimit1(), r.saleRuleLimit2(),
-                    r.companyLimit1(), r.companyLimit2(), r.companyLimit3());
+                    r.companyLimit1(), r.companyLimit2(), r.companyLimit3(), r.targetInfoReqYn());
             if (mapper.update(companyId, row) == 0) {
                 mapper.insert(companyId, row);
             }

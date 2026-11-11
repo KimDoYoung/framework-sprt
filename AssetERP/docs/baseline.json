@@ -16001,6 +16001,30 @@
       "updated_at": "2026-11-11T16:07:06+09:00",
       "note": "#1133 조회조건",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz90_Tab_Limit.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz90_LimitModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz90_limit.xml · selectById": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz90_LimitModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -16086,6 +16110,24 @@
       "status": "반영",
       "updated_at": "2026-11-11T16:07:06+09:00",
       "note": "#1133 조회조건",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz90_Tab_Limit.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz90_LimitModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz90_LimitModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:12:10+09:00",
+      "note": "#1130",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }

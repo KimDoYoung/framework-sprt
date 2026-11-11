@@ -23,8 +23,8 @@ export const bizLimitApi = {
   },
   /** AS-IS biz.Biz90_Limit.update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
   saveLimits: async (rows: BizLimit[]): Promise<BizLimit[]> => {
-    const body = rows.map(({ limitId, startDate, provideRcvType, saleRuleLimit1, saleRuleLimit2, companyLimit1, companyLimit2, companyLimit3 }) =>
-      ({ limitId: limitId > 0 ? limitId : null, startDate, provideRcvType, saleRuleLimit1, saleRuleLimit2, companyLimit1, companyLimit2, companyLimit3 }));
+    const body = rows.map(({ limitId, startDate, provideRcvType, saleRuleLimit1, saleRuleLimit2, companyLimit1, companyLimit2, companyLimit3, targetInfoReqYn }) =>
+      ({ limitId: limitId > 0 ? limitId : null, startDate, provideRcvType, saleRuleLimit1, saleRuleLimit2, companyLimit1, companyLimit2, companyLimit3, targetInfoReqYn }));
     const res = await apiClient.put<ApiResponse<BizLimit[]>>('v1/biz/limits', body);
     return res.data.data ?? [];
   },

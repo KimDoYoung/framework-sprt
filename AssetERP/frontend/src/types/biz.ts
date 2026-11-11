@@ -12,6 +12,8 @@ export interface BizLimit {
   companyLimit1: number | null;
   companyLimit2: number | null;
   companyLimit3: number | null;
+  /** 거래상대방 필수입력 'true'/'false' (원본 2026-11-06) */
+  targetInfoReqYn: string | null;
 }
 
 /** L01 Biz04_Lookup_EmpSetup 오른쪽 그리드 한 행 (AS-IS Biz04_ProvideSetupModel). empSetYn은 'true'/'false' 문자열 */

@@ -70,6 +70,7 @@ export const Biz90_Tab_Limit: React.FC = () => {
       gb.long('companyLimit2', 200, '인별 연간', { editor: 'number' }),  // L129
       gb.long('companyLimit3', 200, '회사별 연간', { editor: 'number' }),  // L130
     ]),
+    gb.boolean('targetInfoReqYn', 100, '거래상대방<br>필수입력', { editable: true }),  // L135 addBoolean (원본 2026-11-06 추가, CH-0160)
   ], [rcvTypes]);
 
   return (
