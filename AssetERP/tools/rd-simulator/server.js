@@ -3,7 +3,8 @@
 //   내려받기 GET|POST /ReportingServer/jsp/CommonInvokerDownload.jsp?…&fileName=x.xlsx&exportType=xlsx  → 파일 응답
 //   서버 저장 GET|POST /ReportingServer/jsp/CommonInvoker.jsp?…&fileName=/../../../../../../data1/…/a.pdf  → 파일을 쓰고 "success"
 //   점검   GET /__calls[?mrd=]  GET /__reset  GET /__health
-// 설정(env): RD_SIM_PORT(5151) RD_SIM_ROOT(./data) RD_SIM_FAIL(정규식 — 맞는 mrd는 저장·내려받기를 실패시킴) RD_SIM_HTTPS_KEY/RD_SIM_HTTPS_CERT(있으면 https)
+// 저장·내려받기 내용은 data/samples/1.<exportType> 샘플을 그대로 쓴다(없으면 호출 정보 파일) — render.js "샘플 파일"
+// 설정(env): RD_SIM_PORT(5151) RD_SIM_ROOT(./data) RD_SIM_SAMPLES(../../data/samples, off=안 씀) RD_SIM_FAIL(정규식 — 맞는 mrd는 저장·내려받기를 실패시킴) RD_SIM_HTTPS_KEY/RD_SIM_HTTPS_CERT(있으면 https)
 'use strict';
 const http = require('http'), https = require('https'), fs = require('fs'), path = require('path');
 const render = require('./render');
@@ -72,8 +73,9 @@ function handle(req, res) {
     const target = resolveSave(call.fileName);
     if (!target) { record({ result: 'rejected' }); return send(400, 'fail|fileName 이 가상 루트 밖이거나 비어 있음'); }
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, render.file(call).body);
-    record({ result: 'saved', savedTo: target });
+    const f = render.file(call);
+    fs.writeFileSync(target, f.body);
+    record({ result: 'saved', savedTo: target, sample: f.sample || null, bytes: f.body.length });
     return send(200, 'success');
   }
   // 브라우저로 내려받기 (엑셀·PDF)
@@ -81,7 +83,7 @@ function handle(req, res) {
     if (failed) { record({ result: 'fail' }); return send(500, 'fail|RD_SIM_FAIL 로 실패시킴'); }
     const f = render.file(call);
     const name = encodeURIComponent(call.fileName || `${call.mrd}.${f.ext}`);
-    record({ result: 'download', bytes: f.body.length });
+    record({ result: 'download', sample: f.sample || null, bytes: f.body.length });
     return send(200, f.body, f.type, { 'Content-Disposition': `attachment; filename*=UTF-8''${name}` });
   }
   // 뷰어 (CommonViewer.html 등)

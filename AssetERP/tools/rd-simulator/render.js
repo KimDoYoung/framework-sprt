@@ -79,9 +79,32 @@ function xlsx(call) {
   ]);
 }
 
-/** exportType → { body, type, ext } */
+// ── 샘플 파일 (사용자 결정 2026-11-11) ──
+// RD가 DB를 읽어 양식대로 그리는 것은 RD 본연의 일이라 흉내 내지 않는다. 대신 사용자가 둔 자료 파일(data/samples/1.<확장자>)을
+// 읽어 그대로 돌려준다 → 저장은 fileName 경로에 그 이름으로 복사, 내려받기는 그 내용으로 응답. 원본 샘플은 건드리지 않는다.
+// 샘플이 없으면 아래의 "호출 정보" 파일을 만든다. RD_SIM_SAMPLES로 폴더를 바꾸고, RD_SIM_SAMPLES=off 이면 쓰지 않는다.
+const fs = require('fs'), path = require('path');
+const SAMPLES = process.env.RD_SIM_SAMPLES === 'off' ? null : path.resolve(process.env.RD_SIM_SAMPLES || path.join(__dirname, '..', '..', 'data', 'samples'));
+const TYPES = {
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  csv: 'text/csv; charset=utf-8',
+};
+
+/** exportType에 맞는 샘플 { body, type, ext, sample } 또는 null */
+function sample(t) {
+  if (!SAMPLES || !/^[a-z0-9]+$/.test(t)) return null;
+  const p = path.join(SAMPLES, `1.${t}`);
+  try { return { body: fs.readFileSync(p), type: TYPES[t] || 'application/octet-stream', ext: t, sample: p }; } catch { return null; }
+}
+
+/** exportType → { body, type, ext, sample? } */
 function file(call) {
   const t = String(call.exportType || '').toLowerCase();
+  const s = sample(t);
+  if (s) return s;
   if (t === 'pdf') return { body: pdf(call), type: 'application/pdf', ext: 'pdf' };
   if (t === 'xlsx') return { body: xlsx(call), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ext: 'xlsx' };
   if (t === 'csv' || t === 'txt') return { body: Buffer.from('﻿' + rows(call).map(r => r.join(',')).join('\n')), type: 'text/csv; charset=utf-8', ext: t };

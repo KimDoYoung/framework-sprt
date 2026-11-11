@@ -12,6 +12,7 @@ RD_SIM_PORT=5252 RD_SIM_ROOT=/tmp/rd node tools/rd-simulator/server.js
 | `RD_SIM_HOST` | 127.0.0.1 | 접속을 받을 주소. 기본은 이 PC에서만(외부 접속 불가), 다른 PC에 열려면 `0.0.0.0` |
 | `RD_SIM_PORT` | 5151 | AS-IS 운영 포트. 개발 5252(DEV-REALDB)·5253(DEV-DEVDB) |
 | `RD_SIM_ROOT` | `./data` | 가상 파일 루트. `fileName`의 `/../../..` 접두를 걷어내고 이 아래에 저장(밖으로 못 나감) |
+| `RD_SIM_SAMPLES` | `../../data/samples` | 저장·내려받기에 쓸 샘플 폴더. `1.<exportType>`(1.pdf·1.xlsx·1.docx…)을 그대로 돌려준다. `off`면 안 쓴다 |
 | `RD_SIM_FAIL` | 없음 | 정규식. 맞는 `mrd`는 저장·내려받기를 실패시킨다(오류 경로 시험) |
 | `RD_SIM_HTTPS_KEY`/`_CERT` | 없음 | 있으면 https (AS-IS는 `https://…:5151`) |
 
@@ -24,7 +25,8 @@ RD_SIM_PORT=5252 RD_SIM_ROOT=/tmp/rd node tools/rd-simulator/server.js
 
 - 쿼리: `dns`, `mrd`, `options`, `dbName`, `fileName`, `exportType` + `rv=key[value]key[value]`(값이 모두 이어 붙어 한 파라미터로 온다).
 - `dbName`은 `post_real`·`post_dev-devdb`·`post_dev-realdb`만 정상으로 본다(아니면 기록의 `problems`).
-- 한글은 PDF(Helvetica)에서 `?`로 나온다. xlsx·csv·HTML은 한글 그대로.
+- **파일 내용 = 샘플**(사용자 결정 2026-11-11): DB를 읽어 양식대로 그리는 것은 RD 본연의 일이라 흉내 내지 않는다. `data/samples/1.<exportType>`을 읽어 저장은 `fileName` 경로에 그 이름으로 복사, 내려받기는 그 내용으로 응답한다(원본 샘플은 그대로). 기록에 `sample` 경로가 남는다.
+- 샘플이 없을 때만 "호출 정보" 파일을 만든다. 이때 한글은 PDF(Helvetica)에서 `?`로 나온다. xlsx·csv·HTML은 한글 그대로.
 
 ## 점검용 API
 - `GET /__calls[?mrd=이름]` — 받은 호출 기록(`page·mrd·dbName·fileName·rv·params·result·savedTo·problems`), `calls.jsonl`에도 남는다.
