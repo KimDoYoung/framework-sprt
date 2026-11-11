@@ -74,6 +74,14 @@ class TdmCheckApprDbTest {
         session.clearCache();
     }
 
+    /** 조치내역(2026.07 발생, 승인완료 25) — SUB_WAITING 행 하위 부서의 유일한 조치내역 */
+    private static final long INSUFF_ID = 202607289813828L;
+
+    private void setInsuffApprYm(String ym) {
+        jdbc.update("UPDATE tdm54_chck_insuff SET tdm54_action_appr_ym = ? WHERE tdm54_chck_insuff_id = ?", ym, INSUFF_ID);
+        session.clearCache();
+    }
+
     private void setApprRow(long id, String status, String submit) {
         jdbc.update("UPDATE tdm59_chck_appr_cmnt SET tdm59_appr_status_cd = ?, tdm59_submit_yn = ? WHERE tdm59_chck_appr_cmnt_id = ?", status, submit, id);
         session.clearCache();
@@ -286,7 +294,12 @@ class TdmCheckApprDbTest {
 
     @Test
     void 조치내역_승인은_조치상태와_이력을_바꾸고_글자수를_검사한다() {
-        // 조치내역(2026.07 발생, 승인완료 25)은 SUB_WAITING 행(하위 부서 202308141568403)의 목록에 나온다
+        // 조치내역(2026.07 발생, 승인완료 25)은 SUB_WAITING 행(하위 부서 202308141568403)의 목록에 나온다 — 단, 조치승인년월에 따라.
+        // AS-IS 규칙(TdmCheckApprMapper.xml selectInsuffs): 승인완료(25)이고 조치승인년월이 점검년월보다 이전이면 목록에서 뺀다.
+        // DB 값은 바뀔 수 있으므로(2026-10-26 일괄 UPDATE로 '2026.09'가 채워져 이 테스트가 깨졌었다) 조건을 테스트가 직접 만든다(롤백됨).
+        setInsuffApprYm("2026.09");     // 이전 달에 승인완료 → 이번 달(2026.10) 목록에 없다
+        assertThat(service.searchInsuffs(USER, SUB_WAITING_ID, false, null)).isEmpty();
+        setInsuffApprYm(YM);            // 이번 점검월에 승인완료 → 목록에 나온다
         List<CheckApprInsuffRes> insuffs = service.searchInsuffs(USER, SUB_WAITING_ID, false, null);
         assertThat(insuffs).hasSize(1);
         CheckApprInsuffRes one = insuffs.get(0);
