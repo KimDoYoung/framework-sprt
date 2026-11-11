@@ -825,9 +825,15 @@ export const icsApi = {
     return res.data.data;
   },
 
-  /** AS-IS ics.Ics32_RelateAppr.updateApprId */
-  updateComplianceReportApprId: async (relateApprId: number, apprId: number): Promise<void> => {
-    await apiClient.put(`v1/ics/compliance-reports/relate-apprs/${relateApprId}/appr-id`, { apprId });
+  /** #1311 [상신] — AS-IS sys.Sys99_Print.insertComplianceState(confirmerId = 로그인 사원) → 출력 그룹 ID (RD 첨부 PDF 자료) */
+  createComplianceRdState: async (stdDate: string, cycleType: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/compliance-reports/rd-state', { stdDate, cycleType });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.updateApprId. rd를 주면(#1311) RD 첨부 PDF "내부통제 준수보고(yyyy년 주기).pdf"도 붙인다 */
+  updateComplianceReportApprId: async (relateApprId: number, apprId: number, rd?: { rdGroupId: number; yyyy: string; cycleName: string }): Promise<void> => {
+    await apiClient.put(`v1/ics/compliance-reports/relate-apprs/${relateApprId}/appr-id`, { apprId, ...rd });
   },
 
   /** apprType: '1' 준수보고(A32, 기본) / '2' 부서장 준수확인서(A52, 로그인 사원 기준) */

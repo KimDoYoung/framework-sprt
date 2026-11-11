@@ -31,12 +31,23 @@ public class IcsComplianceReportService {
 
     private final IcsComplianceReportMapper mapper;
 
-    /** AS-IS insertComplianceState: 재직 사원마다 준수항목별 결과·미준수 사유 */
+    /** 보고 한 줄 + 준수항목 적용시작일(출력 자료 date02에만 쓴다) */
+    public record ReportRow(IcsComplianceReportRes res, LocalDate startDate) {
+    }
+
+    /** AS-IS insertComplianceState: 재직 사원마다 준수항목별 결과·미준수 사유 (#1312 — 예외업무 10, 확인자 조건 없음) */
     public List<IcsComplianceReportRes> report(UserPrincipal user, LocalDate stdDate, String cycleType) {
-        Long companyId = user.getCompanyId();
-        List<IcsComplianceReportRes> rows = new ArrayList<>();
+        return rows(user.getCompanyId(), stdDate, cycleType, EXCEPT_BIZ_CODE, null).stream().map(ReportRow::res).toList();
+    }
+
+    /**
+     * AS-IS Sys99_Print.insertComplianceState L325-413의 행 만들기. exceptBizCode·confirmerId는 부르는 화면이 넘기는 대로
+     * (#1312 보고 = 예외업무 10 / #1311 RD 첨부 PDF = 예외업무 없음·확인자 = 로그인 사원)
+     */
+    public List<ReportRow> rows(Long companyId, LocalDate stdDate, String cycleType, String exceptBizCode, Long confirmerId) {
+        List<ReportRow> rows = new ArrayList<>();
         long seq = 0;
-        for (IcsComplianceReportEmp emp : mapper.selectInOffice(companyId, stdDate, EXCEPT_BIZ_CODE)) {
+        for (IcsComplianceReportEmp emp : mapper.selectInOffice(companyId, stdDate, exceptBizCode, cycleType, confirmerId)) {
             seq++;
             // 3-1. 제출한 작성이 없는 퇴사 예정자 — 퇴사일의 전월 말일이 기준일이면 뺀다(순번은 이미 올라갔다)
             if (mapper.countFixedWrite(emp.personId(), stdDate, cycleType) == 0) {
@@ -49,8 +60,8 @@ public class IcsComplianceReportService {
             for (IcsComplianceReportResult r : mapper.selectResults(companyId, emp.personId(), stdDate, cycleType, KIND_CODE)) {
                 String reason = "준수".equals(r.complianceResult()) ? null
                         : mapper.selectNonComplianceReason(emp.personId(), stdDate, cycleType, r.complianceType());
-                rows.add(new IcsComplianceReportRes(seq, emp.personId(), emp.personName(), emp.orgName(), r.complianceType(), r.complianceTypeName(),
-                        r.complianceResult(), reason));
+                rows.add(new ReportRow(new IcsComplianceReportRes(seq, emp.personId(), emp.personName(), emp.orgName(), r.complianceType(), r.complianceTypeName(),
+                        r.complianceResult(), reason), r.startDate()));
             }
         }
         return rows;

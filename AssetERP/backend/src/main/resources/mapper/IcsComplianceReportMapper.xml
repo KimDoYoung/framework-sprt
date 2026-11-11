@@ -8,8 +8,8 @@
 <mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceReportMapper">
 
     <!-- AS-IS emp03_trans.selectInOffice (IDMS-IC) — SELECT *는 보고에 쓰는 사원ID·사원명·부서명만.
-         원본 2026-10-23: confirmerId가 오면 그 확인자에게 배정된 작성(ics31_confirmer_id, 기준월·주기)이 있는 사원만. 이를 넘기는 곳은 #1311 createRd의 RD 첨부 PDF뿐이라
-         TOBE(#1312 보고, confirmerId 없음)는 빼 두었다 — #1311 PDF를 만들게 되면 이 조건을 옮긴다 (CH-0018) -->
+         원본 2026-10-23(CH-0018): confirmerId가 오면 그 확인자에게 배정된 작성(ics31_confirmer_id, 기준월·주기)이 있는 사원만.
+         넘기는 곳은 #1311 createRd의 RD 첨부 PDF(IcsComplianceRdPdfService). #1312 보고는 confirmerId 없음 -->
     <select id="selectInOffice" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportEmp">
         SELECT emp03_person_id AS person_id,
                emp01_kor_nm    AS person_name,
@@ -45,11 +45,41 @@
                                AND emp33_except_biz_cd = #{exceptBizCode}
                                AND COALESCE(emp33_unvisible_yn,'false') = 'true' )
         </if>
+        <if test="confirmerId != null">
+           AND EXISTS ( SELECT 1
+                          FROM ics31_compliance_write
+                         WHERE ics31_company_id     = emp01_company_id
+                           AND ics31_person_id      = emp01_person_id
+                           AND ics31_yyyymm         = TO_CHAR(#{stdDate}::date, 'YYYY.MM')
+                           AND ics31_cycle_type     = #{cycleType}
+                           AND ics31_confirmer_id   = #{confirmerId} )
+        </if>
          ORDER BY COALESCE(org02_sort_order, org01_org_cd)
                 , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
                 , f_code_seq(emp01_company_id, 'EmpPosCode'  , emp03_pos_cd)
                 , emp01_emp_no
     </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert — Sys99_Print.insertComplianceState L357-389가 채우는 열:
+         long01 순번 · long02 사원ID · string01 사원명 · string02 부서명 · date01 기준일 · date02 준수항목적용시작일
+         · string05 준수항목코드 · string06 준수항목명 · string07 준수결과 · text01 미준수사유(준수면 null) -->
+    <insert id="insertPrintState">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_long02, sys99_string01, sys99_string02, sys99_date01, sys99_date02
+               , sys99_string05, sys99_string06, sys99_string07, sys99_text01 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.seq}, #{row.personId}, #{row.personName}, #{row.orgName}, #{stdDate}, #{startDate}
+               , #{row.complianceType}, #{row.complianceTypeName}, #{row.complianceResult}, #{row.reason} )
+    </insert>
 
     <!-- AS-IS ics31_compliance_write.checkWriteByPersonId (IDMS-IC) -->
     <select id="countFixedWrite" resultType="int">
@@ -85,7 +115,8 @@
         )
         SELECT sys09_code                                                                                  AS compliance_type,
                sys09_name                                                                                  AS compliance_type_name,
-               f_get_compliance_result(#{personId}, #{stdDate}, #{cycleType}, ics30_compliance_type, ics30_start_date) AS compliance_result
+               f_get_compliance_result(#{personId}, #{stdDate}, #{cycleType}, ics30_compliance_type, ics30_start_date) AS compliance_result,
+               ics30_start_date                                                                            AS start_date
           FROM ics30_compliance
                INNER JOIN sys_code ON sys09_code = ics30_compliance_type
          WHERE ics30_company_id = #{companyId}

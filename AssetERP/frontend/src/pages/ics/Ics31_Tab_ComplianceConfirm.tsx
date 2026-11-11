@@ -6,7 +6,8 @@
  * 2026-10-29 원본이 "상신기능 추가"로 바뀌었다(V28): 툴바에 사원명 조회(Ics31_Lookup_SelectPerson)가 생기고, 그리드 아래에 문서분류 · 상신상태 · [상신][문서보기] 줄이 붙었다.
  *   내가 확인자인 작성 내역만 읽는다(서버가 로그인 사원으로 건다). [상신] = 조회 후 → 문서분류 → 미확인 건 없음 → createRd() L575-648 → insertRelateApprId() L651-670
  *   → insertLinkApproval("A52") L672-696 → updateApprId() L698-. 옛 조회창 Ics32_Lookup_RelateAppr는 어디서도 열리지 않아 변환하지 않는다.
- *   createRd()의 RD 첨부 PDF(sys.Sys99_Print.insertComplianceState)는 TOBE에 RD 리포트·PDF 엔진이 없다 — AS-IS도 파일 저장 경로가 없는 환경에서는 PDF 없이 바로 insertRelateApprId()로 간다(L603-605). 그 길만 간다.
+ *   createRd()의 RD 첨부 PDF: [상신] 때 출력 자료(sys.Sys99_Print.insertComplianceState)를 만들고, 결재 저장 뒤 서버가 RD(mrd Ics31_Tab_ComplianceReport)로
+ *   PDF를 만들어 "내부통제 준수보고(yyyy년 주기).pdf"로 붙인다(CH-0018·0109, 사용자 결정 2026-11-11). RD가 꺼졌거나 실패하면 AS-IS 개발계처럼 첨부 없이 간다.
  * 스타일: SG (견본 — docs/page-style.md). 그리드 아래 폼 줄은 테두리 없이 같은 안쪽 div에 flex: none 높이 70.
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
@@ -38,6 +39,8 @@ interface LinkDoc {
   cycleType: string;
   year: string;
   cycleName: string;
+  /** createRd()가 만든 RD 출력 자료 그룹 ID (insertComplianceState) */
+  rdGroupId: number;
 }
 
 // buildGrid() L246-269 — 열 순서·폭·제목은 원본 그대로
@@ -193,9 +196,10 @@ export const Ics31_Tab_ComplianceConfirm: React.FC = () => {
     setMasking(true);  // MASK(true)
     try {
       if (await icsApi.getComplianceConfirmUnconfirmed(std.format('YYYY-MM-DD'), cycle) > 0) { message.info('미확인 건이 존재합니다.'); return; }
-      // RD 첨부 PDF 만들기(sys.Sys99_Print.insertComplianceState + RD)는 없다 — 위 머리 설명
+      // sys.Sys99_Print.insertComplianceState(confirmerId = 로그인 사원) → 출력 그룹 ID. PDF(RD)는 결재 저장 뒤 서버가 만들어 붙인다(updateApprId)
+      const rdGroupId = await icsApi.createComplianceRdState(std.format('YYYY-MM-DD'), cycle);
       const relateApprId = await icsApi.createComplianceReportRelate(std.format('YYYY.MM'), cycle, '2');  // ics.Ics32_RelateAppr.insert (apprType "2", personId = 로그인 사원)
-      setLinkDoc({ classTreeId, relateApprId, stdDate: std.format('YYYY-MM-DD'), cycleType: cycle, year: v.year, cycleName: periodName });
+      setLinkDoc({ classTreeId, relateApprId, stdDate: std.format('YYYY-MM-DD'), cycleType: cycle, year: v.year, cycleName: periodName, rdGroupId });
     } catch (err) {
       message.error(errorMessage(err, '상신 연결을 만들지 못했습니다'));
     } finally {
@@ -207,7 +211,9 @@ export const Ics31_Tab_ComplianceConfirm: React.FC = () => {
   const updateApprId = async (newApprId: number) => {
     if (!linkDoc) return;
     try {
-      await icsApi.updateComplianceReportApprId(linkDoc.relateApprId, newApprId);
+      // + 결재 저장 때 붙이던 RD 첨부 PDF (Apr01_Grid_ApprFile.ics32RelateApprFileSetting: "내부통제 준수보고(yyyy년 주기)")
+      await icsApi.updateComplianceReportApprId(linkDoc.relateApprId, newApprId,
+        { rdGroupId: linkDoc.rdGroupId, yyyy: linkDoc.year, cycleName: linkDoc.cycleName });
       message.success('상신완료 되었습니다');
       await defaultApprName(linkDoc.stdDate, linkDoc.cycleType);
     } catch (err) {

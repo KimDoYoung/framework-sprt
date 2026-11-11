@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ics.mapper;
 
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportEmp;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportResult;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,8 +13,20 @@ import java.util.List;
 @Mapper
 public interface IcsComplianceReportMapper {
 
-    /** AS-IS emp03_trans.selectInOffice — 기준일 재직 사원. exceptBizCode가 있으면 그 예외업무에서 '표시안함'인 사원을 뺀다 */
-    List<IcsComplianceReportEmp> selectInOffice(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("exceptBizCode") String exceptBizCode);
+    /**
+     * AS-IS emp03_trans.selectInOffice — 기준일 재직 사원. exceptBizCode가 있으면 그 예외업무에서 '표시안함'인 사원을 뺀다.
+     * confirmerId가 있으면 그 확인자에게 배정된 그 달·주기 작성이 있는 사원만(원본 2026-10-23, #1311 RD 첨부 PDF)
+     */
+    List<IcsComplianceReportEmp> selectInOffice(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("exceptBizCode") String exceptBizCode,
+                                                @Param("cycleType") String cycleType, @Param("confirmerId") Long confirmerId);
+
+    /** AS-IS sys99_print.deleteByPersonId */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS Sys99_Print.insertComplianceState → sys99_print.insert (보고 한 줄) */
+    int insertPrintState(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                         @Param("windowClassName") String windowClassName, @Param("groupId") long groupId,
+                         @Param("stdDate") LocalDate stdDate, @Param("startDate") LocalDate startDate, @Param("row") IcsComplianceReportRes row);
 
     /** AS-IS ics31_compliance_write.checkWriteByPersonId — 그 달 제출한 작성 행 수 */
     int countFixedWrite(@Param("personId") Long personId, @Param("stdDate") LocalDate stdDate, @Param("cycleType") String cycleType);

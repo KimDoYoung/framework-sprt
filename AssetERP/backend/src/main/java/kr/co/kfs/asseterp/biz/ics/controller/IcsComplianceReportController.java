@@ -5,6 +5,8 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprIdReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRelateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceRdStateReq;
+import kr.co.kfs.asseterp.biz.ics.service.IcsComplianceRdPdfService;
 import kr.co.kfs.asseterp.biz.ics.service.IcsComplianceReportService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.util.List;
 public class IcsComplianceReportController {
 
     private final IcsComplianceReportService service;
+    private final IcsComplianceRdPdfService rdPdfService;
 
     /** AS-IS sys.Sys99_Print.insertComplianceState — stdDate = 기준 분기(월)의 말일 */
     @GetMapping
@@ -52,11 +55,23 @@ public class IcsComplianceReportController {
         return ApiResponse.ok(service.createRelateAppr(principal, req.yyyymm(), req.cycleType(), req.apprType()));
     }
 
-    /** AS-IS ics.Ics32_RelateAppr.updateApprId */
+    /** #1311 [상신] — AS-IS sys.Sys99_Print.insertComplianceState(confirmerId = 로그인 사원) → 출력 그룹 ID (RD 첨부 PDF 자료) */
+    @PostMapping("/rd-state")
+    public ApiResponse<Long> insertComplianceState(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsComplianceRdStateReq req) {
+        return ApiResponse.ok(rdPdfService.insertComplianceState(principal, req.stdDate(), req.cycleType()));
+    }
+
+    /**
+     * AS-IS ics.Ics32_RelateAppr.updateApprId. rdGroupId가 오면(#1311) 결재 저장 때 붙이던 RD 첨부 PDF도 붙인다
+     * (AS-IS Apr01_Grid_ApprFile.ics32RelateApprFileSetting). PDF가 안 만들어져도 상신 기록은 그대로 둔다
+     */
     @PutMapping("/relate-apprs/{relateApprId}/appr-id")
     public ApiResponse<Void> updateRelateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long relateApprId,
                                                 @RequestBody IcsComplianceReportApprIdReq req) {
         service.updateRelateApprId(principal, relateApprId, req.apprId());
+        if (req.rdGroupId() != null) {
+            rdPdfService.attach(principal, req.rdGroupId(), req.apprId(), req.yyyy(), req.cycleName());
+        }
         return ApiResponse.ok(null);
     }
 }
