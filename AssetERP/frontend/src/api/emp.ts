@@ -1748,9 +1748,9 @@ export const empMenuInfoNoticeApi = {
 
 /** EE63 알림설정 — 문자 & 메일 (Emp92_Lookup_SmsNotice) */
 export const empSmsNoticeApi = {
-  /** AS-IS emp.Emp92_SmsNotice.selectByPersonId */
-  search: async (): Promise<SmsNotice[]> => {
-    const res = await apiClient.get<ApiResponse<SmsNotice[]>>('v1/emp/sms-notices');
+  /** AS-IS emp.Emp92_SmsNotice.selectByPersonId — type "M" 필수알림 · "T" 선택알림 (원본 98d5afdd6) */
+  search: async (type: 'M' | 'T'): Promise<SmsNotice[]> => {
+    const res = await apiClient.get<ApiResponse<SmsNotice[]>>('v1/emp/sms-notices', { params: { type } });
     return res.data.data ?? [];
   },
 

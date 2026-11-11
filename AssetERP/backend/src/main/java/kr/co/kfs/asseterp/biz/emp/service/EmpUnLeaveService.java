@@ -6,7 +6,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveSmsTarget;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpUnLeaveMapper;
-import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class EmpUnLeaveService {
 
     private final EmpUnLeaveMapper mapper;
-    private final SmsSender smsSender;
+    private final AlertService alert;
 
     /** AS-IS emp.Emp21_UnLeave.selectByUnLeaveCode (연차 탭) */
     public List<UnLeaveRes> searchYearList(UserPrincipal user, String stdYear, String unLeaveCode) {
@@ -82,16 +82,12 @@ public class EmpUnLeaveService {
     }
 
     /**
-     * AS-IS emp.Emp21_UnLeave.sendMessage L615-664 ([문자발송], 연차·월차 탭 같은 서버 메서드) — 회사가 문자발신 서비스를 신청했으면(getSMSFlag L666-672)
-     * 고른 행의 사원마다 "[Asset-ERP] 이름님의 미사용 연차유급휴가일수 통지서가 도착했습니다. …"를 보낸다.
-     * 반환: AS-IS 상태 그대로 — 미신청이면 -1(화면 "문자발송 기능을 미신청한 고객사입니다…"), 아니면 1.
-     * AS-IS sendPromoMessage는 한 사람이 실패해도(번호 없음 등) 오류를 로그로만 남기고 다음 사람에게 계속 보낸다 → 같게 한다.
+     * AS-IS emp.Emp21_UnLeave.sendMessage L615-648 ([문자발송], 연차·월차 탭 같은 서버 메서드) — 고른 행의 사원마다 통합알림 M04
+     * "이름님의 미사용 연차유급휴가일수 통지서가 도착했습니다. …"(원본 98d5afdd6, CH-0258: 앞의 "[Asset-ERP] "가 빠지고 회사 문자발신 신청 검사(-1)가 없어졌다 —
+     * M코드라 회사 설정과 상관없이 앱알림·메일·SMS). 반환은 늘 1. 보낼 수 없는 종류는 건너뛰고 실패는 로그만(원본도 같다)
      */
     @Transactional
     public int sendMessage(UserPrincipal user, List<Long> ids) {
-        if (!smsSender.companyEnabled(user.getCompanyId())) {
-            return -1;
-        }
         if (ids == null || ids.isEmpty()) {
             return 1;
         }
@@ -112,11 +108,7 @@ public class EmpUnLeaveService {
                     + due
                     + "까지 미사용 연차유급휴가일수의 사용시기를 제출하여 주실 것을 촉구드리는 바입니다.\r\n\\r\\n"
                     + "※ 잔여휴가 사용시기 지정통보서 제출안내 : Asset-ERP > 신청 > 03.휴가 > 연차휴가 지정통보";
-            try {
-                smsSender.send(user.getCompanyId(), null, t.mobileTelNo(), "[Asset-ERP] " + msg, String.valueOf(t.personId()));
-            } catch (RuntimeException e) {   // AS-IS sendPromoMessage L171 catch (Exception e)
-                log.warn("미사용휴가 문자발송 실패: companyId={}, personId={}, {}", user.getCompanyId(), t.personId(), e.getMessage());
-            }
+            alert.alert("M04", t.personId(), user.getCompanyId(), Map.of("content", msg));
         }
         return 1;
     }

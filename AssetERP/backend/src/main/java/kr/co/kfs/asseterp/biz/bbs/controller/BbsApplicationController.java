@@ -68,7 +68,7 @@ public class BbsApplicationController {
         return ApiResponse.ok(null);
     }
 
-    /** AS-IS sms.Sms02_History.sendMessage — [완료문자발송] 아이콘 */
+    /** AS-IS bbs.Bbs11_Application.sendMessage(원본 98d5afdd6 — 전엔 sms.Sms02_History.sendMessage) — [완료문자발송] 아이콘, 통합알림 B03 */
     @PostMapping("/sms")
     public ApiResponse<Void> sendMessage(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ApplicationSmsReq req) {
         service.sendMessage(principal, req.personId(), req.msg());

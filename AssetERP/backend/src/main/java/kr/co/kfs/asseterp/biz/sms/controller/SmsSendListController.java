@@ -35,7 +35,7 @@ public class SmsSendListController {
     /** AS-IS sms.Sms03_GroupSend.sendMessageList */
     @PostMapping
     public ApiResponse<Void> send(@AuthenticationPrincipal UserPrincipal principal, @RequestBody SmsSendListReq req) {
-        service.send(principal, req.personIds(), req.message());
+        service.send(principal, req.personIds(), req.message(), req.smsNoticeCode());
         return ApiResponse.ok(null);
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 public interface EmpSmsNoticeMapper {
 
     /** AS-IS emp92_sms_notice.selectByPersonId — 코드별 기본값: 앱 false·문자 true·메일 true */
-    List<SmsNoticeRes> selectByPersonId(@Param("personId") Long personId);
+    List<SmsNoticeRes> selectByPersonId(@Param("personId") Long personId, @Param("type") String type);
 
     /** AS-IS emp92_sms_notice.check 의 건수 */
     int countByCode(@Param("personId") Long personId, @Param("smsNoticeCode") String smsNoticeCode);

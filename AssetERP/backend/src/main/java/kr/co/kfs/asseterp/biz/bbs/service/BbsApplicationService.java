@@ -10,7 +10,7 @@ import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationNoticeTarget;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationStatusRes;
 import kr.co.kfs.asseterp.biz.bbs.mapper.BbsApplicationMapper;
-import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** AS-IS server/bbs/Bbs11_Application.java (selectByAppStatus / selectByResultCheck L38 / modelUpdate L59 / update L81), sms/Sms02_History.sendMessage L100 */
 @Slf4j
@@ -30,7 +31,7 @@ import java.util.List;
 public class BbsApplicationService {
 
     private final BbsApplicationMapper mapper;
-    private final SmsSender smsSender;
+    private final AlertService alert;
 
     /** AS-IS selectByAppStatus(companyId, appStatus) */
     public List<ApplicationRes> searchByAppStatus(UserPrincipal user, String appStatus) {
@@ -65,14 +66,12 @@ public class BbsApplicationService {
     }
 
     /**
-     * AS-IS Sms02_History.sendMessage L100-131 — 회사가 문자발신 서비스를 신청했으면(SMSok) 신청자 휴대폰번호로 "[Asset-ERP] " + 문구를 보낸다.
-     * 신청하지 않았으면 보내지 않고 "문자발신 서비스를 미신청한 고객사입니다"(AS-IS 상태 -1). 발송 실패는 SmsSender가 거절한다
+     * AS-IS bbs.Bbs11_Application.sendMessage(원본 98d5afdd6 새 메서드, CH-0250·0267·0268 — 전엔 sms.Sms02_History.sendMessage):
+     * 신청자에게 통합알림 B03 "[Asset-ERP] " + 문구. 회사 문자발신 신청 검사(-1)는 없어지고 회사 발송 설정에 따라 메일·SMS, 앱알림은 늘
      */
+    @Transactional
     public void sendMessage(UserPrincipal user, Long personId, String msg) {
-        if (!smsSender.companyEnabled(user.getCompanyId())) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, SmsSender.NOT_SUBSCRIBED);
-        }
-        smsSender.send(user.getCompanyId(), null, mapper.selectMobileTelNo(personId), "[Asset-ERP] " + msg, String.valueOf(personId));
+        alert.alert("B03", personId, user.getCompanyId(), Map.of("content", "[Asset-ERP] " + msg));
     }
 
     // ---- Y13 기타신청서 작성 (Bbs11_Tab_Application · Bbs11_Edit_Application) ----
@@ -124,19 +123,11 @@ public class BbsApplicationService {
             return 0;
         }
         String msg = "'" + user.getName() + "'님이 " + row.appTypeName() + "을(를) " + (apply ? "하였습니다." : "취소하였습니다.");
-        // AS-IS는 sms.Sms02_History.sendMessage로 보낸다 — SMSok가 아니면 상태 -1
-        if (!smsSender.companyEnabled(user.getCompanyId())) {
-            return -1;
+        // 원본 98d5afdd6(CH-0266): bbs.Bbs11_Application.sendMessage — 받는 사람마다 통합알림 B03, 늘 상태 1
+        for (ApplicationNoticeTarget t : targets) {
+            alert.alert("B03", t.personId(), user.getCompanyId(), Map.of("content", "[Asset-ERP] " + msg));
         }
-        try {
-            for (ApplicationNoticeTarget t : targets) {
-                smsSender.send(user.getCompanyId(), null, t.mobileTelno(), "[Asset-ERP] " + msg, t.korName());
-            }
-            return 1;
-        } catch (BusinessException e) {
-            log.warn("기타신청서 알림 문자 발송 실패: {}", e.getMessage());
-            return -1;
-        }
+        return 1;
     }
 
     /** AS-IS delete — 진행된 신청서(상태가 있는 것)와 남의 것은 지울 수 없다(Bbs11_Tab_Application.delete L245-253) */

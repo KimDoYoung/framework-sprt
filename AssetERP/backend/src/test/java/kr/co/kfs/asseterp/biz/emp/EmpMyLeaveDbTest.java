@@ -16,13 +16,13 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpMyLeaveService;
-import kr.co.kfs.asseterp.biz.sms.RefusingSmsSender;
+import kr.co.kfs.asseterp.support.NoticeTestConfig;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 
 /** Y01 휴가신청 — 저장·수정·삭제·기간 계산·초과사용 승인요청 규칙을 asseterpdb에서 확인한다(테스트 트랜잭션 롤백) */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({EmpMyLeaveService.class, RefusingSmsSender.class})
+@Import({EmpMyLeaveService.class, NoticeTestConfig.class})
 class EmpMyLeaveDbTest {
 
     @Autowired EmpMyLeaveService service;
@@ -78,10 +78,11 @@ class EmpMyLeaveDbTest {
     }
 
     @Test
-    void 초과사용_승인요청은_문자를_보내지_못하면_상태를_바꾸지_않는다() {
+    void 초과사용_승인요청은_통합알림_M05를_보내고_상태를_신청으로_바꾼다() {
+        // 원본 98d5afdd6(CH-0257·0269): 회사 문자발신 신청 검사가 없어져 늘 성공
         LocalDate d = LocalDate.of(2031, 5, 6);
         MyLeaveRes saved = service.save(user(), req(-1L, "01", d, d, 1.0, "010-1111-2222"));
-        assertThrows(BusinessException.class, () -> service.requestOverConfirm(user(), saved.leaveId(), 29035L));
-        assertThat(service.get(user(), saved.leaveId()).overConfirmStatusCode()).isNull();
+        service.requestOverConfirm(user(), saved.leaveId(), 29035L);
+        assertThat(service.get(user(), saved.leaveId()).overConfirmStatusCode()).isEqualTo("10");
     }
 }

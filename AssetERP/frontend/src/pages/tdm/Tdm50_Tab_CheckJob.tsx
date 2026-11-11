@@ -31,7 +31,7 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
   const [activeRole, setActiveRole] = useState<number | null>(null);
   const [editJob, setEditJob] = useState<TdmCheckJob | null>(null);     // Tdm50_Edit_CheckJob
   const [loading, setLoading] = useState(false);
-  const [smsTarget, setSmsTarget] = useState<{ personIds: number[]; message: string } | null>(null);   // Sms03_Lookup_SendList.open(personIdList, msg)
+  const [smsTarget, setSmsTarget] = useState<{ smsNoticeCode: string; personIds: number[]; message: string } | null>(null);   // Sms03_Lookup_SendList.open(personIdList, msg)
 
   // retrievePanel() L234-276: tdm.Tdm20_Role.getCeoRoleList(companyId, checkYm, baseDate = 그 달 1일) → 직책마다 탭
   // retrieve() L278-299: tdm.Tdm50_ChckJob.selectByCheckYm(companyId, checkYm, defaultYn=true) → 작업 요약 글 → retrievePanel(), setButtonEnable()
@@ -154,7 +154,7 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
       const targets = await tdmApi.searchCheckMessageTargets(job.chckJobId, firstDayOf(ym));
       // 원본은 목록 순서대로 orgManagerId를 모두 넘긴다(중복·null 포함). TS 타입 때문에 null만 뺀다 — 창은 사원 ID로 다시 읽는다
       const personIds = targets.map(t => t.orgManagerId).filter((id): id is number => id != null);
-      setSmsTarget({ personIds, message: getMessage(job) });
+      setSmsTarget({ smsNoticeCode: 'T05', personIds, message: getMessage(job) });   // 원본 98d5afdd6 open("T05", …)
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }

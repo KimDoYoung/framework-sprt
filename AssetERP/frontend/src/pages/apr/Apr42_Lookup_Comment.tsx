@@ -34,7 +34,7 @@ export const Apr42_Lookup_Comment: React.FC<Props> = ({ apprId, onChanged, onClo
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileTarget, setFileTarget] = useState<AprComment | null>(null);
-  const [smsTarget, setSmsTarget] = useState<{ personIds: number[]; message: string } | null>(null);
+  const [smsTarget, setSmsTarget] = useState<{ smsNoticeCode: string; personIds: number[]; message: string } | null>(null);
 
   // retrieve() L207-221: 서비스 apr.Apr42_Comment.selectByApprId(companyId, personId, apprId)
   const retrieve = useCallback(async () => {
@@ -60,7 +60,7 @@ export const Apr42_Lookup_Comment: React.FC<Props> = ({ apprId, onChanged, onClo
     if (apprId == null || rows.length === 0) return;
     try {
       const notice = await aprCommentApi.getNotice(apprId);
-      setSmsTarget({ personIds: notice.personIds, message: notice.message });
+      setSmsTarget({ smsNoticeCode: 'T03', personIds: notice.personIds, message: notice.message });   // 원본 98d5afdd6 open("T03", …)
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }

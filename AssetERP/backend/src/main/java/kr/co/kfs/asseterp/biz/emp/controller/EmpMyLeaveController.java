@@ -93,7 +93,7 @@ public class EmpMyLeaveController {
         return ApiResponse.ok(service.hasAltAppr(principal, leaveId));
     }
 
-    /** AS-IS Sms02_History.sendMessage + emp.Emp20_Leave.updateOverConfirm (초과사용 승인요청) */
+    /** AS-IS emp.Emp20_Leave.sendMessage(통합알림 M05, 원본 98d5afdd6) + updateOverConfirm (초과사용 승인요청) */
     @PutMapping("/{leaveId}/over-confirm-request")
     public ApiResponse<MyLeaveRes> requestOverConfirm(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long leaveId,
                                                       @RequestBody MyLeaveOverRequestReq req) {

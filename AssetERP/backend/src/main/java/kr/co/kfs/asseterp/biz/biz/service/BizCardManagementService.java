@@ -8,7 +8,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizCardManagementRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardManagementUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardMessageReq;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizCardManagementMapper;
-import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public class BizCardManagementService {
     private static final String ALL = "%";
 
     private final BizCardManagementMapper mapper;
-    private final SmsSender smsSender;
+    private final AlertService alert;
 
     /** AS-IS biz.Biz01_Promo.selectByPaging — 건수와 한 쪽을 함께. 관리자 `%`(전체)는 조건 없음 */
     public PageRes<BizCardManagementRes> search(UserPrincipal user, String dataYm, String managerId, String providePurCode,
@@ -100,20 +101,17 @@ public class BizCardManagementService {
     }
 
     /**
-     * AS-IS biz.Biz01_Promo.sendMessage — 고른 사용자의 휴대폰으로 마감 알림을 보낸다. 휴대폰번호가 없는 사용자는 건너뛴다(원본은 NPE를 삼킴).
-     * 발송 연동(SmsSender)이 없으면 SmsSender가 거절한다
+     * AS-IS biz.Biz01_Promo.sendMessage — 고른 사용자에게 마감 알림. 원본 98d5afdd6부터 통합알림 M02(CH-0253): 앱알림·메일·SMS,
+     * 회사 발송 설정과 상관없이. 보낼 수 없는 종류(이메일·번호 없음, 수신 끔)는 건너뛴다
      */
+    @Transactional
     public void sendMessage(UserPrincipal user, BizCardMessageReq req) {
         if (req.personIds() == null || req.personIds().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
         String content = "[Asset-ERP] 법인카드 사용내역 (" + req.dataYm() + ")이 마감되었습니다.";
         for (Long personId : req.personIds()) {
-            String phone = mapper.selectMobileTelNo(personId);
-            if (phone == null || phone.isBlank()) {
-                continue;
-            }
-            smsSender.send(user.getCompanyId(), null, phone, content, String.valueOf(personId));
+            alert.alert("M02", personId, user.getCompanyId(), Map.of("content", content));
         }
     }
 

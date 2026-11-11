@@ -6,7 +6,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestRes;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitRes;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitTypeRes;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpBenefitMapper;
-import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.List;
 import kr.co.kfs.asseterp.common.util.Texts;
 
@@ -27,7 +28,7 @@ import kr.co.kfs.asseterp.common.util.Texts;
 public class EmpBenefitService {
 
     private final EmpBenefitMapper mapper;
-    private final SmsSender smsSender;
+    private final AlertService alert;
 
     /** 화면의 콤보가 비어 있으면(전체) 조건을 모두 통과시키는 "%" — AS-IS retrieve() */
     private static String codeOrAll(String code) {
@@ -118,13 +119,14 @@ public class EmpBenefitService {
     }
 
     /**
-     * AS-IS sendMessage(알림 등록 창 [문자발송]): 신청한 사원 휴대폰번호로 알림 내용을 문자로 보낸다(회사 0).
-     * 발송 연동(SmsSender)이 없으면 SmsSender가 거절한다
+     * AS-IS sendMessage(알림 등록 창 [문자발송]): 신청한 사원에게 알림 내용을. 원본 98d5afdd6부터 통합알림 M03(CH-0255) —
+     * 앱알림·메일·SMS, 회사는 받는 사람의 회사(전엔 회사 0으로 문자만)
      */
+    @Transactional
     public void sendMessage(UserPrincipal user, Long benefitId, String note) {
         BenefitRes row = mapper.selectById(user.getCompanyId(), benefitId);
         if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        smsSender.send(0L, null, mapper.selectMobileTelNo(row.personId()), note, String.valueOf(row.personId()));
+        alert.alert("M03", row.personId(), null, Map.of("content", note == null ? "null" : note));
     }
 
     /** Y06 AS-IS selectByPersonId: 본인 신청 목록. benefitYn은 "true"·"false"·전체("%") */

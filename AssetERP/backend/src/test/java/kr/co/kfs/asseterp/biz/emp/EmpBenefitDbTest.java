@@ -4,7 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestRes;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpBenefitService;
-import kr.co.kfs.asseterp.biz.sms.RefusingSmsSender;
+import kr.co.kfs.asseterp.support.NoticeTestConfig;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /** U05(복리후생비 관리)의 쓰기·문서폐기를 asseterpdb에서 실제로 돌리고 롤백한다 (@MybatisTest는 테스트마다 롤백) */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({EmpBenefitService.class, RefusingSmsSender.class})
+@Import({EmpBenefitService.class, NoticeTestConfig.class})
 class EmpBenefitDbTest {
 
     @Autowired EmpBenefitService service;
@@ -69,13 +69,14 @@ class EmpBenefitDbTest {
     }
 
     @Test
-    void 알림내용_저장_문자발송_거절() {
+    void 알림내용_저장_알림발송() {
         BenefitRes row = service.search(user, from, to, "%", "").get(0);
         service.updateNote(user, row.benefitId(), "시험 알림");
         assertThat(jdbc.queryForObject("select emp17_note from emp17_benefit where emp17_benefit_id = ?", String.class, row.benefitId())).isEqualTo("시험 알림");
         assertThatThrownBy(() -> service.updateNote(user, -1L, "x")).isInstanceOf(BusinessException.class);
-        // 문자를 보내지 못하면(SmsSender 거절) 예외
-        assertThatThrownBy(() -> service.sendMessage(user, row.benefitId(), "시험 알림")).isInstanceOf(BusinessException.class);
+        // 원본 98d5afdd6(CH-0255): 통합알림 M03 — 회사 문자 설정과 상관없이 보낼 수 있는 종류로 간다(오류 없음), 없는 신청은 거절
+        service.sendMessage(user, row.benefitId(), "시험 알림");
+        assertThatThrownBy(() -> service.sendMessage(user, -1L, "x")).isInstanceOf(BusinessException.class);
     }
 
     @Test

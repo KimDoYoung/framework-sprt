@@ -28,8 +28,8 @@ interface Row {
 const gb = gbFor<Row>();
 
 interface Props {
-  /** AS-IS open(personIdList, message) — 값이 있으면 열린다 */
-  target: { personIds: number[]; message: string } | null;
+  /** AS-IS open(smsNoticeCode, personIdList, message) — 값이 있으면 열린다. smsNoticeCode는 통합알림 코드(댓글 T03 · 책무 T05, 원본 98d5afdd6) */
+  target: { smsNoticeCode: string; personIds: number[]; message: string } | null;
   onClose: () => void;
 }
 
@@ -79,7 +79,7 @@ export const Sms03_Lookup_SendList: React.FC<Props> = ({ target, onClose }) => {
       width: 350,
       onOk: async () => {
         try {
-          await smsApi.sendList(rows.map(r => r.personId), text);
+          await smsApi.sendList(rows.map(r => r.personId), text, target!.smsNoticeCode);
           Modal.info({ title: '확인', content: '발송이 완료되었습니다', okText: '확인' });
         } catch (err) {
           Modal.info({ title: '확인', content: errorMessage(err, '발송 실패'), okText: '확인' });

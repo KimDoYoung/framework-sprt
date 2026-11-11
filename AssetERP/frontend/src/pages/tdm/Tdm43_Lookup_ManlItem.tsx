@@ -71,7 +71,7 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
   // [E5] deleteButton[삭제].Select (L140) → delete() L238-272 → [E7] messageBox.DialogHide [YES] (L252): tdm.Tdm43_Manl.delete → 그리드에서 뺀다
   const deleteManl = () => {
     const selected = gridRef.current?.api?.getSelectedRows() ?? [];
-    if (selected.length === 0) return void message.warning('삭제할 점점항목을 선택하세요');   // 원본 문구 그대로(점점)
+    if (selected.length === 0) return void message.warning('삭제할 점검항목을 선택하세요');   // 원본 98d5afdd6에서 "점점" → "점검" (CH-0270)
     const target = selected[0];
     if (target.manlCode == null) return void message.warning('선택한 관리의무는 점검항목이 등록되어 있지 않습니다');
     Modal.confirm({

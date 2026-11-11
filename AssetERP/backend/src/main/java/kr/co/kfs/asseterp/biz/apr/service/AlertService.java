@@ -63,11 +63,15 @@ public class AlertService {
      * 누구에게 무엇을 보낼지 (DB 읽기만). params: apprId·code(T011·T012·T013·T02), classTreeName·titleName(T012 code 99),
      * count(A01~A03·B01·B02), content(그 밖의 코드), alarmRecordId(T04)
      */
-    public List<AprNoticeCall> plan(String smsNoticeCode, Long personId, Long companyId, Map<String, ?> params) {
+    public List<AprNoticeCall> plan(String smsNoticeCode, Long personId, Long companyIdOrNull, Map<String, ?> params) {
+        Long companyId = companyIdOrNull;
         List<AprNoticeCall> out = new ArrayList<>();
         AprNoticePerson p = personId == null ? null : mapper.selectPerson(personId);
         if (p == null) {
             return out;   // AS-IS는 NPE로 멈춘다 — 부르는 쪽이 모두 사원이 있을 때만 부른다
+        }
+        if (companyId == null) {
+            companyId = p.companyId();   // 받는 사람의 회사 (personModel.getCompanyId())
         }
         String loc = mapper.selectCompanyLoc(companyId);
         boolean mCode = smsNoticeCode.startsWith("M");

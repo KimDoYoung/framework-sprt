@@ -18,8 +18,9 @@ public class EmpSmsNoticeService {
 
     private final EmpSmsNoticeMapper mapper;
 
-    public List<SmsNoticeRes> search(UserPrincipal user) {
-        return mapper.selectByPersonId(user.getUserId());
+    /** type: "M" 필수알림(M으로 시작하는 코드) · 그 밖 선택알림 (원본 98d5afdd6 Emp92_TabPage_SmsNotice01·02, CH-0278·0313) */
+    public List<SmsNoticeRes> search(UserPrincipal user, String type) {
+        return mapper.selectByPersonId(user.getUserId(), type);
     }
 
     /** AS-IS updateList: 행마다 있으면 updateNoticeYn, 없으면 insert. 사원은 로그인한 사용자 */

@@ -3,14 +3,16 @@ package kr.co.kfs.asseterp.biz.sms.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sms.dto.SmsSendTargetRes;
 import kr.co.kfs.asseterp.biz.sms.mapper.SmsSendListMapper;
-import kr.co.kfs.asseterp.common.notice.NoticeResult;
-import kr.co.kfs.asseterp.common.notice.NoticeSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /** 문자 발송 창 (AS-IS client/vi/sms/Sms03_Lookup_SendList · server/sms/Sms03_GroupSend.sendMessageList, V04) */
 @Slf4j
@@ -20,7 +22,7 @@ import java.util.List;
 public class SmsSendListService {
 
     private final SmsSendListMapper mapper;
-    private final NoticeSender sender;
+    private final AlertService alert;
 
     /** AS-IS emp.Emp00_TransInfo.selectByList — 목록이 비면 아무도 없다(AS-IS는 IN (NULL)) */
     public List<SmsSendTargetRes> search(UserPrincipal user, List<Long> personIds) {
@@ -31,23 +33,19 @@ public class SmsSendListService {
     }
 
     /**
-     * AS-IS sendMessageList L129-152: 목록의 행마다 "[Asset-ERP] " + 글을 그 사원의 휴대폰으로 보낸다(같은 사원이 두 행이면 두 번).
-     * 휴대폰 번호가 없는 사원은 건너뛴다(AS-IS는 NullPointerException으로 서버 오류) — 원본 이상한점 #26. 실제 발송은 {@link NoticeSender}가 한다
+     * AS-IS sendMessageList L124-137(원본 98d5afdd6, CH-0298·0314) — 목록의 행마다 그 사원에게 통합알림(화면이 넘긴 코드: 댓글 T03 · 책무 T05)
+     * "[Asset-ERP] " + 글. 앱알림·메일·SMS 중 받을 수 있는 것으로 간다(전엔 문자만, 번호 없으면 NPE — 원본 이상한점 #26은 이것으로 없어짐)
      */
-    public void send(UserPrincipal user, List<Long> personIds, String message) {
+    @Transactional
+    public void send(UserPrincipal user, List<Long> personIds, String message, String smsNoticeCode) {
         if (personIds == null) {
             return;
         }
+        if (smsNoticeCode == null || smsNoticeCode.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "알림 코드가 없습니다");
+        }
         for (Long personId : personIds) {
-            String mobile = mapper.selectMobile(user.getCompanyId(), personId);
-            if (mobile == null || mobile.isBlank()) {
-                log.warn("문자 발송 건너뜀 — 휴대폰 번호 없음 personId={}", personId);
-                continue;
-            }
-            NoticeResult r = sender.sendSms(List.of(mobile), "[Asset-ERP] " + (message == null ? "" : message));
-            if (!r.ok()) {
-                log.warn("SMS전송실패 personId={}: {}", personId, r.message());
-            }
+            alert.alert(smsNoticeCode, personId, user.getCompanyId(), Map.of("content", "[Asset-ERP] " + message));
         }
     }
 }

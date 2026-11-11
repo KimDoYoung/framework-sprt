@@ -42,7 +42,7 @@ export const Tdm50_Tab_DutyRecon: React.FC = () => {
   // buildGrid() L84-91
   const columnDefs = useMemo(() => [
     gb.text('string01', 300, '점검항목'),  // L86
-    gb.text('string02', 400, '점점결과'),  // L87
+    gb.text('string02', 400, '점검결과'),  // L87 (원본 98d5afdd6 "점점" → "점검", CH-0273)
     gb.text('string03', 300, '참조'),  // L88
   ], []);
 

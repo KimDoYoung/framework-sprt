@@ -25,8 +25,9 @@ public class EmpSmsNoticeController {
 
     /** AS-IS emp.Emp92_SmsNotice.selectByPersonId */
     @GetMapping
-    public ApiResponse<List<SmsNoticeRes>> search(@AuthenticationPrincipal UserPrincipal principal) {
-        return ApiResponse.ok(service.search(principal));
+    public ApiResponse<List<SmsNoticeRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                                   @org.springframework.web.bind.annotation.RequestParam(required = false) String type) {
+        return ApiResponse.ok(service.search(principal, type));
     }
 
     /** AS-IS emp.Emp92_SmsNotice.updateList */

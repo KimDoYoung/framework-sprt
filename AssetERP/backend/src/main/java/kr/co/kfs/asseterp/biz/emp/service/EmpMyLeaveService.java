@@ -7,7 +7,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveCodesRes;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.MyLeaveSaveReq;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpMyLeaveMapper;
-import kr.co.kfs.asseterp.biz.sms.service.SmsSender;
+import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ public class EmpMyLeaveService {
     private static final Set<String> DELETABLE_STATUS = Set.of("00", "40", "99");
 
     private final EmpMyLeaveMapper mapper;
-    private final SmsSender smsSender;
+    private final AlertService alert;
 
     /** AS-IS emp.Emp20_Leave.selectByPersonId(personId=본인, stdYear, managerYn=false) */
     public List<MyLeaveRes> search(UserPrincipal user, String stdYear) {
@@ -125,20 +126,16 @@ public class EmpMyLeaveService {
     }
 
     /**
-     * AS-IS Emp20_Edit_Leave.lookupEmpTransInfo → sendMessage → updateOverConfirm — 고른 승인자에게 문자를 보내고,
-     * 보낸 뒤에만 초과사용 승인상태를 10(신청)·승인자로 바꾼다. AS-IS sms.Sms02_History.sendMessage L100-131처럼 회사가 문자발신 서비스를
-     * 신청하지 않았으면(SMSok) 보내지 않고 "문자발신 서비스를 미신청한 고객사입니다"(AS-IS 상태 -1). 발송에 실패해도 상태는 바뀌지 않는다.
+     * AS-IS Emp20_Edit_Leave.lookupEmpTransInfo → sendMessage → updateOverConfirm — 고른 승인자에게 알리고 초과사용 승인상태를 10(신청)·승인자로 바꾼다.
+     * 원본 98d5afdd6(CH-0257·0269): 화면이 sms.Sms02_History.sendMessage 대신 emp.Emp20_Leave.sendMessage(통합알림 M05)를 불러
+     * 회사 문자발신 신청 검사(-1 "미신청한 고객사")가 없어졌다 — 늘 성공, 받을 수 있는 종류(앱알림·메일·SMS)로 간다.
      */
     @Transactional
     public MyLeaveRes requestOverConfirm(UserPrincipal user, Long leaveId, Long confirmerId) {
         if (confirmerId == null) throw new BusinessException(ErrorCode.INVALID_INPUT);
         requireMine(user, leaveId);
-        if (!smsSender.companyEnabled(user.getCompanyId())) throw new BusinessException(ErrorCode.INVALID_INPUT, SmsSender.NOT_SUBSCRIBED);
-        String phone = mapper.selectMobileTelNo(user.getCompanyId(), confirmerId);
-        if (phone == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         String label = mapper.selectRequesterLabel(user.getCompanyId(), user.getUserId());
-        smsSender.send(user.getCompanyId(), null, phone,
-                "[Asset-ERP] '" + label + "'님이 연차 초과사용 승인을 요청하였습니다.", String.valueOf(confirmerId));
+        alert.alert("M05", confirmerId, user.getCompanyId(), Map.of("content", "[Asset-ERP] '" + label + "'님이 연차 초과사용 승인을 요청하였습니다."));
         mapper.updateOverConfirmRequest(user.getCompanyId(), user.getUserId(), leaveId, confirmerId);
         return mapper.selectMineById(user.getCompanyId(), user.getUserId(), leaveId);
     }

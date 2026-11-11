@@ -59,7 +59,7 @@ export const Tdm50_Tab_DutyReconAdmin: React.FC = () => {
   const columnDefs = useMemo(() => [
     gb.text('companyName', 200, '회사명'),  // L123
     gb.text('string01', 300, '점검항목'),  // L124
-    gb.text('string02', 400, '점점결과'),  // L125
+    gb.text('string02', 400, '점검결과'),  // L125 (원본 98d5afdd6 "점점" → "점검", CH-0274)
     gb.text('string03', 300, '참조'),  // L126
   ], []);
 

@@ -76,8 +76,8 @@ export const smsApi = {
     return res.data.data ?? [];
   },
 
-  /** AS-IS sms.Sms03_GroupSend.sendMessageList: 목록의 사원(행마다)에게 같은 글 */
-  sendList: async (personIds: number[], message: string): Promise<void> => {
-    await apiClient.post<ApiResponse<void>>('v1/sms/send-list', { personIds, message });
+  /** AS-IS sms.Sms03_GroupSend.sendMessageList: 목록의 사원(행마다)에게 같은 글을 통합알림(smsNoticeCode)으로 */
+  sendList: async (personIds: number[], message: string, smsNoticeCode: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/sms/send-list', { personIds, message, smsNoticeCode });
   },
 };
