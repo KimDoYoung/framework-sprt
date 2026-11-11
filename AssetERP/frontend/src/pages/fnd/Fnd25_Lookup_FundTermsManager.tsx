@@ -1,7 +1,8 @@
 /**
  * 펀드규약 수정 창 (P12) — Fnd25_Tab_FundTermsManager 왼쪽 목록의 수정 아이콘이 연다
  * AS-IS: myApp/client/vi/fnd/Fnd25_Lookup_FundTermsManager.java (247줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L89-129: 모달 "펀드규약 수정" 700×230, 라벨 100, 펀드규약명(655, 읽기 전용) / 신청구분(260, 콤보 FundTermsType) · 조회순서(165) · 예탁원코드(230, 조회창), 아래 가운데 [저장][삭제][닫기]
+ * 생성자 L89-129: 모달 "펀드규약 수정" 700×230, 라벨 120, 예탁원펀드코드(240, 조회창) · 신청구분(230, 콤보 FundTermsType) · 조회순서(185) / 펀드명(655, 읽기 전용 정식명),
+ *   아래 가운데 [저장][삭제][닫기]. 원본 2026-10-28(CH-0175): 펀드규약명 칸 → 펀드명, 줄 순서·폭 변경, 펀드코드 필수
  * UX보강(10): 첫 입력칸 포커스(UX-05, LookupModal)
  * 스타일: MF (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
@@ -24,10 +25,10 @@ interface Props {
   onClose: () => void;
 }
 
-/** 라벨 폭 100 (form.setLabelWidth(100)) */
+/** 라벨 폭 120 (form.setLabelWidth(120), 원본 2026-10-28) */
 const Field: React.FC<{ label: string; width: number | string; children: React.ReactNode }> = ({ label, width, children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 100, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 120, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -37,6 +38,7 @@ export const Fnd25_Lookup_FundTermsManager: React.FC<Props> = ({ target, onDone,
   const [seq, setSeq] = useState<number | null>(null);
   const [fundId, setFundId] = useState<number | null>(null);
   const [ksdFundCode, setKsdFundCode] = useState<string | null>(null);
+  const [fundFullName, setFundFullName] = useState<string | null>(null);  // 펀드명(정식명) — 읽기 전용
   const [fundOpen, setFundOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   /** originFundId = termsDetailModel.getFundId() (edit L77-87) */
@@ -49,12 +51,14 @@ export const Fnd25_Lookup_FundTermsManager: React.FC<Props> = ({ target, onDone,
     setSeq(target.seq ?? null);
     setFundId(target.fundId ?? null);
     setKsdFundCode(target.ksdFundCode ?? null);
+    setFundFullName(target.fundFullName ?? null);
   }, [target]);
 
   // [E1] updateButton[저장].Select (L97) → ksdFundCheck() L156-174 → update() L176-196
   // 종료일은 원본 모델(selectBySearchText)에 없어 null이 간다 — 서버가 종료일을 비운다(원본 그대로)
   const update = async () => {
     if (!target) return;
+    if (fundId == null) { message.warning('펀드코드는 필수 선택입니다.'); return; }  // 원본 2026-10-28 (서버도 막는다)
     setBusy(true);
     try {
       await fndApi.updateTerms(target.termsId, { termsType, seq, fundId, closeDate: null, originFundId });
@@ -109,20 +113,20 @@ export const Fnd25_Lookup_FundTermsManager: React.FC<Props> = ({ target, onDone,
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '15px 10px 10px' }}>
-        <Field label="펀드규약명 " width={655}><Input disabled value={target?.termsName ?? ''} /></Field>
         <Space size={10} align="start">
-          <Field label="신청구분 " width={260}>
+          <Field label="예탁원펀드코드 " width={240}>
+            {/* [E4] ksdFundCode[예탁원펀드코드].TriggerClick (L117) → openLookupOpr() L223-238: Fnd01_Lookup_SelectSingle.openNone2 */}
+            <LookupInput value={ksdFundCode ?? ''} width={120} onOpen={() => setFundOpen(true)} />
+          </Field>
+          <Field label="신청구분 " width={230}>
             <SystemCodeComboBox kindCd="FundTermsType" placeholder="(선택하세요)" style={{ width: '100%' }} value={termsType ?? undefined}
               onChange={code => setTermsType(code ?? null)} />
           </Field>
-          <Field label="조회순서 " width={165}>
+          <Field label="조회순서 " width={185}>
             <InputNumber style={{ width: '100%' }} precision={0} value={seq} onChange={v => setSeq(v == null ? null : Number(v))} />
           </Field>
-          <Field label="예탁원코드 " width={230}>
-            {/* [E4] ksdFundCode[예탁원코드].TriggerClick (L117) → openLookupOpr() L223-238: Fnd01_Lookup_SelectSingle.openNone2 */}
-            <LookupInput value={ksdFundCode ?? ''} width={130} onOpen={() => setFundOpen(true)} />
-          </Field>
         </Space>
+        <Field label="펀드명 " width={655}><Input disabled value={fundFullName ?? ''} /></Field>
       </div>
       <Fnd01_Lookup_SelectSingle
         open={fundOpen}
@@ -130,6 +134,7 @@ export const Fnd25_Lookup_FundTermsManager: React.FC<Props> = ({ target, onDone,
         onResult={fund => {
           setKsdFundCode(fund?.ksdFundCode ?? null);
           setFundId(fund?.fundId ?? null);
+          setFundFullName(fund?.fundFullName ?? null);  // fundFullName.setValue(resultModel.getFundFullName()) / [해당없음]이면 null
         }}
         onClose={() => setFundOpen(false)}
       />

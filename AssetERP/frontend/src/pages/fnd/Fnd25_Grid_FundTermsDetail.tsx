@@ -59,13 +59,15 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
   const insert = async () => {
     const max = rows.filter(r => r.revisionNo != null).reduce<TermsRevision | null>((m, r) => (m == null || r.revisionNo! > m.revisionNo! ? r : m), null);
     const base: Partial<TermsRevision> = max ?? { ...target?.terms, revisionNo: 0 };
+    // 원본 2026-10-28: 펀드명(정식명)을 편집 창에 넘긴다(termsDetailModel.setFundFullName(selectModel.getFundFullName()))
+    const fundFullName = base.fundFullName ?? target?.terms.fundFullName;
     try {
       const termsDetailId = await fndApi.getTermsNextId();
       setEditTarget({
         mode: 'new',
         model: {
           termsDetailId, termsId: base.termsId, termsType: base.termsType, termsTypeName: base.termsTypeName, termsName: base.termsName,
-          content: '', note: '', seq: base.seq, useYn: true, revisionNo: (base.revisionNo ?? 0) + 1, ksdFundCode: base.ksdFundCode, fundId: base.fundId,
+          content: '', note: '', seq: base.seq, useYn: true, revisionNo: (base.revisionNo ?? 0) + 1, ksdFundCode: base.ksdFundCode, fundId: base.fundId, fundFullName,
         },
       });
     } catch (err) {
@@ -89,6 +91,7 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
         model: {
           termsDetailId, termsId: src.termsId, content: src.content, note: src.note, revisionDate: src.revisionDate, revisionNo: src.revisionNo, useYn: src.useYn,
           termsType: src.termsType, termsName: src.termsName, termsTypeName: src.termsTypeName, seq: src.seq, ksdFundCode: src.ksdFundCode, fundId: src.fundId,
+          fundFullName: src.fundFullName,
         },
       });
     } catch (err) {
@@ -120,7 +123,7 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
   const columnDefs = useMemo(() => [
     // [E6] editCell (ImageCell, L138) → Fnd25_Edit_FundTermsManager.editFundTerms(): 고른 행(내용 포함)을 연다 — 수정이 끝나면 다시 조회
     iconCell<TermsRevision>('edit', 'actionCell', 55, '수정', row => setEditTarget({ mode: 'edit', model: { ...row } })),
-    gb.text('termsName', 320, '펀드규약명', {pinned: 'left'}),
+    // 원본 2026-10-28(CH-0173): 펀드규약명 열 주석 처리
     gb.date('revisionDate', 90, '제개정일', {pinned: 'left'}),
     gb.longCenter('revisionNo', 70, '개정회차'),
     gb.longCenter('fileCnt', 90, '첨부파일 갯수'),

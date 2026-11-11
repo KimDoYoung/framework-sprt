@@ -52,11 +52,11 @@ export const Fnd25_Tab_FundTerms: React.FC = () => {
   // buildGrid() L103-128
   const columnDefs = useMemo(() => [
     gb.text('termsTypeName', 150, '구분'),
-    gb.text('termsName', 250, '펀드규약명'),
+    // 원본 2026-10-28(CH-0176): 펀드규약명 열 주석 처리, 펀드명 = 정식명(폭 450)
     // viewCell (ImageCell "view") → viewContent() L145-149: Fnd25_Lookup_Content.open(termsId)
     iconCell<TermsView>('view', 'actionCell', 55, '내용보기', row => setContentTermsId(row.termsId)),
     gb.text('ksdFundCode', 120, '예탁원코드'),
-    gb.text('fundName', 320, '펀드명'),
+    gb.text('fundFullName', 450, '펀드명'),
     gb.text('trustBankName', 120, '수탁은행'),
     gb.date('fundStartDate', 100, '최초설정일'),
     gb.text('kofiaFundTypeName', 150, '펀드유형'),

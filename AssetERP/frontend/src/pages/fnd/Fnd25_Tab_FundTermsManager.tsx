@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd25_Tab_FundTermsManager.java (239줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L56-87: 왼쪽(45%, 분할, 최소 590·최대 1000) = 툴바(50: 구분 콤보 100 · 검색 220 "펀드규약명/펀드명/예탁원코드" · [조회][등록]) + 규약 그리드(행번호, 체크 없음),
  *   가운데 = 개정 목록(Fnd25_Grid_FundTermsDetail). 규약을 고르면 그 개정을 오른쪽에 보인다
+ *   원본 2026-10-28(CH-0177): [엑셀다운로드] 추가, 그리드 = 예탁원펀드코드·펀드명(정식명)·만기일(펀드규약명 열 빠짐)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
@@ -19,12 +20,14 @@ import { SearchBar } from '@/components/search';
 import { Fnd25_Edit_FundTermsManager, TermsEditTarget } from './Fnd25_Edit_FundTermsManager';
 import { Fnd25_Grid_FundTermsDetail } from './Fnd25_Grid_FundTermsDetail';
 import { Fnd25_Lookup_FundTermsManager } from './Fnd25_Lookup_FundTermsManager';
+import { useLoginUser } from '@/hooks/useLoginUser';
 
 const gb = gbFor<Terms>();
 /** setChecked 주석 처리(L127) → 단일 선택(체크 열 없음). 렌더마다 새 객체를 주면 선택이 풀리므로 한 번만 만든다 */
 const SINGLE_ROW = { mode: 'singleRow', checkboxes: false, enableClickSelection: true } as const;
 
 export const Fnd25_Tab_FundTermsManager: React.FC = () => {
+  const user = useLoginUser();
   // [E0] 화면 열림 (생성자 L56-87) → settings() L89-123, retrieve()
   const [termsType, setTermsType] = useState('%');   // ComboBoxField("FundTermsType", "%", "전체", "전체")
   const [searchText, setSearchText] = useState('');
@@ -99,18 +102,32 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
     }
   };
 
+  // [E7] excelDownloadButton[엑셀다운로드].Select (L135) → downLoad(): sys.Sys99_Print.insertRdFundTermsManager → RD Fnd25_Rd_FundTermsManager xlsx
+  //   "펀드규약_회사명.xlsx" (RD 대신 서버가 xlsx를 만든다, 원본 2026-10-28)
+  const downLoad = async () => {
+    setLoading(true);  // grid.mask("Loading")
+    try {
+      await fndApi.downloadTermsExcel(`펀드규약_${user.companyName}.xlsx`);
+    } catch (err) {
+      message.error(errorMessage(err, '다운로드 실패'));  // AS-IS SimpleMessage(result.getMessage())
+    } finally {
+      setLoading(false);  // grid.unmask()
+    }
+  };
+
   // buildGrid() L125-153
   const columnDefs = useMemo(() => [
-    // [E7] editCell (ImageCell, L132) → Fnd25_Lookup_FundTermsManager.edit(): 고른 규약의 예탁원코드 창
+    // [E8] editCell (ImageCell, L150) → Fnd25_Lookup_FundTermsManager.edit(): 고른 규약의 예탁원코드 창
     iconCell<Terms>('edit', 'actionCell', 55, '수정', row => setLookupTarget(row)),
     gb.text('termsTypeName', 80, '구분', {pinned: 'left'}),
-    gb.text('termsName', 180, '펀드규약명', {pinned: 'left'}),
-    gb.text('ksdFundCode', 120, '예탁원코드'),
-    gb.text('fundName', 320, '펀드명'),
+    // 원본 2026-10-28(CH-0177): 펀드규약명 열 주석 처리, 예탁원펀드코드 제목, 펀드명 = 정식명, 만기일 열 추가
+    gb.text('ksdFundCode', 120, '예탁원펀드코드', {pinned: 'left'}),
+    gb.text('fundFullName', 320, '펀드명'),
     gb.text('trustBankName', 120, '수탁은행'),
     gb.date('fundStartDate', 100, '최초설정일'),
     gb.date('revisionDate', 90, '최종<br>제개정일'),
     gb.longCenter('revisionNo', 70, '최종<br>개정회차'),
+    gb.date('endExpectDate', 90, '만기일'),
   ], []);
 
   return (
@@ -121,7 +138,10 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
             <SearchBar
               onSearch={() => retrieve()}
               loading={loading}
-              extra={<Button type="register" onClick={insert}>등록</Button>}
+              extra={<>
+                <Button type="register" onClick={insert}>등록</Button>
+                <Button type="download" onClick={() => void downLoad()}>엑셀다운로드</Button>
+              </>}
             >
               <SearchBar.Field label="구분">
                 <SystemCodeComboBox kindCd="FundTermsType" altCode={['%', '전체']} style={{ width: 100 }} value={termsType}

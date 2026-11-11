@@ -2,10 +2,11 @@
  * 펀드규약 내용 조회창 (P07) — Fnd01_Tab_FundSearch 그리드의 [규약보기] 아이콘이 연다 (viewContent L285-289)
  * AS-IS: myApp/client/vi/fnd/Fnd25_Lookup_Content.java (226줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L52-85: 모달 1154×800 "펀드규약", 왼쪽 310 = 개정 목록 그리드(제개정일 90 · 개정회차 70 · 첨부파일 80 · 아이콘 40, 행번호 없음), 가운데 = 선택한 개정의 본문(HTML), 아래 가운데 [닫기]
+ * 원본 2026-10-28(CH-0174): 본문 아래에 비고(읽기 전용 TextArea, 높이 120 — 라벨 "비고" 50 왼쪽)를 붙였다
  * 첨부파일 아이콘은 Com01_Lookup_RelateFile.view(termsDetailId) — P12에서 만든 같은 이름 공통 부품을 readOnly로 연다(P07은 Bbs02_Lookup_File로 대신했었다)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message } from 'antd';
+import { Input, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { fndApi } from '@/api/fnd';
@@ -88,8 +89,15 @@ export const Fnd25_Lookup_Content: React.FC<Props> = ({ termsId, onClose }) => {
               onSelectionChanged={onSelectionChanged}
             />
           </div>
-          <div style={{ flex: 1, minWidth: 0, marginLeft: -1, border: '1px solid #d9d9d9', boxSizing: 'border-box', background: '#fff', opacity: selected ? 1 : 0.5 }}>
-            <HtmlView html={selected?.content} height="100%" />
+          <div style={{ flex: 1, minWidth: 0, marginLeft: -1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, minHeight: 0, border: '1px solid #d9d9d9', boxSizing: 'border-box', background: '#fff', opacity: selected ? 1 : 0.5 }}>
+              <HtmlView html={selected?.content} height="100%" />
+            </div>
+            {/* 비고 (원본 2026-10-28): FieldLabel 50 왼쪽 정렬 + 읽기 전용 TextArea, 위아래 여백 10 */}
+            <div style={{ height: 120, margin: '10px 0', display: 'flex', gap: 5 }}>
+              <span style={{ width: 50, flex: 'none', paddingLeft: 8 }}>비고</span>
+              <Input.TextArea readOnly disabled={!selected} value={selected?.note ?? ''} style={{ flex: 1, height: '100%', resize: 'none' }} />
+            </div>
           </div>
         </div>
       </LookupModal>

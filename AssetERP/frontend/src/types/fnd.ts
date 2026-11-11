@@ -158,6 +158,7 @@ export interface FundTermsDetail {
   revisionNo?: number | null;
   fileCnt?: number | null;
   content?: string | null;
+  note?: string | null;  // 원본 2026-10-28: 내용 아래 비고
 }
 
 /** 연관펀드 조회창 한 행 (P06, AS-IS Fnd00_FundModel 중 Fnd01_Lookup_SelectMulti 그리드 열) */
@@ -377,21 +378,22 @@ export interface FundSingle {
   startDate?: string | null;
   empName1?: string | null;
   note?: string | null;
+  fundFullName?: string | null;  // 정식명 — 펀드규약 창(원본 2026-10-28)
 }
 
-/** 펀드규약 한 행 (P12 왼쪽 목록, AS-IS Fnd26_TermsDetailModel — 규약마다 사용 중인 최신 개정) */
+/** 펀드규약 한 행 (P12 왼쪽 목록, AS-IS Fnd26_TermsDetailModel). 원본 2026-10-28: 개정 열(규약명·제개정일·개정회차) 빠짐, 펀드 정식명·만기일 */
 export interface Terms {
   termsId: number;
   termsType?: string | null;
   termsTypeName?: string | null;
-  termsName?: string | null;
   seq?: number | null;
   fundId?: number | null;
   ksdFundCode?: string | null;
-  fundName?: string | null;
+  fundFullName?: string | null;
   trustBankName?: string | null;
   fundStartDate?: string | null;
-  revisionDate?: string | null;
+  endExpectDate?: string | null;
+  revisionDate?: string | null;  // 원본은 SQL이 빠뜨려 빈칸(원본-이상한점 #231) — TOBE는 보인다
   revisionNo?: number | null;
 }
 
@@ -405,6 +407,7 @@ export interface TermsRevision {
   seq?: number | null;
   fundId?: number | null;
   ksdFundCode?: string | null;
+  fundFullName?: string | null;  // 원본 2026-10-28
   revisionDate?: string | null;
   revisionNo?: number | null;
   fileCnt?: number | null;
@@ -441,7 +444,7 @@ export interface TermsView {
   termsTypeName?: string | null;
   termsName?: string | null;
   ksdFundCode?: string | null;
-  fundName?: string | null;
+  fundFullName?: string | null;  // 원본 2026-10-28 (fund_nm → fund_full_nm)
   trustBankName?: string | null;
   fundStartDate?: string | null;
   kofiaFundTypeName?: string | null;

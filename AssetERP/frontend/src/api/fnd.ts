@@ -487,6 +487,23 @@ export const fndApi = {
     return res.data.data ?? [];
   },
 
+  /** #1503 [엑셀다운로드] (AS-IS sys.Sys99_Print.insertRdFundTermsManager + RD Fnd25_Rd_FundTermsManager → xlsx, 원본 2026-10-28) — 회사의 모든 규약·개정 */
+  downloadTermsExcel: async (fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/fnd/terms/excel', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
   /** AS-IS fnd.Fnd26_TermsDetail.selectBySearchText: 규약마다 사용 중인 최신 개정 (termsType `%`=전체) */
   searchTerms: async (params: { termsType: string; searchText: string }): Promise<Terms[]> => {
     const res = await apiClient.get<ApiResponse<Terms[]>>('v1/fnd/terms', { params });

@@ -1,8 +1,10 @@
 /**
  * 펀드규약 편집 창 (P12) — Fnd25_Tab_FundTermsManager [등록] · Fnd25_Grid_FundTermsDetail [등록][등록(복사)] · 수정 아이콘이 연다
  * AS-IS: myApp/client/vi/fnd/Fnd25_Edit_FundTermsManager.java (491줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L97-192: 모달 "펀드규약" 1000×850, 라벨 110, 펀드규약구분(360)·종료일(220)·사용(220) / 조회순서(180)·개정회차(180)·제개정일(220)·예탁원코드(270)
- *   / 펀드규약명(950) / 내용(HTML 편집기 500) / 비고, 아래 가운데 [첨부파일(n건)][저장][닫기]
+ * 생성자 L97-193: 모달 "펀드규약" 1000×850, 라벨 120, 펀드규약구분(400)·종료일(220)·사용(220) / 조회순서(200)·개정회차(200)·제개정일(220)·예탁원펀드코드(270)
+ *   / 펀드명(950, 읽기 전용 정식명) / 내용(HTML 편집기 500) / 비고, 아래 가운데 [첨부파일(n건)][저장][닫기]
+ * 원본 2026-10-28(CH-0172): 펀드규약명 입력칸 → 펀드명(정식명, 읽기 전용), 필수는 펀드규약명 대신 예탁원펀드코드,
+ *   [저장]의 예탁원코드 중복 검사(ksdFundCheck)는 새 규약(insert)만 — 서버가 같은 규칙으로 막는다. 펀드규약명은 원래 값 그대로 저장(편집 칸 없음)
  * 모드 4개: insertFundTerms() L262-286 · newFundTerms() L224-260 · copyFundTerms() L288-334 · editFundTerms() L194-222
  *   (규약구분·조회순서·예탁원코드는 insert만 편집 가능). 새 ID(termsDetailId)는 열기 전에 받아 둔다(DBUtil.setSeq)
  * 내용 편집기는 CKEditor(iframe) → HtmlEditor(Tiptap, 사용자 결정 2026-10-13)
@@ -39,8 +41,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** 라벨 칸 폭: 가장 긴 라벨 '펀드규약구분'(6글자) 기준 96 (AS-IS 110). 필수 라벨은 파란색 */
-const LW = 96;
+/** 라벨 칸 폭: 가장 긴 라벨 '예탁원펀드코드'(7글자) 기준 110 (AS-IS 120). 필수 라벨은 파란색 */
+const LW = 110;
 const req = (text: string) => <span style={{ color: '#0069B4' }}>{text}</span>;
 
 export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, onClose }) => {
@@ -82,7 +84,7 @@ export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, o
     if (f.revisionDate == null) return message.warning('제개정일자는 필수입력입니다.');
     if (f.revisionNo == null) return message.warning('개정회차는 필수입력입니다.');
     if (f.seq == null) return message.warning('조회순서는 필수입력입니다.');
-    if (n(f.termsName) == null) return message.warning('펀드규약명은 필수입력사항입니다.');
+    if (f.fundId == null) return message.warning('예탁원펀드코드는 필수선택사항입니다.');  // 원본 2026-10-28 (펀드규약명 검사는 주석 처리)
     setSaving(true);
     try {
       await fndApi.saveTermsRevision({
@@ -119,36 +121,37 @@ export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, o
         </div>
       }
     >
-        {/* hlc01: 360 · 220 · 220 (L145-150) — 안쪽 폭 960 − 칸 사이 16 = 944로 비례 확대: 425·260·259 */}
+        {/* hlc01: 400 · 220 · 220 (L145-150, 원본 2026-10-28) — 안쪽 폭 960 − 칸 사이 16 = 944로 비례 확대: 450·247·247 */}
         <EditRow>
-          <EditField label={req('펀드규약구분')} labelWidth={LW} width={425}>
+          <EditField label={req('펀드규약구분')} labelWidth={LW} width={450}>
             <SystemCodeComboBox kindCd="FundTermsType" placeholder="(선택하세요)" disabled={locked} style={{ width: '100%' }} value={f.termsType ?? undefined}
               onChange={code => set('termsType', code ?? null)} />
           </EditField>
-          <EditField label="종료일" labelWidth={LW} width={260}>
+          <EditField label="종료일" labelWidth={LW} width={247}>
             <DatePicker style={{ width: '100%' }} value={f.closeDate ? dayjs(f.closeDate) : null}
               onChange={d => set('closeDate', d ? d.format('YYYY-MM-DD') : null)} />
           </EditField>
-          <EditField label="사용" labelWidth={LW} width={259}><Checkbox checked={!!f.useYn} onChange={e => set('useYn', e.target.checked)} /></EditField>
+          <EditField label="사용" labelWidth={LW} width={247}><Checkbox checked={!!f.useYn} onChange={e => set('useYn', e.target.checked)} /></EditField>
         </EditRow>
-        {/* hlc02: 180 · 180 · 220 · 270 (L152-158) — 안쪽 폭 960 − 칸 사이 24 = 936으로 비례 확대: 198·198·242·298 */}
+        {/* hlc02: 200 · 200 · 220 · 270 (L152-158, 원본 2026-10-28) — 안쪽 폭 960 − 칸 사이 24 = 936으로 비례 확대: 211·211·232·282 */}
         <EditRow>
-          <EditField label={req('조회순서')} labelWidth={LW} width={198}>
+          <EditField label={req('조회순서')} labelWidth={LW} width={211}>
             <InputNumber style={{ width: '100%' }} precision={0} disabled={locked} value={f.seq ?? null} onChange={v => set('seq', v == null ? null : Number(v))} />
           </EditField>
-          <EditField label={req('개정회차')} labelWidth={LW} width={198}>
+          <EditField label={req('개정회차')} labelWidth={LW} width={211}>
             <InputNumber style={{ width: '100%' }} precision={0} value={f.revisionNo ?? null} onChange={v => set('revisionNo', v == null ? null : Number(v))} />
           </EditField>
-          <EditField label={req('제개정일')} labelWidth={LW} width={242}>
+          <EditField label={req('제개정일')} labelWidth={LW} width={232}>
             <DatePicker style={{ width: '100%' }} value={f.revisionDate ? dayjs(f.revisionDate) : null}
               onChange={d => set('revisionDate', d ? d.format('YYYY-MM-DD') : null)} />
           </EditField>
-          <EditField label={req('예탁원코드')} labelWidth={LW} width={298}>
-            {/* [E4] ksdFundCode[예탁원코드].TriggerClick (L141) → openLookupOpr() L349-361: Fnd01_Lookup_SelectSingle.open — 고르면 채우고, 안 고르면 그대로 */}
-            <LookupInput value={f.ksdFundCode ?? ''} width={170} disabled={locked} onOpen={() => setFundOpen(true)} />
+          <EditField label={req('예탁원펀드코드')} labelWidth={LW} width={282}>
+            {/* [E4] ksdFundCode[예탁원펀드코드].TriggerClick (L142) → openLookupOpr() L349-361: Fnd01_Lookup_SelectSingle.open — 고르면 채우고, 안 고르면 그대로 */}
+            <LookupInput value={f.ksdFundCode ?? ''} width={160} disabled={locked} onOpen={() => setFundOpen(true)} />
           </EditField>
         </EditRow>
-        <EditField label={req('펀드규약명')} labelWidth={LW}><Input value={f.termsName ?? ''} onChange={e => set('termsName', e.target.value)} /></EditField>
+        {/* 원본 2026-10-28: 펀드규약명 → 펀드명(fundFullName, setEnabled(false)) */}
+        <EditField label={req('펀드명')} labelWidth={LW}><Input disabled value={f.fundFullName ?? ''} /></EditField>
         <EditField label="내용" labelWidth={LW}>
           {/* 편집기는 만들 때 한 번 내용을 넣는다(AS-IS setHtmlText) — 열 때마다 다시 만든다 */}
           <HtmlEditor key={`${f.termsDetailId}-${mode}`} value={f.content} onChange={html => set('content', html)} height={420} />
@@ -157,7 +160,7 @@ export const Fnd25_Edit_FundTermsManager: React.FC<Props> = ({ target, onDone, o
       <Com01_Lookup_RelateFile open={fileOpen} parentId={f.termsDetailId} onClose={() => { setFileOpen(false); void setFileButtonText(); }} />
       <Fnd01_Lookup_SelectSingle
         open={fundOpen}
-        onResult={fund => { if (fund) setF(prev => prev && { ...prev, ksdFundCode: fund.ksdFundCode ?? null, fundId: fund.fundId }); }}
+        onResult={fund => { if (fund) setF(prev => prev && { ...prev, ksdFundCode: fund.ksdFundCode ?? null, fundId: fund.fundId, fundFullName: fund.fundFullName ?? null }); }}
         onClose={() => setFundOpen(false)}
       />
     </EditModal>
