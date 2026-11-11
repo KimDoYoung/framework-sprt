@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { fileApi } from '../api/file';
 import { useLoginUser } from '../hooks/useLoginUser';
-import { Input, Avatar, Dropdown, MenuProps, Tooltip, AutoComplete, Modal, Popconfirm, message, Tag } from 'antd';
+import { Input, InputRef, Avatar, Dropdown, MenuProps, Tooltip, AutoComplete, Popover, ConfigProvider, message, Tag } from 'antd';
 import {
   SearchOutlined,
   BulbOutlined,
@@ -19,29 +19,25 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   UnorderedListOutlined,
-  AppstoreOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  FontSizeOutlined,
-  CheckOutlined,
+  LayoutOutlined,
 } from '@ant-design/icons';
+import type { IJsonModel } from 'flexlayout-react';
 import { MenuLevel_1, MenuLevel_3 } from '../types';
-import { SavedLayoutItem } from '../utils/storage';
-import { FontFamilyId, FONT_OPTIONS, getFontOption } from '../utils/font';
+import { MyScreenPreset } from '../api/userProps';
+import { MyScreenPanel } from './MyScreenPanel';
 
 interface TopBarProps {
   menus: MenuLevel_1[];
   sidebarPinned: boolean;
   onToggleSidebarPin: () => void;
   onOpenScreen?: (item: MenuLevel_3, parent: MenuLevel_1) => void;
-  savedLayouts?: SavedLayoutItem[];
-  onSaveNamedLayout?: (name: string) => void;
-  onLoadNamedLayout?: (item: SavedLayoutItem) => void;
-  onDeleteNamedLayout?: (id: string) => void;
-  onResetLayout?: () => void;
-  currentFontId?: FontFamilyId;
-  onChangeFont?: (id: FontFamilyId) => void;
+  /** 나의 화면 패널 (재설계 03) — 열림 상태는 MainFrame 이 가진다(F9 와 같이 쓰려고) */
+  myScreenOpen?: boolean;
+  onMyScreenOpenChange?: (open: boolean) => void;
+  getCurrentLayout?: () => { model: IJsonModel; defaultName: string };
+  onApplyMyScreen?: (preset: MyScreenPreset) => void;
+  /** 화면번호 입력칸 — Esc 로 포커스 (재설계 04) */
+  searchInputRef?: React.Ref<InputRef>;
   userName?: string;
   onLogout?: () => void;
   /** AS-IS MainFrame.checkCommute() / JSCaller — 출퇴근 창 (EE50, 진입 아이콘은 TOBE 확인용 추가) */
@@ -72,13 +68,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   sidebarPinned,
   onToggleSidebarPin,
   onOpenScreen,
-  savedLayouts = [],
-  onSaveNamedLayout,
-  onLoadNamedLayout,
-  onDeleteNamedLayout,
-  onResetLayout,
-  currentFontId = 'pretendard',
-  onChangeFont,
+  myScreenOpen,
+  onMyScreenOpenChange,
+  getCurrentLayout,
+  onApplyMyScreen,
+  searchInputRef,
   userName,
   onLogout,
   onOpenCommute,
@@ -93,8 +87,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   const photoUrl = useMemo(() => fileApi.monitoringUrl(loginUser.userId), [loginUser.userId]);
   const [photoOk, setPhotoOk] = useState(true);
   const [searchValue, setSearchValue] = useState('');
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [newLayoutName, setNewLayoutName] = useState('');
+  // 나의 화면 패널이 지금 열려 있는지 (패널의 키 처리기가 실시간으로 확인한다 — props 는 닫힐 때 갱신되지 않는다)
+  const myScreenOpenRef = useRef(false);
+  myScreenOpenRef.current = !!myScreenOpen;
 
   // ── 전체 메뉴 평탄화 (화면번호/메뉴명 검색용) ──
   const allScreens: ScreenSearchItem[] = useMemo(() => {
@@ -148,6 +143,16 @@ export const TopBar: React.FC<TopBarProps> = ({
     lastOpenRef.current = now;
     onOpenScreen?.(found.item, found.parentLevel1);
     setSearchValue('');
+    // 목록에서 고르면 AutoComplete 가 onSelect 뒤에 고른 값(화면번호)을 다시 넣는다 → 그다음에 한 번 더 비운다
+    window.setTimeout(() => setSearchValue(''), 0);
+  };
+
+  // Ctrl+Delete: 화면번호 칸 모두 지우기 (브라우저 기본은 커서 뒤 한 단어만 지운다)
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey && !e.altKey && !e.metaKey && e.code === 'Delete') {
+      e.preventDefault();
+      setSearchValue('');
+    }
   };
 
   const handleSelectScreen = (code: string) => {
@@ -179,166 +184,6 @@ export const TopBar: React.FC<TopBarProps> = ({
       message.warning(`화면번호 또는 메뉴 '${searchValue}'을(를) 찾을 수 없습니다.`);
     }
   };
-
-  // ── 레이아웃 저장 확인 ──
-  const handleSaveLayoutConfirm = () => {
-    if (!newLayoutName.trim()) {
-      message.warning('레이아웃 이름을 입력해 주세요.');
-      return;
-    }
-    onSaveNamedLayout?.(newLayoutName.trim());
-    setNewLayoutName('');
-    setIsSaveModalOpen(false);
-  };
-
-  // ── 화면 레이아웃 드롭다운 메뉴 아이템 ──
-  const layoutMenuItems: MenuProps['items'] = [
-    {
-      key: 'save-current',
-      icon: <PlusOutlined style={{ color: '#1677ff' }} />,
-      label: '현재 레이아웃 이름 지정 저장...',
-      onClick: () => {
-        setNewLayoutName(`화면배치 ${savedLayouts.length + 1}`);
-        setIsSaveModalOpen(true);
-      },
-    },
-    { type: 'divider' },
-    {
-      key: 'saved-group',
-      type: 'group',
-      label: `저장된 레이아웃 목록 (${savedLayouts.length})`,
-      children:
-        savedLayouts.length > 0
-          ? savedLayouts.map((item) => ({
-              key: item.id,
-              label: (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    minWidth: 220,
-                    gap: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => onLoadNamedLayout?.(item)}
-                  >
-                    <span style={{ fontWeight: 500, fontSize: 13 }}>{item.name}</span>
-                    <span style={{ fontSize: 11, color: '#8c8c8c', marginLeft: 8 }}>
-                      {item.createdAt}
-                    </span>
-                  </div>
-                  <Popconfirm
-                    title="레이아웃 삭제"
-                    description={`'${item.name}'을(를) 삭제하시겠습니까?`}
-                    onConfirm={(e) => {
-                      e?.stopPropagation();
-                      onDeleteNamedLayout?.(item.id);
-                    }}
-                    onCancel={(e) => e?.stopPropagation()}
-                    okText="삭제"
-                    cancelText="취소"
-                  >
-                    <DeleteOutlined
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ color: '#ff4d4f', fontSize: 12, padding: '2px 4px', cursor: 'pointer' }}
-                    />
-                  </Popconfirm>
-                </div>
-              ),
-            }))
-          : [
-              {
-                key: 'no-layouts',
-                disabled: true,
-                label: <span style={{ color: '#8c8c8c', fontSize: 12 }}>저장된 레이아웃이 없습니다</span>,
-              },
-            ],
-    },
-    { type: 'divider' },
-    {
-      key: 'reset-default',
-      icon: <ReloadOutlined />,
-      label: '기본 레이아웃으로 초기화',
-      onClick: () => onResetLayout?.(),
-    },
-  ];
-
-  const currentFontOpt = getFontOption(currentFontId);
-
-  // ── 폰트 선택 드롭다운 메뉴 아이템 (Pretendard vs 나눔폰트 비교) ──
-  const fontMenuItems: MenuProps['items'] = [
-    {
-      key: 'font-group-header',
-      type: 'group',
-      label: (
-        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
-          한글 폰트 비교 / 선택 (ERP 환경)
-        </span>
-      ),
-      children: FONT_OPTIONS.map((opt) => ({
-        key: opt.id,
-        label: (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minWidth: 280,
-              gap: 12,
-              padding: '4px 0',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span
-                  style={{
-                    fontWeight: currentFontId === opt.id ? 700 : 500,
-                    fontSize: 13,
-                    color: currentFontId === opt.id ? '#1677ff' : '#1e293b',
-                  }}
-                >
-                  {opt.name}
-                </span>
-                {opt.badge && (
-                  <Tag
-                    color={
-                      opt.id === 'pretendard'
-                        ? 'blue'
-                        : opt.id === 'nanum-square-neo'
-                        ? 'green'
-                        : opt.id === 'nanum-gothic'
-                        ? 'orange'
-                        : 'default'
-                    }
-                    style={{ margin: 0, fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
-                  >
-                    {opt.badge}
-                  </Tag>
-                )}
-              </div>
-              <span style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{opt.description}</span>
-            </div>
-            {currentFontId === opt.id && (
-              <CheckOutlined style={{ color: '#1677ff', fontSize: 13, flexShrink: 0 }} />
-            )}
-          </div>
-        ),
-        onClick: () => {
-          onChangeFont?.(opt.id);
-          message.info(`글꼴이 '${opt.name}'(으)로 적용되었습니다.`);
-        },
-      })),
-    },
-  ];
 
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '내 정보 수정' },
@@ -394,18 +239,70 @@ export const TopBar: React.FC<TopBarProps> = ({
             <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} />
           </div>
 
-          {/* ── 화면번호/메뉴명 입력 AutoComplete 검색창 (Enter 호출 지원) ── */}
+          {/* ── 화면번호/메뉴명 입력 AutoComplete 검색창 (Enter 호출 지원, Esc 로 이동 — 재설계 04)
+                 맨 오른쪽 동그라미 아이콘 = 나의 화면 (재설계 03, F9) ── */}
           <div style={{ marginLeft: 12 }}>
+            {/* 자동완성 목록에서 ↑↓로 고른 항목이 잘 보이게 파란 배경 (antd 기본은 거의 흰색, 2026-11-11) */}
+            <ConfigProvider theme={{ components: { Select: { optionActiveBg: '#bae0ff', optionSelectedBg: '#91caff' } } }}>
             <AutoComplete
               value={searchValue}
               options={searchOptions}
               onSelect={handleSelectScreen}
               onChange={setSearchValue}
-              style={{ width: 240 }}
+              style={{ width: 260 }}
             >
               <Input
-                placeholder="화면번호/메뉴명 (Enter)"
+                ref={searchInputRef}
+                placeholder="화면번호/메뉴명 (Esc)"
                 prefix={<SearchOutlined style={{ color: '#8c8c8c' }} />}
+                suffix={
+                  <Popover
+                    open={myScreenOpen}
+                    onOpenChange={(v) => onMyScreenOpenChange?.(v)}
+                    trigger="click"
+                    placement="bottomRight"
+                    arrow={false}
+                    // 닫힐 때 내용을 없앤다: antd 는 닫힐 때 내용을 마지막 모습(open=true)으로 붙잡아 두어
+                    // 패널의 키 처리기가 남아 Esc·숫자키(숫자패드)를 가로챘다 (2026-11-11 사용자 신고)
+                    destroyOnHidden
+                    styles={{ body: { padding: 0 } }}
+                    content={
+                      getCurrentLayout && onApplyMyScreen ? (
+                        <MyScreenPanel
+                          open={!!myScreenOpen}
+                          liveOpenRef={myScreenOpenRef}
+                          onClose={() => onMyScreenOpenChange?.(false)}
+                          getCurrentLayout={getCurrentLayout}
+                          onApply={(preset) => { setSearchValue(''); onApplyMyScreen(preset); }}
+                        />
+                      ) : null
+                    }
+                  >
+                    {/* 패널이 열려 있으면 툴팁이 [현재 배치 저장]을 덮으므로 숨긴다 */}
+                    <Tooltip title="나의 화면 (F9)" placement="bottom" open={myScreenOpen ? false : undefined}>
+                      <span
+                        // 입력칸 포커스·자동완성 목록이 열리지 않게
+                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 22,
+                          height: 22,
+                          marginRight: -6,
+                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          background: myScreenOpen ? '#1677ff' : '#e6f4ff',
+                          transition: 'background 0.15s ease',
+                        }}
+                      >
+                        <LayoutOutlined style={{ fontSize: 12, color: myScreenOpen ? '#fff' : '#1677ff' }} />
+                      </span>
+                    </Tooltip>
+                  </Popover>
+                }
+                onKeyDown={handleSearchKeyDown}
                 onPressEnter={handleSearchEnter}
                 allowClear
                 style={{
@@ -417,59 +314,9 @@ export const TopBar: React.FC<TopBarProps> = ({
                 }}
               />
             </AutoComplete>
+            </ConfigProvider>
           </div>
 
-          {/* ── 화면 레이아웃 관리 드롭다운 (저장/불러오기) ── */}
-          <Dropdown menu={{ items: layoutMenuItems }} trigger={['click']} placement="bottomLeft">
-            <div
-              style={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '4px 10px',
-                borderRadius: 14,
-                backgroundColor: 'rgba(255, 255, 255, 0.16)',
-                fontSize: 12,
-                fontWeight: 500,
-                userSelect: 'none',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                color: '#fff',
-                transition: 'all 0.15s ease',
-              }}
-              title="화면 레이아웃 저장 및 불러오기"
-            >
-              <AppstoreOutlined style={{ fontSize: 13 }} />
-              <span>화면 레이아웃</span>
-              <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
-            </div>
-          </Dropdown>
-
-          {/* ── 폰트 선택 드롭다운 (Pretendard vs 나눔폰트 비교) ── */}
-          <Dropdown menu={{ items: fontMenuItems }} trigger={['click']} placement="bottomLeft">
-            <div
-              style={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '4px 10px',
-                borderRadius: 14,
-                backgroundColor: 'rgba(255, 255, 255, 0.16)',
-                fontSize: 12,
-                fontWeight: 500,
-                userSelect: 'none',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                color: '#fff',
-                transition: 'all 0.15s ease',
-              }}
-              title="글꼴 실시간 비교 및 전환 (Pretendard vs 나눔폰트)"
-            >
-              <FontSizeOutlined style={{ fontSize: 13 }} />
-              <span>글꼴: {currentFontOpt.name}</span>
-              <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
-            </div>
-          </Dropdown>
         </div>
 
         {/* Right section: Help, User, Messenger/Tool icons */}
@@ -584,27 +431,6 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </header>
 
-      {/* ── 화면 레이아웃 이름 지정 저장 모달 ── */}
-      <Modal
-        title="현재 화면 레이아웃 저장"
-        open={isSaveModalOpen}
-        onOk={handleSaveLayoutConfirm}
-        onCancel={() => setIsSaveModalOpen(false)}
-        okText="저장"
-        cancelText="취소"
-        destroyOnClose
-      >
-        <div style={{ marginBottom: 12, color: '#595959', fontSize: 13 }}>
-          현재 분할된 화면과 열려 있는 탭들의 배치를 이름으로 저장합니다.
-        </div>
-        <Input
-          placeholder="레이아웃 이름 (예: 기본 업무 3분할, 당직점검 배치)"
-          value={newLayoutName}
-          onChange={(e) => setNewLayoutName(e.target.value)}
-          onPressEnter={handleSaveLayoutConfirm}
-          autoFocus
-        />
-      </Modal>
     </>
   );
 };

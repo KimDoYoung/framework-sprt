@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  TOBE 재설계 03 "나의 화면 저장" — sys90_user_props (AS-IS 없음, DDL: docs/4-재설계/ddl/sys90_user_props.sql)
+  키는 세션 userId (사원 emp01_person_id, 회사관리자 -sys02_user_id)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysUserPropsMapper">
+
+    <select id="selectByUserId" resultType="kr.co.kfs.asseterp.biz.sys.dto.UserPropsRow">
+        SELECT sys90_my_screen_layout AS my_screen_layout
+             , sys90_props            AS props
+          FROM sys90_user_props
+         WHERE sys90_user_id = #{userId}
+    </select>
+
+    <insert id="upsertMyScreenLayout">
+        INSERT INTO sys90_user_props (sys90_user_id, sys90_company_id, sys90_my_screen_layout, sys90_reg_dt, sys90_upd_dt)
+        VALUES (#{userId}, #{companyId}, #{json}, now(), now())
+        ON CONFLICT (sys90_user_id) DO UPDATE
+           SET sys90_my_screen_layout = EXCLUDED.sys90_my_screen_layout
+             , sys90_company_id       = EXCLUDED.sys90_company_id
+             , sys90_upd_dt           = now()
+    </insert>
+
+</mapper>

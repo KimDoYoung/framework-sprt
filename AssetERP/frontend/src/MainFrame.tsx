@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { message, Dropdown, MenuProps, ConfigProvider, Tooltip } from 'antd';
+import { message, Dropdown, MenuProps, ConfigProvider, Tooltip, Modal, InputRef } from 'antd';
 import koKR from 'antd/locale/ko_KR';
 import dayjs from 'dayjs';
 import {
@@ -31,9 +31,11 @@ import { PendingScreenView } from './components/PendingScreenView';
 import { SCREENS } from './pages/screens';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { registerMenuOpener } from './utils/tempData';
-import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
+import { appSettingsStorage } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
-import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
+import { useGlobalHotkeys } from './hooks/useGlobalHotkeys';
+import { MyScreenPreset } from './api/userProps';
+import { getFontOption, applyGlobalFont } from './utils/font';
 import { authApi } from './api/auth';
 import { sysApi } from './api/sys';
 import { User } from './types/auth';
@@ -256,7 +258,8 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('');
 
   // ── 글꼴 설정 상태 (asseterp_settings 단일 저장소 연동) ──
-  const [fontFamily, setFontFamily] = useAppSetting('font_family', 'pretendard');
+  // TopBar 글꼴 버튼은 지웠다(2026-11-11) — 고르는 곳은 사용자 설정 탭(재설계 2, sys90_props)에서 다시 만든다
+  const [fontFamily] = useAppSetting('font_family', 'pretendard');
   const currentFontOpt = getFontOption(fontFamily);
 
   useEffect(() => {
@@ -285,11 +288,6 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.userId]);
-
-  // ── 저장된 명명 레이아웃 목록 상태 ──
-  const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
-    appSettingsStorage.getSavedLayouts()
-  );
 
   // ── 탭 헤더 컨텍스트 메뉴 상태 ──
   const [contextMenu, setContextMenu] = useState<{
@@ -372,25 +370,57 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     }, 200);
   };
 
-  // ── 단축키 F4: 최대화 및 복원 토글 ──
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F4') {
-        e.preventDefault();
-        const maxTs = model.getMaximizedTabset();
-        if (maxTs) {
-          model.doAction(Actions.maximizeToggle(maxTs.getId()));
-        } else {
-          const target = model.getActiveTabset() || model.getFirstTabSet();
-          if (target) {
-            model.doAction(Actions.maximizeToggle(target.getId()));
-          }
-        }
+  // ── 전역 단축키 (재설계 04): Alt+X 탭 닫기, Alt+Shift+X 모든 탭 닫기, Esc 화면번호 칸, F4 최대화, F9 나의 화면 ──
+  const toggleMaximize = () => {
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    } else {
+      const target = model.getActiveTabset() || model.getFirstTabSet();
+      if (target) {
+        model.doAction(Actions.maximizeToggle(target.getId()));
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [model]);
+    }
+  };
+
+  const closeCurrentTab = () => {
+    const ts = model.getActiveTabset() || model.getFirstTabSet();
+    const node = ts?.getSelectedNode();
+    if (node instanceof TabNode && node.isCloseable()) {
+      model.doAction(Actions.deleteTab(node.getId()));
+    }
+  };
+
+  // 전체 레이아웃(분할된 탭셋 모두)의 닫을 수 있는 탭. My Page(첫 탭)는 닫을 수 없어 남는다
+  const closeAllConfirmingRef = useRef(false);
+  const closeAllTabs = () => {
+    if (closeAllConfirmingRef.current) return;
+    const tabs: TabNode[] = [];
+    model.visitNodes(n => { if (n instanceof TabNode && n.isCloseable()) tabs.push(n); });
+    if (tabs.length === 0) {
+      message.info('닫을 화면이 없습니다.');
+      return;
+    }
+    closeAllConfirmingRef.current = true;
+    Modal.confirm({
+      title: `열린 화면 ${tabs.length}개를 모두 닫을까요?`,
+      okText: '모두 닫기',
+      cancelText: '취소',
+      onOk: () => { tabs.forEach(t => model.doAction(Actions.deleteTab(t.getId()))); },
+      afterClose: () => { closeAllConfirmingRef.current = false; },
+    });
+  };
+
+  const searchInputRef = useRef<InputRef>(null);
+  const [myScreenOpen, setMyScreenOpen] = useState(false);
+
+  useGlobalHotkeys({
+    closeCurrentTab,
+    closeAllTabs,
+    focusScreenSearch: () => searchInputRef.current?.focus({ cursor: 'all' }),
+    toggleMaximize,
+    toggleMyScreen: () => setMyScreenOpen(o => !o),
+  });
 
   // ── 컨텍스트 메뉴 외부 클릭 시 닫기 ──
   useEffect(() => {
@@ -543,7 +573,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     return [
       {
         key: 'close-current',
-        label: '이 탭 닫기',
+        label: '이 탭 닫기 (Alt+X)',
         disabled: !canCloseCurrent,
         onClick: () => {
           if (canCloseCurrent) {
@@ -599,36 +629,60 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   };
 
 
-  // ── 명명 레이아웃 저장/불러오기/삭제/초기화 핸들러 ──
-  const handleSaveNamedLayout = (name: string) => {
-    const item = appSettingsStorage.saveLayout(name, model.toJson());
-    setSavedLayouts(appSettingsStorage.getSavedLayouts());
-    message.success(`'${item.name}' 레이아웃이 저장되었습니다.`);
+  // ── 나의 화면 저장 (재설계 03): 지금 배치 읽기 / 저장된 배치로 복원 ──
+  const getCurrentLayout = () => {
+    const ts = model.getActiveTabset() || model.getFirstTabSet();
+    const node = ts?.getSelectedNode();
+    const cfg = node instanceof TabNode ? ((node.getConfig() as { title?: string }) || {}) : {};
+    const defaultName = cfg.title || (node instanceof TabNode ? node.getName() : '') || '나의 화면';
+    return { model: model.toJson(), defaultName };
   };
 
-  const handleLoadNamedLayout = (item: SavedLayoutItem) => {
+  const applyMyScreen = (preset: MyScreenPreset) => {
+    // 지금 사용자 메뉴에 있는 화면만 연다 (저장 뒤 권한이 빠졌거나 화면이 없어졌을 수 있다)
+    const allowed = new Set<string>();
+    menus.forEach(m1 => m1.groups.forEach(g => g.items.forEach(i => allowed.add(i.code))));
+    let dropped = 0;
+    type JNode = { type?: string; component?: string; config?: { code?: string }; selected?: number; children?: JNode[] };
+    const prune = (node: JNode): JNode | null => {
+      if (node.type === 'tab') {
+        if (node.component === 'screen' && !allowed.has(node.config?.code ?? '')) { dropped++; return null; }
+        return node;
+      }
+      if (!Array.isArray(node.children)) return node;
+      const kids = node.children.map(prune).filter((c): c is JNode => c !== null);
+      if (node.type === 'tabset') {
+        node.children = kids;
+        if ((node.selected ?? 0) >= kids.length) node.selected = 0;
+        return kids.length === 0 ? null : node; // 빈 탭셋은 뺀다
+      }
+      node.children = kids;
+      return kids.length === 0 ? null : node; // 빈 행은 뺀다
+    };
     try {
-      const sanitized = sanitizeLayoutJson(item.modelJson);
+      const json = JSON.parse(JSON.stringify(preset.model)) as IJsonModel;
+      const root = prune(json.layout as unknown as JNode);
+      if (!root) {
+        message.warning(`'${preset.name}'에는 지금 열 수 있는 화면이 없습니다.`);
+        return;
+      }
+      json.layout = root as unknown as IJsonModel['layout'];
+      const sanitized = sanitizeLayoutJson(json);
       const m = Model.fromJson(sanitized);
+      if (!m.getNodeById('tab-mypage')) {
+        // 첫 탭(My Page)은 늘 있어야 한다 — 없으면 첫 탭셋 맨 앞에 지금 것을 넣는다
+        const home = model.getNodeById('tab-mypage') as TabNode | undefined;
+        const first = m.getFirstTabSet();
+        if (home && first) m.doAction(Actions.addTab(home.toJson(), first.getId(), DockLocation.CENTER, 0, false));
+      }
       setModel(m);
-      appSettingsStorage.set('flexlayout_model', sanitized);
-      message.success(`'${item.name}' 레이아웃을 불러왔습니다.`);
+      appSettingsStorage.set('flexlayout_model', m.toJson());
+      // 화면이 바뀌는 것으로 충분하다 — 빠진 화면이 있을 때만 알린다 (2026-11-11 사용자)
+      if (dropped > 0) message.info(`열 수 없는 화면 ${dropped}개는 빠졌습니다.`);
     } catch (e) {
-      message.error('레이아웃 불러오기에 실패했습니다.');
       console.error(e);
+      message.error('화면 배치를 불러오지 못했습니다.');
     }
-  };
-
-  const handleDeleteNamedLayout = (id: string) => {
-    appSettingsStorage.deleteSavedLayout(id);
-    setSavedLayouts(appSettingsStorage.getSavedLayouts());
-    message.info('레이아웃이 삭제되었습니다.');
-  };
-
-  const handleResetLayout = () => {
-    appSettingsStorage.remove('flexlayout_model');
-    setModel(Model.fromJson(defaultLayoutJson));
-    message.info('기본 레이아웃으로 초기화되었습니다.');
   };
 
   // ── FlexLayout Tab 컴포넌트 렌더러 (factory) ──
@@ -692,13 +746,11 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
           sidebarPinned={sidebarPinned}
           onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
           onOpenScreen={handleSelectMenuLevel_3}
-          savedLayouts={savedLayouts}
-          onSaveNamedLayout={handleSaveNamedLayout}
-          onLoadNamedLayout={handleLoadNamedLayout}
-          onDeleteNamedLayout={handleDeleteNamedLayout}
-          onResetLayout={handleResetLayout}
-          currentFontId={fontFamily as FontFamilyId}
-          onChangeFont={(id) => setFontFamily(id)}
+          myScreenOpen={myScreenOpen}
+          onMyScreenOpenChange={setMyScreenOpen}
+          getCurrentLayout={getCurrentLayout}
+          onApplyMyScreen={applyMyScreen}
+          searchInputRef={searchInputRef}
           userName={`${user.companyName} ${user.name}님`}
           onLogout={handleLogout}
           onOpenCommute={() => setCommuteOpen(true)}
