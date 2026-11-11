@@ -15868,5 +15868,21 @@
     "note": null,
     "history": [],
     "id": "U2-03"
+  },
+  "__units__": {
+    "server/emp/mapper/emp00_trans_info.xml · getPersonId": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:44:32+09:00",
+      "note": "TOBE 최근결재선 불러오기(AprStepEditService.recentLines)가 [참조등록] 전 사원 조회(all, 799)를 빌려 써 겸직이 빠졌음 → mode person(899) 분리",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    }
+  },
+  "__files__": {
+    "server/emp/mapper/emp00_trans_info.xml": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:44:32+09:00",
+      "note": "TOBE 최근결재선 불러오기(AprStepEditService.recentLines)가 [참조등록] 전 사원 조회(all, 799)를 빌려 써 겸직이 빠졌음 → mode person(899) 분리",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    }
   }
 }

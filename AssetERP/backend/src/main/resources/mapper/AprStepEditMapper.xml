@@ -66,6 +66,10 @@
                 <otherwise>AND emp00_org_code_id = #{orgCodeId}</otherwise>
             </choose>
             </when>
+            <!-- AS-IS emp00_trans_info.getPersonId (최근결재선 불러오기 사원별 조회). 2026-11-03 원본이 겸직(800번대)도 받도록 799 → 899 (CH-0220) -->
+            <when test="mode == 'person'">
+           AND emp00_trans_cd &lt;= '899'
+            </when>
             <otherwise>
            AND emp00_trans_cd &lt;= '799'
             </otherwise>

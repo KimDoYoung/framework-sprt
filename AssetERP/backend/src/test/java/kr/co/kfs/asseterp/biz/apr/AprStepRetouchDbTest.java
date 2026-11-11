@@ -32,6 +32,7 @@ class AprStepRetouchDbTest {
     @Autowired AprStepEditService service;
     @Autowired AprApprActionService action;
     @Autowired JdbcTemplate jdbc;
+    @Autowired kr.co.kfs.asseterp.biz.apr.mapper.AprStepEditMapper mapper;
 
     /** 상신자 29035 → 29049 승인 → 202306221546363 대기(차례) → 202406201712129 대기 */
     private static final long MIDDLE = 202608249852607L;
@@ -89,5 +90,18 @@ class AprStepRetouchDbTest {
         assertThat(lines).noneMatch(l -> "00".equals(l.stepTypeCode()));
         assertThat(lines.get(0).stepApprName()).contains("(");
         assertThat(service.recentDocs(user(29035L), "group", "")).isNotNull();
+    }
+
+    /** CH-0220: AS-IS getPersonId가 2026-11-03부터 겸직(800번대)도 받는다(799 → 899). [참조등록]의 전 사원 조회(getTransDate)는 799 그대로 */
+    @Test
+    void 최근_결재선_사원_조회는_겸직_발령도_받는다() {
+        Long concurrent = jdbc.queryForObject("""
+                select t.emp03_person_id from emp03_trans t join emp01_person p on p.emp01_person_id = t.emp03_person_id
+                 where p.emp01_company_id = 28000 and t.emp03_trans_cd between '800' and '899'
+                   and t.emp03_trans_date = (select max(x.emp03_trans_date) from emp03_trans x
+                                              where x.emp03_person_id = t.emp03_person_id and x.emp03_trans_date <= current_date)
+                 order by 1 limit 1""", Long.class);
+        assertThat(mapper.selectEmps(28000L, concurrent, "person", null, null, false)).isNotEmpty();
+        assertThat(mapper.selectEmps(28000L, concurrent, "all", null, null, false)).isEmpty();
     }
 }

@@ -107,7 +107,7 @@ public class AprStepEditService {
 
     /**
      * Apr01_Lookup_ApprList.update L205-225(getApprStepList) → Apr04_Edit_ApprStep.recentLoad L582-625: 고른 문서의 결재선(상신자 제외)을 사원마다 오늘 재직 정보로 다시 만든다.
-     * 재직(발령 799 이하)이 아니라 찾을 수 없는 사원은 건너뛴다. 번호(seq)와 상신자 줄은 창이 다시 정한다
+     * 재직(발령 899 이하 — 겸직 포함, AS-IS getPersonId 2026-11-03)이 아니라 찾을 수 없는 사원은 건너뛴다. 번호(seq)와 상신자 줄은 창이 다시 정한다
      */
     public List<AprNewStepRes> recentLines(UserPrincipal user, Long apprId) {
         if (writeMapper.selectBrief(apprId, user.getCompanyId()) == null) {
@@ -118,7 +118,7 @@ public class AprStepEditService {
             if ("00".equals(s.stepTypeCode())) {
                 continue;
             }
-            List<AprStepEmpRes> emp = mapper.selectEmps(user.getCompanyId(), s.stepEmpId(), "all", null, null, false);
+            List<AprStepEmpRes> emp = mapper.selectEmps(user.getCompanyId(), s.stepEmpId(), "person", null, null, false);
             if (emp.isEmpty()) {
                 continue;
             }
