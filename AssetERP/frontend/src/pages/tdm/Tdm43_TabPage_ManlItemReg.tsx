@@ -107,7 +107,7 @@ export const Tdm43_TabPage_ManlItemReg: React.FC<Props> = ({ target, onEndChange
     }
   };
 
-  // [E4] loadButton[불러오기].Select [manlDutyModel == null] (L126): 관리의무를 먼저 고르게 하고 Tdm43_Lookup_ManlItemRegList.open(manlDutyModel, cb → copyManlList())
+  // [E4] loadButton[관리의무별 불러오기].Select [manlDutyModel == null] (L126, 이름은 원본 2026-10-26 CH-0190): 관리의무를 먼저 고르게 하고 Tdm43_Lookup_ManlItemRegList.open(manlDutyModel, cb → copyManlList())
   const loadManl = () => {
     if (!duty) { message.warning('상단의 관리의무를 먼저 선택해주세요'); return; }
     setListOpen(true);
@@ -145,7 +145,7 @@ export const Tdm43_TabPage_ManlItemReg: React.FC<Props> = ({ target, onEndChange
         <Space>
           <Button type="register" disabled={ended} onClick={insertManl}>등록</Button>
           <Button type="delete" disabled={ended} onClick={deleteManl}>삭제</Button>
-          <Button type="register" disabled={ended} onClick={loadManl}>불러오기</Button>
+          <Button type="register" disabled={ended} onClick={loadManl}>관리의무별 불러오기</Button>
           <Button type="save" onClick={() => updateEndYn(true)}>작성완료</Button>
           <Button type="cancel" onClick={() => updateEndYn(false)}>작성취소</Button>
         </Space>

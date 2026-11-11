@@ -94,8 +94,9 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
   // buildGrid() L154-176 (setChecked SINGLE)
   const columnDefs = useMemo(() => [
     gb.textArea('taskName', 250, '책무'),  // L165
-    gb.textArea('taskDetailAddSeq', 300, '책무세부'),  // L166
-    gb.textArea('taskDutyAddSeq', 300, '관리의무'),  // L167
+    // 원본 2026-10-23(CH-0189): 순번을 붙인 이름(…AddSeq) 대신 이름 그대로
+    gb.textArea('taskRelateDetailName', 300, '책무세부'),  // L166
+    gb.textArea('taskRelateDutyName', 300, '관리의무'),  // L167
     gb.textArea('checkItemAddCode', 300, '점검항목'),  // L168
     dynamicViewCell<Row>('checkItemAddCode', 'viewCell', 35, '', row => lookupManl(row)),  // L169 addDynamicCell(viewCell)
     gb.textArea('checkHowLimit', 350, '점검방법'),  // L170

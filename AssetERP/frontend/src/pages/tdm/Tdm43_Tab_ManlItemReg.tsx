@@ -167,7 +167,8 @@ export const Tdm43_Tab_ManlItemReg: React.FC = () => {
     void retrieve(current());
   };
 
-  // [E7] loadButton[불러오기].Select [manlJobId == null] (L263): 매뉴얼작업·직책·부서를 확인하고 Tdm43_Lookup_ManlItemRegList2.open(param, cb → copyManlList())
+  // 원본 2026-10-26(CH-0191): 버튼 이름 "전체 불러오기", 직책·책무·부서 폭 180, 검색 150
+  // [E7] loadButton[전체 불러오기].Select [manlJobId == null] (L263): 매뉴얼작업·직책·부서를 확인하고 Tdm43_Lookup_ManlItemRegList2.open(param, cb → copyManlList())
   const loadDuties = () => {
     if (manlJob.id == null) { message.warning('매뉴얼작업을 선택하세요'); return; }
     if (role.id == null) { message.warning('직책을 선택하세요'); return; }
@@ -191,21 +192,21 @@ export const Tdm43_Tab_ManlItemReg: React.FC = () => {
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="50%" min={100}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
-            <SearchBar onSearch={onSearch} extra={<Button type="register" onClick={loadDuties}>불러오기</Button>}>
+            <SearchBar onSearch={onSearch} extra={<Button type="register" onClick={loadDuties}>전체 불러오기</Button>}>
               <SearchBar.Field label="매뉴얼작업">
                 <LookupInput width={250} value={manlJob.name ?? ''} placeholder="필수선택입니다" onOpen={() => setJobLookup({ checkYn: !isManager })} />
               </SearchBar.Field>
               <SearchBar.Field label="직책">
-                <LookupInput width={200} value={role.name ?? ''} placeholder="전체" onOpen={() => setLookup('role')} />
+                <LookupInput width={180} value={role.name ?? ''} placeholder="전체" onOpen={() => setLookup('role')} />
               </SearchBar.Field>
               <SearchBar.Field label="책무">
-                <LookupInput width={200} value={task.name ?? ''} placeholder="전체" onOpen={() => setLookup('task')} />
+                <LookupInput width={180} value={task.name ?? ''} placeholder="전체" onOpen={() => setLookup('task')} />
               </SearchBar.Field>
               <SearchBar.Field label="부서">
-                <LookupInput width={200} value={org.name ?? ''} disabled={!isManager} onOpen={() => setLookup('org')} />
+                <LookupInput width={180} value={org.name ?? ''} disabled={!isManager} onOpen={() => setLookup('org')} />
               </SearchBar.Field>
               <SearchBar.Field label="검색">
-                <SearchBar.Input style={{ width: 200 }} placeholder="직책/책무/책무세부/관리의무" value={searchText} onChange={e => setSearchText(e.target.value)} />
+                <SearchBar.Input style={{ width: 150 }} placeholder="직책/책무/책무세부/관리의무" value={searchText} onChange={e => setSearchText(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>

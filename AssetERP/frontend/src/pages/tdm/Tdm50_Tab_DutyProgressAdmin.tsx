@@ -76,11 +76,9 @@ export const Tdm50_Tab_DutyProgressAdmin: React.FC = () => {
     gb.text('orgName', 160, '지원부서', frozen),  // L138
     gb.text('name1454', 110, '1454<br>부서담당자'),  // L139
     gb.text('apprList1463', 110, '1463<br>승인선'),  // L140
-    gb.group('메뉴얼 확정(1424)', [   // L133 HeaderGroupMap(0, 7, …, 1, 4)
-      longNull('manlCnt', 70, '전체항목', BLUE),  // L141
-      longNull('endCnt', 70, '작성완료', BLUE),  // L142
-      longNull('lockCnt', 60, 'Lock', BLUE),  // L143
-      longNull('approveCnt', 60, '결재', BLUE),  // L144
+    gb.group('메뉴얼 확정(1424)', [   // HeaderGroupMap(0, 7, …, 1, 2) — 원본 2026-11-04(CH-0194): 작성완료·Lock 열 뺌
+      longNull('manlCnt', 70, '전체항목', BLUE),
+      longNull('approveCnt', 60, '결재', BLUE),
     ]),
     gb.group('점검주기별 항목수', [   // L134 HeaderGroupMap(0, 11, …, 1, 7)
       longNull('unusedCnt', 60, '미사용'),  // L145
