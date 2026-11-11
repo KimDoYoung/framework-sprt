@@ -391,6 +391,7 @@ export interface UserInfo {
   korName?: string | null;
   empNo?: string | null;
   posName?: string | null;
+  titleName?: string | null;
   orgName?: string | null;
   officeTelNo?: string | null;
   mobileTelNo?: string | null;

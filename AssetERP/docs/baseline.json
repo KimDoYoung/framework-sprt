@@ -15875,6 +15875,36 @@
       "updated_at": "2026-11-11T15:44:32+09:00",
       "note": "TOBE 최근결재선 불러오기(AprStepEditService.recentLines)가 [참조등록] 전 사원 조회(all, 799)를 빌려 써 겸직이 빠졌음 → mode person(899) 분리",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/Emp01_Tab_UserInfo.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/model/Emp01_PersonModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/model/Emp01_PersonModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp01_person.xml · selectBySearchTextPaging": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp01_person.xml · selectById": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "selectById SQL 그대로(공통 resultMap 한 줄)",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -15882,6 +15912,30 @@
       "status": "반영",
       "updated_at": "2026-11-11T15:44:32+09:00",
       "note": "TOBE 최근결재선 불러오기(AprStepEditService.recentLines)가 [참조등록] 전 사원 조회(all, 799)를 빌려 써 겸직이 빠졌음 → mode person(899) 분리",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/Emp01_Tab_UserInfo.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/model/Emp01_PersonModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/emp/model/Emp01_PersonModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "#1325 직책 열",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/emp/mapper/emp01_person.xml": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T15:48:46+09:00",
+      "note": "selectById SQL 그대로(공통 resultMap 한 줄)",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }

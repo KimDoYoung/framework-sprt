@@ -45,6 +45,7 @@ const buildGrid = (onEdit: (row: UserInfo) => void): ColDef<UserInfo>[] => [
   gb.textCenter('korName', 80, '사원명'),  // L209
   gb.text('empNo', 120, '사번'),  // L210
   gb.textCenter('posName', 80, '직위'),  // L211
+  gb.textCenter('titleName', 80, '직책'),  // L213 (AS-IS 2026-10-19 추가, CH-0164)
   gb.text('orgName', 220, '부서명'),  // L212
   gb.textCenter('officeTelNo', 120, '사무실'),  // L213
   gb.textCenter('mobileTelNo', 120, '휴대폰'),  // L214
@@ -69,6 +70,7 @@ const getCellValue = (model: UserInfo, field?: string): string | undefined => {
     case 'korName': return person();
     case 'empNo': return s(model.empNo);  // 사번
     case 'posName': return person();
+    case 'titleName': return s(model.titleName);  // 직책 (AS-IS case 7, 2026-10-19)
     case 'orgName': return person();
     case 'officeTelNo': return s(model.officeTelNo);  // 사무실
     case 'mobileTelNo': return s(model.mobileTelNo);  // 휴대폰

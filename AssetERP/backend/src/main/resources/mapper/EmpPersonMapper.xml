@@ -33,6 +33,7 @@
                  , sys01_company_nm                                                     AS emp01_company_nm
                  , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')    AS emp01_org_nm
                  , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'pos_nm')         AS emp01_pos_nm
+                 , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'title_nm')       AS emp01_title_nm  <!-- AS-IS 2026-10-19 직책 추가 (CH-0017) -->
                  , f_get_emptrans(emp01_person_id, null, 'retire_date')                 AS emp01_retire_date
                  , emp02_note_admin                                                     AS emp01_note_admin
               FROM emp01_person
@@ -58,6 +59,7 @@
                emp01_kor_nm         AS kor_name,
                emp01_emp_no         AS emp_no,
                emp01_pos_nm         AS pos_name,
+               emp01_title_nm       AS title_name,
                emp01_org_nm         AS org_name,
                emp01_office_telno   AS office_tel_no,
                emp01_mobile_telno   AS mobile_tel_no,

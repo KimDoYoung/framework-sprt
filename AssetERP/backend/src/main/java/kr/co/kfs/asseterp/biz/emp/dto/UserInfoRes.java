@@ -10,6 +10,7 @@ public record UserInfoRes(
         String korName,
         String empNo,
         String posName,
+        String titleName,
         String orgName,
         String officeTelNo,
         String mobileTelNo,
