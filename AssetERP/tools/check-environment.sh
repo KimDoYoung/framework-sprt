@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# check-environment: 이 PC(사무실 t3600 / 집 omen)가 AssetERP 개발·배포에 필요한 환경을 갖췄는지 점검한다. 읽기 전용(아무것도 고치지 않는다).
+# check-environment: 이 PC(사무실 t3600 / 집 omen)가 AssetERP 개발·배포에 필요한 환경을 갖췄는지 점검한다. 점검은 읽기 전용이고, 고칠 수 있는 것은 모아서 물어본 뒤에만 고친다.
 # 사용: ./tools/check-environment.sh [옵션]   (AssetERP 폴더 어디서든 됨)
 #   (옵션 없음)      hostname(소문자)으로 기기를 판정해 전부 점검
 #   --host <이름>    hostname 대신 이 기기로 판정 (omen | t3600)
+#   -y, --yes        자동고침 가능한 항목을 묻지 않고 바로 고친다
+#   --no-fix         자동고침을 제안하지 않는다 (순수 읽기 전용)
 #   -h, --help       이 도움말
+# 자동고침: 점검만 하고, 고칠 수 있는 것(시뮬레이터 켜기·폴더 만들기·컨테이너 시작·색인 갱신·npm ci·ufw 허용)을 모아 끝에 "고칠까요? [y/N]"로 묻는다.
+#           터미널이 아니면(파이프·cron) 묻지 않고 목록만 보인다. 사람이 판단할 것(IP·setenv.sh·TODO)은 "고칠 명령"으로만 알린다.
 # 점검: 1 기기·프로필(setenv.sh, application-<프로필>.properties의 IP)  2 Docker·DB·Tomcat  3 시뮬레이터 포트(0.0.0.0 바인딩, 컨테이너→호스트 연결 = ufw)
 #       4 도구 버전(java 21·node·gradle·psql·yunhee)  5 AS-IS 소스·색인  6 개발 포트 사용 현황  7 외부 연결(ntfy.sh, 알림은 보내지 않음)
-# 결과: 항목마다 ✅/⚠/❌ 한 줄, 끝에 "고칠 명령"(sudo 명령은 출력만 한다). ❌가 하나라도 있으면 종료코드 1.
+# 결과: 항목마다 ✅/⚠/❌ 한 줄, 끝에 자동고침 제안과 "고칠 명령"(사람이 판단할 것). ❌가 하나라도 있으면 종료코드 1.
 # 기기를 새로 들이면 아래 HOSTS 표에 한 줄 추가하고 application-<프로필>.properties·/data/docker/<호스트>-tomcat/bin/setenv.sh 를 만든다.
 set -uo pipefail
 
@@ -19,6 +23,10 @@ declare -A SIM_NAME=( [5151]="RD 시뮬레이터 (tools/run-rd-server.sh, RD_SIM
                       [5161]="알림 talk·sms (tools/run-notice-server.sh, NOTICE_SIM_HOST=0.0.0.0)"
                       [2525]="알림 SMTP (tools/run-notice-server.sh, NOTICE_SIM_HOST=0.0.0.0)"
                       [5171]="외부연동 AI·메일 (tools/run-ext-server.sh, EXT_SIM_HOST=0.0.0.0)" )
+declare -A SIM_START=( [5151]="RD_SIM_HOST=0.0.0.0 \"\$ROOT/tools/run-rd-server.sh\""
+                       [5161]="NOTICE_SIM_HOST=0.0.0.0 \"\$ROOT/tools/run-notice-server.sh\""
+                       [2525]="NOTICE_SIM_HOST=0.0.0.0 \"\$ROOT/tools/run-notice-server.sh\""
+                       [5171]="EXT_SIM_HOST=0.0.0.0 \"\$ROOT/tools/run-ext-server.sh\"" )
 TOMCAT_PORT=8082                        # 호스트 → Tomcat 컨테이너
 DEV_PORTS=(5173 8080 5432)              # Vite · bootRun · PostgreSQL
 DATA_DIR="/home/kdy987/tmp/asseterp-data"   # compose 공유 볼륨 (asseterp.base.dir)
@@ -28,11 +36,53 @@ JAVA_MAJOR=21
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST_LC="$(hostname -s 2>/dev/null || hostname)"; HOST_LC="${HOST_LC,,}"
 
+usage() {
+    cat <<'EOF'
+check-environment.sh — 이 PC가 AssetERP 개발·배포 환경을 갖췄는지 점검합니다.
+
+사용법
+  ./tools/check-environment.sh [옵션]        (AssetERP 폴더 어디서든 실행 가능)
+
+옵션
+  -y, --yes        고칠 수 있는 항목을 묻지 않고 바로 고칩니다
+      --no-fix     점검만 하고 고침은 제안하지 않습니다 (읽기 전용)
+      --host NAME  hostname 대신 이 기기로 판정합니다 (omen | t3600)
+  -h, --help       이 도움말
+
+점검 항목
+  1. 기기·프로필     setenv.sh, application-<프로필>.properties 의 IP
+  2. Docker·DB       컨테이너, PostgreSQL, Tomcat, 공유 볼륨
+  3. 시뮬레이터      포트 5151·5161·2525·5171 (0.0.0.0 바인딩, 컨테이너→호스트 연결)
+  4. 도구 버전       java 21, node, npm, gradle, psql, yunhee, git
+  5. AS-IS 소스·색인 소스 저장소, menus.md·menus.tsv·db 색인 (14일 넘으면 경고)
+  6. 개발 포트       5173·8080·5432·8082 사용 현황 (참고용)
+  7. 외부 연결       ntfy.sh (알림은 보내지 않음)
+
+결과 표시
+  ✅ 정상   ⚠ 경고   ❌ 문제 (하나라도 있으면 종료코드 1)
+
+자동고침
+  끝에 고칠 수 있는 항목을 모아 보여주고 "고칠까요? [y/N]" 로 묻습니다.
+    · 시뮬레이터 켜기·재시작, 컨테이너 시작, 공유 폴더 만들기
+    · npm ci, 메뉴·소스 색인 다시 만들기, ufw 허용 (sudo 비밀번호 필요)
+  고친 뒤에는 자동으로 다시 점검합니다.
+  터미널이 아니면(파이프·cron) 묻지 않고 목록만 보여줍니다 — 실행하려면 -y.
+  사람이 판단할 것(IP, setenv.sh, TODO, DB 색인)은 "고칠 명령"으로만 알립니다.
+
+새 기기를 들일 때
+  이 파일의 HOSTS 표에 한 줄 추가하고, application-<프로필>.properties 와
+  /data/docker/<호스트>-tomcat/bin/setenv.sh 를 만듭니다.
+EOF
+}
+
+ASSUME_YES=0; NO_FIX=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --host) [[ $# -ge 2 && -n "$2" ]] || { echo "[ERROR] --host 에는 이름이 필요합니다." >&2; exit 2; }
                 HOST_LC="${2,,}"; shift ;;
-        -h|--help) sed -n '2,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -y|--yes) ASSUME_YES=1 ;;
+        --no-fix) NO_FIX=1 ;;
+        -h|--help) usage; exit 0 ;;
         *) echo "모르는 옵션: $1 (--help)" >&2; exit 2 ;;
     esac
     shift
@@ -43,6 +93,9 @@ ok()   { echo "  ✅ $*"; OK=$((OK+1)); }
 warn() { echo "  ⚠  $*"; WARN=$((WARN+1)); }
 fail() { echo "  ❌ $*"; FAIL=$((FAIL+1)); }
 fix()  { FIXES+=("$*"); }
+# 자동고침 후보: autofix "<설명>" "<bash 명령>" — 끝에서 묻고 실행. 같은 명령은 한 번만.
+AUTO_DESC=(); AUTO_CMD=()
+autofix() { AUTO_DESC+=("$1"); AUTO_CMD+=("$2"); }
 section() { echo; echo "■ $*"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 # properties 파일에서 키 값 (없으면 빈 값)
@@ -101,7 +154,7 @@ else
     for c in "$PG_CONTAINER" "$TOMCAT_CONTAINER"; do
         st="$(docker inspect -f '{{.State.Status}}' "$c" 2>/dev/null || echo 없음)"
         if [[ "$st" == running ]]; then ok "컨테이너 $c running"
-        else fail "컨테이너 $c $st"; fix "cd /data/docker && docker compose up -d $c"; fi
+        else fail "컨테이너 $c $st"; autofix "컨테이너 $c 시작" "cd /data/docker && docker compose up -d $c"; fi
     done
 fi
 if have pg_isready; then
@@ -118,7 +171,7 @@ if have curl; then
     else warn "Tomcat http://localhost:$TOMCAT_PORT/AssetERP/ → ${code:-응답 없음} (배포 전이면 정상)"; fi
 fi
 if [[ -d "$DATA_DIR" && -w "$DATA_DIR" ]]; then ok "공유 볼륨 $DATA_DIR 쓰기 가능"
-else fail "공유 볼륨 $DATA_DIR 없음 또는 쓰기 불가"; fix "mkdir -p $DATA_DIR"; fi
+else fail "공유 볼륨 $DATA_DIR 없음 또는 쓰기 불가"; autofix "공유 볼륨 폴더 만들기" "mkdir -p $DATA_DIR"; fi
 
 # ── 3. 시뮬레이터 포트·방화벽 ───────────────────────────────
 section "3. 시뮬레이터 포트 (컨테이너 → 호스트 ${SIM_HOST:-?})"
@@ -128,17 +181,17 @@ if (( DOCKER_OK )) && [[ -n "$SIM_HOST" ]] && docker exec "$TOMCAT_CONTAINER" ba
 for p in "${SIM_PORTS[@]}"; do
     name="${SIM_NAME[$p]}"
     addr="$(grep -E "[:.]$p\$" <<<"$LISTEN" | head -1)"
-    if [[ -z "$addr" ]]; then warn "$p 꺼짐 — $name"; continue; fi
+    if [[ -z "$addr" ]]; then warn "$p 꺼짐 — $name"; autofix "시뮬레이터 :$p 켜기 (0.0.0.0)" "${SIM_START[$p]} start"; continue; fi
     case "$addr" in
         127.0.0.1:*|\[::1\]:*) fail "$p 가 $addr 에만 바인딩 — 컨테이너에서 못 닿음. $name"
-                               fix "$p: 시뮬레이터를 *_SIM_HOST=0.0.0.0 으로 다시 켠다 — $name"; continue ;;
+                               autofix "시뮬레이터 :$p 를 0.0.0.0 으로 다시 켜기" "${SIM_START[$p]} restart"; continue ;;
     esac
     if (( ! CAN_PROBE )); then ok "$p 열림 ($addr) — 컨테이너 연결은 점검 못 함"; continue; fi
     if docker exec "$TOMCAT_CONTAINER" timeout 3 bash -c "</dev/tcp/$SIM_HOST/$p" >/dev/null 2>&1; then
         ok "$p 열림 ($addr), $TOMCAT_CONTAINER → $SIM_HOST:$p 연결 OK"
     else
         fail "$p 열림 ($addr) 이지만 $TOMCAT_CONTAINER → $SIM_HOST:$p 연결 실패 (방화벽 의심)"
-        fix "sudo ufw allow from $DOCKER_NET to any port $p proto tcp"
+        autofix "[sudo] ufw: docker 대역 → :$p 허용" "sudo ufw allow from $DOCKER_NET to any port $p proto tcp"
     fi
 done
 if sudo -n true 2>/dev/null && have ufw; then
@@ -159,7 +212,7 @@ for t in node npm gradle psql yunhee git; do
         ok "$t ${v:-?}"
     else fail "$t 없음"; fi
 done
-[[ -d "$ROOT/frontend/node_modules" ]] && ok "frontend/node_modules 있음" || { warn "frontend/node_modules 없음"; fix "cd $ROOT/frontend && npm ci"; }
+[[ -d "$ROOT/frontend/node_modules" ]] && ok "frontend/node_modules 있음" || { warn "frontend/node_modules 없음"; autofix "frontend 패키지 설치 (npm ci)" "cd $ROOT/frontend && npm ci"; }
 
 # ── 5. AS-IS 소스·색인 ──────────────────────────────────────
 section "5. AS-IS 소스·색인"
@@ -173,7 +226,14 @@ else fail "AS-IS 소스 없음 — $ASIS"; fi
 for f in docs/as-is/src/menus.md docs/as-is/menus.tsv docs/as-is/db; do
     if [[ -e "$ROOT/$f" ]]; then
         age=$(( ( $(date +%s) - $(stat -c %Y "$ROOT/$f") ) / 86400 ))
-        if (( age > 14 )); then warn "$f ${age}일 전 — ./check-git.sh 로 갱신"; else ok "$f (${age}일 전)"; fi
+        if (( age > 14 )); then
+            warn "$f ${age}일 전 — ./check-git.sh 로 갱신"
+            case "$f" in
+                */menus.md|*/menus.tsv) autofix "메뉴·소스 색인 다시 만들기 (menus.tsv → index-src, 몇 분 걸림)" \
+                    "cd '$ROOT/..' && yunhee sql --builtin menus -o tsv --no-header --out AssetERP/docs/as-is/menus.tsv && yunhee index-src -t AssetERP/docs/as-is/src" ;;
+                *) fix "DB 색인: AssetERP/CLAUDE.md '색인 다시 만들기'의 index-db (스키마를 새로 받아야 해서 자동고침 안 함)" ;;
+            esac
+        else ok "$f (${age}일 전)"; fi
     else fail "$f 없음"; fix "AssetERP/CLAUDE.md '색인 다시 만들기' 실행"; fi
 done
 
@@ -196,4 +256,31 @@ if (( ${#FIXES[@]} )); then
     echo; echo "고칠 명령:"
     printf '%s\n' "${FIXES[@]}" | awk '!seen[$0]++' | sed 's/^/  /'
 fi
-(( FAIL == 0 ))
+
+# ── 자동고침 ────────────────────────────────────────────────
+RC=$(( FAIL == 0 ? 0 : 1 ))
+if (( ${#AUTO_CMD[@]} && ! NO_FIX )); then
+    # 같은 명령은 한 번만 (5161·2525 는 같은 서버)
+    declare -A seen=(); D=(); C=()
+    for i in "${!AUTO_CMD[@]}"; do
+        [[ -n "${seen[${AUTO_CMD[$i]}]:-}" ]] && continue
+        seen[${AUTO_CMD[$i]}]=1; D+=("${AUTO_DESC[$i]}"); C+=("${AUTO_CMD[$i]}")
+    done
+    echo; echo "자동으로 고칠 수 있는 것 ${#C[@]}개:"
+    for i in "${!C[@]}"; do echo "  $((i+1)). ${D[$i]}"; echo "       \$ ${C[$i]}"; done
+    go=0
+    if (( ASSUME_YES )); then go=1
+    elif [[ -t 0 && -t 1 ]]; then
+        read -r -p "  지금 고칠까요? [y/N] " ans; [[ "$ans" =~ ^[yY] ]] && go=1
+    else echo "  (터미널이 아니라 묻지 않음 — 실행하려면 -y)"; fi
+    if (( go )); then
+        export ROOT
+        for i in "${!C[@]}"; do
+            echo; echo "▶ ${D[$i]}"
+            if bash -c "${C[$i]}"; then echo "  → 완료"; else echo "  → 실패 (위 출력 확인)"; fi
+        done
+        echo; echo "── 다시 점검 ──"
+        exec "${BASH_SOURCE[0]}" --no-fix --host "$HOST_LC"
+    fi
+fi
+exit $RC
