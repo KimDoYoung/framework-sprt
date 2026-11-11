@@ -1,0 +1,506 @@
+1001	Dcr01_Tab_ClassTree	관리자 > 03. 문서관리 > 문서분류
+1002	Dcr01_Tab_DcrUser	문서작성 > 01. 문서작성 > 업무별 문서작성
+1003	Dcr01_Tab_DcrManager	관리자 > 03. 문서관리 > 업무별 문서작성(관리자)
+1004	Dcr01_Tab_DcrClassModify	관리자 > 03. 문서관리 > 문서이동
+1005	Apr01_Tab_FundDocument	문서작성 > 02. 문서검색 > 펀드별 문서검색
+1006	Dcr00_Tab_DocList	문서작성 > 02. 문서검색 > 통합 문서검색
+1007	Dcr05_Tab_DocType	문서작성 > 03. 파일 및 양식관리 > 문서양식등록
+1008	Fbx01_Tab_BoxDocument	문서작성 > 03. 파일 및 양식관리 > 파일보관함
+1009	Ics01_Tab_IcsFileUser	준법감시 > 00. 법규정보 > 법규보고 서식파일
+1010	Apr01_Tab_TotalList	문서작성 > 06. 문서작성현황 > 운영현황표
+1011	Apr01_Tab_SubList	문서작성 > 06. 문서작성현황 > 건별명세
+1012	Ics01_Tab_ClassTree	기초자료 > 00. 내부통제 > 법규관리(관리자)
+1013	Ics01_Tab_ClassTreeUser	준법감시 > 01. 법규관리 > 법규관리
+1014	Ics01_Tab_ApprList	문서작성 > 01. 문서작성 > 법규별 문서작성
+1015	Sch04_Tab_BizReClass	준법감시 > 01. 법규관리 > 법규 담당자 변경(일회성)
+1016	Ics02_Tab_IcsList	준법감시 > 90. 법규통제 현황(사용X) > 법규통제 운영현황표
+1017	Sch04_Tab_CheckList	준법감시 > 90. 법규통제 현황(사용X) > 법규통제 상세내역
+1018	Apr01_Tab_MyApproveList	문서작성 > 04. 전자결재 > 결재내역 조회
+1019	Apr01_Tab_MyRequestList	문서작성 > 04. 전자결재 > 상신내역 조회
+1020	Apr01_Tab_StampSeq	문서작성 > 04. 전자결재 > (X)인감대장
+1021	Apr07_Tab_AltAppr	문서작성 > 04. 전자결재 > 대결자 지정
+1022	Apr07_Tab_AltApprMgr	관리자 > 04. 전자결재 > 대결자 지정(관리자)
+1023	Dcr10_Tab_MailHistory	문서작성 > 05. 메일관리 > 발신메일목록
+1024	Dcr10_Tab_MailHistory_Manager	관리자 > 04. 전자결재 > 발신메일 목록(관리자)
+1025	Emp10_Tab_AddrBook	문서작성 > 05. 메일관리 > 주소록 관리
+1026	Apr10_Tab_Stamp	문서작성 > 04. 전자결재 > 사용인감등록
+1027	Apr08_Tab_ApprRole	문서작성 > 05. 메일관리 > (X)직책별 결재자 등록
+1028	Org01_Tab_OrgCode	경영관리 > 01. 조직 및 사원관리 > 조직정보 등록
+1029	Emp00_Tab_TransInfo	경영관리 > 01. 조직 및 사원관리 > 사원정보 관리
+1030	Emp00_Tab_OrgPerson	경영관리 > 01. 조직 및 사원관리 > 조직별 사원조회
+1031	Emp00_Tab_OrgEmpManager	관리자 > 06. 경영관리 > 조직별 사원조회(관리자)
+1032	Emp20_Tab_Leave	신청 > 01. 외출/출장/휴가 > 휴가신청
+1033	Emp20_Tab_LeaveManager	경영관리 > 02. 휴가/출장 관리 > 휴가관리(경영관리팀)
+1034	Emp20_Tab_LeaveList	신청 > 01. 외출/출장/휴가 > 휴가신청조회
+1035	Emp20_Tab_YearList	경영관리 > 02. 휴가/출장 관리 > 연월차휴가 현황
+1036	Sys30_Tab_LeaveYear	경영관리 > 02. 휴가/출장 관리 > 연차휴가 결산기준
+1037	Pay01_Tab_Annual	경영관리 > 03. 연봉관리 > 연봉계약관리
+1038	Crd01_Tab_Card	자금관리 > 30. 법인카드관리 > 법인카드 및 사용자등록
+1039	Crd02_Tab_DataUpload	자금관리 > 30. 법인카드관리 > 법인카드 내역 업로드
+1040	Crd00_Tab_SlipCopy	자금관리 > 30. 법인카드관리 > (X)법인카드 내역 복사
+1041	Crd05_Tab_Slip	자금관리 > 30. 법인카드관리 > (X)법인카드 내역 관리
+1042	Sch01_Tab_Info	스케줄 > 01. 업무일정 > 업무일정 등록
+1043	Sch04_Tab_ToDoList	스케줄 > 01. 업무일정 > 업무일정 처리
+1044	Msc01_Tab_Schedule	스케줄 > (X) 스케줄 등록
+1045	Msc01_HTML_Week	스케줄 > (X) 주간 스케줄
+1046	Fnd01_Tab_FundPlan	펀드관리 > 01. 상품기획 > 신규기획펀드 등록
+1047	Fnd08_Tab_OrgAuthTempFund	펀드관리 > 01. 상품기획 > 신규기획펀드 권한설정
+1048	Fnd01_Tab_FundCode	펀드관리 > 02. 펀드관리 > 펀드 등록 및 변경
+1049	Fnd01_Tab_FundSearch	펀드관리 > 02. 펀드관리 > 펀드 조회
+1050	Fnd08_Tab_OrgAuth	펀드관리 > 02. 펀드관리 > 펀드 권한설정
+1051	Fnd03_Tab_Consignment	펀드관리 > 90. 기관정보관리 > 수탁사정보 관리
+1052	Fnd06_Tab_OfficeWork	펀드관리 > 90. 기관정보관리 > 사무수탁사정보 관리
+1053	Fnd07_Tab_IssuingEntity	펀드관리 > 90. 기관정보관리 > 발행기관정보 관리
+1054	Ppt01_Tab_Info	고유자산 > (X)02. 부동산 > 물건정보관리
+1055	Tgt01_Tab_Co	고유자산 > (X)02. 부동산 > 매매처정보관리
+1056	Est03_Tab_Contract_C	고유자산 > (X)02. 부동산 > 비용관리
+1057	Est03_Tab_Contract	고유자산 > (X)02. 부동산 > 임대계약정보등록
+1058	Est03_Tab_Deposit	고유자산 > (X)02. 부동산 > 임대보증금 입출금관리
+1059	Est08_Tab_Schedule	고유자산 > (X)02. 부동산 > 예상 현금흐름표조회
+1060	Est05_Tab_Flow	고유자산 > (X)02. 부동산 > 수익/비용 입출금관리
+1062	Crm01_Tab_ItemTreeGrid	커뮤니티 > 03. 업무활동 > (X)영업활동관리
+1063	Crm09_Tab_ContactPointTreeGrid	커뮤니티 > 03. 업무활동 > (X)거래처 및 업무활동 등록
+1064	Bbs02_Tab_NoticeManager	커뮤니티 > 02. 공지사항 > 사내공지등록
+1065	Bbs02_Tab_NoticeView	커뮤니티 > 02. 공지사항 > 공지사항
+1066	Sys90_Tab_AfterService	커뮤니티 > 90. 기타 > 개선사항 및 오류 통보
+1067	Mrb01_Tab_List	신청 > 02. 회의실 예약관리 > 회의실 예약관리
+1068	Pcd01_Tab_Pickup	신청 > 02. 회의실 예약관리 > X
+1069	Sys04_Tab_Role	관리자 > 01. 화면권한관리 > 권한그룹 관리
+1070	Sys07_Tab_RoleMenu	관리자 > 01. 화면권한관리 > 권한그룹별 메뉴 맵핑
+1071	Sys05_Tab_UserRole	관리자 > 01. 화면권한관리 > 권한그룹별 사용자 맵핑
+1072	Sys05_Tab_PersonRole	관리자 > 01. 화면권한관리 > 사용자별 권한그룹 맵핑
+1073	Dcr03_Tab_DcrAuth	관리자 > 02. 문서권한관리 > 문서분류별 조직 맵핑
+1074	Dcr03_Tab_OrgAuth	관리자 > 02. 문서권한관리 > 조직별 문서분류 맵핑
+1075	Sys01_Tab_Company	관리자 > 01. 고객관리 > 고객별 시스템정보 관리
+1076	Sys03_Tab_CompanyMenu	관리자 > 01. 고객관리 > 회사별 메뉴맵핑
+1077	Sys06_Tab_Menu	관리자 > 01. 고객관리 > 메뉴 관리
+1078	Sys08_Tab_CodeKindAdmin	관리자 > 03. 코드관리 > 시스템 공통코드 관리
+1079	Sys08_Tab_CodeKindClient	관리자 > 03. 코드관리 > 고객사 공통코드
+1080	Sys12_Tab_Calendar	관리자 > 09. 기타 > 일자관리
+1081	Dbm01_Tab_TabComments	관리자 > 09. 기타 > Table Spec,(Model)Properties
+1082	Pay01_Tab_AnnualList	경영관리 > 03. 연봉관리 > 연봉계약현황
+1083	Pay02_Tab_Month	경영관리 > 04. 급여관리(Old) > 급여관리(old)
+1084	Pay02_Tab_List	경영관리 > 04. 급여관리(Old) > 급여대장(old)
+1085	Pay02_Tab_PersonList	경영관리 > 04. 급여관리(Old) > 급여명세서(old)
+1086	Pay03_Tab_Account	경영관리 > 04. 급여관리(Old) > 회사계좌관리(X)
+1087	Ast01_Tab_ClassTreeIntrinsic	고유자산 > 10. 고유자산 등록 > 고유자산 기본등록 ①
+1088	Ast01_Tab_InfoIntrinsic	고유자산 > 10. 고유자산 등록 > 고유자산 상세등록 ②
+1089	Ast01_Tab_InfoManager	기초자료 > 30. 자산&경영 > 자산상세 항목관리
+1090	Ast05_Tab_TrCodeIntrinsic	관리자 > 05. 관리회계 > 거래유형 등록
+1091	Ast06_Tab_TrIntrinsic	관리회계 > 11. 특수회계처리 > 고유자산 거래처리
+1092	Ast06_Tab_AccruedIntrinsic	관리회계 > 11. 특수회계처리 > 미수/미지급
+1093	Apr01_Tab_MyReferenceList	문서작성 > 04. 전자결재 > 참조내역 조회
+1094	Fnd06_Tab_OfficeWorkManager	I/F > 91. 기관정보관리(관리자) > 사무수탁사정보 관리(관리자)
+1095	Icam01_Tab_DataInfo	I/F > 10. ICAM > ICAM 연계정보구분 관리
+1096	Icam03_Tab_Fund	I/F > 10. ICAM > ICAM 펀드정보
+1097	Icam99_Tab_Test	I/F > 10. ICAM > 작업용
+1098	Apr01_Tab_Restore	관리자 > 03. 문서관리 > 폐기문서 복구
+1099	Fnd01_Tab_FundSearchIcam	펀드관리 > 02. 펀드관리 > 펀드 조회 (ICAM)
+1100	Fnd09_Tab_TrustBank	펀드관리 > 90. 기관정보관리 > 수탁은행정보 관리
+1101	Icam02_Tab_Data	I/F > 10. ICAM > ICAM 연계정보
+1102	Fnd03_Tab_ConsignmentManager	I/F > 91. 기관정보관리(관리자) > 수탁사정보 관리(관리자)
+1103	Fnd09_Tab_TrustBankManager	I/F > 91. 기관정보관리(관리자) > 수탁은행정보 관리(관리자)
+1104	Pay01_Tab_AnnualPerson	경영관리 > 03. 연봉관리 > 연봉조회
+1105	Fnd20_Tab_Plan	펀드관리 > 01. 상품기획 > 상품기획일정 등록
+1106	Fnd20_Tab_PlanEmp	펀드관리 > 01. 상품기획 > 상품기획문서 등록
+1107	Ics01_Tab_IcsFileUpload	기초자료 > 00. 내부통제 > 법규보고 서식파일 등록
+1108	Dbm10_Tab_MakePdf	관리자 > 09. 기타 > PDF 생성 테스트
+1109	Icam02_Tab_DataAdmin	I/F > 10. ICAM > ICAM 연계정보(관리자용)
+1110	Dcr01_Tab_ClassTree	기초자료 > 20. 문서(전자결재) > 문서분류
+1111	Pay04_Tab_Formula	기초자료 > 30. 자산&경영 > 임금계산방법(x)
+1112	Sys04_Tab_RoleAdmin	기초자료 > 50. 권한 > 권한그룹 관리
+1113	Sys12_Tab_Calendar	기초자료 > 90. 기타 > 일자관리
+1114	Act01_Tab_AccountCode	기초자료 > 40. 관리회계 > 계정코드 관리
+1115	Emp15_Tab_Cert	경영관리 > 01. 조직 및 사원관리 > 증명서 발급
+1116	Fbx01_Tab_Document	문서작성 > 03. 파일 및 양식관리 > 파일등록
+1117	Ast01_Tab_ClassTreeManagement	펀드관리 > 80. 펀드자산 > 펀드자산 종목기본
+1118	Ast01_Tab_InfoManagement	펀드관리 > 80. 펀드자산 > 펀드자산 종목상세
+1119	Ast06_Tab_TrManagement	펀드관리 > 80. 펀드자산 > 펀드자산 거래관리
+1120	Ast05_Tab_TrCodeManagement	펀드관리 > 80. 펀드자산 > 거래코드 관리(운용)
+1121	Sys90_Tab_AfterServiceAdmin	관리자 > 02. 시스템관리 > 개선사항 및 오류 통보
+1122	Fbx01_Tab_Search	문서작성 > 03. 파일 및 양식관리 > 파일조회
+1123	Fnd10_Tab_RelateAst	펀드관리 > 02. 펀드관리 > 펀드별 자산 조회(ICAM)
+1124	Fnd10_Tab_RelateFnd	펀드관리 > 02. 펀드관리 > 자산별 펀드 조회(ICAM)
+1125	Flt03_Tab_AccountReport	준법감시 > 10. 임직원매매 > 계좌신고
+1126	Flt10_Tab_BuyReport	준법감시 > 10. 임직원매매 > 매수 사전신고
+1127	Flt10_Tab_SellReport	준법감시 > 10. 임직원매매 > 매도 사전신고
+1128	Flt10_Tab_PreApprove	준법감시 > 11. 임직원매매(준감인) > 사전승인
+1129	Ast06_Tab_AccruedManagement	펀드관리 > 80. 펀드자산 > 펀드자산 미수/미지급
+1130	Biz90_Tab_Limit	준법감시 > 40. 이익제공(수령)현황 > 이익제공 기준관리(준감인)
+1131	Biz01_Tab_Card	준법감시 > 40. 이익제공(수령)현황 > 이익제공 입력(법인카드)
+1132	Biz01_Tab_Other	준법감시 > 40. 이익제공(수령)현황 > 이익제공 입력(현금,물품)
+1133	Biz01_Tab_LimitCheckList	준법감시 > 40. 이익제공(수령)현황 > 이익제공 한도초과현황
+1134	Apr01_Tab_BizPriorApproval	준법감시 > 40. 이익제공(수령)현황 > 이익제공 사전승인신청
+1135	Bmt01_Tab_Buy	준법감시 > 40. 이익제공(수령)현황 > 판촉물 구매 및 제공내역
+1136	Biz01_Tab_PriorApproval	준법감시 > 40. 이익제공(수령)현황 > 이익제공 상세현황
+1137	Apr01_Tab_ItemDocument	문서작성 > 02. 문서검색 > (X)종목별 문서검색
+1138	Biz01_Tab_CardContents	준법감시 > 40. 이익제공(수령)현황 > 법인카드 사용내역 조회
+1139	Pay07_Tab_Retire	경영관리 > 04. 급여관리(Old) > 퇴직정산서(old)
+1140	Sys26_Tab_LoginHistory	관리자 > 02. 시스템관리 > 로그인내역 조회
+1141	Biz01_Tab_CardManagement	자금관리 > 30. 법인카드관리 > 법인카드 내역관리
+1142	Flt10_Tab_RealTransaction	준법감시 > 10. 임직원매매 > 정기보고
+1143	Flt11_Tab_BookList	준법감시 > 10. 임직원매매 > 보유내역조회
+1144	Flt10_Tab_TrList	준법감시 > 10. 임직원매매 > 매매내역조회
+1145	Flt01_Tab_CompanyStd	준법감시 > 11. 임직원매매(준감인) > 기준관리
+1146	Sys15_Tab_Corp	관리자 > 09. 기타 > 거래처 등록
+1147	Act10_Tab_ReprAccount	관리자 > 05. 관리회계 > 대표계정 관리
+1148	Act02_Tab_CreateJournal	관리회계 > 10. 전표입력 > 전표입력
+1149	Act02_Tab_Journal	관리회계 > 21. 회계장부 > 분개장
+1150	Act02_Tab_JournalSub	관리회계 > 21. 회계장부 > 계정별원장
+1151	Act04_Tab_GenLedger	관리회계 > 21. 회계장부 > 계정과목집계표
+1152	Flt10_Tab_EmpAppr	준법감시 > 11. 임직원매매(준감인) > 정기보고현황
+1153	Flt10_Tab_TrListAdmin	준법감시 > 11. 임직원매매(준감인) > 매매내역조회
+1154	Flt11_Tab_BookListAdmin	준법감시 > 11. 임직원매매(준감인) > 보유내역조회
+1155	Sys15_Tab_Corp	기초자료 > 30. 자산&경영 > 거래처 관리
+1156	Act10_Tab_ReprAccount	기초자료 > 40. 관리회계 > 대표계정관리
+1157	Flt10_Tab_Violate	준법감시 > 11. 임직원매매(준감인) > 위반내역조회
+1158	Ast06_Tab_TrFinance	고유자산 > 20. 고유자산 거래처리 > 금융상품 거래처리
+1159	Ast09_Tab_DepositBook	관리회계 > 20. 결산 > 예금잔고대사
+1160	Ast09_Tab_FinanceBook	고유자산 > 30. 고유자산 현황 > 금융상품 보유내역
+1161	Bmt10_Tab_Info	고유자산 > 30. 고유자산 현황 > 전산장비관리
+1162	Act11_Tab_TrJournalMap	관리자 > 05. 관리회계 > 거래유형별 분개맵핑
+1163	Act13_Tab_RealAccountMap	관리자 > 05. 관리회계 > 실계정맵핑
+1164	Act02_Tab_DepositIoList	자금관리 > 10. 자금관리 > 일일자금관리
+1165	Ast05_Tab_TrCodeAdmin	기초자료 > 40. 관리회계 > 거래유형 등록(관리자)
+1166	Ast06_Tab_TrDeposit	관리회계 > 11. 특수회계처리 > 계좌이체
+1167	Ast06_Tab_EvalFinance	고유자산 > 20. 고유자산 거래처리 > 금융상품 평가처리
+1168	Act11_Tab_TrJournalMap	기초자료 > 40. 관리회계 > 거래유형별 분개맵핑
+1169	Act13_Tab_RealAccountMap	기초자료 > 40. 관리회계 > 실계정맵핑
+1170	Bmt12_Tab_PcList	고유자산 > 30. 고유자산 현황 > PC장비상세
+1171	Ast06_Tab_TrForIntrinsic	관리회계 > 12. 특수회계처리(외화) > 고유자산 거래처리(외화)
+1172	Ast06_Tab_TrForDeposit	관리회계 > 12. 특수회계처리(외화) > 계좌이체(외화)
+1173	Ast06_Tab_AccruedForIntrinsic	관리회계 > 12. 특수회계처리(외화) > 미수/미지급(외화)
+1174	Ast06_Tab_FxEvalDeposit	관리회계 > 20. 결산 > 외화예금 환평가처리
+1175	Ast06_Tab_EvalDepn	고유자산 > 20. 고유자산 거래처리 > 감가상각처리
+1176	Act02_Tab_CreateForJournal	관리회계 > 12. 특수회계처리(외화) > 전표입력(외화)
+1177	Act02_Tab_ForJournal	관리회계 > 21. 회계장부 > 분개장(외화)
+1178	Act04_Tab_ReportPL	관리회계 > 22. 재무제표 > 손익계산서
+1179	Act04_Tab_ReportBS	관리회계 > 22. 재무제표 > 재무상태표
+1180	Act02_Tab_CreateJournalBiz	자금관리 > 20. 사업비관리 > 급여/카드 회계처리
+1181	Ast13_Tab_DepnBook	고유자산 > 30. 고유자산 현황 > 감가상각대장
+1182	Sys25_Tab_ResetPassword	관리자 > 09. 기타 > 비밀번호 초기화
+1183	Pay02_Tab_PersonListManager	경영관리 > 04. 급여관리(Old) > 급여명세서(경영관리팀)(old)
+1184	Emp21_Tab_PersonList	신청 > 01. 외출/출장/휴가 > 연월차휴가 지정통보
+1185	Emp21_Tab_UnLeaveList	경영관리 > 02. 휴가/출장 관리 > 연차휴가 사용촉진
+1186	Sms03_Tab_GroupSend	커뮤니티 > 90. 기타 > 사원별 문자발송
+1187	Car03_Tab_List	경영관리 > 10. 차량관리 > 공용차량 예약관리
+1188	Car01_Tab_Info	경영관리 > 10. 차량관리 > 차량정보관리
+1189	Car04_Tab_PrivateJournal	경영관리 > 10. 차량관리 > 전용차량 운행등록
+1190	Car04_Tab_PublicJournal	경영관리 > 10. 차량관리 > 공용차량 운행등록
+1191	Car04_Tab_PrivateJournalAdmin	경영관리 > 10. 차량관리 > 전용차량 운행변경(경영관리팀)
+1192	Car04_Tab_PublicJournalAdmin	경영관리 > 10. 차량관리 > 공용차량 운행변경(경영관리팀)
+1193	Car04_Tab_Journal	경영관리 > 10. 차량관리 > 차량 운행일지
+1194	Apr15_Tab_StampCert	경영관리 > 91. 법인서류 > 법인인감증명서 관리(X)
+1195	Act04_Tab_Close	관리회계 > 20. 결산 > 회계마감
+1196	Ast06_Tab_TrTax	자금관리 > 20. 사업비관리 > 세금/4대보험 등록
+1197	Sys80_Tab_AdminUserList	관리자 > 02. 시스템관리 > Admin 사용자 관리
+1198	Sys81_Tab_AdminUserHistory	관리자 > 02. 시스템관리 > Admin 로그인내역 조회
+1199	Icam10_Tab_OfficeMngFee	관리회계 > 30. 사무보수관리 > ICAM 펀드보수 발생내역
+1200	Icam12_Tab_OfficeMngFeeBook	관리회계 > 30. 사무보수관리 > ICAM 펀드보수 월말잔액
+1201	Ast30_Tab_OfficeMngFeeState	관리회계 > 30. 사무보수관리 > 보수원장
+1202	Ast30_Tab_OfficeMngFeeClose	관리회계 > 20. 결산 > 펀드보수 결산처리
+1203	Icam10_Tab_FeeAdmin	I/F > 10. ICAM > ICAM 보수(관리자용)
+1204	Icam11_Tab_OfficeMngFeeDeposit	관리회계 > 30. 사무보수관리 > 펀드별 보수입금계좌 등록
+1205	Ast06_Tab_TrDepositInt	관리회계 > 11. 특수회계처리 > 예금/예치금 이자수령
+1206	Act09_Tab_AccountNum	관리자 > 05. 관리회계 > 결산회기관리
+1207	Act02_Tab_JournalFix	관리회계 > 10. 전표입력 > 전표승인처리
+1208	Ast06_Tab_TrAcntTransfer	고유자산 > 20. 고유자산 거래처리 > 금융상품 계좌대체
+1209	Biz10_Tab_ContCorp	KFS > 10. ICAM 계약사관리 > ICAM 계약사 관리
+1210	Biz20_Tab_FeeCharge	KFS > 10. ICAM 계약사관리 > 최저보수 청구
+1211	Emp10_Tab_PublicAddrBook	문서작성 > 05. 메일관리 > 공용주소록 관리
+1212	Cmp10_Tab_MailBook	문서작성 > 05. 메일관리 > 공용메일 관리
+1213	Ics02_Tab_Manager	준법감시 > 01. 법규관리 > 법규 관리그룹 등록
+1214	Icam10_Tab_FundMngFee	관리회계 > 30. 펀드운용보수관리 > ICAM 운용보수 발생내역
+1215	Icam12_Tab_FundMngFeeBook	관리회계 > 30. 펀드운용보수관리 > ICAM 운용보수 월말잔액
+1216	Ast30_Tab_FundMngFeeState	관리회계 > 30. 펀드운용보수관리 > 펀드보수원장
+1217	Icam11_Tab_FundMngFeeDeposit	관리회계 > 30. 펀드운용보수관리 > 운용보수 입금계좌 관리
+1218	Ast30_Tab_FundMngFeeClose	관리회계 > 30. 펀드운용보수관리 > 운용보수 회계처리
+1219	Pay08_Tab_TaxWithholding	경영관리 > 04. 급여관리 > 원천징수영수증(사본)
+1220	Pay08_Tab_TaxWithholdingAdmin	경영관리 > 04. 급여관리 > 원천징수영수증 업로드
+1221	Emp17_Tab_Benefit	신청 > 80. 사업비 신청 > 복리후생비 신청
+1222	Emp17_Tab_BenefitManager	자금관리 > 20. 사업비관리 > 복리후생비 관리
+1223	Sch10_Tab_Ipo	펀드관리 > 04. 공모주청약 > 공모주 일정조회
+1224	Dcr00_Tab_FileList	문서작성 > 02. 문서검색 > 문서별 첨부파일 검색
+1225	Act04_Tab_ReportFSS	관리회계 > 22. 재무제표 > 금감원보고용 재무제표
+1226	Sch01_Tab_List	스케줄 > 01. 업무일정 > 기간별 업무일정 조회
+1227	Fnd30_Tab_Opr	펀드관리 > 04. 공모주청약 > 공모주청약 운용지시
+1228	Ics10_Tab_Checklist	준법감시 > 30. 내부통제 체크리스트 > 내부통제 체크리스트 관리
+1229	Ics15_Tab_ChecklistWrite	준법감시 > 30. 내부통제 체크리스트 > 내부통제 체크리스트 작성
+1230	Ics15_Tab_ChecklistConfirm	준법감시 > 30. 내부통제 체크리스트 > 내부통제내역 확인(부서장)
+1231	Ics15_Tab_ChecklistStatus	준법감시 > 30. 내부통제 체크리스트 > 내부통제내역 현황(준감인)
+1232	Ics10_Tab_ChecklistAdmin	기초자료 > 00. 내부통제 > 내부통제 체크리스트(관리자)
+1233	Emp24_Tab_JointLeave	경영관리 > 02. 휴가/출장 관리 > 공동연차관리
+1234	Emp22_Tab_EtcLeave	경영관리 > 02. 휴가/출장 관리 > 포상휴가관리
+1235	Ics15_Tab_ChecklistStatusDetail	준법감시 > 30. 내부통제 체크리스트 > 내부통제내역 상세(준감인)
+1236	Rpt01_Tab_DailyWrite	커뮤니티 > 04. 업무보고 > 일일업무 입력
+1237	Rpt01_Tab_DailyConfirm	커뮤니티 > 04. 업무보고 > 기간별 업무확인
+1238	Ast09_Tab_DepositBookPeriod	자금관리 > 10. 자금관리 > 예금잔고조회
+1239	Ast09_Tab_FinanceBookPeriod	고유자산 > 30. 고유자산 현황 > 금융상품 보유내역(기간조회)
+1240	Chk02_Tab_DailyList	펀드관리 > 10. 펀드회계 일일점검 > 일일점검내역 관리
+1241	Chk03_Tab_DailyListWrite	펀드관리 > 10. 펀드회계 일일점검 > 일일점검내역 작성
+1242	Chk03_Tab_DailyListConfirm	펀드관리 > 10. 펀드회계 일일점검 > 일일점검내역 확인
+1243	Chk03_Tab_DailyListStatus	펀드관리 > 10. 펀드회계 일일점검 > 일일점검내역
+1244	Chk01_Tab_ClassTree	기초자료 > 00. 내부통제 > 일일점검내역 분류(관리자)
+1245	Chk02_Tab_DailyListAdmin	기초자료 > 00. 내부통제 > 일일점검내역 관리(관리자)
+1246	Bbs02_Tab_NoticeAdmin	커뮤니티 > 02. 공지사항 > KFS공지등록
+1247	Sys07_Tab_Company	기초자료 > 50. 권한 > 권한그룹별 메뉴권한 복사
+1248	Sys08_Tab_CodeKindClient	관리자 > 09. 기타 > 공통코드
+1249	Ast30_Tab_OfficeMngFeeStatePeriod	관리회계 > 30. 사무보수관리 > 보수원장(기간조회)
+1250	Act01_Tab_AccountCode	관리회계 > 21. 회계장부 > 계정과목 관리
+1251	Ast33_Tab_OfficeMngFundTrans	관리회계 > 30. 사무보수관리 > 이관펀드 등록(사무관리)
+1252	Ast33_Tab_FundMngTrans	관리회계 > 30. 펀드운용보수관리 > 이관펀드 등록
+1253	Apr90_Tab_DisposalListAdmin	관리자 > 03. 문서관리 > 폐기문서 승인(관리자)
+1254	Bbs10_Tab_BizShare	커뮤니티 > 03. 업무활동 > 업무공유
+1255	Ics01_Tab_PeriodList	준법감시 > 00. 법규정보 > 월별 법규조회
+1256	Ics20_Tab_RevisionHistory	준법감시 > 00. 법규정보 > 법규개정내역
+1257	Ics20_Tab_RevisionHistoryAdmin	기초자료 > 00. 내부통제 > 법규개정내역 등록
+1258	Bbs02_Tab_NoticeViewLaw	준법감시 > 00. 법규정보 > 법규공지
+1259	Bbs02_Tab_NoticeViewMgt	경영관리 > 00. 경영정보 > 경영공지
+1260	Rpt02_Tab_MonthWrite	커뮤니티 > 04. 업무보고 > 월간회의자료
+1261	Scm01_Tab_Sr	KFS > 01. 시스템 개발 > 시스템 개발 의뢰
+1262	Scm01_Tab_DevMng	KFS > 01. 시스템 개발 > 시스템 개발 관리
+1263	Scm10_Tab_Dev	KFS > 01. 시스템 개발 > 시스템 개발
+1264	Scm11_Tab_DevTest	KFS > 01. 시스템 개발 > 시스템 QA/UAT
+1265	Scm30_Tab_Program	KFS > 03. 프로그램 관리 > 프로그램 관리
+1266	Scm13_Tab_Deploy	KFS > 02. 배포관리 > 배포처리
+1267	Flt05_Tab_ItemTypeAdmin	기초자료 > 00. 내부통제 > 임직원매매 종목유형관리
+1268	Icam10_Tab_CurrentFeeByFund	펀드관리 > 20. 운용현황 > 펀드별 발생보수현황
+1269	Icam50_Tab_DbSource	I/F > 10. ICAM > ICAM DB Source Get
+1270	Pay10_Tab_Month	경영관리 > 04. 급여관리 > 급여관리
+1271	Pay10_Tab_List	경영관리 > 04. 급여관리 > 급여대장
+1272	Pay10_Tab_PersonList	경영관리 > 04. 급여관리 > 급여명세서
+1273	Pay10_Tab_PersonListManager	경영관리 > 04. 급여관리 > 급여명세서(경영관리팀)
+1274	Pay10_Tab_Retire	경영관리 > 04. 급여관리 > 퇴직정산
+1275	Pay31_Tab_InsureApply	경영관리 > 04. 급여관리 > 4대보험신고(EDI)
+1276	Pay32_Tab_InsurePay	경영관리 > 04. 급여관리 > 4대보험 정산내역
+1277	Emp35_Tab_DeductPerson	경영관리 > 04. 급여관리 > 급여공제정보
+1278	Pay20_Tab_Deduct	경영관리 > 04. 급여관리 > 급여기초정보
+1279	Pay20_Tab_DeductAdmin	기초자료 > 30. 자산&경영 > 급여기초정보관리
+1280	Dcr30_Tab_LinkAdmin	기초자료 > 20. 문서(전자결재) > 문서분류지정
+1281	Pay10_Tab_MonthItem	경영관리 > 04. 급여관리 > 급여관리(항목별)
+1282	Apr30_Tab_ApprStepGroup	관리자 > 03. 문서관리 > 문서결재선 그룹관리
+1283	Emp00_Tab_RoleMenu	관리자 > 01. 화면권한관리 > 사원별 메뉴권한(View)
+1284	Sys06_Tab_MenuView	관리자 > 01. 화면권한관리 > 메뉴별 그룹권한(View)
+1285	Pay10_Tab_MonthSearch	경영관리 > 04. 급여관리 > 급여항목조회
+1286	Sys07_Tab_CompanyRoleMenu	기초자료 > 50. 권한 > 고객사별 메뉴권한 관리
+1287	Emp01_Tab_InoutState	경영관리 > 20. 대외보고서 > 기간별 입퇴사현황
+1288	Ast06_Tab_TrIPO	고유자산 > 20. 고유자산 거래처리 > 청약처리
+1289	Rpt10_Tab_FssOrg	경영관리 > 20. 대외보고서 > 업무보고서
+1290	Fnd32_Tab_Account	펀드관리 > 04. 공모주청약 > 공모주 참여계좌 관리
+1291	Apr15_Tab_CcorCert	경영관리 > 91. 법인서류 > 법인등기부등본 관리(X)
+1292	Rpt10_Tab_FssSubmit	기초자료 > 30. 자산&경영 > 금감원 업무보고서
+1293	Sch10_Tab_IpoAdmin	기초자료 > 30. 자산&경영 > 공모주 일정등록
+1294	Emp31_Tab_Director	경영관리 > 01. 조직 및 사원관리 > 임원정보 관리
+1295	Ast25_Tab_Price	고유자산 > 20. 고유자산 거래처리 > 금융상품 시세관리
+1296	Sch10_Tab_Ipo2	고유자산 > 20. 고유자산 거래처리 > 공모주일정
+1297	Sys95_Tab_Manual	커뮤니티 > 91. AssetERP > AssetERP 매뉴얼
+1298	Sys95_Tab_ManualAdmin	관리자 > 09. 기타 > AssetERP 매뉴얼 등록
+1299	Ast40_Tab_OwnerCapital	고유자산 > 10. 고유자산 등록 > 자기자본/투자한도 등록
+1300	Ast09_Tab_FinanceBookOpr	고유자산 > 30. 고유자산 현황 > 금융상품 운용내역
+1301	Sys91_Tab_AdviceMember	커뮤니티 > 91. AssetERP > AssetERP 자문위원
+1302	Sys91_Tab_AdviceMember	관리자 > 09. 기타 > AssetERP 자문의원 관리
+1303	Sys92_Tab_ManagementTeam	커뮤니티 > 91. AssetERP > AssetERP 관리팀
+1304	Sys92_Tab_ManagementTeam	관리자 > 09. 기타 > AssetERP 관리팀 등록
+1305	Sms02_Tab_TotalCount	관리자 > 01. 고객관리 > 고객별 문자사용량
+1306	Sys10_Tab_TotalSize	관리자 > 01. 고객관리 > 고객별 서버사용량
+1307	Sys05_Tab_CompanyUserRole	기초자료 > 50. 권한 > 고객사별 사용자권한그룹 관리
+1308	Sch04_Tab_DailyCheckList	스케줄 > 02. 업무일정 체크 > 데일리 체크리스트(상신)
+1309	Ics30_Tab_Compliance	준법감시 > 20. 임직원 내부통제 준수 > 내부통제 준수리스트 관리
+1310	Ics31_Tab_ComplianceWrite	준법감시 > 20. 임직원 내부통제 준수 > 내부통제 준수확인서 작성
+1311	Ics31_Tab_ComplianceConfirm	준법감시 > 20. 임직원 내부통제 준수 > 내부통제 준수점검(준감인)
+1312	Ics31_Tab_ComplianceReport	준법감시 > 20. 임직원 내부통제 준수 > 내부통제 준수보고(준감인)
+1313	Ics30_Tab_Compliance	기초자료 > 00. 내부통제 > 임직원 내부통제 준수리스트
+1314	Icam55_Tab_UserRegAppr	KFS > 04. ICAM 사용자ID 관리 > 사용자ID 신청서 작성
+1315	Icam55_Tab_UserStopAuthAppr	KFS > 04. ICAM 사용자ID 관리 > 미사용ID 권한정지 신청
+1316	Icam55_Tab_UserApprResult	KFS > 04. ICAM 사용자ID 관리 > 사용자ID 처리결과 등록
+1317	Icam55_Tab_UserStopAuth	KFS > 04. ICAM 사용자ID 관리 > 미사용ID 기록관리
+1318	Dcr01_Tab_DcrWrite	문서작성 > 01. 문서작성 > 신규 문서작성
+1319	Biz01_Tab_CardSimple	준법감시 > 40. 이익제공(수령)현황 > (s)이익제공입력(카드)
+1320	Biz01_Tab_OtherSimple	준법감시 > 40. 이익제공(수령)현황 > (s)이익제공입력(현금,물품)
+1321	Biz01_Tab_CardContentsSimple	준법감시 > 40. 이익제공(수령)현황 > (s)법인카드사용내역
+1322	Biz01_Tab_PriorApprovalSimple	준법감시 > 40. 이익제공(수령)현황 > (s)이익제공 상세현황
+1323	Icam06_Tab_FundOperateStatus	펀드관리 > 20. 운용현황 > 펀드운용현황(펀드합계)
+1324	Emp01_Tab_DueDiligence	경영관리 > 20. 대외보고서 > 인력현황
+1325	Emp01_Tab_UserInfo	관리자 > 01. 고객관리 > 사용자정보 조회
+1326	Dcr00_Tab_ApprList	문서작성 > 02. 문서검색 > 문서 다운로드
+1327	Fnd01_Tab_FundIcamHistory	펀드관리 > 02. 펀드관리 > 펀드 조회(변경이력)
+1328	Apr16_Tab_StampDocManager	경영관리 > 91. 법인서류 > 법인서류 매수관리
+1329	Apr16_Tab_StampList	경영관리 > 91. 법인서류 > 인감날인대장
+1330	Apr16_Tab_StampDocAppl	신청 > 90. 기타신청 > 법인서류 및 날인 신청
+1331	Bbs11_Tab_Application	신청 > 90. 기타신청 > 기타신청서 작성
+1332	Bbs11_Tab_ApplicationMng	경영관리 > 90. 신청서관리 > 기타신청서 확인
+1333	Biz01_Tab_CardReport	자금관리 > 30. 법인카드관리 > 법인카드 현황
+1334	Kfs01_Tab_RemoteView	커뮤니티 > 90. 기타 > 리모트뷰 사용기록관리
+1335	Biz01_Tab_EntertmExpenseReport	자금관리 > 30. 법인카드관리 > 접대비 현황
+1336	Ics01_Tab_ClassTreeUserView	준법감시 > 00. 법규정보 > 법규조회
+1337	Sch04_Tab_IcsList	준법감시 > 00. 법규정보 > 법규보고 점검
+1338	Ics17_Tab_UserRequest	준법감시 > 01. 법규관리 > 법규등록신청
+1339	Ics17_Tab_UserRequestAdmin	기초자료 > 00. 내부통제 > 법규등록신청확인
+1340	Sch04_Tab_IcsListManager	준법감시 > 01. 법규관리 > 법규보고 점검(관리자)
+1341	Fnd30_Tab_DemandOpr	펀드관리 > 04. 공모주청약 > 공모주 수요예측
+1342	Ast09_Tab_PreDepositBook	관리회계 > 21. 회계장부 > 선급금/선급비용 조회
+1343	Apr01_Tab_ExternalBiz	신청 > 90. 기타신청 > 대외활동 신청서 작성
+1344	Bbs15_Tab_CompanyRule	커뮤니티 > 01. 회사규정 > 회사규정
+1345	Bbs15_Tab_CompanyRuleManager	커뮤니티 > 01. 회사규정 > 회사규정(관리자)
+1346	Icr01_Tab_ClassTreeView	준법감시 > 00. 법규정보 > 내규조회
+1347	Icr01_Tab_ClassTree	준법감시 > 01. 법규관리 > 내규관리
+1348	Emp50_Tab_TransportExpenseMng	자금관리 > 20. 사업비관리 > 여비교통비 관리
+1349	Emp50_Tab_TransportExpense	신청 > 80. 사업비 신청 > 여비교통비 신청
+1350	Apr16_Tab_StampFileCheck	경영관리 > 91. 법인서류 > 인감날인본 업로드확인
+1351	Flt02_Tab_EmpInfo	준법감시 > 11. 임직원매매(준감인) > 임직원매매현황
+1352	Crd10_Tab_ExcelCompanyAdmin	기초자료 > 30. 자산&경영 > 법인카드 업로드 기초자료(관리자)
+1353	Sys10_Tab_TrashFileList	관리자 > 02. 시스템관리 > 미사용 파일조회
+1354	Rpt03_Tab_WeekWrite	커뮤니티 > 04. 업무보고 > 주간업무보고
+1355	Rpt04_Tab_WeekConfirm	커뮤니티 > 04. 업무보고 > 주간업무보고 확인
+1356	Sch04_Tab_DailyCheckListStatus	스케줄 > 02. 업무일정 체크 > 업무일정 체크내역
+1357	Sch01_Tab_ListOrg	스케줄 > 01. 업무일정 > 부서별 업무일정 조회
+1358	Emp54_Tab_Errand	신청 > 01. 외출/출장/휴가 > 외출등록
+1359	Emp53_Tab_BizTrip	신청 > 01. 외출/출장/휴가 > 출장품의 및 결과보고
+1360	Sys06_Tab_MenuGuide	관리자 > 02. 시스템관리 > 화면안내등록
+1361	Bmt12_Tab_EmpIct	경영관리 > 20. 대외보고서 > 임직원 정보통신수단
+1362	Bbs20_Tab_FloralRequestMng	경영관리 > 90. 신청서관리 > 화환신청 확인
+1363	Bbs20_Tab_FloralRequest	신청 > 90. 기타신청 > 화환 신청
+1364	Pay40_Tab_TaxWithholding	경영관리 > 04. 급여관리 > 갑근세확인서 발급
+1365	Ast06_Tab_TrForFinance	고유자산 > 20. 고유자산 거래처리 > 금융상품 거래처리(외화)
+1366	Ast09_Tab_FinanceForBook	고유자산 > 30. 고유자산 현황 > 금융상품 보유내역(외화)
+1367	Sms03_Tab_SendAdmin	관리자 > 01. 고객관리 > 고객별 문자발송
+1368	Act15_Tab_CloseCheck	기초자료 > 40. 관리회계 > 마감검증 체크항목
+1369	Flt00_Tab_Info	준법감시 > 10. 임직원매매 > 화면사용순서
+1370	Flt10_Tab_ViolateUser	준법감시 > 10. 임직원매매 > 위반내역조회
+1371	Flt10_Tab_AcntTransfer	준법감시 > 10. 임직원매매 > 계좌대체
+1372	Flt10_Tab_RightsExercise	준법감시 > 10. 임직원매매 > 권리행사/기타입출고
+1373	Emp55_Tab_benefitInfoManager	기초자료 > 30. 자산&경영 > 복리후생비 코드관리
+1374	Icam00_Tab_FundExpectDate	KFS > 10. ICAM 계약사관리 > 펀드예정일정보
+1375	Est01_Tab_PfFeeType	펀드관리 > 05. 부동산PF 용역수행 > 부동산PF 수수료
+1376	Est02_Tab_PfContract	펀드관리 > 05. 부동산PF 용역수행 > 용역계약체결
+1377	Est03_Tab_PfHistory	펀드관리 > 05. 부동산PF 용역수행 > 용역수행내역 등록
+1378	Est02_Tab_PfResultReport	펀드관리 > 05. 부동산PF 용역수행 > 용역결과보고서
+1379	Bbs30_Tab_ClassTree	커뮤니티 > 05. 게시판 > 게시판
+1381	Emp53_Tab_BizTripManager	경영관리 > 02. 휴가/출장 관리 > 출장관리
+1382	Est03_Tab_PfHistoryConfirm	펀드관리 > 05. 부동산PF 용역수행 > 용역수행내역 승인
+1383	Pay50_Tab_ExpenseRequest	신청 > 80. 사업비 신청 > 사업비 지출요청
+1384	Pay50_Tab_ExpenseConfirm	신청 > 80. 사업비 신청 > 사업비 지출승인(부서장)
+1385	Pay50_Tab_ExpenseManager	자금관리 > 20. 사업비관리 > 지출결의서(경영관리)
+1386	Pay50_Tab_ExpensePayWrite	자금관리 > 20. 사업비관리 > 자금집행결의서
+1387	Pay50_Tab_ExpenseJournal	자금관리 > 20. 사업비관리 > 사업비 회계처리
+1388	Adv02_Tab_Account	펀드관리 > 03. 일임(자문)관리 > 일임계좌 등록
+1389	Adv05_Tab_OrgAuth	펀드관리 > 03. 일임(자문)관리 > 일임계좌 권한설정
+1390	Pay50_Tab_ExpenseSettle	자금관리 > 20. 사업비관리 > 미지급반제처리
+1391	Emp41_Tab_EvalList	경영관리 > 05. 인사평가 > 인사평가 항목
+1392	Emp43_Tab_EvalTarget	경영관리 > 05. 인사평가 > 인사평가 대상자
+1393	Emp43_Tab_EvalExecute	경영관리 > 05. 인사평가 > 인사평가수행(평가자)
+1394	Emp43_Tab_FirstAppr	경영관리 > 05. 인사평가 > 인사평가결과(인사부)
+1395	Emp43_Tab_FinalAppr	경영관리 > 05. 인사평가 > 인사평가보고(대표이사)
+1396	Emp43_Tab_EvalResult	경영관리 > 05. 인사평가 > 인사평가 결과조회
+1397	Ast13_Tab_OfficeAssets	고유자산 > 30. 고유자산 현황 > 비품관리대장
+1398	Emp41_Tab_EvalList	기초자료 > 30. 자산&경영 > 인사평가 항목(Admin)
+1399	Pay50_Tab_AccountSumList	자금관리 > 20. 사업비관리 > 사업비발생현황
+1400	Pay50_Tab_ExpensePay	자금관리 > 20. 사업비관리 > 자금집행결의서 조회
+1401	Ast30_Tab_FundMngFee	관리회계 > 30. 펀드운용보수관리 > 펀드보수현황
+1402	Biz51_Tab_ErpContCorp	KFS > 11. ERP 계약사관리 > AssetERP 계약사관리
+1403	Biz55_Tab_ErpFeeCharge	KFS > 11. ERP 계약사관리 > AssetERP 사용료청구
+1404	Sys86_Tab_Websocket	관리자 > 01. 고객관리 > 로그아웃 알림 관리
+1405	Mkt01_Tab_TargetCompany	커뮤니티 > 03. 업무활동 > 업무활동등록
+1406	Biz01_Tab_CardUserAllocation	자금관리 > 30. 법인카드관리 > 법인카드 실사용자 배분
+1407	Pay50_Tab_Expense	신청 > 80. 사업비 신청 > 지출결의서
+1408	Mkt03_Tab_HistoryManager	커뮤니티 > 03. 업무활동 > 업무활동등록(관리자)
+1409	Sys53_Tab_SpecificMenuRequest	관리자 > 01. 화면권한관리 > 특정화면 사용요청
+1410	Sys53_Tab_SpecificMenuRequestAdmin	관리자 > 01. 고객관리 > 고객별 특정화면 관리
+1411	Tdm01_Tab_Hr	책무 > 01. 기본정보 > 임원 등록
+1412	Tdm10_Tab_Task	책무 > 01. 기본정보 > 책무 등록
+1413	Tdm13_Tab_TaskDuty	책무 > 01. 기본정보 > 관리의무 등록
+1414	Tdm20_Tab_Role	책무 > 01. 기본정보 > 직책별 책무 등록
+1415	Tdm05_Tab_Cncl	책무 > 01. 기본정보 > 회의체 등록
+1417	Tdm30_Tab_RoleAllc	책무 > 02. 책무구조도 > 임원별 직책배정
+1418	Tdm31_Tab_RoleDesc	책무 > 02. 책무구조도 > 임원별 책무기술서
+1419	Tdm32_Tab_RoleDigm	책무 > 02. 책무구조도 > 책무체계도
+1420	Tdm40_Tab_ManlJob	책무 > 03. 부서책무매뉴얼 > 매뉴얼 작업대상 선정
+1421	Tdm41_Tab_ManlDutyOrg	책무 > 03. 부서책무매뉴얼 > 매뉴얼 부서지정
+1422	Tdm43_Tab_ManlItemReg	책무 > 03. 부서책무매뉴얼 > 매뉴얼(점검항목) 작성
+1423	Tdm42_Tab_ManlOrgAppr	책무 > 03. 부서책무매뉴얼 > 매뉴얼 보고(부서별)
+1424	Tdm42_Tab_ManlManager	책무 > 03. 부서책무매뉴얼 > 매뉴얼 관리(관리자)
+1425	Ics40_Tab_DcrPreConfirm	준법감시 > 90. 기타 > 준감인 사전확인대장
+1426	Fnd11_Tab_BookExtr	펀드관리 > 02. 펀드관리 > 펀드보유주식등록(타사무)
+1427	Adv11_Tab_BookExtr	펀드관리 > 03. 일임(자문)관리 > 일임보유주식등록(타사무)
+1428	Apr01_Tab_MyAuthList	문서작성 > 04. 전자결재 > 공람내역 조회
+1429	Sys96_Tab_OpenMenuLogAdmin	관리자 > 01. 고객관리 > 고객별 매뉴사용기록
+1431	Ics35_Tab_ExtrActivity	준법감시 > 12. 대외활동 > 대외활동신청
+1432	Ics35_Tab_ExtrActivityList	준법감시 > 12. 대외활동 > 대외활동 신청내역
+1433	Icam02_Tab_CashFlow	I/F > 10. ICAM > ICAM 현금흐름
+1434	Sys15_Tab_Corp	기초자료 > 90. 기타 > 기관정보
+1435	Test01_Tab_AddrBook	테스트매뉴 > 01. 주소록 > 주소록관리
+1436	Test02_Tab_AddrBookDetail	테스트매뉴 > 01. 주소록 > 상세 주소록관리
+1437	Imt02_Tab_PcManagement	테스트매뉴 > 01. 주소록 > PC관리(대장)
+1438	Imt20_Tab_PcHistory	테스트매뉴 > 01. 주소록 > PC관리(대장) 서브
+1439	Emp30_Tab_ApprStepExcept	문서작성 > 04. 전자결재 > 결재선 예외처리
+1440	Sch04_Tab_List	스케줄 > 01. 업무일정 > (X)기간별 스케줄 조회
+1441	Sch20_Tab_AddChecklist	스케줄 > (X)02. 체크리스트 > (X)체크리스트 생성
+1442	Sys27_Tab_LoginManage	관리자 > 02. 시스템관리 > 로그인 Mac 주소 관리
+1443	Apr90_Tab_DisposalList	문서작성 > 01. 문서작성 > 폐기문서 신청현황
+1444	Ics01_Tab_ClassTreeByGroup	준법감시 > 01. 법규관리 > 관리그룹별 법규조회(????)
+1445	Ifi90_Tab_Config	I/F > 01. I/F 관리 > I/F 설정
+1446	Ifi91_Tab_ApiConfig	I/F > 02. OpenAPI > API 관리
+1447	Ifi92_Tab_ApiLayout	I/F > 02. OpenAPI > API 레이아웃
+1448	Ifi01_Tab_ApiCompany	I/F > 02. OpenAPI > 고객사Key 등록
+1449	Ifi95_Tab_FileConfig	I/F > 01. I/F 관리 > 파일송수신관리
+1450	Ifi96_Tab_FileLayout	I/F > 01. I/F 관리 > 파일레이아웃
+1451	Org01_Tab_OrgCode	기본정보 > 기본정보 > 조직정보 등록
+1452	Emp00_Tab_TransInfo	기본정보 > 기본정보 > 사원정보 등록
+1453	Apr01_Tab_OfficeWorkCert	신청 > 90. 기타신청 > 사무수탁사 확인서 작성
+1454	Tdm08_Tab_Manager	책무 > 01. 기본정보 > 책무담당자 등록
+1455	Tdm50_Tab_CheckJob	책무 > 04. 책무이행점검 > 이행점검 작업지시 및 보고
+1456	Tdm51_Tab_CheckOrg	책무 > 04. 책무이행점검 > 업무점검자 지정 및 승인요청
+1457	Tdm52_Tab_CheckManl	책무 > 04. 책무이행점검 > 책무이행점검
+1458	Tdm59_Tab_CheckAppr	책무 > 04. 책무이행점검 > 책무이행점검 승인
+1459	Tdm54_Tab_CheckInsuff	책무 > 04. 책무이행점검 > 미흡내역 조치
+1460	Tdm57_Tab_CeoReport	책무 > 04. 책무이행점검 > 대표이행점검 보고
+1463	Tdm09_Tab_ApprStep	책무 > 01. 기본정보 > 직책별 부서승인선 등록
+1464	Flt10_Tab_CeoReport	준법감시 > 11. 임직원매매(준감인) > 책임자보고
+1465	Emp54_Tab_ErrandManager	경영관리 > 02. 휴가/출장 관리 > 외출관리
+1466	Tdm00_Tab_ChangeList	책무 > 90. 책무관리현황 > 조치대상조회(변화관리)
+1467	Tdm35_Tab_TaskList	책무 > 90. 책무관리현황 > 책무조회
+1468	Tdm43_Tab_ManlItemList	책무 > 90. 책무관리현황 > 매뉴얼 규정/양식 연결
+1469	Tdm91_Tab_CompanySetup	책무 > 90. 책무관리현황 > 책무관리 시스템설정
+1470	Act02_Tab_DepositIoList	고유자산 > 40. 예금관리 > 일일자금관리
+1471	Ast09_Tab_DepositBookPeriod	고유자산 > 40. 예금관리 > 예금잔고조회
+1472	Ast06_Tab_TrDepositInt	고유자산 > 40. 예금관리 > 예금/예치금 이자수령
+1473	Ast09_Tab_DepositBook	고유자산 > 40. 예금관리 > 예금잔고대사
+1474	Emp00_Tab_ChangeHistory	경영관리 > 01. 조직 및 사원관리 > 사원정보 변경조회
+1475	Icam06_Tab_FundPrice	펀드관리 > 20. 운용현황 > 펀드별 기준가 현황
+1476	Bbs15_Tab_CompanyRule	준법감시 > 02. 회사규정 > 회사규정
+1477	Bbs15_Tab_CompanyRuleManager	준법감시 > 02. 회사규정 > 회사규정(관리자)
+1478	Crd01_Tab_Card	경영관리 > 92. 법인카드 등록 > 법인카드 및 사용자등록
+1479	Crd02_Tab_DataUpload	경영관리 > 92. 법인카드 등록 > 법인카드 내역 업로드
+1480	Tdm36_Tab_RoleReport	책무 > 02. 책무구조도 > 책무구조도 제출
+1481	Tdm43_Tab_RelateFormFileUpload	책무 > 90. 책무관리현황 > 이행점검 연관양식 등록
+1482	Dcr05_Tab_DocType	기초자료 > 20. 문서(전자결재) > 문서양식등록
+1483	Bbs15_Tab_CompanyRuleManager	기초자료 > 10. 책무 > 회사규정관리
+1484	Apr16_Tab_StampListOrg	경영관리 > 91. 법인서류 > 부서 인감날인대장
+1485	Att02_Tab_CommuteAdmin	경영관리 > 06. 근태관리 > 근태관리(관리자)
+1486	Att03_Tab_OvertimeReq	경영관리 > 06. 근태관리 > 연장근무관리
+1487	Att02_Tab_CommuteStatus	경영관리 > 06. 근태관리 > 근태현황(관리자)
+1488	Flt03_Tab_AccountAdmin	준법감시 > 11. 임직원매매(준감인) > 계좌신고현황
+1489	Pay34_Tab_WorkTimeConfig	기초자료 > 30. 자산&경영 > 근로시간기준관리
+1490	Apr90_Tab_DisposalAppr	문서작성 > 02. 문서검색 > 폐기문서 승인
+1491	Dcr04_Tab_EmpAuth	관리자 > 02. 문서권한관리 > 조회권한 예외사원 등록
+1492	Att02_Tab_PersonStatus	경영관리 > 06. 근태관리 > 근태현황
+1493	Tdm31_Tab_RoleDescAdmin	기초자료 > 10. 책무 > 책무기술서 재생성
+1494	Icam10_Tab_CurrentFeeByFund	관리회계 > 30. 펀드운용보수관리 > 월별 펀드보수현황
+1495	Tdm50_Tab_TotalDashboard	책무 > 00. 대시보드 > 책무점검 현황
+1496	Tdm50_Tab_DutyProgress	책무 > 00. 대시보드 > 책무진행 상태
+1497	Tdm50_Tab_DutyRecon	책무 > 00. 대시보드 > 책무마감 검증
+1498	Tdm32_Tab_RoleDigmAdmin	기초자료 > 10. 책무 > 책무체계도 재생성
+1499	Ics40_Tab_DcrReviewConfirm	준법감시 > 90. 기타 > 심사필 확인대장
+1500	Sys60_Tab_FilePolicy	관리자 > 09. 기타 > 파일보안정책
+1501	Emp60_Tab_Sign	문서작성 > 04. 전자결재 > 결재서명관리
+1502	Tdm42_Tab_ManlManagerAdmin	기초자료 > 10. 책무 > 책무매뉴얼 재생성
+1503	Fnd25_Tab_FundTermsManager	펀드관리 > 02. 펀드관리 > 펀드규약 등록
+1504	Fnd25_Tab_FundTerms	펀드관리 > 02. 펀드관리 > 펀드규약
+1505	Biz60_Tab_FundPriceModiReport	KFS > 20. 기타 > 기준가 정정내역 보고
+1506	Apr15_Tab_ReprCorp	문서작성 > 04. 전자결재 > 추가 대표명의 등록
+1507	Apr17_Tab_CorpDoc	경영관리 > 91. 법인서류 > 구)법인서류 매수관리
+1508	Apr19_Tab_StampList	경영관리 > 91. 법인서류 > 구)인감날인대장
+1509	Apr19_Tab_StampFileCheck	경영관리 > 91. 법인서류 > 구)인감날인본 업로드확인
+1510	Apr17_Tab_CorpDocApp	신청 > 90. 기타신청 > 구)법인서류 및 날인 신청
+1511	Tdm50_Tab_DutyProgressAdmin	기초자료 > 10. 책무 > 책무진행 상태
+1512	Tdm50_Tab_DutyReconAdmin	기초자료 > 10. 책무 > 책무마감 검증

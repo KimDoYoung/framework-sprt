@@ -84,17 +84,17 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
   const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+    <div style={{ height: '100%', padding: 1, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize={treeWidth} min={200} max={1000}>
-          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
-            <div style={{ minHeight: 50, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 8px', padding: '4px 8px', flex: 'none' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ minHeight: 50, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 4px', padding: '4px 4px', flex: 'none' }}>
               {/* <Typography.Text strong style={{ flex: 'none' }}>문서분류</Typography.Text> */}
               <Input style={{ width: 150, flex: 'none' }} allowClear value={docSearch} onChange={e => setDocSearch(e.target.value)} onPressEnter={search} />
               <Button type="search" onClick={search}>찾기</Button>
               <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff', marginTop: 8 }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: view === 'list' ? 'hidden' : 'auto', background: '#fff' }}>
               {/* [E4] tree.Selection (L108) → docList.retrieve(classTreeModel, managerYn) */}
               {view === 'list' ? (
                 <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
@@ -118,7 +118,7 @@ export const DcrManagerView: React.FC<Props> = ({ loadTree, admin = false, showI
           </div>
         </Splitter.Panel>
         <Splitter.Panel>
-          <div style={{ height: '100%', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box' }}>
             <Apr01_Grid_DocList node={selected} admin={admin} showInsert={showInsert} padded={padded} />
           </div>
         </Splitter.Panel>
