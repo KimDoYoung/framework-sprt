@@ -90,6 +90,7 @@
                    END
                )                                                                               AS status_name_bold
              , apr01_note                                                                      AS note
+             , apr01_status_cd                                                                 AS status_code
           FROM apr01_appr
                INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
          WHERE 1=1

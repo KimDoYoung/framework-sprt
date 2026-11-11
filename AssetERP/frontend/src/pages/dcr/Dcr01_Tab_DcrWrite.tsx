@@ -24,6 +24,7 @@ import { SearchBar } from '@/components/search';
 import { Dcr08_Lookup_SelectSingle } from './Dcr08_Lookup_SelectSingle';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Apr50_Lookup_ApprList } from '../apr/Apr50_Lookup_ApprList';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from './Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprDcrWrite>();
 const LIMIT = 100;  // gridToolBar.setToolBar(100)
@@ -64,6 +65,7 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [oftenOpen, setOftenOpen] = useState(false);
   const [bookmarkOpen, setBookmarkOpen] = useState(false);   // Apr50_Lookup_ApprList
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);   // Dcr10_Lookup_MailSender
   const gridRef = useRef<AgGridReact<AprDcrWrite>>(null);
   /** gridToolBar.addParam(…) — 페이지를 넘길 때는 마지막 조회 조건을 쓴다(GridPagingLoader) */
   const paramRef = useRef<{ startDate: string; closeDate: string; searchText: string; receiveName: string; classTreeId: number | null } | undefined>(undefined);
@@ -241,7 +243,13 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   // [E1] bookmarkAnchor.MouseDown (L125-131) → Apr50_Lookup_ApprList.open()
   const openBookmark = () => setBookmarkOpen(true);
 
-  // buildGrid() L538-575
+  // sendMail() (원본 2026-11-02 L586-594): 완료(30)가 아니면 "완료되지 않은 문서입니다", 아니면 Dcr10_Lookup_MailSender.open(apprId)
+  const sendMail = (row: AprDcrWrite) => {
+    if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
+    else setMailTarget({ mode: 'open', apprId: row.apprId });
+  };
+
+  // buildGrid() L538-583
   const columnDefs = useMemo(() => [
     gb.bookmarkYn('bookmarkYn', 30, ' '),  // L562
     gb.date('regDate', 90, '등록일'),  // L563
@@ -254,14 +262,16 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
     gb.textHtml('statusNameBold', 80, '상태'),  // L570
     // L571 actionCell(View): 폐기 문서는 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false) 뒤 retrieveOne()
     // 닫힌 뒤 목록을 다시 읽는다(onClosed → retrieve). retrieveOne(selectByApprId2, 그 한 줄만 새로고침)은 목록 전체 조회로 대신한다
-    iconCell<AprDcrWrite>('view', 'actionCell', 80, '상세보기', row => {
+    iconCell<AprDcrWrite>('view', 'actionCell', 80, '보기', row => {  // 원본 2026-11-02 "상세보기" → "보기"
       if ((row.title ?? '').indexOf('style=color:#E33E31;>[폐기]') !== -1) {
         message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       } else {
         setViewApprId(row.apprId);
       }
     }),
-    gb.text('note', 300, '비고'),  // L572
+    // 원본 2026-11-02 sendMailCell(Send) 50 "메일" → sendMail() (폐기 검사 없음)
+    iconCell<AprDcrWrite>('send', 'sendMailCell', 50, '메일', row => sendMail(row)),
+    gb.text('note', 300, '비고'),  // L580
   ], []);
 
   return (
@@ -325,6 +335,8 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
       </div>
 
       <Apr50_Lookup_ApprList open={bookmarkOpen} onClose={() => setBookmarkOpen(false)} />
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
       <Apr01_Edit_ApprDoc
         apprId={viewApprId}
         newClassTreeId={newClassTreeId}

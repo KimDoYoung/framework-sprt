@@ -805,7 +805,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm50_Tab_TotalDashboard, // N01 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘 → Tdm52_Edit_ChckManl·Tdm54_Lookup_ChckInsuffCmnt)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기, 알림발송 → Sms03_Lookup_SendList, 보고서 PDF는 서버 CheckExctPdfMaker)
   Tdm51_Tab_CheckOrg, // N21 (+ Tdm51_TabPage_CheckOrg·Tdm58_Lookup_ChckApprStep·Emp00_Lookup_SelectSingleTdm, 점검항목 [상세]의 Tdm52_Edit_ChckManl은 N22에서)
-  Tdm52_Tab_CheckManl, // N22 (+ Tdm52_TabPage_CheckManl·Tdm52_Edit_ChckManl·Tdm52_Edit_ChckManlBatch·Tdm54_Edit_ChckInsuff·Tdm00_Lookup_RelateAppr — tdm52 [불러오기]는 보류)
+  Tdm52_Tab_CheckManl, // N22 (+ Tdm52_TabPage_CheckManl·Tdm52_Edit_ChckManl·Tdm52_Edit_ChckManlBatch·Tdm54_Edit_ChckInsuff·Tdm00_Lookup_RelateAppr)
   Tdm59_Tab_CheckAppr, // N23 (+ Tdm59_TabPage_CheckAppr·Tdm59_Edit_Cmnt·Tdm59_Edit_ReportCmnt·Tdm52_Edit_ChckManlCmnt·Tdm54_Lookup_ChckInsuffCmnt·Tdm55_Lookup_ChckRecord2·Tdm00_Lookup_RelateAppr)
   Tdm00_Tab_ChangeList, // N25
   Tdm35_Tab_TaskList, // N26

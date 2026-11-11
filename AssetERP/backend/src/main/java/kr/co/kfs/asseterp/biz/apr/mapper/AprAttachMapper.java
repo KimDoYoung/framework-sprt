@@ -37,6 +37,12 @@ public interface AprAttachMapper {
     /** AS-IS dcr00_doc_list.selectByText (admin == 'false', statusCheckYn == 'false', keyTable 없음) */
     List<AprLoadDoc2Row> selectLoadDocs(@Param("c") AprLoadDoc2Cond cond);
 
+    /** AS-IS dcr00_doc_list.selectNoAuthByText (원본 2026-10-28) — 이행점검(tdm52) 증빙 불러오기: 권한과 상관없이 회사 문서 전체, 열람권한은 f_get_apprDcrAuth */
+    List<AprLoadDoc2Row> selectNoAuthLoadDocs(@Param("c") AprLoadDoc2Cond cond, @Param("keyTableId") Long keyTableId, @Param("tdmRelateDcrYn") boolean tdmRelateDcrYn);
+
+    /** AS-IS LoginUser.getCompanyModel().getTdmEvidOnlyRelateDcrYn() — sys01_tdm_evid_only_relate_dcr_yn */
+    boolean selectTdmEvidOnlyRelateDcrYn(@Param("companyId") Long companyId);
+
     /** AS-IS dcr05_doc_type.selectByClassTreeId */
     List<AprDocFormRow> selectDocFormsByClassTree(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("titleName") String titleName, @Param("formClassCode") String formClassCode);
 

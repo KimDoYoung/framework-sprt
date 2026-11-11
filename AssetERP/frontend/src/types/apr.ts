@@ -45,6 +45,8 @@ export interface AprDcrWrite {
   /** `<b style=color:…;>상태</b>` */
   statusNameBold?: string | null;
   note?: string | null;
+  /** apr01_status_cd — [메일]은 결재완료(30)만 (원본 2026-11-02) */
+  statusCode?: string | null;
 }
 
 export interface AprDcrWriteParams {

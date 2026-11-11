@@ -972,10 +972,18 @@ export const aprRelateEditApi = {
 
 /** 상신 편집창의 [불러오기]·[양식]과 첨부파일 옵션설정·추가/삭제 (AS-IS client/vi/apr/Apr05_Lookup_LoadDoc2 · dcr/Dcr05_Lookup_FormView · apr/Apr01_Lookup_ApprFileList · sys/Sys61_Lookup_FileList·DelList, V05) */
 export const aprAttachApi = {
-  /** AS-IS dcr.Dcr00_DocList.selectByText */
-  loadDocs: async (params: { classTreeId?: number | null; startDate: string; endDate: string; searchText: string }): Promise<AprLoadDoc2[]> => {
-    const res = await apiClient.get<ApiResponse<AprLoadDoc2[]>>('v1/apr/doc-picks', { params: { ...params, classTreeId: params.classTreeId ?? undefined } });
+  /** AS-IS dcr.Dcr00_DocList.selectByText / keyTable 'tdm52'면 selectNoAuthByText(이행점검 증빙) */
+  loadDocs: async (params: { classTreeId?: number | null; startDate: string; endDate: string; searchText: string;
+                             keyTable?: string; keyTableId?: number | null; tdmRelateDcrYn?: boolean }): Promise<AprLoadDoc2[]> => {
+    const res = await apiClient.get<ApiResponse<AprLoadDoc2[]>>('v1/apr/doc-picks', {
+      params: { ...params, classTreeId: params.classTreeId ?? undefined, keyTableId: params.keyTableId ?? undefined },
+    });
     return res.data.data ?? [];
+  },
+  /** 회사 설정 "책무증빙자료 불러오기 연결문서만" — tdm52 불러오기의 [연결된 문서분류만 조회]를 켜고 잠근다 */
+  tdmEvidOnlyRelateDcrYn: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/apr/doc-picks/tdm-evid-only-relate-dcr-yn');
+    return !!res.data.data;
   },
 
   /** AS-IS dcr.Dcr05_DocType.selectByClassTreeId (all=false) / selectByName (all=true) */

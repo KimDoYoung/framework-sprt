@@ -5,7 +5,7 @@
  *   체크박스 다중, 제목 370 · 등록일 90 · 시행일 90 · 등록자 80 · 상신상태 80 · 상세보기 70) + 아래 200 = Com01_Grid_RelateFile, 창 아래 가운데 [닫기]
  * open(keyTable, keyTableId, callback) L97-114: 파일 칸도 올리기·지우기 가능 / view(…) L116-128: [불러오기]·[신규문서 작성]·[연결제거]를 숨기고 파일 칸은 보기만(setDisable L348-352)
  * [신규문서 작성]은 erpProductCode 가 S1인 회사에는 없다(생성자 L78). 불러오기(Apr05_Lookup_LoadDoc2 "MULTI", 결재완료 문서만)는 keyTable 이 tdm52이면 다른 목록을 쓴다
- *   — tdm52 [불러오기]는 보류(2026-11-05): 그 목록 SQL(dcr.Dcr00_DocList.selectNoAuthByText)이 쓰는 DB 함수 f_get_apprDcrAuth가 asseterpdb에 없다. 누르면 안내만
+ *   — tdm52 [불러오기]는 dcr.Dcr00_DocList.selectNoAuthByText(권한 무관 목록 + 열람권한, [연결된 문서분류만 조회]) — 2026-11-11 연결(DB 복원으로 f_get_apprDcrAuth 생김)
  * 서버: com.Com01_RelateAppr.selectByKeyTableId·listUpdate·delete, apr.Apr01_Appr.permissionsCheck
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
@@ -163,11 +163,8 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
           <Space>
             {/* [E1] retrieveButton[조회].Select (L131) → retrieve() */}
             <Button type="search" onClick={retrieve}>조회</Button>
-            {!readOnly && <Button type="register" onClick={() => {
-              // selectAppr() L231-242: tdm52는 Apr05_Lookup_LoadDoc2("MULTI", keyTable, keyTableId, true) — 보류(머리 주석)
-              if (keyTable === 'tdm52') { message.info('이행점검 증빙의 문서 불러오기는 아직 연결되지 않았습니다 (DB 함수 f_get_apprDcrAuth 없음)'); return; }
-              setLoadOpen(true);
-            }}>불러오기</Button>}
+            {/* selectAppr() L230-257: tdm52는 Apr05_Lookup_LoadDoc2("MULTI", keyTable, keyTableId, true), 아니면 ("MULTI", true) */}
+            {!readOnly && <Button type="register" onClick={() => setLoadOpen(true)}>불러오기</Button>}
             {!readOnly && apprButton && <Button type="register" onClick={() => setClassOpen(true)}>신규문서 작성</Button>}
             {!readOnly && <Button type="delete" onClick={removeCheck}>연결제거</Button>}
           </Space>
@@ -180,7 +177,8 @@ export const Com01_Lookup_RelateAppr: React.FC<Props> = ({ open, mode = 'open', 
           {extra && <div style={{ height: 200 }}>{extra}</div>}
         </div>
       </LookupModal>
-      <Apr05_Lookup_LoadDoc2 open={loadOpen} multi aprStatusYn onSelectedList={onLoadDocs} onClose={() => setLoadOpen(false)} />
+      <Apr05_Lookup_LoadDoc2 open={loadOpen} multi aprStatusYn keyTable={keyTable === 'tdm52' ? keyTable : undefined} keyTableId={keyTable === 'tdm52' ? keyTableId : undefined}
+        onSelectedList={onLoadDocs} onClose={() => setLoadOpen(false)} />
       <Dcr01_Lookup_Class open={classOpen} classTreeId={null} onResult={onClassResult} onClose={() => setClassOpen(false)} />
       <Apr01_Edit_ApprDoc
         apprId={viewApprId}

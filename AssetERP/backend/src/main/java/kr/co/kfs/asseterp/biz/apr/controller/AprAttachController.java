@@ -33,13 +33,22 @@ public class AprAttachController {
 
     private final AprAttachService service;
 
-    /** AS-IS dcr.Dcr00_DocList.selectByText */
+    /** AS-IS dcr.Dcr00_DocList.selectByText / keyTable=tdm52면 selectNoAuthByText */
     @GetMapping("/doc-picks")
     public ApiResponse<List<AprLoadDoc2Row>> loadDocs(@AuthenticationPrincipal UserPrincipal principal, @RequestParam(required = false) Long classTreeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(service.loadDocs(principal, classTreeId, startDate, endDate, searchText));
+            @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) String keyTable,
+            @RequestParam(required = false) Long keyTableId,
+            @RequestParam(defaultValue = "false") boolean tdmRelateDcrYn) {
+        return ApiResponse.ok(service.loadDocs(principal, classTreeId, startDate, endDate, searchText, keyTable, keyTableId, tdmRelateDcrYn));
+    }
+
+    /** 회사 설정 "책무증빙자료 불러오기 연결문서만"(AS-IS CompanyModel.tdmEvidOnlyRelateDcrYn) */
+    @GetMapping("/doc-picks/tdm-evid-only-relate-dcr-yn")
+    public ApiResponse<Boolean> tdmEvidOnlyRelateDcrYn(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.tdmEvidOnlyRelateDcrYn(principal));
     }
 
     /** AS-IS dcr.Dcr05_DocType.selectByClassTreeId / selectByName(all=true) */

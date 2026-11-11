@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm00_Lookup_RelateAppr.java (247줄) extends Com01_Lookup_RelateAppr — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L50-73: 크기 1000×700, 부모의 증빙자료 창(Com01_Lookup_RelateAppr) 아래 200 높이로 "※ 외부보관 증빙자료" 툴바([조회][등록][저장][삭제]) + 체크 셀 편집 그리드를 더한다
  * view(…)는 setDisable() L141-148: 외부보관 증빙자료의 버튼 4개를 숨긴다. retrieve() L150-154: 부모 조회 뒤 retrieveExtrEvid()
- * keyTable "tdm52"(Tdm52_Edit_ChckManl·ChckManlBatch·ChckManlCmnt)도 2026-11-05 연결. 단 tdm52의 [불러오기]는 목록이 달라(Com01 selectAppr L230-243) 보류 — Com01 머리 참고
+ * keyTable "tdm52"(Tdm52_Edit_ChckManl·ChckManlBatch·ChckManlCmnt)도 2026-11-05 연결. tdm52의 [불러오기]는 목록이 다르다(Com01 selectAppr L230-257, 2026-11-11 연결) — Com01 머리 참고
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';

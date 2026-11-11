@@ -37,6 +37,7 @@ class AprAttachDbTest {
     @Autowired AprAttachService service;
     @Autowired AprApprWriteService write;
     @Autowired JdbcTemplate jdbc;
+    @Autowired org.apache.ibatis.session.SqlSession sqlSession;
 
     private static final long ME = 29035L;
     /** 결재완료(30) 문서, 상신자 29035 */
@@ -64,16 +65,39 @@ class AprAttachDbTest {
 
     @Test
     void 불러오기_목록은_내가_볼_수_있는_문서를_기간과_검색어로_가른다() {
-        List<AprLoadDoc2Row> rows = service.loadDocs(user(29049L), null, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), "");
+        List<AprLoadDoc2Row> rows = service.loadDocs(user(29049L), null, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), "", null, null, false);
         assertThat(rows).isNotEmpty();
         assertThat(rows.get(0).authYn()).isTrue();
         assertThat(rows.get(0).fundDisplayName()).isNotBlank();
         String title = rows.get(0).title();
-        assertThat(service.loadDocs(user(29049L), null, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), title).stream().map(AprLoadDoc2Row::title)).contains(title);
-        assertThatThrownBy(() -> service.loadDocs(user(29049L), null, null, LocalDate.now(), "")).hasMessageContaining("조회기간 시작일을 선택하세요");
+        assertThat(service.loadDocs(user(29049L), null, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), title, null, null, false).stream().map(AprLoadDoc2Row::title)).contains(title);
+        assertThatThrownBy(() -> service.loadDocs(user(29049L), null, null, LocalDate.now(), "", null, null, false)).hasMessageContaining("조회기간 시작일을 선택하세요");
         // 문서분류를 주면 그 아래 분류 문서만
         long classTree = rows.get(0).apprId() == null ? 0 : jdbc.queryForObject("select apr01_class_tree_id from apr01_appr where apr01_appr_id = ?", Long.class, rows.get(0).apprId());
-        assertThat(service.loadDocs(user(29049L), classTree, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), "")).isNotEmpty();
+        assertThat(service.loadDocs(user(29049L), classTree, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31), "", null, null, false)).isNotEmpty();
+    }
+
+    @Test
+    void tdm52_불러오기는_권한과_상관없이_고르고_이미_연결한_문서는_뺀다() {
+        long chck = 202511279199633L;   // 이 점검항목에 2025-11-26 문서 7건이 연결돼 있다
+        LocalDate from = LocalDate.of(2025, 11, 1), to = LocalDate.of(2025, 11, 30);
+        jdbc.update("update sys01_company set sys01_tdm_evid_only_relate_dcr_yn = 'false' where sys01_company_id = 28000");
+        List<AprLoadDoc2Row> all = service.loadDocs(user(29049L), null, from, to, "", "tdm52", null, false);
+        List<AprLoadDoc2Row> other = service.loadDocs(user(29049L), null, from, to, "", "tdm52", chck, false);
+        assertThat(all).isNotEmpty();
+        assertThat(all.size() - other.size()).isEqualTo(7);
+        // 열람권한이 없으면 본문을 내려보내지 않는다
+        assertThat(all).filteredOn(r -> !r.authYn()).allMatch(r -> r.content() == null);
+        // [연결된 문서분류만 조회]: 그 점검항목의 매뉴얼에 연결된 문서분류만 — 회사 설정이 켜져 있으면 늘
+        long relChck = 202511279199943L;
+        List<AprLoadDoc2Row> rel = service.loadDocs(user(29049L), null, LocalDate.of(2020, 1, 1), LocalDate.of(2026, 12, 31), "", "tdm52", relChck, true);
+        List<Long> allowed = jdbc.queryForList("select tdm47_dcr_class_tree_id from tdm47_manl_relate_dcr join tdm43_manl on tdm43_manl_id = tdm47_manl_id"
+                + " join tdm52_chck_manl on tdm52_manl_id = tdm43_manl_id where tdm52_chck_manl_id = ?", Long.class, relChck);
+        assertThat(rel).isNotEmpty().allMatch(r -> allowed.contains(jdbc.queryForObject("select apr01_class_tree_id from apr01_appr where apr01_appr_id = ?", Long.class, r.apprId())));
+        jdbc.update("update sys01_company set sys01_tdm_evid_only_relate_dcr_yn = 'true' where sys01_company_id = 28000");
+        sqlSession.clearCache();   // 같은 트랜잭션의 앞 조회 결과(1차 캐시)를 비운다
+        assertThat(service.tdmEvidOnlyRelateDcrYn(user(29049L))).isTrue();
+        assertThat(service.loadDocs(user(29049L), null, LocalDate.of(2020, 1, 1), LocalDate.of(2026, 12, 31), "", "tdm52", relChck, false)).hasSize(rel.size());
     }
 
     @Test

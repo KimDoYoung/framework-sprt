@@ -32,8 +32,13 @@ public class AprAttachService {
     private final AprApprNewMapper newMapper;
     private final AprApprDetailService detailService;
 
-    /** AS-IS dcr.Dcr00_DocList.selectByText — 내가 볼 수 있는 문서만(admin == 'false' 가지) */
-    public List<AprLoadDoc2Row> loadDocs(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
+    /**
+     * AS-IS Apr05_Lookup_LoadDoc2.retrieve L351-393 — keyTable "tdm52"(이행점검 증빙)이면 dcr.Dcr00_DocList.selectNoAuthByText, 아니면 selectByText
+     * (내가 볼 수 있는 문서만, admin == 'false' 가지). 회사 설정 "책무증빙자료 불러오기 연결문서만"이면 tdmRelateDcrYn을 늘 켠다(원본은 체크를 잠금).
+     * 보안 보강: 열람권한이 없는 문서는 본문을 내려보내지 않는다(원본은 내려보내고 화면에서만 가린다).
+     */
+    public List<AprLoadDoc2Row> loadDocs(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText,
+                                         String keyTable, Long keyTableId, boolean tdmRelateDcrYn) {
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "조회기간 시작일을 선택하세요");
         }
@@ -41,8 +46,21 @@ public class AprAttachService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "조회기간 종료일을 선택하세요");
         }
         Long orgId = newMapper.selectOrgCodeId(user.getUserId());
-        return mapper.selectLoadDocs(new AprLoadDoc2Cond(user.getCompanyId(), orgId, user.getUserId(), classTreeId, startDate, endDate,
-                "%" + (searchText == null ? "" : searchText) + "%"));
+        AprLoadDoc2Cond cond = new AprLoadDoc2Cond(user.getCompanyId(), orgId, user.getUserId(), classTreeId, startDate, endDate,
+                "%" + (searchText == null ? "" : searchText) + "%");
+        if (!"tdm52".equals(keyTable)) {
+            return mapper.selectLoadDocs(cond);
+        }
+        boolean relateOnly = tdmRelateDcrYn || mapper.selectTdmEvidOnlyRelateDcrYn(user.getCompanyId());
+        return mapper.selectNoAuthLoadDocs(cond, keyTableId, relateOnly).stream()
+                .map(r -> r.authYn() ? r : new AprLoadDoc2Row(r.docId(), r.apprId(), r.regDate(), r.title(), r.receiveName(), r.fundDisplayName(),
+                        r.statusName(), r.empName(), r.classTreeName(), false, r.statusCode(), null, r.inOutTypeCode()))
+                .toList();
+    }
+
+    /** AS-IS LoginUser.getCompanyModel().getTdmEvidOnlyRelateDcrYn() — tdm52 불러오기의 [연결된 문서분류만 조회] 잠금 */
+    public boolean tdmEvidOnlyRelateDcrYn(UserPrincipal user) {
+        return mapper.selectTdmEvidOnlyRelateDcrYn(user.getCompanyId());
     }
 
     /** AS-IS dcr.Dcr05_DocType.selectByClassTreeId(그 문서분류에 연결된 양식) / selectByName(전체보기) */

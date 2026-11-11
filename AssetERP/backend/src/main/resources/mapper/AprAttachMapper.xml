@@ -227,6 +227,82 @@
                 , apr01_appr_id DESC
     </select>
 
+    <!-- AS-IS dcr00_doc_list.selectNoAuthByText (IDMS-IC 2026-10-28) — 이행점검(tdm52) 증빙 [불러오기]. 권한 조건 없이 회사 문서(취소 99 제외), 열람권한은 f_get_apprDcrAuth.
+         이미 그 점검항목에 연결한 문서는 뺀다. tdmRelateDcrYn이면 점검항목의 매뉴얼에 연결된 문서분류(tdm47)만. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%').
+         원본에 펀드 열이 없어 fund_display_name은 '-'(selectLoadDocs와 같은 규칙) -->
+    <select id="selectNoAuthLoadDocs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLoadDoc2Row">
+        SELECT ROW_NUMBER() OVER()                                                          AS doc_id
+             , apr01_appr_id                                                                AS appr_id
+             , apr01_reg_date                                                               AS reg_date
+             , apr01_title                                                                  AS title
+             , apr01_receive_nm                                                             AS receive_name
+             , '-'                                                                          AS fund_display_name
+             , CASE WHEN apr01_status_cd = '40' THEN '&lt;'||'b style=color:#E33E31;'||'&gt;'||f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)||'&lt;'||'/b'||'&gt;'
+                                                ELSE '&lt;'||'b style=color:#404040;'||'&gt;'||f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)||'&lt;'||'/b'||'&gt;'
+               END                                                                          AS status_name
+             , emp00_kor_nm                                                                 AS emp_name
+             , f_class_tree_nm_allpath(apr01_class_tree_id)                                 AS class_tree_name
+             , COALESCE(f_get_apprDcrAuth(apr01_company_id, #{c.empId}, #{c.orgId}, apr01_appr_id)::boolean, false) AS auth_yn
+             , apr01_status_cd                                                              AS status_code
+             , apr01_content                                                                AS content
+             , apr01_inout_cd                                                               AS in_out_type_code
+          FROM apr01_appr
+               INNER JOIN getPerson(#{c.companyId}, f_today()) ON emp00_person_id = apr01_reg_emp_id
+         WHERE apr01_company_id = #{c.companyId}
+           AND apr01_reg_date BETWEEN #{c.regDate}::date AND #{c.endRegDate}::date
+           AND COALESCE(apr01_status_cd,'99') != '99'
+        <if test="c.classTreeId != null">
+           AND apr01_class_tree_id IN (
+                WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                    SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                           ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                           false
+                      FROM dcr01_class_tree a
+                     WHERE a.dcr01_company_id = #{c.companyId}
+                       AND a.dcr01_class_tree_id = #{c.classTreeId}
+                       AND a.dcr01_use_yn = 'true'
+                       AND a.dcr01_type_cd LIKE '%'
+                    UNION ALL
+                    SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                           array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                           a.dcr01_class_tree_nm = any(b.path)
+                      FROM dcr01_class_tree a
+                           INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                     WHERE a.dcr01_company_id = #{c.companyId}
+                       AND a.dcr01_use_yn = 'true'
+                       AND a.dcr01_type_cd LIKE '%'
+                       AND NOT cycle
+                )
+                SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+           AND CONCAT( apr01_title
+                     , REGEXP_REPLACE(apr01_content, E'&lt;[^&gt;]+&gt;', '', 'gi')
+                     , apr01_note
+                     , emp00_kor_nm ) ILIKE #{c.searchText}
+           AND NOT EXISTS ( SELECT 1
+                              FROM com01_relate_appr
+                             WHERE com01_key_table    = 'tdm52'
+                               AND com01_key_table_id = #{keyTableId}
+                               AND com01_appr_id      = apr01_appr_id )
+        <if test="tdmRelateDcrYn">
+           AND EXISTS ( SELECT 1
+                          FROM tdm47_manl_relate_dcr
+                               INNER JOIN tdm43_manl      ON tdm43_manl_id = tdm47_manl_id
+                               INNER JOIN tdm52_chck_manl ON tdm52_manl_id = tdm43_manl_id
+                         WHERE tdm52_chck_manl_id      = #{keyTableId}
+                           AND tdm47_dcr_class_tree_id = apr01_class_tree_id )
+        </if>
+         ORDER BY apr01_reg_date DESC
+                , apr01_title collate "ko_KR.utf8" asc
+                , apr01_appr_id DESC
+    </select>
+
+    <select id="selectTdmEvidOnlyRelateDcrYn" resultType="boolean">
+        SELECT COALESCE(sys01_tdm_evid_only_relate_dcr_yn, 'false') = 'true'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
     <!-- AS-IS dcr05_doc_type.selectByClassTreeId (IDMS-IC) — a.*·창이 쓰는 열만 -->
     <select id="selectDocFormsByClassTree" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocFormRow">
         SELECT a.dcr05_doc_type_id  AS doc_type_id
