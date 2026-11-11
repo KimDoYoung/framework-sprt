@@ -13,6 +13,7 @@ import { aprApi } from '@/api/apr';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 import { AprFundDoc } from '@/types/apr';
 import { FundCode } from '@/types/fnd';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -38,6 +39,7 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
   const [docs, setDocs] = useState<AprFundDoc[]>([]);
   /** 문서 창 (Apr01_Edit_ApprDoc.retrieveApproval) */
   const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);   // Dcr10_Lookup_MailSender
   const [fundLoading, setFundLoading] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
   const selectedFundId = useRef<number | null>(null);
@@ -102,10 +104,18 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
     gbDoc.text('classTreeNameAllPath', 500, '문서분류'),
     gbDoc.text('title', 500, '상신제목'),
     gbDoc.text('receiveName', 150, '수신처'),
-    // actionCell(Detail) → Apr01_Edit_ApprDoc.retrieveApproval(...)
-    iconCell<AprFundDoc>('view', 'actionCell', 60, '상세보기', row => setViewApprId(row.apprId)),
+    // actionCell(Detail) → Apr01_Edit_ApprDoc.retrieveApproval(...) — 원본 2026-11-02 60 "상세보기" → 50 "보기"
+    iconCell<AprFundDoc>('view', 'actionCell', 50, '보기', row => setViewApprId(row.apprId)),
+    // 원본 2026-11-02 sendMailCell(Send) 50 "메일" → sendMail() (CH-0149)
+    iconCell<AprFundDoc>('send', 'sendMailCell', 50, '메일', row => sendMail(row)),
     gbDoc.text('fileName', 500, '첨부파일'),
   ], []);
+
+  // sendMail() (원본 2026-11-02): 완료(30)가 아니면 "완료되지 않은 문서입니다", 아니면 Dcr10_Lookup_MailSender.open(apprId)
+  function sendMail(row: AprFundDoc) {
+    if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
+    else setMailTarget({ mode: 'open', apprId: row.apprId });
+  }
 
   return (
     <div style={{ height: '100%', background: '#fff' }}>
@@ -161,6 +171,8 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
       </Splitter>
       {/* Apr01_Grid_FundDocList L32-44 detailCell → retrieveApproval(apprModel, false, callback 비어 있음) */}
       <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

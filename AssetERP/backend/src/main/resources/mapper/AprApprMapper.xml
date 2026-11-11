@@ -970,6 +970,7 @@
              , A.apr01_title                                         AS title
              , A.apr01_receive_nm                                    AS receive_name
              , B.sys10_file_nm                                       AS file_name
+             , A.apr01_status_cd                                     AS status_code  <!-- CH-0149 [메일] 셀: 완료(30)만 발송 -->
           FROM apr01_appr A
                LEFT OUTER JOIN sys10_file B ON A.apr01_appr_id = B.sys10_parent_id AND B.sys10_title_yn = 'true'
                LEFT OUTER JOIN apr10_stamp E ON A.apr01_stamp_id = E.apr10_stamp_id

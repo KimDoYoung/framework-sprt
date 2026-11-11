@@ -183,6 +183,7 @@ export interface AprFundDoc {
   title?: string | null;
   receiveName?: string | null;
   fileName?: string | null;
+  statusCode?: string | null;
 }
 
 /** 종목별 문서검색 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_ItemDocList가 쓰는 열) */
