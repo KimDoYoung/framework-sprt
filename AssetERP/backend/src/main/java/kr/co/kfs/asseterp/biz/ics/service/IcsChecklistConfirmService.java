@@ -30,12 +30,14 @@ public class IcsChecklistConfirmService {
 
     private final IcsChecklistConfirmMapper mapper;
 
-    /** AS-IS selectChecklistStatusPaging: 목록 + 전체 건수. 검색어는 AS-IS처럼 앞뒤에 %를 붙인다 */
+    /** AS-IS selectChecklistStatusPaging: 목록 + 전체 건수. 검색어는 AS-IS처럼 앞뒤에 %를 붙인다. 제출구분·확인구분(원본 2026-11-02 CH-0041·0178)은 'true'·'false'·null(전체) */
     public PageRes<IcsChecklistConfirmRes> search(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
-                                                  String searchText, boolean unCheckYn, boolean unConfirmYn, int offset, int limit) {
+                                                  String searchText, String fixYn, String confirmYn, int offset, int limit) {
         String like = Texts.like(searchText);
-        return new PageRes<>(mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn),
-                mapper.selectPaging(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, offset, limit));
+        String fix = Texts.trueFalseOrNull(fixYn);
+        String conf = Texts.trueFalseOrNull(confirmYn);
+        return new PageRes<>(mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, fix, conf),
+                mapper.selectPaging(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, fix, conf, offset, limit));
     }
 
     /**
@@ -43,11 +45,13 @@ public class IcsChecklistConfirmService {
      * RD 서버가 없으므로 RD에 싣던 값(대분류·중분류·체크결과·담당부서·담당자·확인여부)을 한 시트에 쓴다. 전체 건수만큼 한 번에 읽는다(AS-IS와 같다)
      */
     public byte[] download(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
-                           String searchText, boolean unCheckYn, boolean unConfirmYn) {
+                           String searchText, String fixYn, String confirmYn) {
         String like = Texts.like(searchText);
-        long total = mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn);
+        String fix = Texts.trueFalseOrNull(fixYn);
+        String conf = Texts.trueFalseOrNull(confirmYn);
+        long total = mapper.selectTotal(user.getCompanyId(), user.getUserId(), stdDate, cycleType, checklistLClassId, checklistMClassId, like, fix, conf);
         List<List<Object>> rows = total == 0 ? List.of() : mapper.selectPaging(user.getCompanyId(), user.getUserId(), stdDate, cycleType,
-                        checklistLClassId, checklistMClassId, like, unCheckYn, unConfirmYn, 0, total).stream()
+                        checklistLClassId, checklistMClassId, like, fix, conf, 0, total).stream()
                 .map(r -> row(r.checkLClassName(), r.checkMClassName(), r.reason(), r.orgName(), r.personName(), Boolean.TRUE.equals(r.confirmYn()) ? "확인" : ""))
                 .toList();
         return IcsExcelWriter.write("내부통제내역 확인", List.of("대분류", "중분류", "체크결과", "담당부서", "담당자", "확인여부"), rows);

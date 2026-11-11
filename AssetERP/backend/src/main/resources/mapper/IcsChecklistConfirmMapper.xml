@@ -121,11 +121,12 @@
            AND ics23_checklist_m_class_id = #{checklistMClassId}
         </if>
            AND COALESCE(ics15_confirmer_id, confirmer_id) = #{confirmerId}
-        <if test="unCheckYn">
-           AND COALESCE(ics15_fix_yn,'false') = 'false'
+        <!-- 원본 2026-11-02(CH-0041): 확인 화면은 미체크·미확인 체크박스 대신 제출구분·확인구분 콤보 — 'true'·'false', null이면 전체 -->
+        <if test="fixYn != null">
+           AND COALESCE(ics15_fix_yn,'false') = #{fixYn}
         </if>
-        <if test="unConfirmYn">
-           AND COALESCE(ics15_confirm_yn,'false') = 'false'
+        <if test="confirmYn != null">
+           AND COALESCE(ics15_confirm_yn,'false') = #{confirmYn}
         </if>
            AND CONCAT(ics10_check_l_class_nm, ics10_check_m_class_nm, ics10_content, org_nm, person_nm) ILIKE #{searchText}
     </sql>

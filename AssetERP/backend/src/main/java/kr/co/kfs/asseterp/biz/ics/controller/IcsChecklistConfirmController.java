@@ -34,15 +34,15 @@ public class IcsChecklistConfirmController {
 
     private final IcsChecklistConfirmService service;
 
-    /** AS-IS ics.Ics11_ChecklistCompany.selectChecklistStatusPaging — stdDate = 기준 분기(월)의 말일 */
+    /** AS-IS ics.Ics11_ChecklistCompany.selectChecklistStatusPaging — stdDate = 기준 분기(월)의 말일. fixYn·confirmYn = 제출구분·확인구분 콤보(원본 2026-11-02) 'true'·'false', 없으면 전체 */
     @GetMapping
     public ApiResponse<PageRes<IcsChecklistConfirmRes>> search(@AuthenticationPrincipal UserPrincipal principal,
                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
                                                                @RequestParam String cycleType, @RequestParam(required = false) Long checklistLClassId,
                                                                @RequestParam(required = false) Long checklistMClassId, @RequestParam(defaultValue = "") String searchText,
-                                                               @RequestParam boolean unCheckYn, @RequestParam boolean unConfirmYn,
+                                                               @RequestParam(required = false) String fixYn, @RequestParam(required = false) String confirmYn,
                                                                @RequestParam int offset, @RequestParam int limit) {
-        return ApiResponse.ok(service.search(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn, offset, limit));
+        return ApiResponse.ok(service.search(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, fixYn, confirmYn, offset, limit));
     }
 
     /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdChecklistConfirm + RD 리포트 Ics15_Rd_ChecklistConfirm → 한 시트 xlsx) */
@@ -51,9 +51,9 @@ public class IcsChecklistConfirmController {
                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
                                            @RequestParam String cycleType, @RequestParam(required = false) Long checklistLClassId,
                                            @RequestParam(required = false) Long checklistMClassId, @RequestParam(defaultValue = "") String searchText,
-                                           @RequestParam boolean unCheckYn, @RequestParam boolean unConfirmYn,
+                                           @RequestParam(required = false) String fixYn, @RequestParam(required = false) String confirmYn,
                                            @RequestParam(required = false) String fileName) {
-        byte[] body = service.download(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, unCheckYn, unConfirmYn);
+        byte[] body = service.download(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, fixYn, confirmYn);
         String name = (fileName == null || fileName.isBlank() ? "내부통제내역 확인(" + stdDate + ")" : fileName) + ".xlsx";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(name, StandardCharsets.UTF_8).build().toString())

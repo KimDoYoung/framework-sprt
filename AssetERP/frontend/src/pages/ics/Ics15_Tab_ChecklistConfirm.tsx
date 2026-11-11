@@ -1,14 +1,15 @@
 /**
  * 내부통제내역 확인(부서장) (K06) — 준법감시 > 30. 내부통제 체크리스트 > 내부통제내역 확인(부서장) #1230
  * AS-IS: myApp/client/vi/ics/Ics15_Tab_ChecklistConfirm.java (626줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L92-141: center = vlc = 툴바 2줄(기준 분기(월) · 대분류 · 중분류 · [조회][출력/다운로드][확인][확인취소][상신] / 검색 · 미제출 보기 · 미확인 보기)
+ * 생성자 L92-141: center = vlc = 툴바 2줄(기준 분기(월) · 대분류 · 중분류 · [조회][출력/다운로드][확인][확인취소][상신] / 검색 · 제출구분 · 확인구분)
+ *   원본 2026-11-02(CH-0178): 미제출 보기·미확인 보기 체크박스가 제출구분(전체/제출/미제출)·확인구분(전체/확인/미확인) 콤보로 바뀌었다(고르면 바로 조회)
  * / 체크박스 다중 그리드 + 페이징(100). 로그인 사용자가 확인자인 직원 작성 내역을 확인·확인취소한다. 열 때 자동 조회는 없다(원본 그대로).
  * [출력/다운로드]는 RD 뷰어 대신 xlsx를 받는다. [상신]은 상신 조회창(Ics16_Lookup_RelateAppr)을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
  * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Checkbox, message, Modal, Select, Space } from 'antd';
+import { message, Modal, Select, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { ChecklistConfirmParams, IcsChecklistClassCode, IcsChecklistConfirm } from '@/types/ics';
@@ -23,6 +24,12 @@ import { defaultPeriod, getDate } from './icsComplyPeriod';
 const gb = gbFor<IcsChecklistConfirm>();
 const LIMIT = 100;  // gridToolBar.setToolBar(100)
 const ALL = '%';  // 대분류·중분류 "전체"
+/** fixComboBox "제출구분"·confirmComboBox "확인구분" (원본 2026-11-02 getFixYn()·getConfirmYn()) — 전체 = 조건 없음 */
+const FIX_OPTIONS = [{ value: '', label: '전체' }, { value: 'true', label: '제출' }, { value: 'false', label: '미제출' }];
+const CONFIRM_OPTIONS = [{ value: '', label: '전체' }, { value: 'true', label: '확인' }, { value: 'false', label: '미확인' }];
+
+/** retrieve()·buildParams()에 넘기는 방금 바뀐 값(상태 반영 전) */
+type Over = { l?: string; m?: string; fixYn?: string; confirmYn?: string };
 
 export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
   const [cycleType, setCycleType] = useState<string | null>(null);  // enable(cycleType) — null이면 화면 비활성
@@ -31,8 +38,8 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
   const [lClass, setLClass] = useState(ALL);
   const [mClass, setMClass] = useState(ALL);
   const [searchText, setSearchText] = useState('');
-  const [unCheckYn, setUnCheckYn] = useState(false);  // "미제출 보기"
-  const [unConfirmYn, setUnConfirmYn] = useState(false);  // "미확인 보기"
+  const [fixYn, setFixYn] = useState('');  // "제출구분" — '' 전체
+  const [confirmYn, setConfirmYn] = useState('');  // "확인구분" — '' 전체
   const [lCodes, setLCodes] = useState<IcsChecklistClassCode[]>([]);
   const [mCodes, setMCodes] = useState<IcsChecklistClassCode[]>([]);
   const [rows, setRows] = useState<IcsChecklistConfirm[]>([]);
@@ -42,8 +49,8 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
   const [viewTarget, setViewTarget] = useState<ChecklistEditTarget | null>(null);
   const [apprTarget, setApprTarget] = useState<RelateApprTarget | null>(null);
   const checkedRef = useRef<IcsChecklistConfirm[]>([]);
-  const view = useRef({ cycleType, year, period, lClass, mClass, searchText, unCheckYn, unConfirmYn });
-  view.current = { cycleType, year, period, lClass, mClass, searchText, unCheckYn, unConfirmYn };
+  const view = useRef({ cycleType, year, period, lClass, mClass, searchText, fixYn, confirmYn });
+  view.current = { cycleType, year, period, lClass, mClass, searchText, fixYn, confirmYn };
   /** gridToolBar.addParam(…) — 페이지를 넘길 때는 마지막 조회 조건을 쓴다(GridPagingLoader) */
   const paramRef = useRef<ChecklistConfirmParams | undefined>(undefined);
 
@@ -90,7 +97,7 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
   }, []);
 
   /** 화면의 조건으로 조회 조건을 만든다 — retrieve()·[출력/다운로드]가 같이 쓴다. over는 방금 바뀐 값(상태에 아직 반영 전) */
-  const buildParams = (over?: { l?: string; m?: string; unCheckYn?: boolean; unConfirmYn?: boolean }): ChecklistConfirmParams | null => {
+  const buildParams = (over?: Over): ChecklistConfirmParams | null => {
     const v = view.current;
     const std = stdDate();
     if (!std) { message.warning('기준년도를 4자리 숫자로 입력하세요.'); return null; }
@@ -102,14 +109,14 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
       checklistLClassId: l === ALL ? null : Number(l),
       checklistMClassId: m === ALL ? null : Number(m),
       searchText: v.searchText,
-      unCheckYn: over?.unCheckYn ?? v.unCheckYn,
-      unConfirmYn: over?.unConfirmYn ?? v.unConfirmYn,
+      fixYn: (over?.fixYn ?? v.fixYn) || undefined,
+      confirmYn: (over?.confirmYn ?? v.confirmYn) || undefined,
     };
   };
 
-  // [E4] icsChecklistMComboBox[sys.Sys09_Code.selectByIcs23].Collapse (L235) · [E5] searchText.KeyPress [Enter] (L244) · [E6] unCheckYn[미제출 보기].ValueChange (L255)
-  // · [E7] unConfirmYn[미확인 보기].ValueChange (L264) · [E8] retrieveButton[조회].Select (L271) → retrieve() L469-509: 조건을 만들어 1페이지부터 읽는다
-  const retrieve = useCallback(async (over?: { l?: string; m?: string; unCheckYn?: boolean; unConfirmYn?: boolean }) => {
+  // [E4] icsChecklistMComboBox[sys.Sys09_Code.selectByIcs23].Collapse (L235) · [E5] searchText.KeyPress [Enter] (L244) · [E6] fixComboBox[제출구분].Collapse
+  // · [E7] confirmComboBox[확인구분].Collapse · [E8] retrieveButton[조회].Select (L271) → retrieve() L469-509: 조건을 만들어 1페이지부터 읽는다
+  const retrieve = useCallback(async (over?: Over) => {
     const params = buildParams(over);
     if (!params) return;
     paramRef.current = params;
@@ -145,7 +152,7 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
   };
 
   // [E10] confirmButton[확인].Select (L340) / [E11] cancleButton[확인취소].Select (L346) → confirmChk() L534-577:
-  //   고른 행이 없으면 안내, 있으면 HtmlMessageBox "확인"(폭 320). [E13]·[E14] msgBox.DialogHide [YES] (L543·L561) → confirm()
+  //   고른 행이 없으면 안내, 있으면 HtmlMessageBox "확인"(폭 320). [E14] msgBox.DialogHide [YES] (L613, 확인) · [E15] (L631, 확인취소) → confirm()
   const confirmChk = (check: boolean) => {
     const n = checkedRef.current.length;
     if (n === 0) { message.info('대상을 먼저 선택해주세요'); return; }
@@ -184,7 +191,7 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
     gb.text('checkLClassName', 150, '대분류'),
     gb.text('checkMClassName', 200, '중분류'),
     gb.textArea('content', 550, '체크대상'),
-    // View 아이콘: Ics10_Edit_Checklist.open(selectModel.getChecklistModel(), callback) — callback은 비어 있다(조회하지 않음)
+    // [E13] actionCell View 아이콘 (L486): Ics10_Edit_Checklist.open(selectModel.getChecklistModel(), callback) — callback은 비어 있다(조회하지 않음)
     iconCell<IcsChecklistConfirm>('view', 'viewCell', 40, ' ', row => setViewTarget({ model: row })),
     gb.textArea('reason', 250, '체크결과'),
     gb.text('orgName', 100, '담당부서'),
@@ -229,14 +236,18 @@ export const Ics15_Tab_ChecklistConfirm: React.FC = () => {
               options={[{ value: ALL, label: '전체' }, ...lCodes.map(c => ({ value: c.code, label: c.name }))]} />
           </SearchBar.Field>
           <SearchBar.Field label="중분류">
-            <Select style={{ width: 230 }} value={mClass} onChange={v => { setMClass(v); void retrieve({ m: v }); }}
+            <Select style={{ width: 250 }} value={mClass} onChange={v => { setMClass(v); void retrieve({ m: v }); }}
               options={[{ value: ALL, label: '전체' }, ...mCodes.map(c => ({ value: c.code, label: c.name }))]} />
           </SearchBar.Field>
           <SearchBar.Field label="검색">
             <SearchBar.Input style={{ width: 300 }} placeholder="대분류/중분류/체크대상/담당부서/담당자" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
-          <Checkbox checked={unCheckYn} onChange={e => { setUnCheckYn(e.target.checked); void retrieve({ unCheckYn: e.target.checked }); }}>미제출 보기</Checkbox>
-          <Checkbox checked={unConfirmYn} onChange={e => { setUnConfirmYn(e.target.checked); void retrieve({ unConfirmYn: e.target.checked }); }}>미확인 보기</Checkbox>
+          <SearchBar.Field label="제출구분">
+            <Select style={{ width: 80 }} value={fixYn} options={FIX_OPTIONS} onChange={v => { setFixYn(v); void retrieve({ fixYn: v }); }} />
+          </SearchBar.Field>
+          <SearchBar.Field label="확인구분">
+            <Select style={{ width: 80 }} value={confirmYn} options={CONFIRM_OPTIONS} onChange={v => { setConfirmYn(v); void retrieve({ confirmYn: v }); }} />
+          </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <MultiGrid<IcsChecklistConfirm>

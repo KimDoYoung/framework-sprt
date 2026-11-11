@@ -16,14 +16,14 @@ public interface IcsChecklistConfirmMapper {
     List<IcsChecklistConfirmRes> selectPaging(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId, @Param("stdDate") LocalDate stdDate,
                                               @Param("cycleType") String cycleType, @Param("checklistLClassId") Long checklistLClassId,
                                               @Param("checklistMClassId") Long checklistMClassId, @Param("searchText") String searchText,
-                                              @Param("unCheckYn") boolean unCheckYn, @Param("unConfirmYn") boolean unConfirmYn,
+                                              @Param("fixYn") String fixYn, @Param("confirmYn") String confirmYn,
                                               @Param("offset") long offset, @Param("limit") long limit);
 
     /** AS-IS ics11_checklist_company.selectChecklistStatusPagingTotal */
     long selectTotal(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId, @Param("stdDate") LocalDate stdDate,
                      @Param("cycleType") String cycleType, @Param("checklistLClassId") Long checklistLClassId,
                      @Param("checklistMClassId") Long checklistMClassId, @Param("searchText") String searchText,
-                     @Param("unCheckYn") boolean unCheckYn, @Param("unConfirmYn") boolean unConfirmYn);
+                     @Param("fixYn") String fixYn, @Param("confirmYn") String confirmYn);
 
     /** AS-IS ics15_checklist_write.selectByPersonId — 그 달 작성 행 id, 없으면 null */
     Long selectWriteId(@Param("companyId") Long companyId, @Param("checklistId") Long checklistId, @Param("personId") Long personId,
