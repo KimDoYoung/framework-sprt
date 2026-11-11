@@ -28,8 +28,8 @@ export const Bbs10_Tab_BizShare: React.FC = () => {
   const [rows, setRows] = useState<BbsBizShare[]>([]);
   const [editTarget, setEditTarget] = useState<BbsBizShareEdit | null>(null);
 
-  // settings() L99-159: 조회기간 = 올해 1월 1일 ~ 오늘, 구분 "전체"(코드 없음), 검색어 빈칸("업무내용/등록자/비고/키워드")
-  const sp = useSearchParams(() => ({ startDate: dayjs().startOf('year'), closeDate: dayjs(), bizShareType: undefined as string | undefined, searchText: '' }));
+  // settings() L101-165: 조회기간 = 올해 1월 1일 ~ 다음 달 말일(원본 2026-11-02 CH-0153: 오늘 +2개월의 1일 -1일), 구분 "전체"(코드 없음), 검색어 빈칸("업무내용/등록자/비고/키워드")
+  const sp = useSearchParams(() => ({ startDate: dayjs().startOf('year'), closeDate: dayjs().add(1, 'month').endOf('month').startOf('day'), bizShareType: undefined as string | undefined, searchText: '' }));
   const { startDate, closeDate, bizShareType, searchText } = sp.values;
 
   // retrieve() L192-215: 서비스 bbs.Bbs10_BizShare.selectByText(companyId(서버), startDate, closeDate, bizShareType(없으면 %), "%검색어%")
