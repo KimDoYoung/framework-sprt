@@ -115,7 +115,11 @@
         <if test="checkBox">
            AND ics15_answer_cd IS NULL
         </if>
-           AND CONCAT(ics10_check_l_class_nm, ics10_check_m_class_nm, ics10_content) LIKE #{searchText}
+        <!-- 원본 2026-11-02(CH-0036): 제출여부 콤보 — 'true'(제출)·'false'(미제출), null이면 전체 -->
+        <if test="fixYn != null">
+           AND COALESCE(ics15_fix_yn,'false') = #{fixYn}
+        </if>
+           AND CONCAT(ics10_check_l_class_nm, ics10_check_m_class_nm, ics10_content) ILIKE #{searchText}
          ORDER BY ics10_check_l_class_seq, ics10_check_m_class_seq, ics10_seq, ics10_content
     </select>
 

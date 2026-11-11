@@ -488,15 +488,20 @@ export interface IcsChecklistConfirm extends IcsChecklist {
   confirmYn: boolean;
 }
 
-/** 내부통제내역 확인 조회 조건 (K06) — stdDate = 기준 분기(월)의 말일 */
+/**
+ * 내부통제내역 확인(K06 #1230)·상세(K08 #1235) 조회 조건 — stdDate = 기준 분기(월)의 말일.
+ * #1230은 제출구분·확인구분 콤보 fixYn·confirmYn('true'·'false', 없으면 전체 — 원본 2026-11-02), #1235는 미제출·미확인 보기 unCheckYn·unConfirmYn
+ */
 export interface ChecklistConfirmParams {
   stdDate: string;
   cycleType: string;
   checklistLClassId?: number | null;
   checklistMClassId?: number | null;
   searchText: string;
-  unCheckYn: boolean;
-  unConfirmYn: boolean;
+  unCheckYn?: boolean;
+  unConfirmYn?: boolean;
+  fixYn?: string;
+  confirmYn?: string;
 }
 
 /** 내부통제내역 현황 그리드 한 행 (K07, 서버 IcsChecklistStatusRes — AS-IS Sys99_PrintModel). months는 1~12월 12칸("O / X", 기준월 이후는 "-"), 분기 체크주기는 3·6·9·12번째 칸이 1~4분기 */

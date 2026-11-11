@@ -610,8 +610,8 @@ export const icsApi = {
     return res.data.data ?? null;
   },
 
-  /** AS-IS ics.Ics10_Checklist.selectByPersonId: stdDate = 기준 분기(월)의 말일, checkBox = 미체크 보기 */
-  searchChecklistWrites: async (params: { stdDate: string; cycleType: string; checklistLClassId?: number | null; checklistMClassId?: number | null; searchText: string; checkBox: boolean }): Promise<IcsChecklistWrite[]> => {
+  /** AS-IS ics.Ics10_Checklist.selectByPersonId: stdDate = 기준 분기(월)의 말일, checkBox = 미체크 보기, fixYn = 제출여부('true'·'false', 없으면 전체) */
+  searchChecklistWrites: async (params: { stdDate: string; cycleType: string; checklistLClassId?: number | null; checklistMClassId?: number | null; searchText: string; checkBox: boolean; fixYn?: string }): Promise<IcsChecklistWrite[]> => {
     const res = await apiClient.get<ApiResponse<IcsChecklistWrite[]>>('v1/ics/checklist-writes', { params });
     return res.data.data ?? [];
   },
@@ -804,9 +804,14 @@ export const icsApi = {
     await downloadXlsx('v1/ics/checklist-status/details/excel', { ...params, fileName }, `${fileName}.xlsx`);
   },
 
-  /** #1230 상신 창 [미리보기] — AS-IS Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail) */
-  insertChecklistDetailRdPrint: async (stdDate: string, cycleType: string, checklistLClassId: number): Promise<string> => {
-    const res = await apiClient.post<ApiResponse<string>>('v1/ics/checklist-status/details/rd-print', null, { params: { stdDate, cycleType, checklistLClassId } });
+  /**
+   * AS-IS Sys99_Print.insertRdChecklistDetail → rdGroupId (RD 리포트 Ics15_Rd_ChecklistDetail).
+   * #1230 상신 창 [미리보기]는 대분류만, #1235 [출력/다운로드](원본 2026-11-04)는 화면 조건(more) 그대로
+   */
+  insertChecklistDetailRdPrint: async (stdDate: string, cycleType: string, checklistLClassId: number | null,
+    more?: { checklistMClassId?: number | null; searchText?: string; unCheckYn?: boolean; unConfirmYn?: boolean }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/ics/checklist-status/details/rd-print', null,
+      { params: { stdDate, cycleType, checklistLClassId: checklistLClassId ?? undefined, ...more, checklistMClassId: more?.checklistMClassId ?? undefined } });
     return res.data.data;
   },
 

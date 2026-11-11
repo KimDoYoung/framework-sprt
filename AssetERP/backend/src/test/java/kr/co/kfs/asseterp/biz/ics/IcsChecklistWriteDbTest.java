@@ -34,7 +34,7 @@ class IcsChecklistWriteDbTest {
     private static final String YYYYMM = "2026.09";
 
     private List<IcsChecklistWriteRes> list(boolean checkBox) {
-        return service.list(ME, STD_DATE, "M", null, null, "", checkBox);
+        return service.list(ME, STD_DATE, "M", null, null, "", checkBox, null);
     }
 
     @Test
@@ -85,9 +85,9 @@ class IcsChecklistWriteDbTest {
     void 검색어와_분류로_좁힌다() {
         List<IcsChecklistWriteRes> all = list(false);
         IcsChecklistWriteRes one = all.get(0);
-        assertThat(service.list(ME, STD_DATE, "M", one.checkLClassId(), null, "", false)).allMatch(r -> r.checkLClassId().equals(one.checkLClassId()));
-        assertThat(service.list(ME, STD_DATE, "M", null, one.checklistMClassId(), "", false)).allMatch(r -> r.checklistMClassId().equals(one.checklistMClassId()));
-        assertThat(service.list(ME, STD_DATE, "M", null, null, "존재하지않는검색어zzz", false)).isEmpty();
+        assertThat(service.list(ME, STD_DATE, "M", one.checkLClassId(), null, "", false, null)).allMatch(r -> r.checkLClassId().equals(one.checkLClassId()));
+        assertThat(service.list(ME, STD_DATE, "M", null, one.checklistMClassId(), "", false, null)).allMatch(r -> r.checklistMClassId().equals(one.checklistMClassId()));
+        assertThat(service.list(ME, STD_DATE, "M", null, null, "존재하지않는검색어zzz", false, null)).isEmpty();
     }
 
     @Test
@@ -100,5 +100,18 @@ class IcsChecklistWriteDbTest {
         assertThatThrownBy(() -> service.updateReason(other, mine.checklistWriteId(), "남의 사유")).isInstanceOf(BusinessException.class);
         assertThat(service.updateFixYn(other, new IcsChecklistWriteFixReq(true, List.of(mine.checklistWriteId())))).isZero();
         assertThat(service.get(ME, mine.checklistWriteId()).fixYn()).isFalse();
+    }
+
+    @Test
+    void 제출여부_콤보는_제출_미제출로_나눈다() {
+        // 원본 2026-11-02(CH-0036·0093·0180): fixYn 'true'(제출)·'false'(미제출)·null(전체). 시험 DB: 29049의 2026.07 작성 3건이 제출
+        LocalDate jul = LocalDate.of(2026, 7, 31);
+        List<IcsChecklistWriteRes> all = service.list(ME, jul, "M", null, null, "", false, null);
+        List<IcsChecklistWriteRes> fixed = service.list(ME, jul, "M", null, null, "", false, "true");
+        List<IcsChecklistWriteRes> unfixed = service.list(ME, jul, "M", null, null, "", false, "false");
+        assertThat(fixed).isNotEmpty().allMatch(IcsChecklistWriteRes::fixYn);
+        assertThat(unfixed).noneMatch(IcsChecklistWriteRes::fixYn);
+        assertThat(fixed.size() + unfixed.size()).isEqualTo(all.size());
+        assertThat(service.list(ME, jul, "M", null, null, "", false, "아무값")).hasSize(all.size());   // 모르는 값은 전체
     }
 }

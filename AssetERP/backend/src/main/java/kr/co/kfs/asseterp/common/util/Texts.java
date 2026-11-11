@@ -18,4 +18,12 @@ public final class Texts {
     public static String nvl(String s) {
         return s == null ? "" : s;
     }
+
+    /**
+     * "전체/예/아니오" 콤보 값 — AS-IS 화면이 'true'·'false'·null(전체)로 넘기는 것(예: 제출여부 fixYn, 확인여부 confirmYn).
+     * 'true'·'false'는 그대로, 빈 값·그 밖의 값은 null(조건 없음)
+     */
+    public static String trueFalseOrNull(String s) {
+        return "true".equals(s) || "false".equals(s) ? s : null;
+    }
 }

@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteRes;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistWriteMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
+import kr.co.kfs.asseterp.common.util.Texts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +34,11 @@ public class IcsChecklistWriteService {
         return mapper.selectCycleType(user.getCompanyId());
     }
 
-    /** AS-IS Ics10_Checklist.selectByPersonId (searchText는 "%검색어%") */
+    /** AS-IS Ics10_Checklist.selectByPersonId (searchText는 "%검색어%"). fixYn = 제출여부 콤보(원본 2026-11-02 CH-0036·0093) 'true'·'false'·null(전체) */
     public List<IcsChecklistWriteRes> list(UserPrincipal user, LocalDate stdDate, String cycleType, Long checklistLClassId, Long checklistMClassId,
-                                           String searchText, boolean checkBox) {
+                                           String searchText, boolean checkBox, String fixYn) {
         return mapper.selectByPersonId(user.getCompanyId(), user.getUserId(), stdDate, checklistLClassId, checklistMClassId,
-                "%" + (searchText == null ? "" : searchText) + "%", checkBox, cycleType);
+                "%" + (searchText == null ? "" : searchText) + "%", checkBox, cycleType, Texts.trueFalseOrNull(fixYn));
     }
 
     /** AS-IS Ics15_ChecklistWrite.updateAnswerCode: 그 달 작성 행이 있으면 답변만 바꾸고, 없으면 새로 만든다 */

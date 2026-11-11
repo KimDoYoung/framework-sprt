@@ -47,8 +47,9 @@ public class IcsChecklistWriteController {
                                                         @RequestParam(required = false) Long checklistLClassId,
                                                         @RequestParam(required = false) Long checklistMClassId,
                                                         @RequestParam(required = false, defaultValue = "") String searchText,
-                                                        @RequestParam boolean checkBox) {
-        return ApiResponse.ok(service.list(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, checkBox));
+                                                        @RequestParam boolean checkBox,
+                                                        @RequestParam(required = false) String fixYn) {
+        return ApiResponse.ok(service.list(principal, stdDate, cycleType, checklistLClassId, checklistMClassId, searchText, checkBox, fixYn));
     }
 
     /** AS-IS ics.Ics15_ChecklistWrite.updateAnswerCode — 예·아니오·해당없음 */

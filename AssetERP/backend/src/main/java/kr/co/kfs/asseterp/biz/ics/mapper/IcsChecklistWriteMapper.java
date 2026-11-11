@@ -14,10 +14,11 @@ public interface IcsChecklistWriteMapper {
     /** AS-IS Sys01_Company.selectById 중 sys01_ics_check_cycle_type — M(월)/Q(분기), 없으면 null */
     String selectCycleType(@Param("companyId") Long companyId);
 
-    /** AS-IS ics10_checklist.selectByPersonId — 내가 담당(작성그룹 공유)인 사용 중 체크리스트 + 그 달 내 작성 내역. checkBox면 답변 없는 항목만 */
+    /** AS-IS ics10_checklist.selectByPersonId — 내가 담당(작성그룹 공유)인 사용 중 체크리스트 + 그 달 내 작성 내역. checkBox면 답변 없는 항목만, fixYn('true'/'false')이면 그 제출여부만 */
     List<IcsChecklistWriteRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") LocalDate stdDate,
                                                 @Param("checklistLClassId") Long checklistLClassId, @Param("checklistMClassId") Long checklistMClassId,
-                                                @Param("searchText") String searchText, @Param("checkBox") boolean checkBox, @Param("cycleType") String cycleType);
+                                                @Param("searchText") String searchText, @Param("checkBox") boolean checkBox, @Param("cycleType") String cycleType,
+                                                @Param("fixYn") String fixYn);
 
     /** AS-IS ics15_checklist_write.selectById — 내 작성 행만 */
     IcsChecklistWriteItem selectById(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("checklistWriteId") Long checklistWriteId);

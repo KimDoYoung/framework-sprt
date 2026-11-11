@@ -1,10 +1,11 @@
 /**
  * 내부통제 체크리스트 작성 (K05) — 준법감시 > 30. 내부통제 체크리스트 > 내부통제 체크리스트 작성 #1229
  * AS-IS: myApp/client/vi/ics/Ics15_Tab_ChecklistWrite.java (727줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L92-127: center = vlc = 툴바({기준년도}{월/분기} 대분류 · 중분류 · 검색 "대분류/중분류/체크내용/근거" · 미체크 보기 · [조회][제출][제출취소][새로작성]) / 그리드.
+ * 생성자 L92-127: center = vlc = 툴바 2줄(작성분기(월){기준년도}{월/분기} · 대분류 · 중분류 · [조회][제출][제출취소][새로작성] / 제출여부 · 검색 "대분류/중분류/체크내용/근거" · 미체크 보기) / 그리드.
+ *   원본 2026-11-02(CH-0180): 제출여부 콤보(전체/제출/미제출)가 생기고 미체크 보기를 바꾸면 바로 조회, [제출취소]의 "제출 전 입니다" 검사가 없어졌다. 툴바는 TOBE SearchBar 한 줄(줄바꿈).
  * 회사의 체크주기(M 월 / Q 분기)로 콤보 종류를 정하고 기준을 지난 달(분기)로 둔다. 열 때 자동 조회는 없다(원본 그대로 — 콤보를 고르거나 [조회]).
  * 체크 한 번마다 저장한다(E13). 제출한 뒤에도 답은 바꿀 수 있다(원본은 확인된 행만 막는다 — 준수확인서 K01과 다름).
- * [E12 생략] sendMailButton[메일발송]은 원본도 툴바에 안 붙인 도달 불가.
+ * [E13 생략] sendMailButton[메일발송]은 원본도 툴바에 안 붙인 도달 불가.
  * UX보강(10): 툴바 = SearchBar(UX-01)
  * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
@@ -27,6 +28,8 @@ import { defaultPeriod, getDate } from './icsComplyPeriod';
 type Row = IcsChecklistWrite & { yes: boolean; no: boolean; not: boolean };
 const gb = gbFor<Row>();
 const ALL = '%';  // 대분류·중분류 "전체"
+/** fixComboBox "제출여부" (원본 2026-11-02) — 전체 = 조건 없음, 제출 'true', 미제출 'false' */
+const FIX_OPTIONS = [{ value: '', label: '전체' }, { value: 'true', label: '제출' }, { value: 'false', label: '미제출' }];
 
 const toRow = (r: IcsChecklistWrite): Row => ({ ...r, yes: r.answerCode === 'Y', no: r.answerCode === 'N', not: r.answerCode === 'X' });
 const merge = (r: Row, item: IcsChecklistWriteItem): Row => toRow({
@@ -44,6 +47,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
   const [mClass, setMClass] = useState(ALL);
   const [searchText, setSearchText] = useState('');
   const [checkBox, setCheckBox] = useState(false);  // "미체크 보기"
+  const [fixYn, setFixYn] = useState('');  // fixComboBox "제출여부" — '' 전체
   const [lCodes, setLCodes] = useState<IcsChecklistClassCode[]>([]);
   const [mCodes, setMCodes] = useState<IcsChecklistClassCode[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
@@ -51,8 +55,8 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
   const [busy, setBusy] = useState(false);  // fixChk 동안 [제출][제출취소] 비활성
   const [reasonTarget, setReasonTarget] = useState<IcsChecklistWriteItem | null>(null);
   const [viewTarget, setViewTarget] = useState<ChecklistEditTarget | null>(null);
-  const view = useRef({ cycleType, year, period, lClass, mClass, searchText, checkBox, rows });
-  view.current = { cycleType, year, period, lClass, mClass, searchText, checkBox, rows };
+  const view = useRef({ cycleType, year, period, lClass, mClass, searchText, checkBox, fixYn, rows });
+  view.current = { cycleType, year, period, lClass, mClass, searchText, checkBox, fixYn, rows };
 
   // [E0] 화면 열림 (생성자 L92-127) → settings()
   // settings() L129-351 / enable() L506-565: 체크주기를 읽어 콤보 종류와 기준 분기(월)를 정한다. 설정이 없으면 안내하고 화면을 끈다
@@ -84,8 +88,8 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
     icsApi.searchChecklistLCodes(d ?? undefined).then(setLCodes).catch(err => message.error(errorMessage(err, '조회 실패')));
   }, [cycleType, year, period]);
 
-  // [E7] retrieveButton[조회].Select (L246) → retrieve() L427-464: ics.Ics10_Checklist.selectByPersonId (대분류·중분류 id, "%검색어%", 미체크 보기)
-  const retrieve = useCallback(async (over?: { l?: string; m?: string; checkBox?: boolean }): Promise<Row[] | null> => {
+  // [E8] retrieveButton[조회].Select (L276) → retrieve() L427-464: ics.Ics10_Checklist.selectByPersonId (대분류·중분류 id, "%검색어%", 미체크 보기, 제출여부)
+  const retrieve = useCallback(async (over?: { l?: string; m?: string; checkBox?: boolean; fixYn?: string }): Promise<Row[] | null> => {
     const std = stdDateText();
     if (!std) return null;
     const v = view.current;
@@ -100,6 +104,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
         checklistMClassId: m === ALL ? null : Number(m),
         searchText: v.searchText,
         checkBox: over?.checkBox ?? v.checkBox,
+        fixYn: (over?.fixYn ?? v.fixYn) || undefined,
       })).map(toRow);
       setRows(list);
       return list;
@@ -127,7 +132,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
   /** 목록을 서버가 알려 준 작성 행으로 되돌린다(고칠 수 없는 행을 눌렀거나 저장이 실패했을 때) */
   const revert = () => setRows(prev => prev.map(toRow));
 
-  // [E13] grid.getStore().StoreRecordChange [chkModel.getConfirmYn()] (L286): 예·아니오·해당없음 체크 → 확인된 행은 되돌리고 안내, 아니면
+  // [E14] grid.getStore().StoreRecordChange [chkModel.getConfirmYn()] (L286): 예·아니오·해당없음 체크 → 확인된 행은 되돌리고 안내, 아니면
   // 그 답변으로 ics.Ics15_ChecklistWrite.updateAnswerCode (작성 행이 없으면 서버가 만든다). 체크를 풀어도 답변은 그대로다(AS-IS setYes 등이 답변 코드를 다시 넣는다)
   const onCellValueChanged = async (e: CellValueChangedEvent<Row>) => {
     const field = e.colDef.field as keyof typeof ANSWER_CODE | undefined;
@@ -163,8 +168,9 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
     }
   };
 
-  // [E8] fixButton[제출].Select (L252) / [E9] cancelButton[제출취소].Select (L258) → fixChk() L598-662
-  // preFixCheck() L592-596: 제출·제출취소 전에 "미체크 보기"를 끄고 최신 데이터로 다시 조회한 뒤 검사한다
+  // [E9] fixButton[제출].Select (L282) / [E10] cancelButton[제출취소].Select (L258) → fixChk() L598-662
+  // preFixCheck() L592-596: 제출·제출취소 전에 "미체크 보기"를 끄고 최신 데이터로 다시 조회한 뒤 검사한다(제출여부 콤보는 원본도 그대로 둔다)
+  //   제출취소: 원본 2026-11-02부터 "제출 전 입니다" 검사 없이 확인된 행만 막는다
   const fixChk = async (check: boolean) => {
     setBusy(true);
     try {
@@ -192,7 +198,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
     }
   };
 
-  // [E10] deleteButton[새로작성].Select (L264): HtmlMessageBox "확인"/"작성한 내역을 삭제하시겠습니까?"(폭 350)
+  // [E11] deleteButton[새로작성].Select (L294): HtmlMessageBox "확인"/"작성한 내역을 삭제하시겠습니까?"(폭 350)
   const preDelete = () => {
     Modal.confirm({
       title: '확인',
@@ -200,7 +206,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
       okText: '예',
       cancelText: '아니오',
       width: 350,
-      onOk: () => remove(),  // [E11] messageBox.DialogHide [YES] (L268) → delete()
+      onOk: () => remove(),  // [E12] messageBox.DialogHide [YES] (L298) → delete()
     });
   };
 
@@ -222,7 +228,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
     gb.text('checkLClassName', 150, '대분류'),
     gb.text('checkMClassName', 200, '중분류'),
     gb.textArea('content', 500, '체크대상'),
-    // View 아이콘: Ics10_Edit_Checklist.open(selectModel, callback → retrieve())
+    // [E15] actionCell View 아이콘 (L390): Ics10_Edit_Checklist.open(selectModel, callback → retrieve())
     iconCell<Row>('view', 'viewCell', 40, ' ', row => setViewTarget({ model: row })),
     gb.group('체크', [
       gb.boolean('yes', 70, '예', { editable: true }),
@@ -250,6 +256,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
             </>
           }
         >
+          <SearchBar.Field label="작성분기(월)">
           <Space size={6}>
             <SearchBar.Input style={{ width: 60 }} maxLength={4} allowClear={false} value={year} onChange={e => setYear(e.target.value)} />
             {cycleType != null && (
@@ -262,6 +269,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
               />
             )}
           </Space>
+          </SearchBar.Field>
           <SearchBar.Field label="대분류">
             <Select style={{ width: 180 }} value={lClass} onChange={v => { void refreshCode(v); }}
               options={[{ value: ALL, label: '전체' }, ...lCodes.map(c => ({ value: c.code, label: c.name }))]} />
@@ -271,11 +279,15 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
             <Select style={{ width: 230 }} value={mClass} onChange={v => { setMClass(v); void retrieve({ m: v }); }}
               options={[{ value: ALL, label: '전체' }, ...mCodes.map(c => ({ value: c.code, label: c.name }))]} />
           </SearchBar.Field>
+          <SearchBar.Field label="제출여부">
+            {/* [E6] fixComboBox[제출여부].Collapse (L260) → retrieve() (원본 2026-11-02) */}
+            <Select style={{ width: 110 }} value={fixYn} options={FIX_OPTIONS} onChange={v => { setFixYn(v); void retrieve({ fixYn: v }); }} />
+          </SearchBar.Field>
           <SearchBar.Field label="검색">
             {/* [E5] searchText.KeyPress [Enter] (L228) → retrieve() — SearchBar.Input의 Enter가 조회 */}
-            <SearchBar.Input style={{ width: 250 }} placeholder="대분류/중분류/체크내용/근거" value={searchText} onChange={e => setSearchText(e.target.value)} />
+            <SearchBar.Input style={{ width: 479 }} placeholder="대분류/중분류/체크내용/근거" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
-          {/* [E6] checkBox[미체크 보기].ValueChange (L239) → retrieve() */}
+          {/* [E7] checkBox[미체크 보기].ValueChange (L269) → retrieve() */}
           <Checkbox checked={checkBox} onChange={e => { setCheckBox(e.target.checked); void retrieve({ checkBox: e.target.checked }); }}>미체크 보기</Checkbox>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
