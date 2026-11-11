@@ -47,8 +47,10 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String dataYm,
                                             @RequestParam(required = false) String benefitName, @RequestParam(required = false) String benefitCode,
                                             @RequestParam(required = false) String stdDateStr,
-                                            @RequestParam(required = false) String isManager) {
+                                            @RequestParam(required = false) String isManager,
+                                            @RequestParam(required = false) String title) {
         Map<String, String> args = new HashMap<>();
+        put(args, "title", title); // A41 이익제공(법인카드) — 화면이 만든 문서 제목(원본 2026-11-06 printModel.string02)
         put(args, "isManager", isManager); // A63 지출결의서 — "false"면 한 건 본문의 승인자 줄이 빠진다(내 지출결의서 Y10, 기본 true)
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);

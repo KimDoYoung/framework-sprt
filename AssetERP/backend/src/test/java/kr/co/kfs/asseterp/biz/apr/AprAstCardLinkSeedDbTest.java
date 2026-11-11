@@ -103,7 +103,7 @@ class AprAstCardLinkSeedDbTest {
 
     @Test
     void 월_상신_기록은_있으면_지우고_새로_넣는다() {
-        BizRelateApprService service = new BizRelateApprService(relateMapper, mock(BizCardExcelService.class));
+        BizRelateApprService service = new BizRelateApprService(relateMapper);
         long first = service.insertDataYm(user(), "2099.01", "A35", APPR);
         assertThat(jdbc.queryForObject("select count(*) from biz05_relate_appr where biz05_company_id = 28000 and biz05_std_ym = '2099.01' and biz05_link_cd = 'A35'", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("select biz05_appr_id from biz05_relate_appr where biz05_relate_appr_id = ?", Long.class, first)).isEqualTo(APPR);

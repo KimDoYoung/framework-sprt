@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.BizAccountOptionRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoSaveReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardApprLinkReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes;
@@ -22,6 +23,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimplePrintReq;
+import kr.co.kfs.asseterp.biz.biz.service.BizCardApprService;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -48,14 +50,37 @@ import java.util.List;
 public class BizPromoController {
 
     private final BizPromoService service;
+    private final BizCardApprService cardApprService;
 
     /** AS-IS biz.Biz01_Promo.selectByCard */
     @GetMapping("/cards")
     public ApiResponse<List<BizPromoCardRes>> searchByCard(@AuthenticationPrincipal UserPrincipal principal,
                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
-                                                           @RequestParam(required = false, defaultValue = "") String searchText) {
-        return ApiResponse.ok(service.searchByCard(principal, startDate, closeDate, searchText));
+                                                           @RequestParam(required = false, defaultValue = "") String searchText,
+                                                           @RequestParam(required = false, defaultValue = "false") boolean apprCheck,
+                                                           @RequestParam(required = false) Long accountId) {
+        return ApiResponse.ok(service.searchByCard(principal, startDate, closeDate, searchText, apprCheck, accountId));
+    }
+
+    /** AS-IS sys.Sys00_Common.selectAccountName — #1131 계정과목 콤보(원본 2026-11-04) */
+    @GetMapping("/cards/account-names")
+    public ApiResponse<List<BizCodeOptionRes>> cardAccountNames(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate) {
+        return ApiResponse.ok(service.searchCardAccountNames(principal, startDate, closeDate));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectTargetInfoReqYn — 거래상대방 필수입력인데 없는 건수(0이 아니면 "거래상대방은 필수입력입니다.") */
+    @PostMapping("/cards/target-info-check")
+    public ApiResponse<Integer> targetInfoCheck(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> promoIds) {
+        return ApiResponse.ok(service.countTargetInfoMissing(principal, promoIds));
+    }
+
+    /** 원본 2026-11-06 A41 상신 저장 뒤: 고른 내역 첨부 엑셀(createCardExcel2) + 내역에 문서 ID(updateByApprId) → 넣은 건수 */
+    @PostMapping("/cards/appr-link")
+    public ApiResponse<Integer> cardApprLink(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardApprLinkReq req) throws java.io.IOException {
+        return ApiResponse.ok(cardApprService.linkAppr(principal, req.apprId(), req.promoIds(), req.titleName()));
     }
 
     /** AS-IS biz.Biz01_Promo.closeCheck → 마감된 내역이 있으면 true */

@@ -139,10 +139,12 @@ class AprExtrPriorCardLinkSeedDbTest {
     }
 
     @Test
-    void 법인카드_A41은_조회월_제목과_보고_본문() {
-        AprLinkSeedRes res = seedService.seed(user(), classTreeId(), "A41", null, Map.of("stdDate", "2026-02-01"));
-        assertThat(res.title()).isEqualTo("법인카드 사용내역 보고 (2026.02)");
-        assertThat(res.content()).isEqualTo("2026년02월 법인카드 사용내역을 보고합니다.");
+    void 법인카드_A41은_화면이_만든_제목과_보고_본문() {
+        // 원본 2026-11-06(c0b1e1146): 제목 = 화면의 "[법인카드] yyyy년 MM월 지출결의 승인 요청의건_계정과목 외 n", 본문 고정
+        String title = "[법인카드] 2026년 02월 지출결의 승인 요청의건_접대비 외 1";
+        AprLinkSeedRes res = seedService.seed(user(), classTreeId(), "A41", null, Map.of("title", title));
+        assertThat(res.title()).isEqualTo(title);
+        assertThat(res.content()).isEqualTo("법인카드 사용내역을 보고합니다.");
         assertThat(res.titleReadOnly()).isFalse();
         assertThrows(BusinessException.class, () -> seedService.seed(user(), classTreeId(), "A41", null, Map.of()));
     }
@@ -150,9 +152,11 @@ class AprExtrPriorCardLinkSeedDbTest {
     @Test
     void 법인카드_첨부_엑셀은_머리줄_내역_합계줄() throws Exception {
         UserPrincipal u = UserPrincipal.builder().userId(29049L).companyId(28000L).name("시험").roles(List.of("ROLE_USER")).build();
-        LocalDate from = LocalDate.of(2025, 1, 1);
-        LocalDate to = LocalDate.of(2026, 12, 31);
-        List<BizCardExcelRow> rows = promoMapper.selectByCardExcel(28000L, 29049L, from, to, "%");
+        // 원본 2026-11-06: 내역 = 고른 내역(ID), 파일 이름 = 문서 제목. 29049의 2025~2026 내역을 고른 것으로 한다
+        List<Long> ids = jdbc.queryForList("select biz01_promo_id from biz01_promo where biz01_company_id = 28000 and biz01_real_person_id = 29049"
+                + " and biz01_provide_date between '2025-01-01' and '2026-12-31' order by 1", Long.class);
+        List<BizCardExcelRow> rows = promoMapper.selectByCardExcel(28000L, ids);
+        assertThat(promoMapper.selectByCardExcel(1L, ids)).isEmpty();   // 다른 회사 내역은 안 나온다
 
         SysFileService sysFile = mock(SysFileService.class);
         AtomicReference<byte[]> saved = new AtomicReference<>();
@@ -165,27 +169,29 @@ class AprExtrPriorCardLinkSeedDbTest {
             return 1L;
         });
         BizCardExcelService excel = new BizCardExcelService(promoMapper, relateMapper, sysFile);
-        assertThat(excel.createCardExcel(u, APPR, from, to, "")).isEqualTo(1L);
+        String title = "[법인카드] 2025년 01월 지출결의 승인 요청의건";
+        assertThat(excel.createCardExcel(u, APPR, ids, title)).isEqualTo(1L);
 
-        assertThat(rows).isNotEmpty(); // 시험 DB: 29049의 2025~2026 내역 4건
-        assertThat(savedName.get()).isEqualTo("법인카드 사용내역보고(2025.01).xls");
+        assertThat(rows).isNotEmpty().hasSize(ids.size()); // 시험 DB: 29049의 2025~2026 내역 4건
+        assertThat(savedName.get()).isEqualTo(title + ".xls");
         try (HSSFWorkbook wb = new HSSFWorkbook(new java.io.ByteArrayInputStream(saved.get()))) {
             HSSFSheet sheet = wb.getSheetAt(0);
-            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("카드");
-            assertThat(sheet.getRow(0).getCell(14).getStringCellValue()).isEqualTo("비고");
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("카드승인일");
+            assertThat(sheet.getRow(0).getCell(5).getStringCellValue()).isEqualTo("비고");
+            assertThat(sheet.getRow(0).getCell(14).getStringCellValue()).isEqualTo("카드 사용자");
             assertThat(sheet.getLastRowNum()).isEqualTo(rows.size() + 1);
-            assertThat(sheet.getRow(rows.size() + 1).getCell(3).getStringCellValue()).isEqualTo("합계");
+            assertThat(sheet.getRow(rows.size() + 1).getCell(1).getStringCellValue()).isEqualTo("합계");
             double sum = rows.stream().mapToLong(r -> r.provideAmt() == null ? 0 : r.provideAmt()).sum();
-            assertThat(sheet.getRow(rows.size() + 1).getCell(5).getNumericCellValue()).isEqualTo(sum);
+            assertThat(sheet.getRow(rows.size() + 1).getCell(2).getNumericCellValue()).isEqualTo(sum);
+            assertThat(sheet.getRow(1).getCell(10).getNumericCellValue()).isEqualTo(rows.get(0).averagePrice().doubleValue());
         }
     }
 
     @Test
-    void 법인카드_상신_연결은_그_달_행을_지우고_다시_넣고_엑셀을_만든다() throws Exception {
+    void 법인카드_그_달_상신_연결은_행을_지우고_다시_넣는다() {
+        // 원본 2026-11-06부터 #1131은 이 길을 쓰지 않는다(행마다 상신 — BizCardApprService). 남은 API의 동작만 확인
         UserPrincipal u = UserPrincipal.builder().userId(29049L).companyId(28000L).name("시험").roles(List.of("ROLE_USER")).build();
-        BizCardExcelService excel = mock(BizCardExcelService.class);
-        when(excel.createCardExcel(any(), anyLong(), any(), any(), any())).thenReturn(1L);
-        BizRelateApprService service = new BizRelateApprService(relateMapper, excel);
+        BizRelateApprService service = new BizRelateApprService(relateMapper);
         var req = new kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprPersonReq("2099.01", APPR, "A41", LocalDate.of(2099, 1, 1), LocalDate.of(2099, 1, 31), "");
 
         long first = service.insertPersonId(u, req);
@@ -193,6 +199,5 @@ class AprExtrPriorCardLinkSeedDbTest {
         assertThat(second).isNotEqualTo(first);
         assertThat(jdbc.queryForObject("select count(*) from biz05_relate_appr where biz05_std_ym = '2099.01' and biz05_link_cd = 'A41' and biz05_person_id = 29049 and biz05_company_id = 28000", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("select biz05_appr_id from biz05_relate_appr where biz05_relate_appr_id = ?", Long.class, second)).isEqualTo(APPR);
-        org.mockito.Mockito.verify(excel, org.mockito.Mockito.times(2)).createCardExcel(any(), eq(APPR), eq(LocalDate.of(2099, 1, 1)), eq(LocalDate.of(2099, 1, 31)), eq(""));
     }
 }

@@ -45,6 +45,12 @@ export interface BizPromoCard {
   totalPeple: number | null;
   averagePrice: number | null;
   note: string | null;
+  /** 원본 2026-11-06: 행마다 상신 문서 ID·결재상태 코드·이름(10 상신·20 결재중·30 완료…), 거래상대방 수, 카드 사용자 */
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  targetCount: number | null;
+  cardUserName: string | null;
   /** L09 간이판(Biz01_Tab_CardSimple)이 쓰는 열 */
   provideCompany: string | null;
   pepleCount: number | null;

@@ -50,35 +50,35 @@ class BizPromoDbTest {
     private static final LocalDate TO = LocalDate.of(2025, 12, 31);
 
     private BizPromoCardRes first() {
-        List<BizPromoCardRes> list = promoService.searchByCard(user, FROM, TO, "");
+        List<BizPromoCardRes> list = promoService.searchByCard(user, FROM, TO, "", false, null);
         assertThat(list).isNotEmpty();
         return list.get(0);
     }
 
     /** 같은 일자 행의 순서는 정해져 있지 않으므로 고친 행은 ID로 다시 찾는다 */
     private BizPromoCardRes byId(Long promoId) {
-        return promoService.searchByCard(user, FROM, TO, "").stream().filter(r -> r.promoId().equals(promoId)).findFirst().orElseThrow();
+        return promoService.searchByCard(user, FROM, TO, "", false, null).stream().filter(r -> r.promoId().equals(promoId)).findFirst().orElseThrow();
     }
 
     @Test
     void 조회는_로그인_사원의_카드내역만_검색어는_부분일치() {
-        List<BizPromoCardRes> all = promoService.searchByCard(user, FROM, TO, "");
+        List<BizPromoCardRes> all = promoService.searchByCard(user, FROM, TO, "", false, null);
         assertThat(all).hasSize(22);
-        assertThat(promoService.searchByCard(otherCompany, FROM, TO, "")).isEmpty();
+        assertThat(promoService.searchByCard(otherCompany, FROM, TO, "", false, null)).isEmpty();
         String franchise = all.get(0).franchiseName();
-        assertThat(promoService.searchByCard(user, FROM, TO, franchise)).isNotEmpty().allSatisfy(r ->
+        assertThat(promoService.searchByCard(user, FROM, TO, franchise, false, null)).isNotEmpty().allSatisfy(r ->
                 assertThat((r.htmlCardName() + r.franchiseName() + r.sectorName() + r.note()).toLowerCase()).contains(franchise.toLowerCase()));
     }
 
     @Test
     void 출력자료는_내_이전_자료를_지우고_조회_결과_행수만큼_새_그룹으로_담는다() {
-        int rows = promoService.searchByCard(user, FROM, TO, "").size();
-        String g1 = promoService.insertRdCard(user, new BizPromoPrintReq(FROM, TO, ""));
+        int rows = promoService.searchByCard(user, FROM, TO, "", false, null).size();
+        String g1 = promoService.insertRdCard(user, new BizPromoPrintReq(FROM, TO, "", false));
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_company_id = 28000 and sys99_person_id = ? and sys99_window_class_nm = 'Biz01_Tab_Card'",
                 Integer.class, user.getUserId())).isEqualTo(rows);
         assertThat(jdbc.queryForObject("select count(distinct sys99_group_id) from sys99_print where sys99_person_id = ? and sys99_window_class_nm = 'Biz01_Tab_Card'",
                 Integer.class, user.getUserId())).isEqualTo(1);
-        String g2 = promoService.insertRdCard(user, new BizPromoPrintReq(FROM, TO, ""));
+        String g2 = promoService.insertRdCard(user, new BizPromoPrintReq(FROM, TO, "", false));
         assertThat(g2).isNotEqualTo(g1);
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_person_id = ? and sys99_window_class_nm = 'Biz01_Tab_Card' and sys99_group_id = ?",
                 Integer.class, user.getUserId(), Long.valueOf(g1))).isZero();
@@ -102,7 +102,7 @@ class BizPromoDbTest {
         assertThat(promoService.hasClosed(user, List.of(row.promoId()))).isTrue();
         assertThat(promoService.hasClosed(otherCompany, List.of(row.promoId()))).isFalse();
         // JdbcTemplate으로 바꾼 값은 MyBatis 1차 캐시를 비우지 못하므로 조건을 달리해 다시 읽는다
-        assertThat(promoService.searchByCard(user, FROM, TO.minusDays(1), "").stream().filter(r -> r.promoId().equals(row.promoId())).findFirst().orElseThrow().closeName()).isEqualTo("마감");
+        assertThat(promoService.searchByCard(user, FROM, TO.minusDays(1), "", false, null).stream().filter(r -> r.promoId().equals(row.promoId())).findFirst().orElseThrow().closeName()).isEqualTo("마감");
     }
 
     @Test

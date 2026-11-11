@@ -7,7 +7,8 @@
      + sys00_common.selectByProvideContentCode + dcr01_class_tree.selectByLinkCode + sys99_print.deleteByPersonId·insert  (L02) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizPromoMapper">
 
-    <!-- AS-IS biz01_promo.selectByCard L773 (IDMS-IC) — 그리드·편집·출력에 쓰는 열만 별칭으로 -->
+    <!-- AS-IS biz01_promo.selectByCard L773 (IDMS-IC) — 그리드·편집·출력에 쓰는 열만 별칭으로.
+         원본 2026-11-04~06(CH-0005): 상신 문서(apr01_appr, biz01_appr_id)·카드 사용자(crd03_trans) 조인, 미상신건만(apprCheck: 상태 10·20·30 제외)·계정과목(accountId) 조건 -->
     <select id="selectByCard" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes">
         SELECT a.biz01_promo_id                                                                                 AS promo_id
              , COALESCE(a.biz01_close_yn, 'false') = 'true'                                                     AS close_yn
@@ -32,16 +33,31 @@
              , a.biz01_provide_company                                                                          AS provide_company
              , a.biz01_peple_count                                                                              AS peple_count
              , TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))                                        AS average_price2
+             , a.biz01_appr_id                                                                                  AS appr_id
+             , e.apr01_status_cd                                                                                AS appr_status_code
+             , f_cdnm('AprStatusCode', e.apr01_status_cd, e.apr01_company_id, e.apr01_reg_date)                 AS appr_status_name
+             , c.biz02_target_count                                                                             AS target_count
+             , CASE WHEN sys01_card_real_user_yn = 'true' THEN
+                     CASE WHEN f.crd03_public_yn = 'true'
+                           AND biz01_real_person_id IS NULL THEN '공통('||f_emp_kor_nm(f.crd03_person_id)||')'
+                          WHEN f.crd03_public_yn = 'true'
+                           AND biz01_real_person_id IS NOT NULL THEN '공통('||f_emp_kor_nm(biz01_real_person_id)||')'
+                          ELSE f_emp_kor_nm(f.crd03_person_id) END
+                    ELSE CASE WHEN COALESCE(f.crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(f.crd03_person_id) END END AS card_user_name
           FROM biz01_promo a
                INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
                INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
                INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
-               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
-                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                   AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true'  THEN 1 ELSE 0 END) AS biz02_emp_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'false' THEN 1 ELSE 0 END) AS biz02_target_count
                                            FROM biz02_person
                                           WHERE biz02_promo_id = biz01_promo_id
                                        ) c ON TRUE
                LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+               LEFT OUTER JOIN apr01_appr e ON e.apr01_appr_id = a.biz01_appr_id
+               LEFT OUTER JOIN crd03_trans f ON (    f.crd03_card_id = biz01_card_id
+                                                 AND biz01_provide_date BETWEEN f.crd03_fr_dt AND COALESCE(f.crd03_to_dt,'9999-12-31') )
          WHERE 1=1
            AND biz01_company_id = #{companyId}
            AND (
@@ -59,8 +75,74 @@
                  )
                )
            AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
+        <if test="apprCheck">
+           AND COALESCE(e.apr01_status_cd,'00') NOT IN ('10', '20', '30')
+        </if>
+        <if test="accountId != null">
+           AND act01_account_code_id = #{accountId}
+        </if>
            AND CONCAT(crd01_card_nm,crd02_franchise_nm,crd02_sector_nm, biz01_note) ILIKE #{searchText}
          ORDER BY biz01_provide_date
+    </select>
+
+    <!-- AS-IS biz01_promo.selectTargetInfoReqYn (IDMS-IC 2026-11-06, CH-0010) — 고른 내역 중 '거래상대방 필수입력' 한도인데 거래상대방(직원 아님)이 없는 건수. 로그인 회사 조건은 보안 보강 -->
+    <select id="countTargetInfoMissing" resultType="int">
+        SELECT count(*)
+          FROM (SELECT CASE WHEN COALESCE(biz90_target_info_req_yn, 'false') = 'true' AND biz02_target_count = 0
+                            THEN false
+                            ELSE true END   AS result
+                  FROM biz01_promo
+                       LEFT OUTER JOIN LATERAL ( SELECT COALESCE(SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'false' THEN 1 ELSE 0 END), 0) AS biz02_target_count
+                                                   FROM biz02_person
+                                                  WHERE biz02_promo_id = biz01_promo_id) c ON TRUE
+                       LEFT OUTER JOIN LATERAL ( SELECT *
+                                                   FROM biz90_limit
+                                                  WHERE biz90_provide_rcv_type = '1'
+                                                    AND biz90_company_id = biz01_company_id
+                                                    AND biz90_start_date <![CDATA[<=]]> biz01_provide_date
+                                                  ORDER BY biz90_start_date DESC
+                                                  LIMIT 1) l ON TRUE
+                 WHERE biz01_company_id = #{companyId}
+                   AND biz01_promo_id IN <foreach collection="promoIds" item="id" open="(" close=")" separator=",">#{id}</foreach>) t
+         WHERE result = false
+    </select>
+
+    <!-- AS-IS biz01_promo.updateByApprId (IDMS-IC 2026-11-06, CH-0011) — 고른 내역에 상신 문서 ID. 로그인 회사 조건은 보안 보강 -->
+    <update id="updateApprId">
+        UPDATE biz01_promo
+           SET biz01_appr_id = #{apprId}
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_promo_id IN <foreach collection="promoIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </update>
+
+    <!-- AS-IS sys00_common.selectAccountName (IDMS-IC 2026-11-04, CH-0057) — #1131 계정과목 콤보: 기간 안의 내 법인카드 내역에 쓰인 계정과목. 로그인 회사 조건은 보안 보강 -->
+    <select id="selectCardAccountNames" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes">
+        SELECT CAST(act01_account_code_id AS VARCHAR) AS code
+             , act01_account_nm                       AS name
+          FROM biz01_promo
+               INNER JOIN act01_account_code d ON d.act01_account_code_id = biz01_account_code_id
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+               INNER JOIN crd02_data b ON crd02_data_id = biz01_card_data_id
+               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+               LEFT OUTER JOIN crd03_trans f ON (    f.crd03_card_id = biz01_card_id
+                                                 AND biz01_provide_date BETWEEN f.crd03_fr_dt AND COALESCE(f.crd03_to_dt,'9999-12-31') )
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
+           AND (
+                 (sys01_card_real_user_yn = 'true' AND biz01_real_person_id = #{personId})
+              OR ( (sys01_card_real_user_yn IS DISTINCT FROM 'true')
+                    AND #{personId} IN (
+                          SELECT crd03_person_id
+                            FROM crd03_trans
+                                 INNER JOIN crd01_card
+                                         ON crd01_card_id = crd03_card_id
+                           WHERE biz01_provide_date
+                                 BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,to_date('29991231','yyyyMMdd'))
+                             AND biz01_card_id = crd03_card_id
+                      )
+                 )
+               )
+         GROUP BY act01_account_code_id, act01_account_nm
     </select>
 
     <!-- AS-IS biz01_promo.closeCheck L2267 (IDMS-IC) — 로그인 회사 조건은 보안 보강 -->
@@ -181,10 +263,11 @@
         INSERT INTO sys99_print
                ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
                , sys99_string02, sys99_date01, sys99_string03, sys99_string04, sys99_long01
-               , sys99_string05, sys99_string06, sys99_long02, sys99_long03, sys99_string07 )
+               , sys99_string05, sys99_string06, sys99_long02, sys99_long03, sys99_string07, sys99_string08 )
         VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
                , COALESCE(#{row.htmlCardName}, ''), #{row.approvalDt}, COALESCE(#{row.franchiseName}, ''), COALESCE(#{row.sectorName}, ''), COALESCE(#{row.approvalAmount}, 0)
-               , COALESCE(#{row.providePurName}, ''), COALESCE(#{row.provideContentName}, ''), COALESCE(#{row.totalPeple}, 0), COALESCE(#{row.averagePrice}, 0), COALESCE(#{row.note}, '') )
+               , COALESCE(#{row.providePurName}, ''), COALESCE(#{row.provideContentName}, ''), COALESCE(#{row.totalPeple}, 0), COALESCE(#{row.averagePrice}, 0), COALESCE(#{row.note}, '')
+               , COALESCE(#{row.accountName}, '') )  <!-- string08 계정과목: 원본 2026-11-04 (CH-0111) -->
     </insert>
 
     <!-- ===== L03 Biz01_Tab_Other · Biz01_Edit_Other ===== -->
@@ -811,7 +894,8 @@
          ORDER BY q.row_id
     </insert>
 
-    <!-- V29 AS-IS biz01_promo.selectByCardExcel L724 (IDMS-IC) — A41 상신 첨부 엑셀. 열은 엑셀에 쓰는 것만 별칭으로, 조건·정렬은 그대로 -->
+    <!-- V29 AS-IS biz01_promo.selectByCardExcel L724 (IDMS-IC) — A41 상신 첨부 엑셀. 열은 엑셀에 쓰는 것만 별칭으로.
+         원본 2026-11-06(CH-0216): 조건이 기간·검색어 → 고른 내역 ID(promoIds). 로그인 회사 조건은 보안 보강 -->
     <select id="selectByCardExcel" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardExcelRow">
         <![CDATA[
         SELECT crd01_card_nm                                                                                      AS html_card_name
@@ -860,23 +944,9 @@
                LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
          WHERE 1=1
            AND biz01_company_id = #{companyId}
-           AND (
-                 (sys01_card_real_user_yn = 'true' AND biz01_real_person_id = #{personId})
-              OR ( (sys01_card_real_user_yn IS DISTINCT FROM 'true')
-                    AND #{personId} IN (
-                          SELECT crd03_person_id
-                            FROM crd03_trans
-                                 INNER JOIN crd01_card
-                                         ON crd01_card_id = crd03_card_id
-                           WHERE a.biz01_provide_date
-                                 BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,to_date('29991231','yyyyMMdd'))
-                             AND a.biz01_card_id = crd03_card_id
-                      )
-                 )
-               )
-           AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
-           AND CONCAT(crd01_card_nm,crd02_franchise_nm,crd02_sector_nm, biz01_note) ILIKE #{searchText}
-         ORDER BY biz01_provide_date
+           AND biz01_promo_id IN
         ]]>
+        <foreach collection="promoIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+         ORDER BY biz01_provide_date
     </select>
 </mapper>

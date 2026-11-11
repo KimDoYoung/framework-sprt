@@ -19,7 +19,6 @@ import java.util.List;
 public class BizRelateApprService {
 
     private final BizRelateApprMapper mapper;
-    private final BizCardExcelService cardExcelService;
 
     /** AS-IS selectByPersonId(companyId, dataYm, linkCode, personId = LoginUser) — 정확히 한 건일 때만 그 행, 아니면 null(미상신) */
     public BizRelateApprRes getByPerson(UserPrincipal user, String dataYm, String linkCode) {
@@ -75,19 +74,16 @@ public class BizRelateApprService {
 
     /**
      * AS-IS insertPersonId L164-206 — 로그인 사원의 그 달 상신 연결을 새 문서로 바꾼다(있으면 지우고 넣는다). 반환은 새 연결 ID.
-     * A41(법인카드)이면 문서 첨부 엑셀 `createCardExcel2`도 만든다(AS-IS는 문서 저장 때, TOBE는 문서 ID가 정해지는 이 때).
-     * AS-IS는 기존 연결이 둘 이상이면 selectOne 오류, TOBE는 모두 지운다
+     * AS-IS는 기존 연결이 둘 이상이면 selectOne 오류, TOBE는 모두 지운다.
+     * 원본 2026-11-06부터 #1131은 이걸 부르지 않고 행마다 상신한다(BizCardApprService) — A41 첨부 엑셀도 거기서 만든다
      */
     @Transactional
-    public long insertPersonId(UserPrincipal user, BizRelateApprPersonReq req) throws java.io.IOException {
+    public long insertPersonId(UserPrincipal user, BizRelateApprPersonReq req) {
         for (BizRelateApprRes old : mapper.selectByPersonId(user.getCompanyId(), req.dataYm(), req.linkCode(), user.getUserId())) {
             mapper.deleteById(user.getCompanyId(), old.relateApprId());
         }
         long id = mapper.selectNextId();
         mapper.insertPersonId(id, user.getCompanyId(), req.dataYm(), req.linkCode(), req.apprId(), user.getUserId());
-        if ("A41".equals(req.linkCode()) && req.startDate() != null && req.closeDate() != null) {
-            cardExcelService.createCardExcel(user, req.apprId(), req.startDate(), req.closeDate(), req.searchText());
-        }
         return id;
     }
 }

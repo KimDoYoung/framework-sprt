@@ -46,7 +46,8 @@ export const Biz01_Tab_CardSimple: React.FC = () => {
   const retrieve = useCallback(async () => {
     const v = sp.current.current;
     try {
-      const list = await bizPromoApi.searchCards(fmtDate(v.startDate), fmtDate(v.closeDate), v.searchText);
+      // 원본은 apprCheck를 넘기지 않는다 → MyBatis `apprCheck != false`(null)가 참 → 결재 10·20·30 내역은 빠진다(2026-11-04 이후, CH-0005)
+      const list = await bizPromoApi.searchCards(fmtDate(v.startDate), fmtDate(v.closeDate), v.searchText, { apprCheck: true });
       gridRef.current?.api?.deselectAll();
       setChecked([]);
       setRows(list);

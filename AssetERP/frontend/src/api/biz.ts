@@ -53,9 +53,28 @@ export const bizProvideSetupApi = {
 /** L02 AS-IS Biz01_Tab_Card·Biz01_Edit_Card·Biz01_Lookup_CardManagement (server/biz/Biz01_Promo) */
 export const bizPromoApi = {
   /** AS-IS biz.Biz01_Promo.selectByCard — 날짜 'yyyy-MM-dd', 서버가 searchText를 %…%로 감싼다 */
-  searchCards: async (startDate: string, closeDate: string, searchText: string): Promise<BizPromoCard[]> => {
-    const res = await apiClient.get<ApiResponse<BizPromoCard[]>>('v1/biz/promos/cards', { params: { startDate, closeDate, searchText } });
+  searchCards: async (startDate: string, closeDate: string, searchText: string,
+    opts: { apprCheck?: boolean; accountId?: number | null } = {}): Promise<BizPromoCard[]> => {
+    // 원본 2026-11-04~06: apprCheck = [미상신건만 조회](결재 10·20·30 제외), accountId = 계정과목(없으면 전체)
+    const res = await apiClient.get<ApiResponse<BizPromoCard[]>>('v1/biz/promos/cards', {
+      params: { startDate, closeDate, searchText, apprCheck: opts.apprCheck ?? false, accountId: opts.accountId ?? undefined },
+    });
     return res.data.data ?? [];
+  },
+  /** AS-IS sys.Sys00_Common.selectAccountName — #1131 계정과목 콤보(기간 안 내 법인카드 내역의 계정과목) */
+  cardAccountNames: async (startDate: string, closeDate: string): Promise<BizCodeOption[]> => {
+    const res = await apiClient.get<ApiResponse<BizCodeOption[]>>('v1/biz/promos/cards/account-names', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz01_Promo.selectTargetInfoReqYn — 거래상대방 필수입력인데 거래상대방이 없는 건수 */
+  countTargetInfoMissing: async (promoIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/cards/target-info-check', promoIds);
+    return res.data.data ?? 0;
+  },
+  /** 원본 2026-11-06 A41 상신 저장 뒤: 고른 내역 첨부 엑셀(파일 이름 = 제목) + 내역에 문서 ID(updateByApprId) */
+  linkCardAppr: async (apprId: number, promoIds: number[], titleName: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/cards/appr-link', { apprId, promoIds, titleName });
+    return res.data.data ?? 0;
   },
   /** AS-IS biz.Biz01_Promo.closeCheck — 마감된 내역이 있으면 true (status -1) */
   hasClosed: async (promoIds: number[]): Promise<boolean> => {
@@ -98,8 +117,8 @@ export const bizPromoApi = {
     return res.data.data ?? null;
   },
   /** AS-IS sys.Sys99_Print.insertRdCard → 출력 그룹 ID (RD rdGroupId) */
-  rdPrint: async (startDate: string, closeDate: string, searchText: string): Promise<string> => {
-    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/rd-print', { startDate, closeDate, searchText });
+  rdPrint: async (startDate: string, closeDate: string, searchText: string, apprCheck = false): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/rd-print', { startDate, closeDate, searchText, apprCheck });
     return res.data.data ?? '';
   },
 

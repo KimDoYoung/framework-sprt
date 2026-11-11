@@ -25,15 +25,24 @@ import java.util.List;
 @Mapper
 public interface BizPromoMapper {
 
-    /** AS-IS biz01_promo.selectByCard */
+    /** AS-IS biz01_promo.selectByCard. apprCheck = 미상신건만(결재 10·20·30 제외), accountId = 계정과목(null이면 전체) */
     List<BizPromoCardRes> selectByCard(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                        @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
-                                       @Param("searchText") String searchText);
+                                       @Param("searchText") String searchText, @Param("apprCheck") boolean apprCheck,
+                                       @Param("accountId") Long accountId);
 
-    /** AS-IS biz01_promo.selectByCardExcel — A41 상신 첨부 엑셀의 내역(검색어는 "%…%"로 감싼 글자) */
-    List<BizCardExcelRow> selectByCardExcel(@Param("companyId") Long companyId, @Param("personId") Long personId,
-                                            @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
-                                            @Param("searchText") String searchText);
+    /** AS-IS biz01_promo.selectByCardExcel — A41 상신 첨부 엑셀의 내역 = 고른 내역(원본 2026-11-06) */
+    List<BizCardExcelRow> selectByCardExcel(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
+
+    /** AS-IS biz01_promo.selectTargetInfoReqYn — 거래상대방 필수입력인데 거래상대방이 없는 건수 */
+    int countTargetInfoMissing(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
+
+    /** AS-IS biz01_promo.updateByApprId — 고른 내역에 상신 문서 ID */
+    int updateApprId(@Param("companyId") Long companyId, @Param("apprId") Long apprId, @Param("promoIds") List<Long> promoIds);
+
+    /** AS-IS sys00_common.selectAccountName — #1131 계정과목 콤보 */
+    List<BizCodeOptionRes> selectCardAccountNames(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                                  @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
 
     /** AS-IS biz01_promo.closeCheck — 마감된 내역의 개수 */
     int countClosed(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);

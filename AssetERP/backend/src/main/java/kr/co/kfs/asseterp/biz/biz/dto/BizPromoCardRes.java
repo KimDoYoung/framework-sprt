@@ -23,6 +23,12 @@ public record BizPromoCardRes(
         String note,
         String provideCompany,
         Long pepleCount,
-        Long averagePrice2
+        Long averagePrice2,
+        /** 원본 2026-11-06(c0b1e1146): 행마다 상신 문서 ID·결재상태(apr01_status_cd·이름)·거래상대방 수·카드 사용자 (CH-0005·0120) */
+        Long apprId,
+        String apprStatusCode,
+        String apprStatusName,
+        Long targetCount,
+        String cardUserName
 ) {
 }

@@ -16025,6 +16025,84 @@
       "updated_at": "2026-11-11T16:12:10+09:00",
       "note": "#1130",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/Biz01_Promo.java · updateByApprId": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · updateByApprId": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectByCardExcel": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz01_PromoModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_Tab_Card.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectByCard": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/Biz01_Promo.java · selectTargetInfoReqYn": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectTargetInfoReqYn": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/sys/Sys99_Print.java · insertRdCard": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/sys/mapper/sys00_common.xml · selectAccountName": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz01_PromoModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/sys/Sys00_Common.java · selectBizCardManager": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T16:33:34+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml · selectById": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T16:33:34+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   },
   "__files__": {
@@ -16128,6 +16206,36 @@
       "status": "반영",
       "updated_at": "2026-11-11T16:12:10+09:00",
       "note": "#1130",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/Biz01_Promo.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "server/biz/mapper/biz01_promo.xml": {
+      "status": "해당없음",
+      "updated_at": "2026-11-11T16:33:34+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz01_PromoModel.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/Biz01_Tab_Card.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
+      "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
+    },
+    "client/vi/biz/model/Biz01_PromoModelProperties.java": {
+      "status": "반영",
+      "updated_at": "2026-11-11T16:33:33+09:00",
+      "note": "#1131",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
   }

@@ -56,9 +56,21 @@ public class BizPromoService {
     private final BizPromoMapper mapper;
     private final BizPersonMapper personMapper;
 
-    /** AS-IS selectByCard(companyId, personId = LoginUser) — searchText는 클라이언트가 "%…%"로 감싸 보낸다 */
-    public List<BizPromoCardRes> searchByCard(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
-        return mapper.selectByCard(user.getCompanyId(), user.getUserId(), startDate, closeDate, Texts.like(searchText));
+    /** AS-IS selectByCard(companyId, personId = LoginUser) — searchText는 클라이언트가 "%…%"로 감싸 보낸다. apprCheck = 미상신건만, accountId = 계정과목(null 전체) */
+    public List<BizPromoCardRes> searchByCard(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText,
+                                              boolean apprCheck, Long accountId) {
+        return mapper.selectByCard(user.getCompanyId(), user.getUserId(), startDate, closeDate, Texts.like(searchText), apprCheck, accountId);
+    }
+
+    /** AS-IS sys.Sys00_Common.selectAccountName(companyId, personId, startDate, closeDate) — #1131 계정과목 콤보(원본 2026-11-04) */
+    public List<BizCodeOptionRes> searchCardAccountNames(UserPrincipal user, LocalDate startDate, LocalDate closeDate) {
+        return mapper.selectCardAccountNames(user.getCompanyId(), user.getUserId(), startDate, closeDate);
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectTargetInfoReqYn — 고른 내역 중 거래상대방 필수입력인데 거래상대방이 없는 건수(0이 아니면 상신 불가) */
+    public int countTargetInfoMissing(UserPrincipal user, List<Long> promoIds) {
+        if (promoIds == null || promoIds.isEmpty()) return 0;
+        return mapper.countTargetInfoMissing(user.getCompanyId(), promoIds);
     }
 
     /** AS-IS closeCheck — 마감된 내역이 하나라도 있으면 true(status -1) */
@@ -126,7 +138,9 @@ public class BizPromoService {
 
         mapper.deletePrint(companyId, personId, PRINT_WINDOW);
 
-        for (BizPromoCardRes row : mapper.selectByCard(companyId, personId, req.startDate(), req.closeDate(), Texts.like(req.searchText()))) {
+        // 원본 2026-11-04: 미상신건만(apprCheck)을 같이 넘긴다. 계정과목은 원본도 출력에 넘기지 않는다(전체)
+        for (BizPromoCardRes row : mapper.selectByCard(companyId, personId, req.startDate(), req.closeDate(), Texts.like(req.searchText()),
+                Boolean.TRUE.equals(req.apprCheck()), null)) {
             mapper.insertPrintCard(mapper.selectNextId(), companyId, personId, PRINT_WINDOW, groupId, row);
         }
         return String.valueOf(groupId);
