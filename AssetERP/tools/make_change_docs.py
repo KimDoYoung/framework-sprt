@@ -310,7 +310,9 @@ def new_file_rows(menu, since):
 
 
 # ---------------------------------------------------------------- 5. 대장에 이어 붙이기
-COLS = ['키', '발견일', 'AS-IS 커밋', '종류', '단위', '변경 요약', '영향 화면', 'TOBE 대응', '상태', '처리일', '비고']
+COLS = ['키', '발견일', 'AS-IS 커밋', '종류', '단위', '변경 요약', '영향 화면', 'TOBE 대응', '확인', '상태', '처리일', '비고']
+C = {name: i for i, name in enumerate(COLS)}
+DONE_NEEDS_CHECK = '반영'   # 이 상태는 '확인' 칸(테스트 이름·compare 일치 등)이 있어야 한다 — README "반영 완료 조건"
 
 
 def esc(s): return (s or '').replace('|', '\\|')
@@ -325,39 +327,43 @@ def merge(rows, today, dry):
     text = open(LEDGER).read()
     lines = text.splitlines()
     idx = {}            # 단위 → [(줄 번호, cells)]
-    last_no = 0
+    last_no, bad, unchecked = 0, [], []
     for i, l in enumerate(lines):
         if l.startswith('| CH-'):
             c = split_row(l)
-            if len(c) != len(COLS): continue
-            last_no = max(last_no, int(c[0][3:]))
-            idx.setdefault(c[4], []).append((i, c))
+            if len(c) != len(COLS): bad.append(l[:12]); continue
+            last_no = max(last_no, int(c[C['키']][3:]))
+            idx.setdefault(c[C['단위']], []).append((i, c))
+            if c[C['상태']] == DONE_NEEDS_CHECK and not c[C['확인']]: unchecked.append(c[C['키']])
+    if bad: print(f'⚠ 칸 수가 {len(COLS)}개가 아닌 줄 {len(bad)}건(건너뜀): ' + ', '.join(bad[:5]))
+    if unchecked: print(f'⚠ 확인 없이 반영된 줄 {len(unchecked)}건: ' + ', '.join(unchecked[:10]))
     added, updated, same = [], 0, 0
     rows.sort(key=lambda r: r['order'])
     for r in rows:
         key = esc(r['key'])
         prev = idx.get(key, [])
-        open_ = [(i, c) for i, c in prev if c[8] == '대기']
+        open_ = [(i, c) for i, c in prev if c[C['상태']] == '대기']
         if open_:
             i, c = open_[-1]
             nc = list(c)
-            nc[2], nc[5], nc[6] = esc(r['commit']), esc(r['summ']), esc(r['scr'])
-            if not nc[7]: nc[7] = esc(r['tobe'])
+            nc[C['AS-IS 커밋']], nc[C['변경 요약']], nc[C['영향 화면']] = esc(r['commit']), esc(r['summ']), esc(r['scr'])
+            if not nc[C['TOBE 대응']]: nc[C['TOBE 대응']] = esc(r['tobe'])
             # 자동으로 쓴 "못 찾음" 비고는 화면을 찾았으면 고친다(사람이 쓴 비고는 그대로)
             lost = '쓰는 화면을 색인에서 못 찾음 — 확인 필요'
-            if lost in nc[10] and not r['scr'].startswith('(못 찾음)'):
-                nc[10] = nc[10].replace(lost, '완료(기준선) 화면에서는 안 씀' if r['scr'].startswith('(완료 화면 밖)') else '').strip('; ')
+            if lost in nc[C['비고']] and not r['scr'].startswith('(못 찾음)'):
+                nc[C['비고']] = nc[C['비고']].replace(lost, '완료(기준선) 화면에서는 안 씀' if r['scr'].startswith('(완료 화면 밖)') else '').strip('; ')
             if nc != c:
                 lines[i] = '| ' + ' | '.join(nc) + ' |'; updated += 1
             else:
                 same += 1
             continue
-        if prev and any(r['hash'] and r['hash'] in c[2] for _, c in prev):
+        if prev and any(r['hash'] and r['hash'] in c[C['AS-IS 커밋']] for _, c in prev):
             same += 1; continue            # 처리한 뒤 새 커밋 없음
         last_no += 1
-        cells = [f'CH-{last_no:04d}', today, esc(r['commit']), r['kind'], key, esc(r['summ']), esc(r['scr']),
-                 esc(r['tobe']), r['status'], '' if r['status'] == '대기' else today, esc(r['note'])]
-        added.append('| ' + ' | '.join(cells) + ' |')
+        cell = {'키': f'CH-{last_no:04d}', '발견일': today, 'AS-IS 커밋': esc(r['commit']), '종류': r['kind'], '단위': key,
+                '변경 요약': esc(r['summ']), '영향 화면': esc(r['scr']), 'TOBE 대응': esc(r['tobe']), '확인': '',
+                '상태': r['status'], '처리일': '' if r['status'] == '대기' else today, '비고': esc(r['note'])}
+        added.append('| ' + ' | '.join(cell[n] for n in COLS) + ' |')
     if added:
         last_row = max((i for i, l in enumerate(lines) if l.startswith('| CH-')), default=None)
         if last_row is None:
@@ -383,7 +389,7 @@ def main():
     today = datetime.date.today().isoformat()
     rows = unit_rows(drift, menu) + new_file_rows(menu, since)
     added, updated, same = merge(rows, today, a.dry_run)
-    c = collections.Counter(split_row(l)[3] for l in added)
+    c = collections.Counter(split_row(l)[C['종류']] for l in added)
     print(f'단위 {len(rows)}개 → 새 줄 {len(added)} · 대기 줄 갱신 {updated} · 그대로 {same}' + (' (dry-run: 대장에 쓰지 않음)' if a.dry_run else ''))
     if c: print('  새 줄 종류: ' + ', '.join(f'{k} {v}' for k, v in sorted(c.items(), key=lambda kv: KIND_ORDER.get(kv[0], 9))))
     if a.dry_run:
