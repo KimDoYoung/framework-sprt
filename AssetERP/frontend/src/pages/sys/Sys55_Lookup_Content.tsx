@@ -2,7 +2,8 @@
  * 화면안내 창 (EE103) — 회사가 메뉴마다 써 둔 화면안내를 보여 주거나(view) 작성한다(open)
  * AS-IS: myApp/client/vi/sys/Sys55_Lookup_Content.java (292줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, IDMS-IC)
  * view(model, checkBoxYn) L68-157: 700×700 "화면안내", HTML 읽기 전용, 아래 가운데 [닫기]
- *   ※ [다시 표시하지 않음] 체크(checkBox L99-120)는 bottomPanel에 붙이는 줄이 주석(L142-144)이라 AS-IS에서도 화면에 없다 — 만들지 않았다(E2·setMenuInfo L233-263 도달 불가)
+ *   ※ [다시 표시하지 않음] 체크(checkBox L99-120)는 원본 2026-11-05에 다시 켜졌지만(view(…, true) — 메뉴를 열 때 자동으로 띄울 때만) TOBE에는 그 자동 표시(MenuOpener·MenuInfoNotice)가 없어
+ *   13-누락대장으로 넘겼다 — 만들지 않았다(E2·setMenuInfo L233-263 도달 불가)
  * open(menuModel, callback) L159-200: 700×700 "화면안내 작성", HTML 편집기, 아래 가운데 [저장][닫기]
  * 호출처: view = Emp91_Lookup_List(보기 아이콘), MenuOpener(메뉴 열 때 자동) / open = Sys55_Tab_MenuGuideCompany(TOBE 미변환 — 연결 없음)
  * 스타일: MH (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
@@ -50,8 +51,8 @@ export const Sys55_Lookup_Content: React.FC<Props> = ({ open, mode, menuGuideCom
   const update = async () => {
     try {
       const saved = await sysMenuGuideContentApi.save(guideId, menuId ?? null, html);
-      // L213 menuModel.setMenuGuideCompanyId(menuGuideCompanyModel.getCompanyId()) — AS-IS는 회사 ID를 넣는다(그대로)
-      setGuideId(saved.companyId);
+      // L213 menuModel.setMenuGuideCompanyId(menuGuideCompanyModel.getMenuGuideCompanyId()) — 원본 2026-11-05(CH-0205)에 회사 ID → 화면안내 ID로 고쳐짐
+      setGuideId(saved.menuGuideCompanyId);
       if (menuId != null) await empMenuInfoNoticeApi.removeByMenu(menuId);
       message.success('저장이 완료되었습니다.');
     } catch (err) {

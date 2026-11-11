@@ -578,6 +578,8 @@ export interface MenuGuide {
   menuFullName: string | null;
   menuName: string | null;
   note: string | null;
+  /** 화면번호 (원본 2026-10-23) */
+  menuNo?: string | null;
 }
 
 /** 일자 한 행 (A18, AS-IS Sys12_CalendarModel). day 'YYYY-MM-DD', workingYn 'true'/'false'(영업일 체크박스), companyName은 고객사반영 조회창만 */

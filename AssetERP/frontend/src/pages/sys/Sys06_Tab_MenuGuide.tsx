@@ -21,6 +21,7 @@ const ALL = '%';  // menuName: "전체" 또는 "%"
 /** AS-IS buildGrid() L116-124 */
 const buildGrid = () => [
   gb.text('menuFullName', 300, '메뉴'),  // L119 SQL 계산 컬럼(total_menu_nm)
+  gb.textCenter('menuNo', 80, '화면번호'),  // 원본 2026-10-23(CH-0184)
   gb.text('menuName', 250, '화면명'),  // L120
   gb.textArea('note', 800, '화면안내', { editor: 'largeText' }),  // L121
 ];

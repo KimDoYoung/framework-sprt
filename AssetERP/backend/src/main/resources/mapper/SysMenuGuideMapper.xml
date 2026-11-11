@@ -50,6 +50,7 @@
         SELECT sys06_menu_id    AS menu_id
              , total_menu_nm    AS menu_full_name
              , sys06_menu_nm    AS menu_name
+             , sys06_menu_no    AS menu_no      -- 화면번호 (원본 2026-10-23 CH-0184)
              , sys06_note       AS note
           FROM menu_path
          WHERE level = 3
