@@ -63,6 +63,9 @@ data/samples/
 # A-Man 매뉴얼 zip 샘플(6-매뉴얼 규격 확인용, 사용자 관리, 커밋하지 않음)
 data/aman-samples/
 
+# 매뉴얼 작업(6-매뉴얼)의 산출물 작업 폴더 — 확정본은 A-Man이 보관한다. 우리는 만들어 올리기만 함(커밋하지 않음)
+/manual/
+
 # DB 백업(tools/db_dump_backup.sh) — 크고 다시 받을 수 있음, 커밋하지 않는다
 data/backup/
 
