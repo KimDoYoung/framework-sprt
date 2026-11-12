@@ -94,6 +94,7 @@ images/{uuid hex}.png ×n    ← 캡처 이미지(본문에서 상대 경로 ima
   - 1~10절 `boxes.json`: PNG마다 같은 이름 `.boxes.json`, `box=[x,y,w,h]` PNG 픽셀 기준, 이름은 화면에 보이는 글자, 같은 이름은 `#2`.
   - 11절 `draw.json`: **A-Man 이미지 편집기의 요소 어휘를 그대로** 쓴다(`circle-number`·`box`·`arrow`·`text`·`callout` + 우리가 더한 `mask`·`crop`). 기본 모양도 A-Man 값이라 사람이 만든 이미지와 같게 나온다. A-Man 소스: `~/work/aman/frontend/src/components/imageditor/`.
 - `draw.json`은 `"target": "등록"`처럼 boxes.json의 이름으로 요소를 가리키거나 `x, y, width, height`로 픽셀을 직접 준다. yunhee에 `--boxes`·`mark`가 생기기 전에는 좌표를 직접 지정해 시험한다.
+- A-Man 편집기에서 다시 손볼 이미지는 필요할 때 **작업 JSON**(`yunhee mark --json`의 해석된 요소 + 원본·결과 PNG의 base64를 `{title, originalImageUrl, editedImageUrl, items, circleCounter, imageScale}`로 감싼 것)을 15줄쯤의 스크립트로 만들어 `POST /admin/image-work`로 등록한다(A-Man 무수정, 미시험·yunhee 요청 불필요, `mask`·`crop`은 A-Man 요소가 아니라 원본에 미리 반영해야 함).
 - OCR 같은 `find`(이미지에서 위치 찾기)는 두지 않는다. 좌표는 캡처 때 DOM에서 얻는다. DOM 밖 요소(캔버스 등)가 많아지면 그때 다시 검토.
 
 ## 열린 문제 / 결정 대기
