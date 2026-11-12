@@ -7,9 +7,9 @@ SYS·ORG를 정리했고 EMP는 인사(0001~0005)까지 실행했다(2026-11-10)
 flowchart LR
     SYS["SYS 시스템관리<br/>고객사 등록·관리자·메뉴"]
     ORG["ORG 조직<br/>ORG-BZ-0001~0005"]
-    EMP["EMP 사원<br/>EMP-BZ-0001~0005 (0006~0024 목록)"]
+    EMP["EMP 사원<br/>EMP-BZ-0001~0024"]
     AUTH["SYS 권한<br/>권한그룹·직원 권한"]
-    WORK["업무 도메인들<br/>APR 결재 · ATT 근태 · PAY 급여 · ICS 내부통제 · TDM 책무 …"]
+    WORK["업무 도메인들<br/>APR 결재(0001~0008 실행) · ATT 근태 · PAY 급여 · ICS 내부통제 · TDM 책무 …"]
 
     SYS --> ORG --> EMP --> AUTH --> WORK
     SYS --> AUTH
