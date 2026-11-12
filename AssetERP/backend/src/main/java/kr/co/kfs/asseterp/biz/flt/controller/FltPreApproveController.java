@@ -72,4 +72,10 @@ public class FltPreApproveController {
     public ApiResponse<String> sendMessage(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.sendMessage(principal));
     }
+
+    /** AS-IS flt.Flt10_Tr.sendMessage02 (협의승인요청 알림발송) */
+    @PostMapping("/send-message/add-confirmer")
+    public ApiResponse<String> sendMessage02(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.sendMessage02(principal));
+    }
 }

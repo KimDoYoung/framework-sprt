@@ -33,6 +33,8 @@ public class FltPreApproveService {
 
     /** emp92_sms_notice A01 : 임직원 매매 사전신청 완료알림 */
     private static final String NOTICE_CODE = "A01";
+    /** 임직원매매 사전신고 협의승인요청 (AS-IS AlertService A04) */
+    private static final String NOTICE_CODE_ADD_CONFIRM = "A04";
 
     private final FltPreApproveMapper mapper;
     private final AprNoticeMapper noticeMapper;
@@ -102,6 +104,25 @@ public class FltPreApproveService {
             }
             alert.alert(NOTICE_CODE, p.personId(), p.companyId(), Map.of("count", String.valueOf(t.count())));
             mapper.updateConfirmSmsYn(companyId, t.personId());
+        }
+        return targets.size() + "건이 발송완료되었습니다";
+    }
+
+    /**
+     * AS-IS sendMessage02 L340-366 (ecfa0f17b, CH-0367) [협의승인요청 알림발송] — 협의승인자가 지정된 승인 대기(20) 건이 있는 사원마다
+     * 통합알림 A04 "[Asset-ERP] 임직원 매매 사전 협의승인신청 N건이 존재합니다."를 보낸다. 받는 사람은 원본대로 매매 신청 사원(flt10_person_id).
+     * confirm_sms_yn은 바꾸지 않는다(원본도 그대로라 누를 때마다 다시 간다). 끝나면 "N건이 발송완료되었습니다"(N = 대상 사원 수).
+     */
+    @Transactional
+    public String sendMessage02(UserPrincipal user) {
+        Long companyId = user.getCompanyId();
+        List<PreApproveSendTargetRow> targets = mapper.selectSendMessageList02(companyId);
+        for (PreApproveSendTargetRow t : targets) {
+            AprNoticePerson p = noticeMapper.selectPerson(t.personId());
+            if (p == null) {
+                continue;
+            }
+            alert.alert(NOTICE_CODE_ADD_CONFIRM, p.personId(), p.companyId(), Map.of("count", String.valueOf(t.count())));
         }
         return targets.size() + "건이 발송완료되었습니다";
     }

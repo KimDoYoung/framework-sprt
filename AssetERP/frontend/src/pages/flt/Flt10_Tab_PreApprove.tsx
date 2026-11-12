@@ -228,20 +228,20 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
     });
   };
 
-  // [E8] confirmButton[승인].Select (L303) → confirmChk() L529-559 → [E15] YES → updateReason("20")
+  // [E8] confirmButton[승인].Select (L303) → confirmChk() L529-559 → [E16] YES → updateReason("20")
   const confirmChk = () => confirmBox('승인', '승인', r => r.statusCode !== '10', '승인(반려) 처리된 내역이 존재합니다', () => updateReason('20'));
-  // [E9] rejectButton[반려].Select (L309) → rejectChk() L593-623 → [E17] YES → updateReason("30")
+  // [E9] rejectButton[반려].Select (L309) → rejectChk() L593-623 → [E18] YES → updateReason("30")
   const rejectChk = () => confirmBox('반려', '반려', r => r.statusCode !== '10', '승인(반려) 처리된 내역이 존재합니다', () => updateReason('30'));
-  // [E10] cancelButton[취소].Select (L315) → cancelChk() L561-591 → [E16] YES → updateStatusCode("10", null)
+  // [E10] cancelButton[취소].Select (L315) → cancelChk() L561-591 → [E17] YES → updateStatusCode("10", null)
   const cancelChk = () => confirmBox('취소', '취소', r => r.statusCode === '10', '승인(반려)전 내역이 존재합니다', () => void updateStatusCode('10', null));
 
   // [E11] fundStockButton[펀드보유종목 확인].Select (L321) → Fnd10_Lookup_RelateFund.open()
   const fundStock = () => setFundStockOpen(true);  // EE47
 
-  // [E13] noticeButton[알림수신인 설정].Select (L334) → Emp93_Lookup_SmsNoticeTarget.open("B01")
+  // [E14] noticeButton[알림수신인 설정].Select (L334) → Emp93_Lookup_SmsNoticeTarget.open("B01")
   const noticeTarget = () => setNoticeOpen(true);  // EE44
 
-  // [E12] sendMessageButton[일괄 알림발송].Select (L328) → sendMessage() L371-386
+  // [E12] sendMessageButton01[일괄 알림발송].Select (L330) → sendMessage01()
   const sendMessage = async () => {
     try {
       const msg = await fltApi.sendPreApproveMessage();
@@ -252,7 +252,16 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
     }
   };
 
-  // [E14] addConfirmerButton[협의승인자 지정].Select (L341) → 이미 협의승인자가 처리한 건 검사 → updateAddConfirmer(list) L744-768
+  // [E13] sendMessageButton02[협의승인요청 알림발송].Select (L336, ecfa0f17b) → sendMessage02() — 성공 메시지만(원본은 다시 조회하지 않음)
+  const sendMessage02 = async () => {
+    try {
+      message.info(await fltApi.sendPreApproveAddConfirmMessage());
+    } catch (err) {
+      message.error(errorMessage(err, '발송 실패'));
+    }
+  };
+
+  // [E15] addConfirmerButton[협의승인자 지정].Select (L341) → 이미 협의승인자가 처리한 건 검사 → updateAddConfirmer(list) L744-768
   const addConfirmer = () => {
     const list = [...buyChecked.current, ...sellChecked.current];
     if (list.some(r => r.addConfirmDatetime != null)) {
@@ -316,6 +325,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
           {addConfirmYn && <Button type="assign" onClick={addConfirmer}>협의승인자 지정</Button>}
           <Button type="view" onClick={fundStock}>펀드보유종목 확인</Button>
           <Button type="send" onClick={sendMessage}>일괄 알림발송</Button>
+          <Button type="send" onClick={sendMessage02}>협의승인요청 알림발송</Button>
           <span style={{ fontSize: 12, color: '#456EA6', fontWeight: 'bold' }}>&nbsp;* 승인여부를 클릭하여 매매사유 확인 및 승인/반려사유를 수정 할 수 있습니다.</span>
         </div>
         <div style={sectionLabel}>▶ 매 수</div>

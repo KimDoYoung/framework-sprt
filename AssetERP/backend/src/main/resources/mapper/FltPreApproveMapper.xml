@@ -237,6 +237,18 @@
          ORDER BY flt10_person_id
     </select>
 
+    <!-- AS-IS(IDMS-IC) flt10_tr.getSendMessageList02 (2026-11-12, CH-0359) — 협의승인자가 지정됐고 승인 대기(20)인 건이 있는 사원별 건수 -->
+    <select id="selectSendMessageList02" resultType="kr.co.kfs.asseterp.biz.flt.dto.PreApproveSendTargetRow">
+        SELECT flt10_person_id      AS person_id
+             , COUNT(*)             AS count
+          FROM flt10_tr
+         WHERE flt10_company_id = #{companyId}
+           AND flt10_add_confirmer_id IS NOT NULL
+           AND COALESCE(flt10_status_cd, '00') = '20'
+         GROUP BY flt10_person_id
+         ORDER BY flt10_person_id
+    </select>
+
     <!-- AS-IS(IDMS-IC) flt10_tr.updateConfirmSmsYn (회사 조건 추가) -->
     <update id="updateConfirmSmsYn">
         UPDATE flt10_tr

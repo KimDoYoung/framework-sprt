@@ -545,6 +545,12 @@ export const fltApi = {
     return res.data.data ?? '';
   },
 
+  /** AS-IS flt.Flt10_Tr.sendMessage02 (협의승인요청 알림발송) → 결과 메시지 */
+  sendPreApproveAddConfirmMessage: async (): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/flt/trs/approvals/send-message/add-confirmer');
+    return res.data.data ?? '';
+  },
+
   // ── J09 기준관리 (Flt01_Tab_CompanyStd · Flt01_Lookup_LockUpCheckType · Flt08_Lookup_LockupItem · Flt05_Lookup_ItemType) ──
 
   /** AS-IS flt.Flt01_CompanyStd.selectByCompanyId — 로그인 회사, 적용시작일 내림차순 */

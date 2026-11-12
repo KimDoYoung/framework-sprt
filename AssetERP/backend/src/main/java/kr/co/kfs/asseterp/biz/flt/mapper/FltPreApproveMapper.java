@@ -35,6 +35,9 @@ public interface FltPreApproveMapper {
     /** AS-IS flt10_tr.getSendMessageList — 알림 미발송 승인·반려 건이 있는 사원과 건수 */
     List<PreApproveSendTargetRow> selectSendMessageList(@Param("companyId") Long companyId);
 
+    /** AS-IS flt10_tr.getSendMessageList02 — 협의승인자가 지정된 승인 대기(20) 건이 있는 사원과 건수 */
+    List<PreApproveSendTargetRow> selectSendMessageList02(@Param("companyId") Long companyId);
+
     /** AS-IS flt10_tr.updateConfirmSmsYn (회사 조건 추가) */
     int updateConfirmSmsYn(@Param("companyId") Long companyId, @Param("personId") Long personId);
 
