@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,15 +25,16 @@ import kr.co.kfs.asseterp.common.notice.NoticeSender;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 통합알림 — AS-IS server/utils/alert/AlertService (98d5afdd6, 2026-11-11). 한 사람에게 알림코드(smsNoticeCode) 하나로 앱알림·메일·SMS를 보낸다.
+ * 통합알림 — AS-IS server/utils/alert/AlertService (98d5afdd6 2026-11-11, ecfa0f17b 2026-11-12 CH-0400). 한 사람에게 알림코드(smsNoticeCode) 하나로 앱알림·메일·SMS를 보낸다.
  * <ul>
  *   <li>앱알림: 이메일이 있고 수신차단(emp92 sendCheckTalk)이 아니면. 제목은 코드별(getTitle), 본문은 getMsg</li>
- *   <li>메일: 이메일이 있고 차단(sendCheckMail)이 아니고, 회사 메일 발송({위치}.Mailok)이거나 코드가 M으로 시작하면. 제목 "[알림] Asset-ERP"(SendMailMaster.sendPromoMessage), 본문 getMsg</li>
+ *   <li>메일: 이메일이 있고 형식이 맞고(isValidEmail) 차단(sendCheckMail)이 아니고, 회사 메일 발송({위치}.Mailok)이거나 코드가 M으로 시작하면. 제목 "[알림] Asset-ERP"(SendMailMaster.sendPromoMessage), 본문 getMsg</li>
  *   <li>SMS: 휴대폰이 있고 차단(sendCheckSms)이 아니고, 회사 SMS 발송({위치}.SMSok)이거나 코드가 M으로 시작하면. 본문 getMsg + 접속 주소(EUC-KR로 바꿨다 되돌림)</li>
  * </ul>
  * 발송 기록(sms02_history)은 원본처럼 두 번 남는다: ① AlertService가 보낸 뒤 비고 없이 ② SendSMSAPI.smsSender가 성공했을 때 비고 = 번호.
  * TOBE는 ①을 부른 쪽 트랜잭션에서 쓰고, 실제 발송과 ②는 커밋 뒤(롤백이면 안 보냄) 따로 트랜잭션으로 쓴다.
  * 코드 T04(스케줄 알림)는 메일을 보낼 때 sch07_alarm_record에 보낸 주소를 남긴다.
+ * AS-IS ecfa0f17b의 Teams 알림(viamc만, "Vi 테스트 전용", emp92_teams_notice_yn)은 옮기지 않았다 — 변경반영-대장 CH-0401 보류.
  */
 @Slf4j
 @Service
@@ -61,7 +63,7 @@ public class AlertService {
 
     /**
      * 누구에게 무엇을 보낼지 (DB 읽기만). params: apprId·code(T011·T012·T013·T02), classTreeName·titleName(T012 code 99),
-     * count(A01~A03·B01·B02), content(그 밖의 코드), alarmRecordId(T04)
+     * count(A01~A04·B01·B02, 없으면 0), content(그 밖의 코드), alarmRecordId(T04)
      */
     public List<AprNoticeCall> plan(String smsNoticeCode, Long personId, Long companyIdOrNull, Map<String, ?> params) {
         Long companyId = companyIdOrNull;
@@ -76,7 +78,7 @@ public class AlertService {
         String loc = mapper.selectCompanyLoc(companyId);
         boolean mCode = smsNoticeCode.startsWith("M");
         boolean talkChk = p.emailAddress() != null && mapper.countTalkBlocked(personId, smsNoticeCode) == 0;
-        boolean mailChk = p.emailAddress() != null && mapper.countMailBlocked(personId, smsNoticeCode) == 0
+        boolean mailChk = p.emailAddress() != null && isValidEmail(p.emailAddress()) && mapper.countMailBlocked(personId, smsNoticeCode) == 0
                 && (mCode || props.mailEnabled(loc));
         boolean smsChk = p.mobileTelNo() != null && mapper.countSmsBlocked(personId, smsNoticeCode) == 0
                 && (mCode || props.smsEnabled(loc));
@@ -168,6 +170,7 @@ public class AlertService {
             case "A01" -> "임직원매매 사전신고 승인완료";
             case "A02" -> "사업비 요청 반려";
             case "A03" -> "지출결의 반려";
+            case "A04" -> "임직원매매 사전신고 협의승인요청";
             case "B01" -> "임직원매매 사전신고 승인요청";
             case "B02" -> "사업비지출 승인요청";
             case "B03" -> "기타신청서 신청요청";
@@ -191,6 +194,9 @@ public class AlertService {
                     return "결재문서 " + " '(" + str(p, "classTreeName") + ") " + str(p, "titleName") + "' 건이 직전 결재자의 승인 취소로 인해 결재가 중단되었습니다.";
                 }
                 AprAlertAppr a = mapper.selectApprAlert(longOf(p, "apprId"));
+                if (a == null) {
+                    return "";   // ecfa0f17b getApprMessage: 문서가 없으면 빈 본문
+                }
                 String head = "결재문서 " + " '(" + a.classTreeNameAllPath() + ") " + a.title() + "' 건";
                 return switch (c == null ? "" : c) {
                     case "20" -> head + "의 다음 결재자입니다.";
@@ -201,28 +207,34 @@ public class AlertService {
                 };
             }
             case "T013" -> {
-                return "'" + mapper.selectApprAlert(longOf(p, "apprId")).title() + "' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]";
+                AprAlertAppr a = mapper.selectApprAlert(longOf(p, "apprId"));
+                return a == null ? "" : "'" + a.title() + "' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]";
             }
             case "T02" -> {
-                return "[Asset-ERP] " + mapper.selectApprAlert(longOf(p, "apprId")).title() + " 취소되었습니다.";
+                AprAlertAppr a = mapper.selectApprAlert(longOf(p, "apprId"));
+                return a == null ? "" : "[Asset-ERP] " + a.title() + " 취소되었습니다.";
             }
             case "A01" -> {
-                return "[Asset-ERP] 임직원 매매 사전신청 " + str(p, "count") + "건이 완료되었습니다.";
+                return "[Asset-ERP] 임직원 매매 사전신청 " + count(p) + "건이 완료되었습니다.";
             }
             case "A02" -> {
-                return "[Asset-ERP] 사업비요청 " + str(p, "count") + "건이 반려되었습니다";
+                return "[Asset-ERP] 사업비요청 " + count(p) + "건이 반려되었습니다";
             }
             case "A03" -> {
-                return "[Asset-ERP] 지출결의 " + str(p, "count") + "건이 반려되었습니다";
+                return "[Asset-ERP] 지출결의 " + count(p) + "건이 반려되었습니다";
+            }
+            case "A04" -> {
+                return "[Asset-ERP] 임직원 매매 사전 협의승인신청 " + count(p) + "건이 존재합니다.";
             }
             case "B01" -> {
-                return "[Asset-ERP] 임직원 매매 사전 승인신청 " + str(p, "count") + "건이 존재합니다.";
+                return "[Asset-ERP] 임직원 매매 사전 승인신청 " + count(p) + "건이 존재합니다.";
             }
             case "B02" -> {
-                return "[Asset-ERP] 사업비지출 승인요청 " + str(p, "count") + "건이 존재합니다";
+                return "[Asset-ERP] 사업비지출 승인요청 " + count(p) + "건이 존재합니다";
             }
             default -> {
-                return str(p, "content");
+                String content = str(p, "content");
+                return content == null ? "" : content;
             }
         }
     }
@@ -230,6 +242,25 @@ public class AlertService {
     private static String str(Map<String, ?> p, String key) {
         Object v = p == null ? null : p.get(key);
         return v == null ? null : String.valueOf(v);
+    }
+
+    /** AS-IS getCount — 건수가 없으면 "0" */
+    private static String count(Map<String, ?> p) {
+        String c = str(p, "count");
+        return c == null ? "0" : c;
+    }
+
+    private static final Pattern EMAIL = Pattern.compile(
+            "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+            + "@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$");
+
+    /** AS-IS isValidEmail (ecfa0f17b) — 앞뒤 공백을 뺀 뒤 254자 이하이고 형식이 맞아야 메일을 보낸다 */
+    public static boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        String e = email.trim();
+        return e.length() <= 254 && EMAIL.matcher(e).matches();
     }
 
     private static Long longOf(Map<String, ?> p, String key) {

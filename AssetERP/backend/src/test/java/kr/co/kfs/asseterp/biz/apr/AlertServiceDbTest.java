@@ -17,7 +17,7 @@ import kr.co.kfs.asseterp.biz.apr.service.AlertService;
 import kr.co.kfs.asseterp.support.NoticeTestConfig;
 
 /**
- * 통합알림(AS-IS server/utils/alert/AlertService, 98d5afdd6 — CH-0277) 규칙. 시험 설정은 회사 위치 kfstest만 메일·SMS 발송.
+ * 통합알림(AS-IS server/utils/alert/AlertService, 98d5afdd6 — CH-0277, ecfa0f17b — CH-0400) 규칙. 시험 설정은 회사 위치 kfstest만 메일·SMS 발송.
  * 김형수(202306221546363): 이메일·휴대폰 있음, 회사 28000(kfstest)
  */
 @MybatisTest
@@ -62,10 +62,34 @@ class AlertServiceDbTest {
     }
 
     @Test
-    void 건수_문구와_원본_그대로의_null건() {
+    void 건수_문구와_건수가_없으면_0건() {
         assertThat(alert.plan("A02", KIM, 28000L, Map.of("count", "3")).get(0).body()).isEqualTo("[Asset-ERP] 사업비요청 3건이 반려되었습니다");
-        // 원본-이상한점 234: rejectSendMessage는 "count()" 키로 넘겨 건수가 null
-        assertThat(alert.plan("A03", KIM, 28000L, Map.of("count()", "3")).get(0).body()).isEqualTo("[Asset-ERP] 지출결의 null건이 반려되었습니다");
+        // 원본-이상한점 234: rejectSendMessage는 "count()" 키로 넘겨 건수가 없다 — ecfa0f17b getCount부터 "null건" 대신 "0건"
+        assertThat(alert.plan("A03", KIM, 28000L, Map.of("count()", "3")).get(0).body()).isEqualTo("[Asset-ERP] 지출결의 0건이 반려되었습니다");
+    }
+
+    @Test
+    void A04_협의승인요청은_제목과_건수_문구() {
+        AprNoticeCall talk = alert.plan("A04", KIM, 28000L, Map.of("count", "2")).get(0);
+        assertThat(talk.title()).isEqualTo("임직원매매 사전신고 협의승인요청");
+        assertThat(talk.body()).isEqualTo("[Asset-ERP] 임직원 매매 사전 협의승인신청 2건이 존재합니다.");
+    }
+
+    @Test
+    void 이메일_형식이_틀리면_메일만_빠진다() {
+        assertThat(AlertService.isValidEmail(" kim@k-fs.co.kr ")).isTrue();
+        assertThat(AlertService.isValidEmail("kim@localhost")).isFalse();
+        assertThat(AlertService.isValidEmail("kim k-fs.co.kr")).isFalse();
+        assertThat(AlertService.isValidEmail("")).isFalse();
+        jdbc.update("update emp01_person set emp01_email_addr = 'not-an-email' where emp01_person_id = ?", KIM);
+        assertThat(kinds(alert.plan("M01", KIM, 28000L, Map.of("content", "x")))).containsExactly("talk", "sms");
+    }
+
+    @Test
+    void 결재문서가_없으면_빈_문구() {
+        assertThat(alert.plan("T013", KIM, 28000L, Map.of("apprId", -1L)).get(0).body()).isEmpty();
+        assertThat(alert.plan("T02", KIM, 28000L, Map.of("apprId", -1L)).get(0).body()).isEmpty();
+        assertThat(alert.plan("T011", KIM, 28000L, Map.of("apprId", -1L, "code", "20")).get(0).body()).isEmpty();
     }
 
     @Test
