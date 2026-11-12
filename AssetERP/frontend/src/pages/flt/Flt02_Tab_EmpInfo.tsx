@@ -57,7 +57,7 @@ export const Flt02_Tab_EmpInfo: React.FC = () => {
   // setGridHidden() L153-174: 서비스 flt.Flt01_CompanyStd.selectByDate(companyId, toDay=기준일) → 연간투자한도 숨김이면 8번 열을 가린다(열릴 때 한 번)
   useEffect(() => {
     fltApi.getEmpInfoSetting(paramRef.current.stdDate.format(DATE_FORMAT))
-      .then(s => setLimitHidden(s.investLimitUnvisibleYn))
+      .then(s => setLimitHidden(s.investLimitUnvisibleYn || s.investLimitNoCheckYn))  // 11-11 투자한도 체크안함도 가린다
       .catch(() => undefined);
     void retrieve();
   }, [retrieve]);

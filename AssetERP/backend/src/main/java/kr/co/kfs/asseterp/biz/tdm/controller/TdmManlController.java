@@ -148,8 +148,9 @@ public class TdmManlController {
     /** AS-IS tdm.Tdm43_Manl.selectByDate (stdDate 'yyyy-MM-dd') */
     @GetMapping("/by-date")
     public ApiResponse<List<ManlListRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdDate,
+                                                       @RequestParam(required = false) Long orgId,
                                                        @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(service.searchByDate(principal, stdDate, searchText));
+        return ApiResponse.ok(service.searchByDate(principal, stdDate, orgId, searchText));
     }
 
     /** AS-IS tdm.Tdm43_Manl.selectById */

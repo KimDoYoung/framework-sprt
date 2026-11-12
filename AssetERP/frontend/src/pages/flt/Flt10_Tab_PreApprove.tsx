@@ -117,7 +117,7 @@ export const Flt10_Tab_PreApprove: React.FC = () => {
   // [E0] 화면 열림 (생성자 L100-176) → settings() → setInitData(): 기준관리의 투자한도 숨김 · 협의승인 회사 여부
   useEffect(() => {
     fltApi.getPreApproveSetting(closeDate.format(DATE_FORMAT))
-      .then(s => { setInvestLimitUnvisible(s.investLimitUnvisibleYn); setAddConfirmYn(s.addConfirmYn); })
+      .then(s => { setInvestLimitUnvisible(s.investLimitUnvisibleYn || s.investLimitNoCheckYn); setAddConfirmYn(s.addConfirmYn); })
       .catch(err => message.error(errorMessage(err, '설정 조회 실패')));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

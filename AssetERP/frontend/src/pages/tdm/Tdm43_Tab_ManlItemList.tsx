@@ -1,9 +1,10 @@
 /**
  * [1468] 책무 > 90. 책무관리현황 > 매뉴얼 규정/양식 연결 (N27)
  * AS-IS: myApp/client/vi/tdm/Tdm43_Tab_ManlItemList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L67-100: 위 툴바(기준일 · 검색 · [조회][법규연결][내규연결][양식연결][문서분류연결]) + 가운데 점검항목 그리드(체크박스 다중) + 오른쪽 340 `Tdm45_TabPage_Relate`
+ * 생성자 L67-100: 위 툴바(기준일 · 부서 · 검색 · [조회][법규연결][내규연결][양식연결][문서분류연결]) + 가운데 점검항목 그리드(체크박스 다중) + 오른쪽 340 `Tdm45_TabPage_Relate`
  * 함께: Tdm45_TabPage_Relate·Tdm43_Lookup_RefBasis·Tdm43_Lookup_EtcModify(신규) / Tdm43_Edit_Manl(view)·Tdm43_Lookup_RelateFormFileList·Tdm43_Lookup_ExctDuty(기존)
  *   / Ics01_Lookup_SelectMulti·Icr01_Lookup_SelectMulti·Dcr01_Lookup_SelectMulti(다른 도메인, 기존)
+ * 원본 2026-11-11(CH-0331·0345): 툴바에 부서 조회칸(orgLookup, Org00_Lookup_SelectTdm.openAll(오늘, null, true)), 그리드에 증빙자료 열, 검색 안내에 증빙자료
  * UX보강(10): 툴바 = SearchBar(UX-01, 버튼이 많아 UX-02 초기화는 뺀다)
  * 스타일: SGP (yunhee page-style 판별 — docs/page-style.md)
  */
@@ -17,6 +18,8 @@ import { TdmManlFormFile, TdmManlList } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { LookupInput } from '@/components/lookup/LookupInput';
+import { Org00_Lookup_SelectTdm } from '@/components/lookup/Org00_Lookup_SelectTdm';
 import { Dcr01_Lookup_SelectMulti } from '../dcr/Dcr01_Lookup_SelectMulti';
 import { Icr01_Lookup_SelectMulti } from '../icr/Icr01_Lookup_SelectMulti';
 import { Ics01_Lookup_SelectMulti } from '../ics/Ics01_Lookup_SelectMulti';
@@ -32,6 +35,8 @@ type LinkKind = 'ics' | 'icr' | 'form' | 'dcr';
 export const Tdm43_Tab_ManlItemList: React.FC = () => {
   const [stdDate, setStdDate] = useState<Dayjs>(dayjs());   // settings() L102-104: 기준일 = LoginUser.getToday()
   const [searchText, setSearchText] = useState('');
+  const [org, setOrg] = useState<{ id: number | null; name: string }>({ id: null, name: '' });   // orgId·orgLookup (원본 11-11)
+  const [orgOpen, setOrgOpen] = useState(false);
   const [rows, setRows] = useState<TdmManlList[]>([]);
   const [loading, setLoading] = useState(false);
   const gridRef = useRef<AgGridReact<TdmManlList>>(null);
@@ -43,10 +48,10 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
   const [lookup, setLookup] = useState<LinkKind | null>(null);
 
   // retrieve() L225-242: tdm.Tdm43_Manl.selectByDate(companyId, stdDate, "%검색어%") → 첫 행이 있으면 선택
-  const retrieve = useCallback(async (d: Dayjs = stdDate, text: string = searchText) => {
+  const retrieve = useCallback(async (d: Dayjs = stdDate, text: string = searchText, orgId: number | null = org.id) => {
     setLoading(true);
     try {
-      const list = await tdmApi.searchManlsByDate(d.format('YYYY-MM-DD'), text);
+      const list = await tdmApi.searchManlsByDate(d.format('YYYY-MM-DD'), text, orgId);
       setRows(list);
       setCheckedIds([]);
       setSelectFirst(n => n + 1);
@@ -55,7 +60,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [stdDate, searchText]);
+  }, [stdDate, searchText, org.id]);
 
   // 읽은 뒤 첫 행 선택: grid.getSelectionModel().select(0, false)
   useEffect(() => {
@@ -71,7 +76,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
   // [E0] 화면 열림 (생성자 L67-100) → settings(), retrieve()
   useEffect(() => { void retrieve(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 한 건만 골랐을 때만 오른쪽 목록이 켜진다 — [E7] grid.SelectionChanged (L167) → tabPage.setEnabled(size == 1), tabPage.retrieve()
+  // 한 건만 골랐을 때만 오른쪽 목록이 켜진다 — [E8] grid.SelectionChanged (L202) → tabPage.setEnabled(size == 1), tabPage.retrieve()
   const selected = checkedIds.length === 1 ? rows.find(r => r.manlId === checkedIds[0]) ?? null : null;
 
   // manlGrid.getStore().update(model)
@@ -96,7 +101,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
     }
   };
 
-  // [E3] addIcsButton[법규연결].Select [선택>0] (L123) · [E4] addIcrButton[내규연결] (L134) · [E5] addFormButton[양식연결] (L145) · [E6] addDcrButton[문서분류연결] (L156)
+  // [E4] addIcsButton[법규연결].Select [선택>0] (L158) · [E5] addIcrButton[내규연결] (L169) · [E6] addFormButton[양식연결] (L180) · [E7] addDcrButton[문서분류연결] (L191)
   const openLookup = (kind: LinkKind) => {
     if (checkedIds.length === 0) { message.warning('점검항목을 선택해주세요'); return; }
     setLookup(kind);
@@ -109,6 +114,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
     gb.text('orgName', 150, '점검부서'),  // L211
     gb.textArea('taskRelateDutyName', 300, '관리의무'),  // L212
     gb.textArea('checkItemAddCode', 350, '점검항목'),  // L213
+    gb.textArea('checkEvidDocName', 150, '증빙자료'),  // 원본 11-11 추가
     gb.textCenter('icsCntStr', 65, '연관법규'),  // L214
     gb.textCenter('icrCntStr', 65, '연관내규'),  // L215
     gb.textCenter('formFileCntStr', 65, '연관양식'),  // L216
@@ -121,7 +127,7 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
-        {/* [E1] searchText.KeyPress [Enter] (L108)·[E2] retrieveButton[조회].Select (L117) → retrieve() */}
+        {/* [E2] searchText.KeyPress [Enter] (L143)·[E3] retrieveButton[조회].Select (L152) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}
           extra={
@@ -136,8 +142,12 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
           <SearchBar.Field label="기준일">
             <DatePicker style={{ width: 120 }} format="YYYY.MM.DD" allowClear={false} value={stdDate} onChange={d => d && setStdDate(d)} />
           </SearchBar.Field>
+          {/* [E1] orgLookup.TriggerClick [result == null] (L120) → Org00_Lookup_SelectTdm.openAll(오늘, null, true): 고르면 부서(orgId), [전체]면 비움 → retrieve() (원본 11-11 추가) */}
+          <SearchBar.Field label="부서">
+            <LookupInput width={180} value={org.name} placeholder="전체" onOpen={() => setOrgOpen(true)} />
+          </SearchBar.Field>
           <SearchBar.Field label="검색">
-            <SearchBar.Input style={{ width: 350 }} placeholder="직책/담당부서/관리의무/점검항목코드/점검항목" value={searchText} onChange={e => setSearchText(e.target.value)} />
+            <SearchBar.Input style={{ width: 350 }} placeholder="직책/담당부서/관리의무/점검항목코드/점검항목/증빙자료" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
@@ -156,6 +166,16 @@ export const Tdm43_Tab_ManlItemList: React.FC = () => {
           </div>
         </div>
       </div>
+      <Org00_Lookup_SelectTdm
+        stdDate={orgOpen ? dayjs().format('YYYY-MM-DD') : undefined}
+        allButton
+        onSelect={o => {
+          const next = o ? { id: o.orgCodeId, name: o.korNm ?? '' } : { id: null, name: '' };
+          setOrg(next);
+          void retrieve(stdDate, searchText, next.id);
+        }}
+        onClose={() => setOrgOpen(false)}
+      />
       <Tdm43_Edit_Manl mode="view" manl={view} onClose={() => setView(null)} />
       <Tdm43_Lookup_EtcModify
         target={etc ? { manl: etc, stdDate: stdDate.format('YYYY-MM-DD') } : null}

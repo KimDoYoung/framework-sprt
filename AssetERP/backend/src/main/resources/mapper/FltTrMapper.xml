@@ -136,6 +136,7 @@
                flt02_year_invest_limit                                                AS year_invest_limit,
                COALESCE(flt01_invest_amt_calc_target_cd,'1')                          AS invest_amt_calc_target_code,
                COALESCE(flt01_invest_amt_over_check_yn, 'false') = 'true'             AS invest_amt_over_check_yn,
+               COALESCE(flt01_invest_limit_no_check_yn, 'false') = 'true'             AS invest_limit_no_check_yn,   -- AS-IS 11-11 투자한도 체크안함 (CH-0322)
                NULL                                                                   AS oath_status_code,
                NULL                                                                   AS today,
                NULL                                                                   AS flt_only_curr_yn
@@ -710,7 +711,8 @@
     <!-- AS-IS(IDMS-IC) flt02_emp.selectInvestLimit — 적용 시작일이 기준일 이전인 가장 늦은 설정 한 건 -->
     <select id="selectEmpLimit" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes">
         SELECT COALESCE(flt01_invest_amt_over_check_yn, 'false') = 'true'                       AS invest_amt_over_check_yn
-             , COALESCE(flt02_year_invest_limit,0)                                              AS year_invest_limit
+             , COALESCE(flt01_invest_limit_no_check_yn, 'false') = 'true'                       AS invest_limit_no_check_yn   -- AS-IS 11-11 투자한도 체크안함 (CH-0324)
+             , COALESCE(flt02_year_invest_limit,0)                                             AS year_invest_limit
              , f_get_floorTrCheck('1', flt02_company_id, flt02_person_id, CAST(#{stdDate} AS date), false)  AS year_invest_amt
              , COALESCE(flt01_total_invest_amt ,0)                                              AS total_invest_limit
              , f_get_floorTrCheck('2', flt02_company_id, flt02_person_id, CAST(#{stdDate} AS date), false)  AS total_invest_amt
@@ -1523,6 +1525,7 @@
                     , emp.*
                  FROM emp
                 WHERE flt02_year_invest_limit <![CDATA[<]]> emp01_year_invest_limit
+                  AND COALESCE(flt01_invest_limit_no_check_yn,'false') != 'true'   -- AS-IS 11-11 투자한도 체크안함 (CH-0330)
                 UNION ALL
                -------------------------------------------------------------------
                SELECT '04'                                                                     AS check_cd

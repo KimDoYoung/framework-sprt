@@ -28,7 +28,8 @@ public class FltEmpService {
 
     /** AS-IS setGridHidden() — 기준관리의 "연간투자한도 숨김". 기준관리가 없으면 false */
     public EmpInfoSettingRes setting(UserPrincipal user, String stdDate) {
-        return new EmpInfoSettingRes(Boolean.TRUE.equals(mapper.selectInvestLimitUnvisible(user.getCompanyId(), stdDate)));
+        return new EmpInfoSettingRes(Boolean.TRUE.equals(mapper.selectInvestLimitUnvisible(user.getCompanyId(), stdDate)),
+                Boolean.TRUE.equals(mapper.selectInvestLimitNoCheck(user.getCompanyId(), stdDate)));
     }
 
     /** 엑셀다운로드 — AS-IS는 Sys99_Print.insertRdEmpInfo(selectByCompanyId2) + RD 리포트(연간투자한도를 숨기면 Flt02_Rd_EmpInfo2). 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */

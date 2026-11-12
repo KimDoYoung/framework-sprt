@@ -56,10 +56,10 @@ public class FltTrService {
         Boolean onlyCurr = Boolean.TRUE.equals(mapper.selectFltOnlyCurr(user.getCompanyId()));
         String oathCode = oath == null ? null : oath.oathStatusCode();
         if (emp == null) {
-            return new TrCheckRes(false, null, null, null, null, oathCode, today, onlyCurr);
+            return new TrCheckRes(false, null, null, null, null, null, oathCode, today, onlyCurr);
         }
         return new TrCheckRes(true, emp.checkCycle(), emp.yearInvestLimit(), emp.investAmtCalcTargetCode(),
-                emp.investAmtOverCheckYn(), oathCode, today, onlyCurr);
+                emp.investAmtOverCheckYn(), emp.investLimitNoCheckYn(), oathCode, today, onlyCurr);
     }
 
     /** AS-IS selectInvestLimit */

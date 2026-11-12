@@ -3,13 +3,14 @@
  * AS-IS: myApp/client/vi/flt/Flt02_Lookup_Emp.java (603줄) — 메서드 이름·줄 번호는 원본(IDMS-IC)
  * open() L116-179: 모달 960×750 "임직원매매 기본설정", 위에서 아래로
  *   1. 임직원 금융투자상품 매매 법규준수서약서 — 문서분류 칸(550) · 상신상태(250) · [상신](120)
- *   2. 연간투자한도 및 보고주기 설정 — [조회][등록][저장][삭제] + 체크박스 다중 셀 편집 그리드(적용시작일자 120 · 연간추가 투자한도 300 · 보고주기 120) + 안내 두 줄
+ *   2. 연간투자한도 및 보고주기 설정 — [조회][등록][저장][삭제] + 체크박스 다중 셀 편집 그리드(적용시작일자 120 · 연간추가 투자한도 200(체크안함이면 숨김) · 보고주기 120) + 안내 두 줄
  *   3. 가족 금융거래정보 이용동의서 — 안내 · [파일업로드] + 체크 단일 파일 그리드(첨부파일 690 · 보기 50 · 받기 50 · 삭제 50) + [닫기]
  * 서약서 상신은 전자결재 편집창(Apr01_Edit_ApprDoc)을 링크코드 A06으로 연다. 닫기는 callback.execute() 뒤 hide()
  * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';
+import dayjs from 'dayjs';
 import { fltApi, fltEmpSettingApi } from '@/api/flt';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
 import { errorMessage } from '@/api/client';
@@ -45,6 +46,7 @@ interface Props {
 export const Flt02_Lookup_Emp: React.FC<Props> = ({ open, onClose }) => {
   const user = useLoginUser();
   const [cycles, setCycles] = useState<Code[]>([]);
+  const [noCheck, setNoCheck] = useState(false);  // settings() — 기준관리의 투자한도 체크안함이면 연간추가 투자한도 열을 가린다 (원본 11-11)
   // 서약서 (1번 칸): 문서분류 = 기본 문서분류(Dcr30_Link A06)가 처음 값, 상신상태 = flt04_oath
   const [defaultClass, setDefaultClass] = useState<{ id: number; name: string } | null>(null);
   const [classTree, setClassTree] = useState<{ id: number | null; name: string }>({ id: null, name: '' });
@@ -127,6 +129,8 @@ export const Flt02_Lookup_Emp: React.FC<Props> = ({ open, onClose }) => {
     setOath(null);
     setFiles([]);
     sysApi.searchCodes('FloorTrCheckCycle').then(setCycles).catch(() => {});  // buildGrid() L296 보고주기 콤보
+    // settings() L182-200: flt.Flt01_CompanyStd.selectByDate(회사, 오늘) → investLimitNoCheckYn이면 3번 열(연간추가 투자한도) 숨김. 기준관리가 없으면 false
+    fltApi.getEmpInfoSetting(dayjs().format('YYYY-MM-DD')).then(s => setNoCheck(s.investLimitNoCheckYn)).catch(() => setNoCheck(false));
     void defaultName();
     void crud.retrieve();
     void retrieveApprStep();
@@ -213,8 +217,8 @@ export const Flt02_Lookup_Emp: React.FC<Props> = ({ open, onClose }) => {
   // buildGrid() L292-312: 보고주기 콤보 [E12] FloorTrCheckCycleComboBox.Collapse (L297) → checkCycle/checkCycleName 동기화
   const columnDefs = useMemo(() => [
     gb.date('startDate', 120, '적용시작일자', { editor: 'date' }),  // L307
-    gb.long('yearInvestLimit', 300, '연간추가 투자한도 (연봉한도)', { editor: 'number' }),  // L308
-    gb.text('checkCycleName', 120, '보고주기', {  // L309
+    gb.long('yearInvestLimit', 200, '연간추가 투자한도', { editor: 'number', hide: noCheck }),  // L308 (원본 11-11 폭 200·제목 변경)
+    gb.textCenter('checkCycleName', 120, '보고주기', {  // L309 (원본 11-11 가운데 정렬)
       editor: 'select',
       values: cycles.map(c => c.name),
       valueSetter: p => {
@@ -223,7 +227,7 @@ export const Flt02_Lookup_Emp: React.FC<Props> = ({ open, onClose }) => {
         return true;
       },
     }),
-  ], [cycles]);
+  ], [cycles, noCheck]);
 
   // buildFileGrid() L314-369
   const fileColumnDefs = useMemo(() => [

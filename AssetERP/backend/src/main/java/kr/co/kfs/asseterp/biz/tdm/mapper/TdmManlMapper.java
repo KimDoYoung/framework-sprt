@@ -144,9 +144,9 @@ public interface TdmManlMapper {
 
     int copyRelateFile(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
 
-    /** AS-IS tdm43_manl.selectByDate (N27) — manlId가 있으면 그 한 건만 */
+    /** AS-IS tdm43_manl.selectByDate (N27) — manlId가 있으면 그 한 건만, orgId가 있으면 그 부서(와 f_get_tdmOrg_id2 조직)의 점검항목만 */
     List<ManlListRes> selectListByDate(@Param("companyId") Long companyId, @Param("stdDate") String stdDate, @Param("searchText") String searchText,
-                                       @Param("manlId") Long manlId);
+                                       @Param("manlId") Long manlId, @Param("orgId") Long orgId);
 
     /** AS-IS tdm43_manl.selectById (N27) */
     ManlListRes selectListById(@Param("manlId") Long manlId);

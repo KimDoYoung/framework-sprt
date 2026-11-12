@@ -89,6 +89,7 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
   const limitRef = useRef<FltInvestLimit[]>([]);
   const calcTargetRef = useRef<string | null>(null);
   const overCheckRef = useRef<boolean | null>(null);
+  const noCheckRef = useRef<boolean>(false);  // 투자한도 체크안함(기준관리, AS-IS 11-11 investLimitNoCheckYn)
   const pendingSelectRef = useRef<number | null>(null);
   const accountGridRef = useRef<AgGridReact<FltTrAccount>>(null);
   searchRef.current = searchText;
@@ -141,7 +142,7 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
     limitRef.current = rows;
     setLimitRows(rows);
     // 투자금액 계산대상이 매매금액이면서 초과체크 대상인 경우..
-    if (overCheckRef.current && calcTargetRef.current === '1' && rows.length >= 2) {
+    if (!noCheckRef.current && overCheckRef.current && calcTargetRef.current === '1' && rows.length >= 2) {
       const yearInvestLimit = rows[0].yearInvestLimit;
       const yearInvestAmt = rows[1].yearInvestLimit;
       if (!yearInvestLimit) {
@@ -217,6 +218,7 @@ export const Flt10_Tab_BuyReport: React.FC = () => {
     setCalcTarget(st.investAmtCalcTargetCode);
     calcTargetRef.current = st.investAmtCalcTargetCode;
     overCheckRef.current = st.investAmtOverCheckYn;
+    noCheckRef.current = !!st.investLimitNoCheckYn;
     setOathDone(st.oathStatusCode === '30');
     await retrieveLimit();
     await retrieveAccount();

@@ -21,7 +21,8 @@
              , flt10_expect_tr_qty                                                      AS expect_tr_qty
              , flt10_expect_tr_amt                                                      AS expect_tr_amt
              , flt10_year_invest_limit_emp                                              AS year_invest_limit_emp
-             , CASE WHEN flt10_year_invest_limit_emp <![CDATA[>=]]> flt10_year_invest_limit THEN TO_CHAR(flt10_year_invest_limit,'FM9,999,999,999,999')
+             , CASE WHEN invest_limit_no_check_yn = 'true' OR   -- AS-IS 11-11 투자한도 체크안함: 빨간 표시 안 함 (CH-0326)
+                         flt10_year_invest_limit_emp <![CDATA[>=]]> flt10_year_invest_limit THEN TO_CHAR(flt10_year_invest_limit,'FM9,999,999,999,999')
                     ELSE '&lt;'||'b style=color:#EF1919;'||'&gt;'||TO_CHAR(flt10_year_invest_limit,'FM9,999,999,999,999')||'&lt;'||'/b'||'&gt;'
                     END                                                                 AS year_invest_limit_str
              , CASE WHEN std_total_invest_amt <![CDATA[>=]]> flt10_total_invest_amt THEN TO_CHAR(flt10_total_invest_amt,'FM9,999,999,999,999')
@@ -100,6 +101,7 @@
                                                         , flt10_item_type, flt10_item_nm, flt10_item_cd
                                                         , flt10_reg_date, true )                                                    AS rcnt_buy_date
                              ,  COALESCE(flt01_total_invest_amt,0)                                                                  AS std_total_invest_amt
+                             ,  COALESCE(flt01_invest_limit_no_check_yn,'false')                                                    AS invest_limit_no_check_yn
                              ,  COALESCE(flt01_turnover_rate,0)                                                                     AS std_turnover_rate
                              ,  flt01_lock_up_calc_std_cd                                                                           AS lock_up_calc_std_cd
                              ,  flt01_lock_up_days                                                                                  AS lock_up_days
@@ -250,6 +252,16 @@
     <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate L77 에서 이 화면이 쓰는 값(투자한도 숨김)만 -->
     <select id="selectInvestLimitUnvisibleYn" resultType="boolean">
         SELECT COALESCE(flt01_invest_limit_unvisible_yn, 'false') = 'true'
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{toDay} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate 에서 투자한도 체크안함만 (11-11, CH-0321) -->
+    <select id="selectInvestLimitNoCheckYn" resultType="boolean">
+        SELECT COALESCE(flt01_invest_limit_no_check_yn, 'false') = 'true'
           FROM flt01_company_std
          WHERE flt01_company_id = #{companyId}
            AND flt01_start_date <![CDATA[<=]]> CAST(#{toDay} AS date)

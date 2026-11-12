@@ -19,6 +19,7 @@
         f_cdnm('FloorTrInvestCalcTargetCode', flt01_invest_amt_calc_target_cd, flt01_company_id, flt01_start_date) AS invest_amt_calc_target_name,
         COALESCE(flt01_invest_amt_over_check_yn, 'false')                             AS invest_amt_over_check_yn,
         COALESCE(flt01_invest_limit_unvisible_yn, 'false')                            AS invest_limit_unvisible_yn,
+        COALESCE(flt01_invest_limit_no_check_yn, 'false')                             AS invest_limit_no_check_yn,   -- AS-IS 11-11 투자한도 체크안함
         flt01_turnover_rate                                                           AS turnover_rate,
         flt01_appr_over_rate                                                          AS appr_over_rate,
         flt01_appr_qty_over_rate                                                      AS appr_qty_over_rate,
@@ -72,14 +73,14 @@
     <!-- AS-IS UpdateDataModel INSERT: 새 행의 모든 열(등록(복사)는 원본 행의 의무보유기간 열도 가져간다) -->
     <insert id="insertCompanyStd">
         INSERT INTO flt01_company_std (flt01_company_std_id, flt01_company_id, flt01_start_date, flt01_total_invest_amt,
-                                       flt01_invest_amt_calc_target_cd, flt01_invest_amt_over_check_yn, flt01_invest_limit_unvisible_yn,
+                                       flt01_invest_amt_calc_target_cd, flt01_invest_amt_over_check_yn, flt01_invest_limit_unvisible_yn, flt01_invest_limit_no_check_yn,
                                        flt01_turnover_rate, flt01_appr_over_rate, flt01_appr_qty_over_rate, flt01_appr_valid_days,
                                        flt01_std_date_type, flt01_fund_hold_stk_yn, flt01_rpt_start_date, flt01_tr_file_evid_yn,
                                        flt01_no_account_skip_yn, flt01_lock_up_cd, flt01_lock_up_days, flt01_lock_up_calc_std_cd,
                                        flt01_buy_opr_day_yn, flt01_buy_opr_month_yn)
         VALUES (#{companyStdId}, #{companyId}, CAST(#{req.startDate} AS date), #{req.totalInvestAmt,jdbcType=NUMERIC},
                 #{req.investAmtCalcTargetCode,jdbcType=VARCHAR}, COALESCE(#{req.investAmtOverCheckYn,jdbcType=VARCHAR}, 'false'),
-                COALESCE(#{req.investLimitUnvisibleYn,jdbcType=VARCHAR}, 'false'),
+                COALESCE(#{req.investLimitUnvisibleYn,jdbcType=VARCHAR}, 'false'), COALESCE(#{req.investLimitNoCheckYn,jdbcType=VARCHAR}, 'false'),
                 #{req.turnoverRate,jdbcType=NUMERIC}, #{req.apprOverRate,jdbcType=NUMERIC}, #{req.apprQtyOverRate,jdbcType=NUMERIC},
                 #{req.apprValidDays,jdbcType=NUMERIC},
                 #{req.stdDateType,jdbcType=VARCHAR}, COALESCE(#{req.fundHoldStkYn,jdbcType=VARCHAR}, 'false'),
@@ -97,6 +98,7 @@
                flt01_invest_amt_calc_target_cd = #{req.investAmtCalcTargetCode,jdbcType=VARCHAR},
                flt01_invest_amt_over_check_yn  = COALESCE(#{req.investAmtOverCheckYn,jdbcType=VARCHAR}, 'false'),
                flt01_invest_limit_unvisible_yn = COALESCE(#{req.investLimitUnvisibleYn,jdbcType=VARCHAR}, 'false'),
+               flt01_invest_limit_no_check_yn  = COALESCE(#{req.investLimitNoCheckYn,jdbcType=VARCHAR}, 'false'),
                flt01_turnover_rate             = #{req.turnoverRate,jdbcType=NUMERIC},
                flt01_appr_over_rate            = #{req.apprOverRate,jdbcType=NUMERIC},
                flt01_appr_qty_over_rate        = #{req.apprQtyOverRate,jdbcType=NUMERIC},

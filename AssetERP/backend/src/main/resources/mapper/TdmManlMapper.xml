@@ -752,11 +752,17 @@
                        INNER JOIN getOrg(#{companyId}, #{stdDate}::date) ON org00_org_id  = tdm43_org_id
                  WHERE tdm42_company_id = #{companyId}
                    AND #{stdDate}::date BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date, '2999-12-31'::date)
-                   AND CONCAT(tdm43_role_nm, org00_kor_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item) ILIKE #{searchText}
+                   AND CONCAT(tdm43_role_nm, org00_kor_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item, tdm43_check_evid_doc_nm) ILIKE #{searchText}   -- 원본 2026-11-11(CH-0331): 검색에 증빙자료 추가
                ) t
+        <if test="orgId != null">
+              , ( SELECT f_get_tdmOrg_id2(#{companyId}, #{orgId}, #{stdDate}::date) tdmorg_id ) t2   -- 원본 2026-11-11(CH-0331): 부서 조건
+        </if>
          WHERE 1=1
         <if test="manlId != null">
            AND t.tdm43_manl_id = #{manlId}
+        </if>
+        <if test="orgId != null">
+           AND t.tdm43_org_id IN (#{orgId}, t2.tdmorg_id)
         </if>
          ORDER BY t.tdm43_role_nm COLLATE "ko_KR.utf8"
                 , t.tdm43_org_nm  COLLATE "ko_KR.utf8"

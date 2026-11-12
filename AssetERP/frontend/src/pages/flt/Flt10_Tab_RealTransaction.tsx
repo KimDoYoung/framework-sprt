@@ -108,6 +108,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
   const periodStringRef = useRef('');  // TempData.periodString — 조회(getDate)한 때의 "n월"·"n분기", 상신 제목에 쓴다
   const calcTargetRef = useRef<string | null>(null);
   const overCheckRef = useRef<boolean>(false);
+  const noCheckRef = useRef<boolean>(false);  // 투자한도 체크안함(기준관리, AS-IS 11-11 investLimitNoCheckYn)
   const limitRef = useRef<Limits>({ yearInvestLimit: 0, yearInvestAmt: 0, totalInvestLimit: 0, totalInvestAmt: 0 });
   const apprIdRef = useRef<number | null>(null);
   const accountSetupDateRef = useRef<string | null>(null);
@@ -186,12 +187,13 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
       return false;
     }
     overCheckRef.current = !!limit.investAmtOverCheckYn;
+    noCheckRef.current = !!limit.investLimitNoCheckYn;
     limitRef.current = {
       yearInvestLimit: num(limit.yearInvestLimit), yearInvestAmt: num(limit.yearInvestAmt),
       totalInvestLimit: num(limit.totalInvestLimit), totalInvestAmt: num(limit.totalInvestAmt),
     };
     // 투자금액초과 매수제한 고객사인 경우
-    if (limit.investAmtOverCheckYn) {
+    if (!noCheckRef.current && limit.investAmtOverCheckYn) {
       if (!limit.yearInvestLimit) {
         Modal.warning({ title: '확인', width: 500, content: br('연간 투자한도금액을 등록하세요<br>** 1125 계좌신고 > [보고주기 변경 및 서약서 서명] 버튼 클릭 **') });
         return false;
@@ -439,7 +441,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     const confirmLimit = (content: string) => Modal.confirm({ title: '확인', content, width: 450, okText: '예', cancelText: '아니오', onOk: afterLimit });
     const lim = limitRef.current;
     // [E34] messageBox.DialogHide (L1539) → callback.execute() — 연간 투자금액 초과 확인
-    if (lim.yearInvestLimit < lim.yearInvestAmt + investAmt) confirmLimit('연간 투자금액을 초과하였습니다. 계속 진행하시겠습니까?');
+    if (!noCheckRef.current && lim.yearInvestLimit < lim.yearInvestAmt + investAmt) confirmLimit('연간 투자금액을 초과하였습니다. 계속 진행하시겠습니까?');
     // [E35] messageBox.DialogHide (L1552) → callback.execute() — 총누적 투자금액 초과 확인
     else if (lim.totalInvestLimit < lim.totalInvestAmt + investAmt) confirmLimit('총누적 투자금액을 초과하였습니다. 계속 진행하시겠습니까?');
     else afterLimit();
@@ -541,7 +543,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     if (!(await getDate())) return;
     if (!(await getInvestLimit())) return;
     const lim = limitRef.current;
-    if (lim.yearInvestLimit < lim.yearInvestAmt) {
+    if (!noCheckRef.current && lim.yearInvestLimit < lim.yearInvestAmt) {
       Modal.confirm({ title: '확인', content: '연간 투자금액을 초과하였습니다. 계속 진행하시겠습니까?', width: 450, okText: '예', cancelText: '아니오', onOk: checkEval });
     } else if (lim.totalInvestLimit < lim.totalInvestAmt) {
       Modal.confirm({ title: '확인', content: '총누적 투자금액을 초과하였습니다. 계속 진행하시겠습니까?', width: 450, okText: '예', cancelText: '아니오', onOk: checkEval });

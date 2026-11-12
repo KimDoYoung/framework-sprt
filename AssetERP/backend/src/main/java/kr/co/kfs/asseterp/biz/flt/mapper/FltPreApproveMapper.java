@@ -40,5 +40,7 @@ public interface FltPreApproveMapper {
 
     Boolean selectInvestLimitUnvisibleYn(@Param("companyId") Long companyId, @Param("toDay") String toDay);
 
+    Boolean selectInvestLimitNoCheckYn(@Param("companyId") Long companyId, @Param("toDay") String toDay);
+
     Boolean selectAddConfirmYn(@Param("companyId") Long companyId);
 }

@@ -1400,8 +1400,8 @@ export const tdmApi = {
   // ── N27 매뉴얼 규정/양식 연결(Tdm43_Tab_ManlItemList) ──
 
   /** AS-IS tdm.Tdm43_Manl.selectByDate — 기준일 'yyyy-MM-dd' */
-  searchManlsByDate: async (stdDate: string, searchText: string): Promise<TdmManlList[]> => {
-    const res = await apiClient.get<ApiResponse<TdmManlList[]>>('v1/tdm/manls/by-date', { params: { stdDate, searchText } });
+  searchManlsByDate: async (stdDate: string, searchText: string, orgId?: number | null): Promise<TdmManlList[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlList[]>>('v1/tdm/manls/by-date', { params: { stdDate, searchText, orgId: orgId ?? undefined } });
     return res.data.data ?? [];
   },
 

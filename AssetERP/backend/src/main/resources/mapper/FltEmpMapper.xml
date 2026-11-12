@@ -94,4 +94,14 @@
          ORDER BY flt01_start_date DESC
          LIMIT 1
     </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate 에서 investLimitNoCheckYn 열만 (11-11 투자한도 체크안함, CH-0321) -->
+    <select id="selectInvestLimitNoCheck" resultType="boolean">
+        SELECT COALESCE(flt01_invest_limit_no_check_yn, 'false') = 'true'
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
 </mapper>

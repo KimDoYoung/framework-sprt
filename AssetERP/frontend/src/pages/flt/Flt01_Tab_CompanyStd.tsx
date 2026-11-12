@@ -60,7 +60,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
       stdDateType: '1', stdDateTypeName: '신청일',
       investAmtCalcTargetCode: '1', investAmtCalcTargetName: '매매금액',
       lockUpCalcStdCode: 'D',
-      investAmtOverCheckYn: 'false', investLimitUnvisibleYn: 'false', fundHoldStkYn: 'false', trFileEvidYn: 'false', noAccountSkipYn: 'false',
+      investAmtOverCheckYn: 'false', investLimitUnvisibleYn: 'false', investLimitNoCheckYn: 'false', fundHoldStkYn: 'false', trFileEvidYn: 'false', noAccountSkipYn: 'false',
     }), []),
     firstEditField: 'startDate',
     // deleteRow() L252-270: "n건의 정보를 삭제하시겠습니까?" → E11 delete()
@@ -84,19 +84,20 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
     gb.date('startDate', 120, '적용<br>시작일자', { editor: 'date' }),  // L176 (원본 90 → 편집 날짜 120, UX-08)
     gb.long('totalInvestAmt', 110, '총누적<br>투자금액(원)', { editor: 'number' }),  // L177
     // [E9] investAmtCalcTargetComboBox[FloorTrInvestCalcTargetCode].Collapse (L140) → 고른 코드를 그 행의 investAmtCalcTargetCode에 addChange
-    gb.textCenter('investAmtCalcTargetName', 100, '투자금액<br>계산기준', codeSelect(calcTargetCodes, 'investAmtCalcTargetName', 'investAmtCalcTargetCode')),  // L178
+    gb.textCenter('investAmtCalcTargetName', 80, '투자금액<br>계산기준', codeSelect(calcTargetCodes, 'investAmtCalcTargetName', 'investAmtCalcTargetCode')),  // L178
     gb.boolean('investAmtOverCheckYn', 80, '투자금액<br>매수제한', { editable: true }),  // L179
     gb.boolean('investLimitUnvisibleYn', 80, '투자한도<br>표시제한', { editable: true }),  // L180
-    gb.long('turnoverRate', 110, '월간<br>매매회전율(%)', { editor: 'number' }),  // L181
-    gb.long('apprOverRate', 110, '사전승인금액<br>초과비율(%)', { editor: 'number' }),  // L182
-    gb.long('apprQtyOverRate', 110, '사전승인수량<br>초과비율(%)', { editor: 'number' }),  // L183
+    gb.boolean('investLimitNoCheckYn', 80, '투자한도<br>체크안함', { editable: true }),  // 원본 11-11 추가 (CH-0339)
+    gb.long('turnoverRate', 100, '월간<br>매매회전율<br>(%)', { editor: 'number' }),  // L181 (원본 11-11 폭 100·제목 3줄)
+    gb.long('apprOverRate', 100, '사전승인금액<br>초과비율(%)', { editor: 'number' }),  // L182
+    gb.long('apprQtyOverRate', 100, '사전승인수량<br>초과비율(%)', { editor: 'number' }),  // L183
     gb.long('apprValidDays', 100, '사전승인<br>유효기간<br>(영업일기준)', { editor: 'number' }),  // L184
     // [E10] stdDateTypeComboBox[FloorTrStdDateType].Collapse (L149) → 고른 코드를 그 행의 stdDateType에 addChange
     gb.textCenter('stdDateTypeName', 100, '매매유효일<br>계산기준', codeSelect(stdDateTypeCodes, 'stdDateTypeName', 'stdDateType')),  // L185
     gb.boolean('fundHoldStkYn', 100, '펀드(일임)<br>보유주식<br>매수제한', { editable: true }),  // L186
     gb.text('lockUpDetailName', 280, '의무보유기간 위반 체크 방식'),  // L187
     // L188 actionCell: 편집 아이콘 → 저장되지 않은 변경이 있으면 알리고, 없으면 Flt01_Lookup_LockUpCheckType (lockUpCell L152-171)
-    iconCell<FltCompanyStd>('edit', 'actionCell', 40, ' ', row => {
+    iconCell<FltCompanyStd>('edit', 'actionCell', 35, ' ', row => {
       if (crudRef.current.hasChanges()) {
         Modal.info({
           title: '확인',

@@ -39,7 +39,15 @@
           FROM emp92_sms_notice
          WHERE emp92_person_id = #{personId}
            AND emp92_sms_notice_cd = #{noticeCode}
+        <choose>
+            <!-- 원본 0be50479f(CH-0347): M으로 시작하는 알림코드는 메일 기본값이 'false' -->
+            <when test='noticeCode != null and noticeCode.startsWith("M")'>
+           AND COALESCE(emp92_mail_notice_yn, 'false') = 'false'
+            </when>
+            <otherwise>
            AND COALESCE(emp92_mail_notice_yn, 'true') = 'false'
+            </otherwise>
+        </choose>
     </select>
 
     <select id="countSmsBlocked" resultType="int">

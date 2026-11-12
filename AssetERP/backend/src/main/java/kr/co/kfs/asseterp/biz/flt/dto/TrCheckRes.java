@@ -10,6 +10,7 @@ public record TrCheckRes(
         Long yearInvestLimit,
         String investAmtCalcTargetCode,
         Boolean investAmtOverCheckYn,
+        Boolean investLimitNoCheckYn,
         String oathStatusCode,
         String today,
         Boolean fltOnlyCurrYn) {

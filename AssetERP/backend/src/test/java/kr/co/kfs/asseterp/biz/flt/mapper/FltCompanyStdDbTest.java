@@ -48,7 +48,7 @@ class FltCompanyStdDbTest {
         // 등록(복사): 첫 행을 복사해 새 행(임시 ID -1)으로 저장
         CompanyStdRes src = rows.get(0);
         CompanyStdSaveReq copy = new CompanyStdSaveReq(-1L, "2026-10-21", src.totalInvestAmt(), src.investAmtCalcTargetCode(),
-                src.investAmtOverCheckYn(), src.investLimitUnvisibleYn(), src.turnoverRate(), src.apprOverRate(), src.apprQtyOverRate(),
+                src.investAmtOverCheckYn(), src.investLimitUnvisibleYn(), src.investLimitNoCheckYn(), src.turnoverRate(), src.apprOverRate(), src.apprQtyOverRate(),
                 src.apprValidDays(), src.stdDateType(), src.fundHoldStkYn(), src.rptStartDate(), src.trFileEvidYn(), src.noAccountSkipYn(),
                 src.lockUpCode(), src.lockUpDays(), src.lockUpCalcStdCode(), src.buyOprDayYn(), src.buyOprMonthYn());
         CompanyStdRes created = stdService.update(user, List.of(copy)).get(0);
@@ -58,13 +58,14 @@ class FltCompanyStdDbTest {
         assertThat(stdService.search(user)).hasSize(5);
 
         // 수정: 그리드 열만 바뀌고 의무보유기간 열은 그대로
-        CompanyStdSaveReq edit = new CompanyStdSaveReq(created.companyStdId(), "2026-10-22", 123456L, "2", "true", "true", 7L, 8L, 9L, 10L, "2",
+        CompanyStdSaveReq edit = new CompanyStdSaveReq(created.companyStdId(), "2026-10-22", 123456L, "2", "true", "true", "true", 7L, 8L, 9L, 10L, "2",
                 "true", "2026-10-01", "true", "true", null, null, null, null, null);
         CompanyStdRes edited = stdService.update(user, List.of(edit)).get(0);
         assertThat(edited.startDate()).isEqualTo("2026-10-22");
         assertThat(edited.totalInvestAmt()).isEqualTo(123456L);
         assertThat(edited.investAmtCalcTargetName()).isEqualTo("입출금액");
         assertThat(edited.noAccountSkipYn()).isEqualTo("true");
+        assertThat(edited.investLimitNoCheckYn()).isEqualTo("true");   // CH-0339 투자한도 체크안함(11-11)
         assertThat(edited.rptStartDate()).isEqualTo("2026-10-01");
         assertThat(edited.lockUpCode()).isEqualTo(src.lockUpCode());
 

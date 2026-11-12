@@ -140,6 +140,8 @@ export interface FltTrCheck {
   /** '1' 매매금액 / '2' 입출금액 */
   investAmtCalcTargetCode: string | null;
   investAmtOverCheckYn: boolean | null;
+  /** 투자한도 체크안함(기준관리, AS-IS 11-11) — true면 투자한도 초과 확인을 하지 않는다 */
+  investLimitNoCheckYn: boolean | null;
   oathStatusCode: string | null;
   today: string;
   fltOnlyCurrYn: boolean;
@@ -261,6 +263,7 @@ export interface FltRealTr {
 /** 투자한도·현재 투자금액 (flt02_emp.selectInvestLimit) */
 export interface FltEmpLimit {
   investAmtOverCheckYn: boolean | null;
+  investLimitNoCheckYn: boolean | null;
   yearInvestLimit: number | null;
   yearInvestAmt: number | null;
   totalInvestLimit: number | null;
@@ -385,6 +388,7 @@ export interface FltEmpInfo {
 /** 임직원매매현황 화면 설정 (기준관리의 연간투자한도 숨김) */
 export interface FltEmpInfoSetting {
   investLimitUnvisibleYn: boolean;
+  investLimitNoCheckYn: boolean;
 }
 
 /** 임직원매매현황 메모 (J07 Flt15_Lookup_Note, flt15_tr_status) */
@@ -483,6 +487,7 @@ export interface FltPreApprove {
 /** 사전승인 화면 설정 — 투자한도 열 숨김(기준관리)·협의승인 사용 회사 */
 export interface FltPreApproveSetting {
   investLimitUnvisibleYn: boolean;
+  investLimitNoCheckYn: boolean;
   addConfirmYn: boolean;
 }
 
@@ -496,6 +501,7 @@ export interface FltCompanyStd {
   investAmtCalcTargetName: string | null;
   investAmtOverCheckYn: string | null;
   investLimitUnvisibleYn: string | null;
+  investLimitNoCheckYn: string | null;
   turnoverRate: number | null;
   apprOverRate: number | null;
   apprQtyOverRate: number | null;

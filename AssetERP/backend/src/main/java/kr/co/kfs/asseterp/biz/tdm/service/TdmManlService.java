@@ -262,8 +262,8 @@ public class TdmManlService {
     // ── N27 책무관리현황 > 매뉴얼 규정/양식 연결 (Tdm43_Tab_ManlItemList) ──
 
     /** AS-IS tdm.Tdm43_Manl.selectByDate — 로그인 회사, 기준일에 쓰는 부서 책무매뉴얼의 점검항목 */
-    public List<ManlListRes> searchByDate(UserPrincipal user, String stdDate, String searchText) {
-        return mapper.selectListByDate(user.getCompanyId(), stdDate, Texts.like(searchText), null);
+    public List<ManlListRes> searchByDate(UserPrincipal user, String stdDate, Long orgId, String searchText) {
+        return mapper.selectListByDate(user.getCompanyId(), stdDate, Texts.like(searchText), null, orgId);
     }
 
     /** AS-IS tdm.Tdm43_Manl.selectById — 연결·삭제 뒤 그 행만 다시 읽는다 */
@@ -300,7 +300,7 @@ public class TdmManlService {
     public ManlListRes updateEtc(UserPrincipal user, Long manlId, ManlEtcReq req) {
         requireOwned(user, manlId);
         mapper.updateEtc(manlId, req, user.getName());
-        List<ManlListRes> rows = mapper.selectListByDate(user.getCompanyId(), req.stdDate(), "%", manlId);
+        List<ManlListRes> rows = mapper.selectListByDate(user.getCompanyId(), req.stdDate(), "%", manlId, null);
         if (rows.isEmpty()) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }

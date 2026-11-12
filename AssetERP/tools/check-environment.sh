@@ -5,6 +5,8 @@
 #   --host <이름>    hostname 대신 이 기기로 판정 (omen | t3600)
 #   -y, --yes        자동고침 가능한 항목을 묻지 않고 바로 고친다
 #   --no-fix         자동고침을 제안하지 않는다 (순수 읽기 전용)
+#   --restart-tomcat Tomcat 컨테이너(<호스트>-tomcat)를 내렸다가(docker stop) 올리고(docker start) 응답할 때까지 기다린 뒤 점검한다.
+#                    점검 전용이라는 원칙 때문에 옵션을 줄 때만 한다(자동고침 목록에는 넣지 않는다). 올라오는 데 보통 1~2분
 #   -h, --help       이 도움말
 # 자동고침: 점검만 하고, 고칠 수 있는 것(시뮬레이터 켜기·폴더 만들기·컨테이너 시작·색인 갱신·npm ci·ufw 허용)을 모아 끝에 "고칠까요? [y/N]"로 묻는다.
 #           터미널이 아니면(파이프·cron) 묻지 않고 목록만 보인다. 사람이 판단할 것(IP·setenv.sh·TODO)은 "고칠 명령"으로만 알린다.
@@ -46,6 +48,8 @@ check-environment.sh — 이 PC가 AssetERP 개발·배포 환경을 갖췄는�
 옵션
   -y, --yes        고칠 수 있는 항목을 묻지 않고 바로 고칩니다
       --no-fix     점검만 하고 고침은 제안하지 않습니다 (읽기 전용)
+      --restart-tomcat  Tomcat 컨테이너를 내렸다가 올린 뒤(응답 대기, 최대 120초) 점검합니다.
+                   옵션을 줄 때만 하며, 자동고침 목록에는 넣지 않습니다
       --host NAME  hostname 대신 이 기기로 판정합니다 (omen | t3600)
   -h, --help       이 도움말
 
@@ -75,9 +79,10 @@ check-environment.sh — 이 PC가 AssetERP 개발·배포 환경을 갖췄는�
 EOF
 }
 
-ASSUME_YES=0; NO_FIX=0
+ASSUME_YES=0; NO_FIX=0; RESTART_TOMCAT=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --restart-tomcat) RESTART_TOMCAT=1 ;;
         --host) [[ $# -ge 2 && -n "$2" ]] || { echo "[ERROR] --host 에는 이름이 필요합니다." >&2; exit 2; }
                 HOST_LC="${2,,}"; shift ;;
         -y|--yes) ASSUME_YES=1 ;;
@@ -151,6 +156,27 @@ if ! have docker; then fail "docker 명령 없음"
 elif ! docker info >/dev/null 2>&1; then fail "docker 데몬에 접속 못 함"; fix "sudo systemctl start docker  (또는 사용자를 docker 그룹에)"
 else
     DOCKER_OK=1; ok "docker 데몬 동작"
+    # --restart-tomcat: 내렸다가 올린 뒤 응답할 때까지 기다린다 (아래 컨테이너·Tomcat 점검이 올라온 뒤의 상태를 본다)
+    if (( RESTART_TOMCAT )); then
+        if docker inspect "$TOMCAT_CONTAINER" >/dev/null 2>&1; then
+            echo "  ▶ Tomcat 재시작: $TOMCAT_CONTAINER 내리는 중…"
+            if docker stop "$TOMCAT_CONTAINER" >/dev/null && docker start "$TOMCAT_CONTAINER" >/dev/null; then
+                echo "    올리는 중… (응답할 때까지 최대 120초)"
+                up=0
+                for _ in $(seq 1 60); do
+                    code="$(curl -s -o /dev/null -m 3 -w '%{http_code}' "http://localhost:$TOMCAT_PORT/AssetERP/" || true)"
+                    if [[ "$code" =~ ^[23] ]]; then up=1; break; fi
+                    sleep 2
+                done
+                if (( up )); then ok "Tomcat 재시작 완료 (응답 $code)"
+                else warn "Tomcat 재시작 뒤 120초 안에 응답 없음 — docker logs $TOMCAT_CONTAINER 로 확인 (war 배포 전이면 정상)"; fi
+            else
+                fail "Tomcat 재시작 실패 — docker stop/start $TOMCAT_CONTAINER"
+            fi
+        else
+            fail "컨테이너 $TOMCAT_CONTAINER 없음 — 재시작 못 함"
+        fi
+    fi
     for c in "$PG_CONTAINER" "$TOMCAT_CONTAINER"; do
         st="$(docker inspect -f '{{.State.Status}}' "$c" 2>/dev/null || echo 없음)"
         if [[ "$st" == running ]]; then ok "컨테이너 $c running"

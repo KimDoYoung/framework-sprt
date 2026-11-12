@@ -5,7 +5,7 @@ package kr.co.kfs.asseterp.biz.flt.dto;
  * 기존 행은 그리드에서 고치는 열만 UPDATE(의무보유기간 열은 조회창 updateLockup이 따로 고친다)
  */
 public record CompanyStdSaveReq(Long companyStdId, String startDate, Long totalInvestAmt, String investAmtCalcTargetCode,
-                                String investAmtOverCheckYn, String investLimitUnvisibleYn, Long turnoverRate,
+                                String investAmtOverCheckYn, String investLimitUnvisibleYn, String investLimitNoCheckYn, Long turnoverRate,
                                 Long apprOverRate, Long apprQtyOverRate, Long apprValidDays, String stdDateType,
                                 String fundHoldStkYn, String rptStartDate, String trFileEvidYn, String noAccountSkipYn,
                                 String lockUpCode, Long lockUpDays, String lockUpCalcStdCode,

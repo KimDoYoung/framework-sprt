@@ -17,4 +17,6 @@ public interface FltEmpMapper {
 
     /** AS-IS flt01_company_std.selectByDate 에서 investLimitUnvisibleYn — 기준관리가 없으면 null */
     Boolean selectInvestLimitUnvisible(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);
+
+    Boolean selectInvestLimitNoCheck(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);
 }

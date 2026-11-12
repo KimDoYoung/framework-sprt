@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper
 public interface EmpSmsNoticeMapper {
 
-    /** AS-IS emp92_sms_notice.selectByPersonId — 코드별 기본값: 앱 false·문자 true·메일 true */
+    /** AS-IS emp92_sms_notice.selectByPersonId — 코드별 기본값: 앱 false·문자 true·메일 true(단 M으로 시작하는 필수알림 코드는 메일 false — 원본 11-11) */
     List<SmsNoticeRes> selectByPersonId(@Param("personId") Long personId, @Param("type") String type);
 
     /** AS-IS emp92_sms_notice.check 의 건수 */

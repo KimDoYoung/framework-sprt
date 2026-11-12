@@ -50,7 +50,8 @@ public class FltPreApproveService {
     public PreApproveSettingRes setting(UserPrincipal user, String toDay) {
         Boolean unvisible = mapper.selectInvestLimitUnvisibleYn(user.getCompanyId(), toDay);
         Boolean addConfirm = mapper.selectAddConfirmYn(user.getCompanyId());
-        return new PreApproveSettingRes(Boolean.TRUE.equals(unvisible), Boolean.TRUE.equals(addConfirm));
+        Boolean noCheck = mapper.selectInvestLimitNoCheckYn(user.getCompanyId(), toDay);
+        return new PreApproveSettingRes(Boolean.TRUE.equals(unvisible), Boolean.TRUE.equals(noCheck), Boolean.TRUE.equals(addConfirm));
     }
 
     /** AS-IS updateStatusCode — 승인('20')이면 매매유효일을 기준관리의 승인유효일로 다시 정한다(서버 오늘 기준) */
