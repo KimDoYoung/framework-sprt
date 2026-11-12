@@ -275,9 +275,9 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ height: '100%', padding: 10,  boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* north: buttonBarVlc — 테두리 안 툴바 3줄 */}
-      <div style={{ border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ boxSizing: 'border-box', borderBottom: '1px solid #d9d9d9', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Typography.Text strong>문서분류</Typography.Text>
           <Select style={{ width: 200 }} placeholder="대분류를 선택하세요" value={lId} options={toOptions(lOptions)} onChange={changeL} />
@@ -303,7 +303,7 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
       </div>
 
       {/* center: vlc — 조회 툴바 + 그리드 + 페이징 */}
-      <div style={{ flex: 1, minHeight: 0, border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, minHeight: 0,  boxSizing: 'border-box', paddingLeft:10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E9] searchText.KeyPress [Enter] (L431)·[E10] receiveName.KeyPress [Enter] (L441)·[E11] retrieveButton[조회].Select (L453) → retrieve() */}
         <SearchBar onSearch={retrieve} loading={loading}>
           <SearchBar.Field label="등록기간">

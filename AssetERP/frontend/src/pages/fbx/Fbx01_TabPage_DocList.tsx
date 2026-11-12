@@ -128,7 +128,7 @@ export const Fbx01_TabPage_DocList = forwardRef<Fbx01_TabPage_DocListHandle>((_p
   // buildGrid() L121-202 (체크박스 단일 선택)
   const columnDefs = useMemo(() => [
     gb.date('crtDate', 100, '등록일'),  // L193
-    gb.text('dcrClassName', 500, '문서분류'),  // L194
+    gb.text('dcrClassName', 450, '문서분류'),  // L194
     gb.text('fileName', 300, '파일명'),  // L195
     gb.textCenter('empName', 100, '등록자'),  // L196
     iconCell<FbxFile>('view', 'actionCell01', 80, '미리보기', row => void viewRow(row)),  // L197
@@ -145,7 +145,7 @@ export const Fbx01_TabPage_DocList = forwardRef<Fbx01_TabPage_DocListHandle>((_p
           columnDefs={columnDefs}
           getRowId={p => String(p.data.fileId)}
           loading={loading}
-          rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
+          rowSelection={{ mode: 'singleRow', checkboxes: false, enableClickSelection: true }}
         />
       </div>
       {/* getButtonBar() 높이 60, 가운데 정렬 */}

@@ -207,7 +207,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
         {/* northLayoutData: 높이 200, 분할 */}
-        <Splitter.Panel defaultSize={200} min={120} max={1000}>
+        <Splitter.Panel defaultSize={250} min={120} max={1000}>
           <div style={{ height: '100%', paddingBottom: 10, boxSizing: 'border-box' }}>
             <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               {/* [E1] searchText.KeyPress [Enter] (L89) · [E2] retrieveButton[조회].Select (L98) → retrieve() */}
@@ -255,7 +255,7 @@ export const Fbx01_Tab_Document: React.FC = () => {
             <Splitter style={{ height: '100%' }}>
               {/* westLayoutData: 가운데 hlc의 cp 400 */}
               <Splitter.Panel defaultSize={400} min={250} max={1000}>
-                <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '100%', borderBottom: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
                   <SearchBar onSearch={search} searchText="찾기"
                     // [E6] expandAll[+] (L122)·[E7] collapseAll[-] (L129) → 보기 전환과 한 묶음(TreeListControlButtons)
                     extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => tree.current?.setExpanded([])} expandDisabled={treeData.length === 0} />}

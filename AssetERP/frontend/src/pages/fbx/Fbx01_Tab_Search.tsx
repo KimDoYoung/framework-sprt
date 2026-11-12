@@ -72,16 +72,16 @@ export const Fbx01_Tab_Search: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
         {/* northLayoutData: 높이 200, 분할 */}
-        <Splitter.Panel defaultSize={200} min={120} max={1000}>
+        <Splitter.Panel defaultSize={400} min={120} max={1000}>
           <div style={{ height: '100%', paddingBottom: 10, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               {/* [E1] searchText.KeyPress [Enter] (L62) · [E2] retrieveButton[조회].Select (L71) → retrieve() */}
               <SearchBar onSearch={retrieve} loading={loading}>
                 <SearchBar.Field label="제목">
                   <SearchBar.Input style={{ width: 350 }} value={sp.values.searchText} onChange={e => sp.set('searchText', e.target.value)} />
                 </SearchBar.Field>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 <SingleGrid<FbxBox>
                   rowData={rows}
                   columnDefs={columnDefs}
@@ -105,7 +105,7 @@ export const Fbx01_Tab_Search: React.FC = () => {
         </Splitter.Panel>
         <Splitter.Panel>
           <div style={{ height: '100%', paddingTop: 10, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+            <div style={{ height: '100%',  boxSizing: 'border-box'}}>
               <Fbx01_Grid_DocList ref={docList} />
             </div>
           </div>

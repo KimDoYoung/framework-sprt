@@ -94,7 +94,7 @@ export const Fbx01_Grid_DocList = forwardRef<Fbx01_Grid_DocListHandle>((_props, 
           <SearchBar.Input style={{ width: 100 }} placeholder="등록자" value={sp.values.regEmpName} onChange={e => sp.set('regEmpName', e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <SingleGrid<FbxFile>
           rowData={rows}
           columnDefs={columnDefs}

@@ -107,7 +107,7 @@ export const Ics01_Grid_ApprList: React.FC<Props> = ({ node }) => {
   ], []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', paddingLeft:10, display: 'flex', flexDirection: 'column' }}>
       {/* [E2] searchTextField.KeyPress [Enter] (L108)·[E3] retrieveButton[검색].Select (L116) → retrieve() */}
       <SearchBar onSearch={() => void retrieve()} searchText="검색" loading={loading} disabled={!enabled}
         extra={(

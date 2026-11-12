@@ -120,9 +120,9 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
   return (
     <div style={{ height: '100%', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
-        <Splitter.Panel defaultSize={270} min={120} max={1020}>
+        <Splitter.Panel defaultSize="50%" min={120} max="90%">
           <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               <SearchBar onSearch={() => void retrieveFundList()} loading={fundLoading}>
                 <SearchBar.Field label="펀드유형">
                   <SystemCodeComboBox kindCd="IcamFundType" altCode={ALL_CODE} style={{ width: 150 }} value={fundTypeCode} onChange={c => setFundTypeCode(c ?? ALL)} />
@@ -136,7 +136,7 @@ export const Apr01_Tab_FundDocument: React.FC = () => {
                 <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>해지펀드포함</Checkbox>
                 <Checkbox checked={classFundExceptYn} onChange={e => setClassFundExceptYn(e.target.checked)}>클래스펀드&amp;차등분배형 제외</Checkbox>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 {/* [E4] grid.SelectionChanged [선택>0] (L140) → retrieveDocList() L200-203 */}
                 <SingleGrid<FundCode>
                   rowData={funds}
