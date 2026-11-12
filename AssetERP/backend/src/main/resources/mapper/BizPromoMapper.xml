@@ -98,7 +98,8 @@
          ORDER BY biz01_provide_date
     </select>
 
-    <!-- AS-IS biz01_promo.selectTargetInfoReqYn (IDMS-IC 2026-11-06, CH-0010) — 고른 내역 중 '거래상대방 필수입력' 한도인데 거래상대방(직원 아님)이 없는 건수. 로그인 회사 조건은 보안 보강 -->
+    <!-- AS-IS biz01_promo.selectTargetInfoReqYn (IDMS-IC 2026-11-12, CH-0010·CH-0355) — 고른 내역 중 '거래상대방 필수입력' 한도인데 거래상대방(직원 아님)이 없는 건수.
+         제공목적 10·11만 검사(CH-0355). 로그인 회사 조건은 보안 보강 -->
     <select id="countTargetInfoMissing" resultType="int">
         SELECT count(*)
           FROM (SELECT CASE WHEN COALESCE(biz90_target_info_req_yn, 'false') = 'true' AND biz02_target_count = 0
@@ -116,6 +117,7 @@
                                                   ORDER BY biz90_start_date DESC
                                                   LIMIT 1) l ON TRUE
                  WHERE biz01_company_id = #{companyId}
+                   AND biz01_provide_pur_cd IN ('10', '11')
                    AND biz01_promo_id IN <foreach collection="promoIds" item="id" open="(" close=")" separator=",">#{id}</foreach>) t
          WHERE result = false
     </select>

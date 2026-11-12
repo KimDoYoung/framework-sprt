@@ -71,7 +71,7 @@ class BizCardApprDbTest {
         List<Long> ids = search(false, null).stream().map(BizPromoCardRes::promoId).toList();
         Long noTarget = jdbc.queryForObject("""
                 select a.biz01_promo_id from biz01_promo a
-                 where a.biz01_promo_id = any(?) and a.biz01_provide_rcv_type = '1'
+                 where a.biz01_promo_id = any(?) and a.biz01_provide_rcv_type = '1' and a.biz01_provide_pur_cd in ('10', '11')
                    and not exists (select 1 from biz02_person p where p.biz02_promo_id = a.biz01_promo_id and coalesce(p.biz02_emp_yn,'false') = 'false')
                  order by 1 limit 1""", Long.class, (Object) ids.toArray(Long[]::new));
         // #1130에서 사용자가 바꿀 수 있는 값이라 시험이 두 상태를 직접 만든다
@@ -83,6 +83,10 @@ class BizCardApprDbTest {
         assertThat(service.countTargetInfoMissing(user, List.of(noTarget, noTarget))).isEqualTo(1);
         UserPrincipal other = UserPrincipal.builder().userId(1L).companyId(1L).roles(List.of("ROLE_USER")).build();
         assertThat(service.countTargetInfoMissing(other, List.of(noTarget))).isZero();
+
+        // CH-0355(4657a06c0): 제공목적 10·11만 검사 — 다른 목적이면 거래상대방이 없어도 세지 않는다
+        jdbc.update("update biz01_promo set biz01_provide_pur_cd = '50' where biz01_promo_id = ?", noTarget);
+        assertThat(service.countTargetInfoMissing(user, List.of(noTarget, noTarget, noTarget))).isZero();
     }
 
     @Test
