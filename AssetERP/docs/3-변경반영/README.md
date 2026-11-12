@@ -9,7 +9,8 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 | 파일 | 내용 |
 |:---|:---|
 | `README.md` | 이 문서 — 원칙·절차·도구 |
-| `변경반영-대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다 |
+| `변경반영-대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다. 남은 일(`대기`·`보류`·`넘김`)만 있다 |
+| `보관/{YYYY-MM}.md` | 끝난 줄(`반영`·`해당없음`)을 처리일의 달로 옮긴 것(자동). 2026-11에는 첫 대장 설명도 있다 |
 | `../../tools/make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
 
 ## 원칙
@@ -69,10 +70,11 @@ AS-IS와 TOBE가 같은 DB(asseterpdb)를 쓰므로 **AS-IS가 정답지**다. �
 cd AssetERP
 tools/check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
 tools/make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
-tools/make-change-docs.sh          # 변경반영-대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m"
+tools/make-change-docs.sh          # 변경반영-대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m · 보관으로 옮김 k"
 ```
 - `make-change-docs.sh`가 하는 일: `yunhee drift --all --done-only --base baseline -o json` → 바뀐 파일을 SQL ID·메서드 단위로 나눔 → 색인·AS-IS 호출(`mapperName + ".id"`, `<include refid>`, 클라이언트 서비스 문자열)을 따라 쓰는 완료 화면 → TOBE 대응 후보 → 기준선 이후 새 파일·DB 스크립트 → 대장에 이어 붙임.
-- **처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다.** 같은 단위가 `대기`면 커밋·변경 요약·영향 화면만 고치고, 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄. 키는 마지막 `CH-` 번호에서 이어 간다.
+- **처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다.** 같은 단위가 `대기`면 커밋·변경 요약·영향 화면만 고치고, 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄. 키는 마지막 `CH-` 번호에서 이어 간다(보관 파일까지 본다).
+- **끝난 줄은 보관으로 옮긴다**(2026-11-12): 실행할 때마다 `반영`·`해당없음` 줄을 `보관/{처리일 YYYY-MM}.md` 끝으로 옮기고, 대장의 "보관" 절(달별 건수)을 다시 쓴다. 지우는 것이 아니라 옮기는 것이다. "처리한 단위에 새 커밋이 없으면 건너뜀" 판정도 보관 줄을 읽는다. drift 없이 옮기기만 하려면 `python3 tools/make_change_docs.py --archive-only`. 보관된 줄을 고칠 일이 생기면(드묾) 보관 파일에서 직접 고친다.
 - `--reuse`는 drift를 다시 돌리지 않고 지난 결과(`.yunhee/drift-today.json`)를 쓴다.
 - ntfy로 `대기` 건수를 알린다.
 

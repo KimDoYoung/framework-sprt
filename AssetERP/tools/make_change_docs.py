@@ -11,12 +11,14 @@
   5. 대장에 이어 붙인다 — 처리한 줄(반영·해당없음·보류·넘김)은 건드리지 않는다
      · 같은 단위가 `대기`로 있으면 커밋·변경 요약·영향 화면만 갱신
      · 처리한 단위가 그 뒤 커밋으로 다시 바뀌었으면 새 줄
+  6. 끝난 줄(반영·해당없음)을 docs/3-변경반영/보관/{처리일 YYYY-MM}.md 로 옮긴다(키 번호·중복 판정은 보관도 읽음)
 yunhee drift-unit / drift-list(수정사항054)가 생기기 전의 임시 도구다.
 """
 import argparse, collections, glob, json, os, re, subprocess, sys, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))           # AssetERP
 LEDGER = os.path.join(ROOT, 'docs/3-변경반영/변경반영-대장.md')
+ARCHIVE_DIR = os.path.join(ROOT, 'docs/3-변경반영/보관')                         # 끝난 줄 월별 보관(YYYY-MM.md)
 ASIS = os.path.expanduser(os.environ.get('YUNHEE_ASIS_SRC_DIR', '~/work/IDMS-IC'))
 SRC_INDEX = os.path.join(ROOT, 'docs/as-is/src')
 BASELINE = os.path.join(ROOT, 'docs/baseline.json')
@@ -323,11 +325,22 @@ def split_row(line):
     return [c.strip() for c in cells]
 
 
+def archive_files():
+    return sorted(glob.glob(os.path.join(ARCHIVE_DIR, '[0-9][0-9][0-9][0-9]-[0-9][0-9].md')))
+
+
 def merge(rows, today, dry):
     text = open(LEDGER).read()
     lines = text.splitlines()
-    idx = {}            # 단위 → [(줄 번호, cells)]
+    idx = {}            # 단위 → [(줄 번호, cells)] — 보관 줄은 줄 번호 None(읽기만: 키 번호·"처리한 뒤 새 커밋 없음" 판정)
     last_no, bad, unchecked = 0, [], []
+    for f in archive_files():
+        for l in open(f).read().splitlines():
+            if l.startswith('| CH-'):
+                c = split_row(l)
+                if len(c) != len(COLS): continue
+                last_no = max(last_no, int(c[C['키']][3:]))
+                idx.setdefault(c[C['단위']], []).append((None, c))
     for i, l in enumerate(lines):
         if l.startswith('| CH-'):
             c = split_row(l)
@@ -369,17 +382,79 @@ def merge(rows, today, dry):
         if last_row is None:
             last_row = next(i for i, l in enumerate(lines) if l.startswith('|:---') and i > 0 and lines[i - 1].startswith('| 키 |'))
         lines[last_row + 1:last_row + 1] = added
+    moved = archive(lines, dry)
     if not dry:
         open(LEDGER, 'w').write('\n'.join(lines) + '\n')
-    return added, updated, same
+    return added, updated, same, moved
+
+
+# ---------------------------------------------------------------- 6. 끝난 줄을 월별 보관 파일로 옮기기
+ARCHIVE_DONE = ('반영', '해당없음')     # 보류·넘김은 아직 남은 일이 있어 대장에 둔다
+
+
+def archive_head(month):
+    return (f'# 변경반영 대장 보관 {month}\n\n'
+            f'`../변경반영-대장.md`에서 끝난 줄(반영·해당없음)을 처리일의 달로 옮긴 것. '
+            f'`tools/make-change-docs.sh`가 돌 때마다 자동으로 옮긴다. 칸 설명은 대장의 "칸" 절.\n'
+            f'키(`CH-…`)로 찾는다. 줄은 고치지 않는다(다시 바뀌면 대장에 새 키가 생긴다).\n\n'
+            f'## 대장\n\n| ' + ' | '.join(COLS) + ' |\n' + '|:---' * len(COLS) + '|\n')
+
+
+def archive(lines, dry):
+    """lines(대장)에서 끝난 줄을 빼 보관/{YYYY-MM}.md 끝에 붙이고, 대장의 "보관" 절을 다시 쓴다. 옮긴 줄 수."""
+    by_month, keep = collections.defaultdict(list), []
+    for l in lines:
+        if l.startswith('| CH-'):
+            c = split_row(l)
+            if len(c) == len(COLS) and c[C['상태']] in ARCHIVE_DONE:
+                by_month[(c[C['처리일']] or c[C['발견일']])[:7]].append(l)
+                continue
+        keep.append(l)
+    lines[:] = keep
+    if not dry and by_month:
+        os.makedirs(ARCHIVE_DIR, exist_ok=True)
+        for month, rows in sorted(by_month.items()):
+            f = os.path.join(ARCHIVE_DIR, f'{month}.md')
+            body = open(f).read() if os.path.exists(f) else archive_head(month)
+            open(f, 'w').write(body.rstrip('\n') + '\n' + '\n'.join(rows) + '\n')
+    # "보관" 절: 달별 건수 표 (대장의 "## 대장" 바로 앞)
+    counts = []
+    for f in archive_files():
+        st = collections.Counter(split_row(l)[C['상태']] for l in open(f).read().splitlines() if l.startswith('| CH-'))
+        counts.append((os.path.basename(f)[:-3], st))
+    if not dry:
+        for month, rows in by_month.items():
+            if not any(m == month for m, _ in counts):
+                counts.append((month, collections.Counter(split_row(l)[C['상태']] for l in rows)))
+    counts.sort()
+    sec = ['## 보관', '',
+           '끝난 줄(반영·해당없음)은 `make-change-docs.sh`가 처리일의 달 파일로 옮긴다. 이 대장에는 `대기`·`보류`·`넘김`만 남는다.', '',
+           '| 달 | 파일 | 반영 | 해당없음 | 계 |', '|:---|:---|---:|---:|---:|']
+    sec += [f'| {m} | [보관/{m}.md](보관/{m}.md) | {st["반영"]} | {st["해당없음"]} | {sum(st.values())} |' for m, st in counts]
+    sec.append('')
+    s = next((i for i, l in enumerate(lines) if l == '## 보관'), None)
+    if s is not None:
+        e = next(i for i in range(s + 1, len(lines)) if lines[i].startswith('## '))
+        del lines[s:e]
+    d = next(i for i, l in enumerate(lines) if l == '## 대장')
+    lines[d:d] = sec
+    return sum(len(v) for v in by_month.values())
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('drift_json')
+    ap.add_argument('drift_json', nargs='?')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--since', help='새 파일·DB 스크립트를 찾을 시작일 (기본: 기준선의 가장 이른 기록일)')
+    ap.add_argument('--archive-only', action='store_true', help='drift 없이 끝난 줄만 보관 파일로 옮긴다')
     a = ap.parse_args()
+    if a.archive_only:
+        lines = open(LEDGER).read().splitlines()
+        moved = archive(lines, a.dry_run)
+        if not a.dry_run: open(LEDGER, 'w').write('\n'.join(lines) + '\n')
+        print(f'보관으로 옮긴 줄 {moved}' + (' (dry-run)' if a.dry_run else ''))
+        return
+    if not a.drift_json: ap.error('drift_json 필요(또는 --archive-only)')
     drift = json.load(open(a.drift_json))
     menu = load_menu()
     since = a.since
@@ -388,9 +463,9 @@ def main():
         since = min((v.get('recorded_at') or '9999')[:10] for v in bl.values() if isinstance(v, dict))
     today = datetime.date.today().isoformat()
     rows = unit_rows(drift, menu) + new_file_rows(menu, since)
-    added, updated, same = merge(rows, today, a.dry_run)
+    added, updated, same, moved = merge(rows, today, a.dry_run)
     c = collections.Counter(split_row(l)[C['종류']] for l in added)
-    print(f'단위 {len(rows)}개 → 새 줄 {len(added)} · 대기 줄 갱신 {updated} · 그대로 {same}' + (' (dry-run: 대장에 쓰지 않음)' if a.dry_run else ''))
+    print(f'단위 {len(rows)}개 → 새 줄 {len(added)} · 대기 줄 갱신 {updated} · 그대로 {same} · 보관으로 옮김 {moved}' + (' (dry-run: 대장에 쓰지 않음)' if a.dry_run else ''))
     if c: print('  새 줄 종류: ' + ', '.join(f'{k} {v}' for k, v in sorted(c.items(), key=lambda kv: KIND_ORDER.get(kv[0], 9))))
     if a.dry_run:
         for l in added[:30]: print('  ' + l)
