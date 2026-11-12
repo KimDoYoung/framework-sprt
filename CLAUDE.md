@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 작업의 구성
 
-작업은 아래 다섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
+작업은 아래 여섯 가지로 나눈다. 각 작업의 규칙·기록은 `AssetERP/docs/` 아래 작업별 폴더에 두고, 폴더마다 README.md 가 길잡이다(전체 지도는 `AssetERP/docs/README.md`).
 
 (폴더 앞 숫자는 작업 ID이지 순서가 아니다.) **작업을 시작하기 전에 그 작업 폴더의 `README.md`를 반드시 먼저 읽는다**(예: 변환 → `AssetERP/docs/1-변환/README.md`). 요청이 어느 작업인지 애매하면 가장 가까운 작업의 README를 읽고, 여러 작업에 걸치면 해당 README를 모두 읽는다.
 
@@ -24,6 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/3-변경반영/` | `tools/check-git.sh` → `tools/make-change-docs.sh`(변경반영-대장), `yunhee drift` |
 | 재설계 | AS-IS의 UI·로직(업무흐름)을 TOBE에서 다르게 바꾸고 새 기능을 더함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/4-재설계/` | |
 | 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/5-테스트/` | `yunhee run "gradle test"` |
+| 매뉴얼 | TOBE 화면의 사용자 매뉴얼(md + 주석 달린 캡처 이미지)을 자동으로 만들어 A-Man 업로드용 zip으로 묶음(업로드는 사람) | `AssetERP/docs/6-매뉴얼/` | `yunhee screen-capture --boxes`(요청 중, 수정사항057)·`yunhee mark`(요청 중, 수정사항058) |
 
 * 기술스택이 바뀌면서 달라지는 것
    - 보안: 세션 → JWT (`docs/security-설계.md`)
