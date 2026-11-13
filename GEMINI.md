@@ -19,7 +19,7 @@ This file provides guidance to agy(GEMINI ai agent) when working with code in th
 |:---|:---|:---|:---|
 | 변환 | GWT/GXT 화면을 Spring Boot/React로 옮김 | `AssetERP/docs/1-변환/` (규칙: `03-절대원칙`·`05-작업방법`) | `yunhee analysis`·`port-sql`·`run` |
 | 업무분석 | AS-IS 업무를 **소스와 DB 구조**로 확인하고 시나리오를 만듦 | `AssetERP/docs/2-업무분석/` (참고: `1-변환/09-업무흐름.md`) | `yunhee trace-*`·`table` |
-| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/3-변경반영/` | `tools/check-git.sh` → `tools/make-change-docs.sh`(변경반영-대장), `yunhee drift` |
+| 변경반영 | AS-IS는 매일 바뀐다. 변환이 끝난 화면도 원본이 바뀌면 파악해서 TOBE에 반영 | `AssetERP/docs/3-변경반영/` | `tools/check-git-and-db.sh` → `tools/make-change-docs.sh`(변경반영-대장), `yunhee drift` |
 | 재설계 | AS-IS의 UI·로직(업무흐름)을 TOBE에서 다르게 바꾸고 새 기능을 더함(전환 단위·공존·롤백은 아래 Strangler Fig) | `AssetERP/docs/4-재설계/` | |
 | 테스트 | 업무 로직 기준으로 TOBE 테스트를 자동화 | `AssetERP/docs/5-테스트/` | `yunhee run "gradle test"` |
 
@@ -87,7 +87,7 @@ ASIS 변경 분 반영 - ASIS 소스의 변경된 내용을 git pull하고 그�
 
 ```bash
 cd AssetERP
-tools/check-git.sh          # AS-IS pull + 색인
+tools/check-git-and-db.sh   # AS-IS pull + 색인 (DB가 바뀌었으면 --db-index, --help)
 tools/make-change-docs.sh   # 바뀐 것을 변경반영-대장(docs/3-변경반영/변경반영-대장.md)에 이어 붙임
 
 ```

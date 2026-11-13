@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #============================================================================
-# tools/make-change-docs.sh - check-git.sh 다음에 돌려 변경반영 문서(변경반영-대장)를 만든다
-#   tools/check-git.sh                 AS-IS 받아오기 + 색인
+# tools/make-change-docs.sh - check-git-and-db.sh 다음에 돌려 변경반영 문서(변경반영-대장)를 만든다
+#   tools/check-git-and-db.sh                 AS-IS 받아오기 + 색인
 #   tools/make-change-docs.sh          바뀐 것을 SQL ID·메서드 단위로 나눠 변경반영-대장에 이어 붙임
 #   tools/make-change-docs.sh --dry-run    대장에 쓰지 않고 새로 붙을 줄만 보여 줌
 #   tools/make-change-docs.sh --reuse      drift를 다시 돌리지 않고 지난 결과(.yunhee/drift-today.json) 사용
@@ -25,7 +25,7 @@ usage() {
     cat <<USAGE
 사용법: tools/make-change-docs.sh [--dry-run] [--reuse] [--since YYYY-MM-DD] [-h|--help]
 
-check-git.sh 다음에 돌린다. 완료 화면(기준선) 이후 AS-IS 변경을 SQL ID·메서드 단위로 나눠
+check-git-and-db.sh 다음에 돌린다. 완료 화면(기준선) 이후 AS-IS 변경을 SQL ID·메서드 단위로 나눠
 ${LEDGER} 에 '대기'로 이어 붙인다.
 
 옵션:
@@ -51,7 +51,7 @@ done
 [[ -f "$LEDGER" ]] || die "대장이 없습니다: $LEDGER"
 command -v yunhee >/dev/null || die "yunhee 가 없습니다"
 
-# AS-IS 원본 위치: yunhee value YUNHEE_ASIS_SRC_DIR (check-git.sh 와 같음)
+# AS-IS 원본 위치: yunhee value YUNHEE_ASIS_SRC_DIR (check-git-and-db.sh 와 같음)
 SRC="${YUNHEE_ASIS_SRC_DIR:-$(yunhee value YUNHEE_ASIS_SRC_DIR 2>/dev/null || true)}"
 export YUNHEE_ASIS_SRC_DIR="${SRC/#\~/$HOME}"
 [[ -n "$SRC" && -d "$YUNHEE_ASIS_SRC_DIR/.git" ]] || die "AS-IS 원본(YUNHEE_ASIS_SRC_DIR)을 찾지 못했습니다: ${YUNHEE_ASIS_SRC_DIR:-}"

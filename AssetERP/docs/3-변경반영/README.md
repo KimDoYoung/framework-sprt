@@ -11,7 +11,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 | `README.md` | 이 문서 — 원칙·절차·도구 |
 | `변경반영-대장.md` | AS-IS 변경 한 건 = 한 줄. 상태를 끝까지 추적한다. 남은 일(`대기`·`보류`·`넘김`)만 있다 |
 | `보관/{YYYY-MM}.md` | 끝난 줄(`반영`·`해당없음`)을 처리일의 달로 옮긴 것(자동). 2026-11에는 첫 대장 설명도 있다 |
-| `../../tools/make-change-docs.sh` | `check-git.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
+| `../../tools/make-change-docs.sh` | `check-git-and-db.sh` 다음에 돌려 대장을 만든다(이어 붙임). 처리는 `../../tools/make_change_docs.py` |
 
 ## 원칙
 
@@ -27,7 +27,7 @@ Strangler Fig로 AS-IS와 TOBE가 함께 서비스된다고 가정하므로 **�
 
 | 종류 | 무엇 | 확인 도구(지금) | 반영 |
 |:---|:---|:---|:---|
-| `DB` | 테이블·열·함수·트리거 | `tools/check-git.sh --db-index`, `yunhee sql`(information_schema·`pg_proc`), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인. **함수**는 AS-IS `doc/dbSource/*.sql`과 `pg_proc.prosrc`를 대조 → 다르면 `tools/db_dump_backup.sh` 백업 → 트랜잭션으로 묶은 SQL 파일(돌려주는 형식이 바뀌면 `DROP FUNCTION IF EXISTS` 먼저, 로컬에 없는 계정 GRANT는 뺌)을 **사용자가** `! docker exec -i <컨테이너> psql -U kdy987 -d asseterpdb -X -q < 파일`로 실행(yunhee는 DDL을 막고, 에이전트의 psql 직접 실행은 훅이 막는다) → 그 함수를 쓰는 TOBE 테스트를 돌린다(처음 사례 CH-0001~0003) |
+| `DB` | 테이블·열·함수·트리거 | `tools/check-git-and-db.sh --db-index`, `yunhee sql`(information_schema·`pg_proc`), `yunhee table` | 가장 먼저. 같은 DB를 쓰므로 TOBE SQL이 바로 깨질 수 있다. 열 추가·이름 변경이면 TOBE 매퍼·DTO 확인. **함수**는 AS-IS `doc/dbSource/*.sql`과 `pg_proc.prosrc`를 대조 → 다르면 `tools/db_dump_backup.sh` 백업 → 트랜잭션으로 묶은 SQL 파일(돌려주는 형식이 바뀌면 `DROP FUNCTION IF EXISTS` 먼저, 로컬에 없는 계정 GRANT는 뺌)을 **사용자가** `! docker exec -i <컨테이너> psql -U kdy987 -d asseterpdb -X -q < 파일`로 실행(yunhee는 DDL을 막고, 에이전트의 psql 직접 실행은 훅이 막는다) → 그 함수를 쓰는 TOBE 테스트를 돌린다(처음 사례 CH-0001~0003) |
 | `SQL` | 매퍼 XML의 SQL ID | `yunhee analysis sql <ns.id>`, AS-IS `git diff` | `yunhee port-sql`로 다시 옮기고 `sql-check --tobe`·`compare`·`mapper-run --compare`로 결과 대조 |
 | `LOGIC` | 서버 Java 메서드(검사·분기·메시지·호출 순서) | `yunhee analysis method <클래스>.<메서드> -o code` | TOBE 서비스·컨트롤러에 옮김. 업무 테스트(`5-테스트`)가 있으면 늘린다 |
 | `MODEL` | 모델·DTO 필드 | `analysis model` | TOBE record·TS 타입에 필드 추가 |
@@ -68,7 +68,7 @@ AS-IS와 TOBE가 같은 DB(asseterpdb)를 쓰므로 **AS-IS가 정답지**다. �
 
 ```bash
 cd AssetERP
-tools/check-git.sh                 # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index)
+tools/check-git-and-db.sh          # AS-IS pull → 색인 다시 만들기 (DB가 바뀌었으면 --db-index: DB 색인+menus.tsv+소스 색인)
 tools/make-change-docs.sh --dry-run   # 무엇이 새로 붙을지 보기
 tools/make-change-docs.sh          # 변경반영-대장에 이어 붙임 → "새 줄 n · 대기 줄 갱신 m · 보관으로 옮김 k"
 ```
@@ -95,7 +95,7 @@ tools/make-change-docs.sh          # 변경반영-대장에 이어 붙임 → "�
 
 ## 도구
 
-지금은 `tools/check-git.sh`(pull·색인), `yunhee drift`(화면 단위 감지), 그 위에서 단위로 나누는 임시 도구 `tools/make-change-docs.sh`다.
+지금은 `tools/check-git-and-db.sh`(pull·색인), `yunhee drift`(화면 단위 감지), 그 위에서 단위로 나누는 임시 도구 `tools/make-change-docs.sh`다.
 yunhee에 **`drift-` 명령군**을 제안했다(`~/work/yunhee-cli/docs/수정사항/수정사항054.md`). `trace-*`가 업무분석용이듯 `drift-*`는 변경반영용이다.
 
 | 명령(제안) | 하는 일 | 대장에서 쓰는 곳 |

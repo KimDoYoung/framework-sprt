@@ -20,8 +20,8 @@
 
 | 파일 | 용도 |
 |:---|:---|
-| `check-git.sh` | AS-IS 원본(`YUNHEE_ASIS_SRC_DIR`) `git pull` → 색인 기준과 다르면 `index-src` 다시 만들기. `--force`·`--no-index`·`--db-index` |
-| `make-change-docs.sh` + `make_change_docs.py` | `check-git.sh` 다음에 돌려 바뀐 것을 SQL ID·메서드 단위로 나눠 `docs/3-변경반영/변경반영-대장.md`에 이어 붙임(처리한 줄은 그대로). `--dry-run`·`--reuse`·`--since` |
+| `check-git-and-db.sh` | AS-IS 원본(`YUNHEE_ASIS_SRC_DIR`) `git pull` → 색인 기준과 다르면 `index-src` 다시 만들기. `--src-index`(옛 `--force`)·`--menu-tsv`(menus.tsv 다시 뽑기)·`--db-index`(DB 색인+menus.tsv+소스 색인)·`--all`·`--no-index`·`--help` |
+| `make-change-docs.sh` + `make_change_docs.py` | `check-git-and-db.sh` 다음에 돌려 바뀐 것을 SQL ID·메서드 단위로 나눠 `docs/3-변경반영/변경반영-대장.md`에 이어 붙임(처리한 줄은 그대로). `--dry-run`·`--reuse`·`--since` |
 
 ## 환경 점검 (읽기 전용)
 
@@ -39,7 +39,7 @@
   | 2 Docker·DB·Tomcat | docker 데몬, postgres·tomcat 컨테이너 running, `pg_isready`, `yunhee sql`(YUNHEE_DB), `http://localhost:8082/AssetERP/`, 공유 볼륨 `/home/kdy987/tmp/asseterp-data` 쓰기 |
   | 3 시뮬레이터 포트 | 5151(RD)·5161(talk·sms)·2525(SMTP)·5171(AI·메일)이 `0.0.0.0`에 떠 있는가, **Tomcat 컨테이너 안에서 호스트 IP:포트로 실제 연결**되는가(실패 = ufw 의심) |
   | 4 도구 | java 21, node·npm·gradle·psql·yunhee·git, `frontend/node_modules` |
-  | 5 AS-IS 소스·색인 | `yunhee config`의 AS-IS 소스 폴더, git 원격 접속(`check-git.sh`), `docs/as-is/` 색인 유무·나이(14일 넘으면 ⚠) |
+  | 5 AS-IS 소스·색인 | `yunhee config`의 AS-IS 소스 폴더, git 원격 접속(`check-git-and-db.sh`), `docs/as-is/` 색인 유무·나이(14일 넘으면 ⚠) |
   | 6 개발 포트 | 5173·8080·5432·8082 사용 중인지(참고만) |
   | 7 외부 연결 | ntfy.sh 접속(알림은 보내지 않음) |
 

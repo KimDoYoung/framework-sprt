@@ -246,14 +246,14 @@ ASIS="$(yunhee config 2>/dev/null | sed -n 's/.*Source (ASIS)[^/]*\(\/[^ │]*\)
 ASIS="${ASIS:-$HOME/work/IDMS-IC}"
 if [[ -d "$ASIS/.git" ]]; then
     ok "AS-IS 소스 $ASIS ($(git -C "$ASIS" rev-parse --abbrev-ref HEAD 2>/dev/null))"
-    if timeout 10 git -C "$ASIS" ls-remote --exit-code origin HEAD >/dev/null 2>&1; then ok "AS-IS git 원격 접속 가능 (check-git.sh)"
-    else warn "AS-IS git 원격 접속 실패 — check-git.sh 의 pull 이 안 됨"; fi
+    if timeout 10 git -C "$ASIS" ls-remote --exit-code origin HEAD >/dev/null 2>&1; then ok "AS-IS git 원격 접속 가능 (check-git-and-db.sh)"
+    else warn "AS-IS git 원격 접속 실패 — check-git-and-db.sh 의 pull 이 안 됨"; fi
 else fail "AS-IS 소스 없음 — $ASIS"; fi
 for f in docs/as-is/src/menus.md docs/as-is/menus.tsv docs/as-is/db; do
     if [[ -e "$ROOT/$f" ]]; then
         age=$(( ( $(date +%s) - $(stat -c %Y "$ROOT/$f") ) / 86400 ))
         if (( age > 14 )); then
-            warn "$f ${age}일 전 — tools/check-git.sh 로 갱신"
+            warn "$f ${age}일 전 — tools/check-git-and-db.sh 로 갱신"
             case "$f" in
                 */menus.md|*/menus.tsv) autofix "메뉴·소스 색인 다시 만들기 (menus.tsv → index-src, 몇 분 걸림)" \
                     "cd '$ROOT/..' && yunhee sql --builtin menus -o tsv --no-header --out AssetERP/docs/as-is/menus.tsv && yunhee index-src -t AssetERP/docs/as-is/src" ;;
