@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyProductRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
@@ -259,6 +260,12 @@ public class SysCompanyService {
     }
 
     // ── A09 메뉴 관리 (AS-IS Sys01_Company.selectByCopyList L75 / selectByCode L64 / updateByMenuYn L118) ──
+
+    /** AS-IS Sys01_Company.selectByErpProductCode (원본 2026-11-13, CH-0406) — #1001·#1280 회사 그리드: 상품 코드(없으면 '%'), 고객명+서브도메인 '%' + 검색어 + '%' */
+    public List<CompanyProductRes> searchByErpProduct(UserPrincipal user, String erpProductCd, String searchText) {
+        user.requireSysAdmin();
+        return sysCompanyMapper.selectByErpProductCode(productOrAll(erpProductCd), "%" + (searchText == null ? "" : searchText) + "%");
+    }
 
     /** 일괄복사 고객사 목록: '%' + 검색어 + '%', 상품 코드(없으면 '%') */
     public List<CompanyCopyRes> searchCopyCompanies(UserPrincipal user, String searchText, String erpProductCd) {

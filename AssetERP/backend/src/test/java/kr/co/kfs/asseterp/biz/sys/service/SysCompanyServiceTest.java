@@ -37,6 +37,17 @@ class SysCompanyServiceTest {
         verify(mapper).searchCompanies(new CompanySearchParam("%", "false"));
     }
 
+    /** CH-0406 (AS-IS Sys01_Company.selectByErpProductCode, 원본 2026-11-13): 상품 없으면 '%', 검색어는 양쪽 '%', 시스템 관리자만 */
+    @Test
+    void 상품별_회사_조회는_상품_없으면_전체_검색어는_양쪽_퍼센트_시스템관리자만() {
+        service.searchByErpProduct(sysAdmin, "A1", "kfs");
+        service.searchByErpProduct(sysAdmin, null, null);
+        service.searchByErpProduct(sysAdmin, "", "");
+        verify(mapper).selectByErpProductCode("A1", "%kfs%");
+        verify(mapper, times(2)).selectByErpProductCode("%", "%%");
+        assertThatThrownBy(() -> service.searchByErpProduct(companyAdmin, "%", "")).isInstanceOf(BusinessException.class);
+    }
+
     @Test
     void 등록은_공백을_지우고_INSERT한_뒤_초기화를_원본_순서로_하고_다시_읽는다() {
         when(mapper.selectNextId()).thenReturn(100L, 101L, 102L);

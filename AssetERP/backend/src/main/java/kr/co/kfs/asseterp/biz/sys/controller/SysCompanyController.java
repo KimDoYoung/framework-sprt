@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyProductRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
@@ -151,6 +152,14 @@ public class SysCompanyController {
                                         @RequestBody CompanyNoteReq req) {
         sysCompanyService.updateNote(principal, companyId, req.note());
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS sys.Sys01_Company.selectByErpProductCode (원본 2026-11-13, CH-0406) — #1001·#1280 회사 그리드, sys admin만 */
+    @GetMapping("/by-erp-product")
+    public ApiResponse<List<CompanyProductRes>> searchByErpProduct(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam(required = false) String erpProductCd,
+                                                                   @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(sysCompanyService.searchByErpProduct(principal, erpProductCd, searchText));
     }
 
     /** A09 일괄복사 고객사 목록 (AS-IS sys.Sys01_Company.selectByCopyList), sys admin만 */
