@@ -87,7 +87,7 @@ export const Icam10_Lookup_FundCode: React.FC<Props> = ({ open, stdDate, onResul
           <Space>
             <Button type="save" onClick={() => confirm()}>확인</Button>
             {/* [E4] selectAllButton[전체].Select (L122) → callback(null), hide() */}
-            <Button type="select" onClick={() => { onResult(null); onClose(); }}>전체</Button>
+            <Button type="selectNone" onClick={() => { onResult(null); onClose(); }}>전체</Button>
             {/* [E5] cancleButton[닫기].Select (L129) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

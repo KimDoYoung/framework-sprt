@@ -80,7 +80,7 @@ export const Car01_Lookup_Info: React.FC<Props> = ({ open, carType, stdMonth, ad
         <div style={{ textAlign: 'center' }}>
           <Space>
             {/* [E4] allButton[전체].Select (L147) → confirmAll() L208-211: callback.execute(null) 뒤 닫는다 */}
-            {allButton && <Button type="select" onClick={() => onResult(null)}>전체</Button>}
+            {allButton && <Button type="selectNone" onClick={() => onResult(null)}>전체</Button>}
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E6] cancelButton[닫기].Select (L159) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>

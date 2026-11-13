@@ -102,7 +102,7 @@ export const Mkt01_Lookup_TargetCompany2: React.FC<Props> = ({ open, onResult, o
           <Space>
             <Button type="save" onClick={() => confirm()}>확인</Button>
             {/* [E8] selectAllButton[전체].Select [callback != null] (L150) → callback(null), hide() */}
-            <Button type="select" onClick={() => { onResult(null); onClose(); }}>전체</Button>
+            <Button type="selectNone" onClick={() => { onResult(null); onClose(); }}>전체</Button>
             {/* [E9] cancelButton[닫기].Select (L159) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

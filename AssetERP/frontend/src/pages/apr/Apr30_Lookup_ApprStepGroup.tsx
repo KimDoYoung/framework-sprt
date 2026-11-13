@@ -77,7 +77,7 @@ export const Apr30_Lookup_ApprStepGroup: React.FC<Props> = ({ open, onResult, on
           <Space>
             <Button type="save" onClick={() => confirm()}>확인</Button>
             {/* [E3] noneButton[선택안함].Select (L86) → confirm("none"): callback.execute(null); hide() */}
-            <Button type="select" onClick={() => { onResult(null); onClose(); }}>선택안함</Button>
+            <Button type="selectNone" onClick={() => { onResult(null); onClose(); }}>선택안함</Button>
             {/* [E4] hideButton[취소].Select (L92) → hide() */}
             <Button type="cancel" onClick={onClose}>취소</Button>
           </Space>

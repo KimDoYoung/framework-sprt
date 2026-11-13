@@ -79,7 +79,7 @@ export const Ast05_Lookup_TrCodeWindow: React.FC<Props> = ({ open, windowClassNa
           <Space>
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E3] selectAllButton[전체].Select (L102) → callback(null), hide() */}
-            <Button type="select" onClick={() => onResult(null)}>전체</Button>
+            <Button type="selectNone" onClick={() => onResult(null)}>전체</Button>
             {/* [E4] cancleButton[닫기].Select (L109) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

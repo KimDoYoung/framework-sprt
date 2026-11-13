@@ -114,7 +114,7 @@ export const Emp43_Lookup_SelectSingle: React.FC<Props> = ({ target, onResult, o
             {/* [E4] oKButton[확인].Select (L126) → confirmChk() */}
             <Button type="save" onClick={confirmChk}>확인</Button>
             {/* [E5] nullButton[미선택].Select (L132) → callback.execute(null), hide() */}
-            <Button type="select" onClick={() => { onResult(null); onClose(); }}>미선택</Button>
+            <Button type="selectNone" onClick={() => { onResult(null); onClose(); }}>미선택</Button>
             {/* [E6] cancelButton[닫기].Select (L139) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

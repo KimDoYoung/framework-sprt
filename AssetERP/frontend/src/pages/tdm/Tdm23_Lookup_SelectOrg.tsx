@@ -90,7 +90,7 @@ export const Tdm23_Lookup_SelectOrg: React.FC<Props> = ({ roleId, tdm09 = false,
             {/* [E4] oKButton[확인].Select (L127) → confirm() */}
             <Button type="save" onClick={() => confirm()}>확인</Button>
             {/* [E5] nullButton[선택안함].Select [callback != null] (L133) → callback.execute(null), hide() */}
-            {nullButton && <Button type="select" onClick={() => { onSelect?.(null); onClose(); }}>선택안함</Button>}
+            {nullButton && <Button type="selectNone" onClick={() => { onSelect?.(null); onClose(); }}>선택안함</Button>}
             {/* [E6] cancelButton[닫기].Select (L142) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

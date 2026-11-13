@@ -110,7 +110,7 @@ export const Ast01_Lookup_Info: React.FC<Props> = ({ open, assetType, trCode, it
           <Space>
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E5] selectAllButton[전체].Select (L217) → confirmAll() L246-249: callback(null) — gridInsert에서는 숨김 */}
-            {withAll && <Button type="select" onClick={() => onResult(null)}>전체</Button>}
+            {withAll && <Button type="selectNone" onClick={() => onResult(null)}>전체</Button>}
             {/* [E6] cancleButton[닫기].Select (L223) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

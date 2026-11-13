@@ -91,7 +91,7 @@ export const Ics31_Lookup_SelectPerson: React.FC<Props> = ({ open, stdDate, cycl
             {/* [E3] oKButton[확인].Select (L78) → confirm() */}
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E4] nullButton[전체].Select [callback != null] (L84) → callback(null), hide() */}
-            <Button type="select" onClick={() => { onResult(null); onClose(); }}>전체</Button>
+            <Button type="selectNone" onClick={() => { onResult(null); onClose(); }}>전체</Button>
             {/* [E5] cancelButton[닫기].Select (L93) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
