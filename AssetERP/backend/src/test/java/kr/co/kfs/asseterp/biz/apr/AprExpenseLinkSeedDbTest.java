@@ -84,13 +84,16 @@ class AprExpenseLinkSeedDbTest {
 
     @Test
     void 자금집행결의서는_자금집행일_제목과_출금계좌_합계_표() {
+        // 지출결의서 상신문서 — DB에 실제 있는 문서로 이어 둔다(가리키던 문서가 DB 사본에 없을 수 있다, 롤백)
+        Long expenseApprId = jdbc.queryForObject("select max(apr01_appr_id) from apr01_appr where apr01_company_id = 28000 and apr01_status_cd = '30'", Long.class);
+        jdbc.update("update pay50_expense set pay50_expense_appr_id = ? where pay50_expense_id = ?", expenseApprId, EXP_A);
         AprLinkSeedRes res = seedService.seed(user(), classTreeId(), "A64", null, Map.of("ids", String.valueOf(EXP_A)));
         String settle = jdbc.queryForObject("select pay50_settle_date::text from pay50_expense where pay50_expense_id = ?", String.class, EXP_A);
         assertThat(res.title()).isEqualTo("자금집행결의서-" + settle);
         assertThat(res.titleReadOnly()).isFalse();
         assertThat(res.content()).contains("자금집행결의서").contains("1. 지급일자 : " + settle).contains("2. 지급총액 : ₩").contains("출금계좌(").contains("전 체 합 계");
         // 지출결의서 상신문서가 연관문서 자동등록
-        assertThat(res.relateApprs()).extracting("targetApprId").contains(jdbc.queryForObject("select pay50_expense_appr_id from pay50_expense where pay50_expense_id = ?", Long.class, EXP_A));
+        assertThat(res.relateApprs()).extracting("targetApprId").contains(expenseApprId);
     }
 
     @Test

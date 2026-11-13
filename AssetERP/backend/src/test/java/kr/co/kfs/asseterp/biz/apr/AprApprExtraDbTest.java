@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +45,9 @@ class AprApprExtraDbTest {
     /** 결재중(20) 문서: 상신자 29035 → 29049 승인 → 202306221546363 대기(차례) */
     private static final long MIDDLE = 202608249852607L;
     private static final long TURN = 202306221546363L;
-    /** 결재완료(30) 문서, 상신자 202204180108329, 폐기신청·증빙연결·자금집행 없음 */
-    private static final long DONE = 202609229873861L;
-    private static final long OWNER = 202204180108329L;
+    /** 결재완료(30) 문서와 상신자 — DB에서 고른다(@BeforeEach): 폐기신청 가능(증빙연결·자금집행·폐기신청 없음), 중요표시·공람 없음, 상신자는 29049·29035가 아님 */
+    private long DONE;
+    private long OWNER;
 
     private static UserPrincipal user(long id) {
         return UserPrincipal.builder().userId(id).companyId(28000L).name("시험").roles(List.of("ROLE_USER")).build();
@@ -55,6 +56,25 @@ class AprApprExtraDbTest {
     private static AprTypoSaveReq req(AprApprDetailRes d, String title, String reason) {
         return new AprTypoSaveReq(title, d.receiveName() == null ? "" : d.receiveName(), d.referenceName() == null ? "" : d.referenceName(),
                 d.note() == null ? "" : d.note(), d.signCompany() == null ? "" : d.signCompany(), d.signCeo() == null ? "" : d.signCeo(), d.content() == null ? "<p>x</p>" : d.content(), reason);
+    }
+
+    @BeforeEach
+    void pickDoneDoc() {
+        List<java.util.Map<String, Object>> rows = jdbc.queryForList("""
+                select apr01_appr_id as id, apr01_reg_emp_id as owner from apr01_appr
+                 where apr01_company_id = 28000 and apr01_status_cd = '30'
+                   and apr01_reg_emp_id not in (29049, 29035)
+                 order by apr01_appr_id desc limit 200""");
+        for (var r : rows) {
+            long id = ((Number) r.get("id")).longValue();
+            UserPrincipal u = user(((Number) r.get("owner")).longValue());
+            if (disposal.check(u, id).ok() && mark.getBookmarks(u, id).isEmpty() && mark.getPersonAuths(u, id).isEmpty()) {
+                DONE = id;
+                OWNER = ((Number) r.get("owner")).longValue();
+                return;
+            }
+        }
+        throw new IllegalStateException("조건에 맞는 결재완료 문서가 없다");
     }
 
     @Test

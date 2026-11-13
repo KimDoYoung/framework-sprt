@@ -20,6 +20,7 @@ import kr.co.kfs.asseterp.biz.apr.service.link.RoleAllcLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.apr.service.link.RoleDescLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.apr.service.link.RoleDigmLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.mapper.TdmApprLinkMapper;
 import kr.co.kfs.asseterp.biz.tdm.service.TdmApprLinkService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 
@@ -37,12 +38,11 @@ class AprTdmLinkSeedDbTest {
     private static final long JOB = 202608059819878L;
     private static final long CEO_ROLE = 202507250000034L;
     /** 올린 파일(fileType 2) 정보가 한 건이고 첨부 한 개가 붙은 책무체계도 */
-    private static final long DIGM_WITH_FILE = 202509119027798L;
-    private static final long FILE_OF_DIGM = 202509269074090L;
     private static final long APPR = 202609229873969L;
 
     @Autowired AprLinkSeedService seedService;
     @Autowired TdmApprLinkService linkService;
+    @Autowired TdmApprLinkMapper linkMapper;
     @Autowired JdbcTemplate jdbc;
 
     private static UserPrincipal user() {
@@ -136,13 +136,26 @@ class AprTdmLinkSeedDbTest {
 
     @Test
     void 책무체계도는_올린_파일이_한_건이면_그_파일을_쓰고_첨부를_문서에_연결한다() {
-        long companyOfDigm = jdbc.queryForObject("select tdm32_company_id from tdm32_role_digm where tdm32_role_digm_id = ?", Long.class, DIGM_WITH_FILE);
-        UserPrincipal owner = UserPrincipal.builder().userId(29049L).companyId(companyOfDigm).name("시험").roles(List.of("ROLE_USER")).build();
-        assertThat(linkService.readyRoleDigmAppr(owner, DIGM_WITH_FILE)).isEqualTo("2");
-        assertThat(jdbc.queryForObject("select tdm32_use_file_type from tdm32_role_digm where tdm32_role_digm_id = ?", String.class, DIGM_WITH_FILE)).isEqualTo("2");
-        linkService.updateRoleDigmApprId(owner, DIGM_WITH_FILE, 99L);
-        linkService.updateRoleDigmApprId(owner, DIGM_WITH_FILE, 99L);   // 두 번 해도 한 번만 연결
-        assertThat(jdbc.queryForObject("select count(*) from sys11_relate_file where sys11_file_id = ? and sys11_parent_id = 99 and sys11_parent_table = 'apr01_appr'", Integer.class, FILE_OF_DIGM)).isEqualTo(1);
+        // 사용자가 올린 파일 정보(fileType 2)가 딱 한 건이고 실제 파일이 붙은 책무체계도를 DB에서 고른다(자료는 DB 사본마다 다르다)
+        List<java.util.Map<String, Object>> picks = jdbc.queryForList("""
+                select tdm32_role_digm_id as digm, tdm32_company_id as company, min(tdm33_role_digm_file_id) as info
+                  from tdm32_role_digm join tdm33_role_digm_file on tdm33_role_digm_id = tdm32_role_digm_id and tdm33_file_type = '2'
+                 group by 1, 2 having count(*) = 1 order by 1 desc""");
+        for (var p : picks) {
+            long digm = ((Number) p.get("digm")).longValue();
+            List<Long> files = linkMapper.selectFileIds(((Number) p.get("info")).longValue());
+            if (files.isEmpty()) continue;
+            UserPrincipal owner = UserPrincipal.builder().userId(29049L).companyId(((Number) p.get("company")).longValue()).name("시험").roles(List.of("ROLE_USER")).build();
+            assertThat(linkService.readyRoleDigmAppr(owner, digm)).isEqualTo("2");
+            assertThat(jdbc.queryForObject("select tdm32_use_file_type from tdm32_role_digm where tdm32_role_digm_id = ?", String.class, digm)).isEqualTo("2");
+            linkService.updateRoleDigmApprId(owner, digm, 99L);
+            linkService.updateRoleDigmApprId(owner, digm, 99L);   // 두 번 해도 한 번만 연결
+            for (Long fileId : files) {
+                assertThat(jdbc.queryForObject("select count(*) from sys11_relate_file where sys11_file_id = ? and sys11_parent_id = 99 and sys11_parent_table = 'apr01_appr'", Integer.class, fileId)).isEqualTo(1);
+            }
+            return;
+        }
+        throw new IllegalStateException("올린 파일이 한 건인 책무체계도가 DB에 없다");
     }
 
     @Test

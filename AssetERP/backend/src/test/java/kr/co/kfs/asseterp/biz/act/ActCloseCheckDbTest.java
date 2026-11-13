@@ -35,7 +35,10 @@ class ActCloseCheckDbTest {
 
     @Test
     void 조회_없는_회사는_임시ID와_true_저장하면_INSERT_다시_저장하면_UPDATE() {
-        int companies = jdbc.queryForObject("select count(*) from sys01_company where coalesce(sys01_use_yn,'false') = 'true' and sys01_company_id != 0", Integer.class);
+        // 사용 고객사마다 마감검증 행(없으면 1줄). 한 회사에 행이 둘이면 두 줄(원본 LEFT JOIN 그대로 — 2026-11-13 DB의 kalpa)
+        int companies = jdbc.queryForObject("""
+                select count(*) from sys01_company left join act15_close_check on act15_company_id = sys01_company_id
+                 where coalesce(sys01_use_yn,'false') = 'true' and sys01_company_id != 0""", Integer.class);
         List<CloseCheckRes> all = service.search(null);
         assertThat(all).hasSize(companies);
         assertThat(service.search("")).hasSize(companies);

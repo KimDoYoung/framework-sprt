@@ -89,8 +89,10 @@ class AprNoticePlanDbTest {
             assertThat(c.title()).isEqualTo("상신문서 (결재완료)");
             assertThat(c.body()).endsWith("건이 결재완료되었습니다.");
         });
+        // 상신자 휴대폰 번호에서 하이픈을 뺀 값("-"뿐이면 빈 문자열 — 원본도 같다). 번호는 DB 사본마다 다르니 DB에서 읽는다
+        String ownerTel = jdbc.queryForObject("select coalesce(emp01_mobile_telno,'') from apr01_appr join emp01_person on emp01_person_id = apr01_reg_emp_id where apr01_appr_id = ?", String.class, SIMPLE);
         assertThat(of(calls, "sms")).singleElement().satisfies(c -> {
-            assertThat(c.to()).isEqualTo("-".replace("-", ""));       // 번호가 "-"뿐이라 하이픈을 빼면 빈 문자열(원본도 같다)
+            assertThat(c.to()).isEqualTo(ownerTel.replace("-", ""));
             assertThat(c.body()).endsWith("건이 결재완료되었습니다." + URL);
         });
     }
