@@ -22,7 +22,10 @@ const color = (c: string) => ({ headerStyle: { color: c } });
 /** 묶음 헤더 제목을 색 글자로 (AS-IS setHtmlGridStyle) */
 const coloredGroup = (title: string, c: string, children: Parameters<typeof gb.group>[1]) => ({
   ...gb.group(title, children),
-  headerGroupComponent: () => <b style={{ color: c }}>{title}</b>,
+  headerClass: ['gb-hdr', 'gb-grp', 'gb-grp-line'],
+  headerGroupComponent: () => (
+    <div style={{ width: '100%', textAlign: 'center', color: c, fontWeight: 'bold' }}>{title}</div>
+  ),
 });
 
 /** buildGrid() L102-125 */
@@ -108,6 +111,7 @@ export const Tdm01_Lookup_HrChangeInfo: React.FC<Props> = ({ open, onApplied, on
       closable={false}
       maskClosable={false}
       onCancel={onClose}
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>

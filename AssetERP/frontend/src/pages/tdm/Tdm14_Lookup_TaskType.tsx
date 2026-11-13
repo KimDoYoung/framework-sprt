@@ -58,7 +58,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
   const viewColumns = useMemo(() => [
     gb.textCenter('taskClassName', 120, '책무구분'),  // L256
     gb.textCenter('taskTypeCode', 100, '책무유형코드'),  // L257
-    gb.text('taskTypeName', 350, '책무유형명'),  // L258
+    gb.text('taskTypeName', 450, '책무유형명'),  // L258
   ], []);
 
   const crud = useGridCrud<TdmTaskType>({
@@ -125,7 +125,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
     <LookupModal
       open={!!mode}
       title="책무유형"
-      width={830}
+      width={800}
       closable={false}
       maskClosable={false}
       onCancel={close}

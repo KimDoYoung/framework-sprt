@@ -140,10 +140,10 @@ export const Tdm08_Tab_Manager: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+    <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="46%" min="30%">
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ height: '100%',  padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {/* [E1] searchText.KeyPress [Enter] (L114)·[E2] retrieveButton[조회].Select (L123) → retrieve() */}
             <SearchBar onSearch={() => retrieve()}>
               <SearchBar.Field label="검색">
@@ -162,7 +162,7 @@ export const Tdm08_Tab_Manager: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', borderLeft: 0, padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, opacity: selected ? 1 : 0.5, pointerEvents: selected ? 'auto' : 'none' }}>
+          <div style={{ height: '100%',  borderLeft: 0, padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, opacity: selected ? 1 : 0.5, pointerEvents: selected ? 'auto' : 'none' }}>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               {/* [E3] insertRButton[행 추가].Select (L130) → insert() */}
               <Button type="addRow" onClick={() => { if (selected) crud.addRow(); }}>행 추가</Button>
