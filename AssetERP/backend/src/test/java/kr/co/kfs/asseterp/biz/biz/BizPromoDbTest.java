@@ -278,7 +278,8 @@ class BizPromoDbTest {
         // 이익제공은 회사·직원·부서를 따로 준다
         assertThat(all).anySatisfy(r -> assertThat(r.targetCompanyName()).isNotNull());
         // 거래상대방은 앞부분 일치(원본 LIKE crmName||'%')
-        String name = all.get(0).targetName();
+        // 거래상대방이 없는 내역은 원본 SQL이 이름 " "(빈칸) 행과 "*미등록*" 행으로 두 번 낸다(원본-이상한점 239) — 빈칸은 서비스가 "전체"로 보므로 실제 이름을 고른다
+        String name = all.stream().map(BizProvideListRes::targetName).filter(n -> n != null && !n.isBlank()).findFirst().orElseThrow();
         List<BizProvideListRes> byTarget = promoService.searchProvideList(user, FROM, TO, "1", name, null);
         assertThat(byTarget).isNotEmpty().hasSizeLessThanOrEqualTo(all.size());
         assertThat(byTarget).allSatisfy(r -> assertThat(r.targetName()).startsWith(name));
