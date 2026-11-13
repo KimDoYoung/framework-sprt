@@ -53,6 +53,8 @@ class IcsComplianceWriteApprDbTest {
 
     @Test
     void 상신하면_그_달_상태와_문서목록과_최근_문서분류가_나온다() {
+        // 출발점: 이 사원의 작성자 상신 연결(유형 2)을 비운다 — DB 사본에 더 늦은 달 연결(지워진 문서 포함)이 있으면 "최근 문서분류"가 그쪽을 본다(롤백)
+        jdbc.update("delete from ics32_relate_appr where ics32_company_id = 28000 and ics32_person_id = 29049 and ics32_appr_type = '2'");
         assertThat(service.appr(user, STD, "M")).isNull();                        // 미상신
         Long apprId = jdbc.queryForObject("select max(apr01_appr_id) from apr01_appr where apr01_company_id = 28000 and apr01_reg_emp_id = 29049", Long.class);
         Long classTreeId = jdbc.queryForObject("select apr01_class_tree_id from apr01_appr where apr01_appr_id = ?", Long.class, apprId);

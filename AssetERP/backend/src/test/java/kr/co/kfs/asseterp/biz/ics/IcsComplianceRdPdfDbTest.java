@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.ics.service.IcsComplianceRdPdfService;
 import kr.co.kfs.asseterp.biz.ics.service.IcsComplianceReportService;
 import kr.co.kfs.asseterp.biz.rd.service.RdFileSaver;
 import kr.co.kfs.asseterp.biz.sys.service.SysFileService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,10 @@ import static org.mockito.Mockito.when;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class IcsComplianceRdPdfDbTest {
 
-    private static final long CONFIRMER = 202204180108329L;     // 시험 DB: 2026.08 월(M) 작성 25건의 확인자
-    private static final LocalDate STD = LocalDate.of(2026, 8, 31);
+    private static final long CONFIRMER = 202204180108329L;     // 월(M) 작성의 확인자
+    /** 이 확인자에게 배정된 월(M) 작성이 가장 많은 달의 말일 — DB 사본마다 다르니 고른다(@BeforeEach) */
+    private LocalDate STD;
+    private String YM;
 
     @Autowired IcsComplianceReportMapper mapper;
     @Autowired BizRelateApprMapper relateMapper;
@@ -45,6 +48,15 @@ class IcsComplianceRdPdfDbTest {
 
     private IcsComplianceRdPdfService svc(RdFileSaver rd, SysFileService sysFile) {
         return new IcsComplianceRdPdfService(mapper, new IcsComplianceReportService(mapper), relateMapper, rd, sysFile);
+    }
+
+    @BeforeEach
+    void 달을_고른다() {
+        YM = jdbc.queryForObject("""
+                select ics31_yyyymm from ics31_compliance_write
+                 where ics31_company_id = 28000 and ics31_cycle_type = 'M' and ics31_confirmer_id = ?
+                 group by 1 order by count(*) desc, 1 desc limit 1""", String.class, CONFIRMER);
+        STD = java.time.YearMonth.parse(YM.replace('.', '-')).atEndOfMonth();
     }
 
     @Test
@@ -61,8 +73,8 @@ class IcsComplianceRdPdfDbTest {
                  where sys99_group_id = ?
                    and not exists (select 1 from ics31_compliance_write w
                                     where w.ics31_company_id = 28000 and w.ics31_person_id = p.sys99_long02
-                                      and w.ics31_yyyymm = '2026.08' and w.ics31_cycle_type = 'M' and w.ics31_confirmer_id = ?)
-                """, Integer.class, groupId, CONFIRMER);
+                                      and w.ics31_yyyymm = ? and w.ics31_cycle_type = 'M' and w.ics31_confirmer_id = ?)
+                """, Integer.class, groupId, YM, CONFIRMER);
         assertThat(notAssigned).isZero();
 
         // 확인자 조건이 없는 #1312 보고보다 사원 수가 같거나 적다

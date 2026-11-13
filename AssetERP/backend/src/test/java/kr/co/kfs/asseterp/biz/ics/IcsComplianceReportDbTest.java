@@ -32,10 +32,11 @@ class IcsComplianceReportDbTest {
     void 재직_사원별_준수항목_결과를_만든다() {
         List<IcsComplianceReportRes> rows = service.report(ME, STD_DATE, "M");
         assertThat(rows).isNotEmpty();
-        // 사원 한 명은 준수항목 수만큼 행이 있고(AS-IS 13개), 순번은 1부터 올라간다
+        // 사원마다 그 달 준수항목 수만큼 행이 있다(항목 수는 DB 사본마다 다르니 모든 사원이 같은 수인지 본다), 순번은 1부터 올라간다
         assertThat(rows.get(0).seq()).isEqualTo(1L);
-        long first = rows.get(0).personId();
-        assertThat(rows.stream().filter(r -> r.personId() == first).count()).isEqualTo(13);
+        java.util.Map<Long, Long> perPerson = rows.stream().collect(java.util.stream.Collectors.groupingBy(IcsComplianceReportRes::personId, java.util.stream.Collectors.counting()));
+        assertThat(new java.util.HashSet<>(perPerson.values())).hasSize(1);
+        assertThat(perPerson.values().iterator().next()).isPositive();
         assertThat(rows).allMatch(r -> r.personName() != null && r.complianceResult() != null);
         // 준수면 사유가 없고, 아니면 사유 칸(없을 수도 있음)을 서버가 채운다
         assertThat(rows).filteredOn(r -> "준수".equals(r.complianceResult())).allMatch(r -> r.reason() == null);
