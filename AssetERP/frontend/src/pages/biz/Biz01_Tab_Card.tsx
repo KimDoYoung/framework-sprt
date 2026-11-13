@@ -61,6 +61,8 @@ export const Biz01_Tab_Card: React.FC = () => {
   const [checked, setChecked] = useState<BizPromoCard[]>([]);
   const [current, setCurrent] = useState<BizPromoCard | null>(null);
   const [closed, setClosed] = useState(false);
+  // 거래상대방 칸 버튼 — 제공목적 11이면 원본이 건드리지 않아 바로 전 내역의 상태가 남는다(원본-이상한점 238, 원본대로 2026-11-13)
+  const [externalClosed, setExternalClosed] = useState(false);
   const [personRefresh, setPersonRefresh] = useState(0);
   // num: 마지막으로 고른 행 번호 (retrieve 뒤 선택 규칙에 쓴다)
   const num = useRef(0);
@@ -150,6 +152,7 @@ export const Biz01_Tab_Card: React.FC = () => {
     const cur = list.find(r => r.promoId === curId) ?? list[list.length - 1];
     const apprCloseYn = await checkApprClose(cur.promoId);
     setClosed(apprCloseYn);
+    if (cur.providePurCode !== '11') setExternalClosed(apprCloseYn);
     num.current = rows.findIndex(r => r.promoId === cur.promoId);
     if (num.current < 0) num.current = 0;
     setCurrent(cur);
@@ -350,7 +353,7 @@ export const Biz01_Tab_Card: React.FC = () => {
               <Biz01_Edit_Card promo={current} closed={closed} onSaved={() => void retrieve()} onEmpAdded={() => setPersonRefresh(n => n + 1)} />
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
-              <Biz02_Grid_PersonList promo={current} closed={closed} internalClosed={closed || current?.providePurCode === '11'} refreshKey={personRefresh} onChanged={() => void retrieve()} />
+              <Biz02_Grid_PersonList promo={current} closed={externalClosed} internalClosed={closed || current?.providePurCode === '11'} refreshKey={personRefresh} onChanged={() => void retrieve()} />
             </div>
           </div>
         </Splitter.Panel>
