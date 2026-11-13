@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyProductRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
@@ -134,6 +135,9 @@ public interface SysCompanyMapper {
     int insertFormMappingsFromAdmin(Long companyId);
 
     // ── A09 메뉴 관리 (AS-IS Sys01_Company.selectByCopyList / selectByCode / updateByMenuYn) ──
+
+    /** AS-IS sys01_company.selectByErpProductCode (CH-0404) */
+    List<CompanyProductRes> selectByErpProductCode(@Param("erpProductCd") String erpProductCd, @Param("searchText") String searchText);
 
     List<CompanyCopyRes> selectCopyCompanies(@Param("searchText") String searchText, @Param("erpProductCd") String erpProductCd);
 

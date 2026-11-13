@@ -440,6 +440,21 @@
          WHERE com11_company_id = 0
     </insert>
 
+    <!-- AS-IS sys01_company.selectByErpProductCode (IDMS-IC 2026-11-13 8e79aa2d0, CH-0404) — 사용 고객 중 상품(없는 회사는 '%'로 보아 전체에만)·고객명+서브도메인.
+         #1001 운용사별 문서분류 반영 · #1280 회사별 문서분류. 조건·정렬 그대로, SELECT만 화면 컬럼 -->
+    <select id="selectByErpProductCode" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyProductRes">
+        SELECT sys01_company_id       AS company_id,
+               sys01_company_nm       AS company_nm,
+               sys01_loc_nm           AS loc_nm,
+               sys01_erp_product_cd   AS erp_product_cd
+          FROM sys01_company
+         WHERE 1=1
+           AND sys01_use_yn = 'true'
+           AND COALESCE(sys01_erp_product_cd, '%') LIKE #{erpProductCd}
+           AND CONCAT(sys01_company_nm, sys01_loc_nm) ILIKE #{searchText}
+         ORDER BY sys01_company_id
+    </select>
+
     <!-- A09 일괄복사 고객사 목록. AS-IS sys01_company.selectByCopyList: 조건·정렬 그대로, SELECT만 화면 컬럼 -->
     <select id="selectCopyCompanies" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes">
         SELECT sys01_company_id       AS company_id,
