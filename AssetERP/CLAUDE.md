@@ -69,7 +69,8 @@ ID별 교훈은 쓰지 않는다. 같은 실수가 있으면 새로 쓰지 말�
 - `sleep N` 뒤 `tail` 같은 대기는 훅이 막는다 → 배포는 `run_in_background` 완료 알림을 기다린다.
 - 한 줄 수정에 `sed -i`를 쓰지 않는다 → `Edit`.
 - `yunhee port-save` 결과의 열 이름을 믿지 않는다 → `yunhee table`로 열을 보고 손으로 맞춘다.
-- 로컬 DB에 테이블·열이 있는지는 `yunhee table`(오래된 스냅샷)이 아니라 `yunhee sql`(information_schema)로 본다.
+- 로컬 DB에 테이블·열이 있는지는 `yunhee table`(오래된 스냅샷)이 아니라 `yunhee sql`(information_schema)로 본다. **테이블·열 이름을 추측해 쿼리·`--track`에 쓰지 않는다**(`act07_gen_ledger_close_tmp`↔`act07_gen_ledger_closetmp`처럼 틀린다) → 쓰기 전에 `information_schema`로 먼저 확인.
+- `yunhee analysis screen`을 필터 없이 부르지 않는다 → 연결 조회창·팝업까지 한꺼번에 길게 나온다(DCR 화면). `--class <하위클래스>`·`--section events|methods|services`로 필요한 절만.
 - 문서·주석에 쓰는 API·함수 이름은 쓰기 전에 실제 이름을 확인한다(추측해서 쓰지 않는다).
 - 문서를 일괄 치환·삭제할 때는 먼저 백업(스크래치패드)하고, 행 앞 ID 칸 같은 구조가 같이 지워지지 않았는지 결과를 확인한다.
 - 이미 적힌 규칙을 읽고도 어기는 것이 가장 큰 문제다 → 같은 명령류(`mapper-run`, `api`, `port-*`)를 처음 쓸 때는 가이드 5절의 그 행을 다시 본다.
