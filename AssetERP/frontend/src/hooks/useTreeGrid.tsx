@@ -97,7 +97,7 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
   useEffect(() => { gridRef.current?.api?.onFilterChanged(); }, [expanded, rows]);
 
   /** 트리 컬럼: 깊이만큼 들여쓰기 + 펼침 단추 */
-  const treeCol = useCallback((field: keyof T & string, width: number, headerName: string): ColDef<T> => ({
+  const treeCol = useCallback((field: keyof T & string, width: number, headerName: string, rowIcon?: (row: T) => React.ReactNode): ColDef<T> => ({
     field: field as unknown as ColDef<T>['field'],
     width,
     headerName,
@@ -113,11 +113,12 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
               {open ? <CaretDownOutlined /> : <CaretRightOutlined />}
             </span>
           ) : <span style={{ display: 'inline-block', width: 14 }} />}
+          {rowIcon?.(p.data)}
           {p.value as React.ReactNode}
         </span>
       );
     },
-  }), [depthField, hasChildren, idOf, toggle]);
+  }), [depthField, hasChildren, idOf, toggle]);  // rowIcon: 이름 앞에 다는 아이콘(선택)
 
   // 펼침이 바뀌면 트리 컬럼 아이콘을 다시 그린다
   useEffect(() => { gridRef.current?.api?.refreshCells({ force: true }); }, [expanded]);

@@ -107,6 +107,8 @@ export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSav
       closable={false}
       onCancel={onClose}
       destroyOnHidden
+      // 헤더 선 ~ 첫 입력칸 간격 10: 기본 28(헤더 아래 여백 8 + EditModal 안쪽 위 여백 20)에서 18을 줄인다
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', marginBottom: -10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>

@@ -37,7 +37,7 @@ const TYPES = {
   move: ['red', <SwapOutlined />],
   upload: ['orange', <UploadOutlined />],
   download: ['orange', <DownloadOutlined />],
-  view: ['orange', <EyeOutlined />],
+  view: ['lightBlue', <EyeOutlined />],
   goto: ['orange', <ArrowRightOutlined />],
   group: ['orange', <TeamOutlined />],
   assign: ['orange', <CheckOutlined />],

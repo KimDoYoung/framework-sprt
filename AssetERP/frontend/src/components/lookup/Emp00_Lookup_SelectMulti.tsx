@@ -89,7 +89,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
   };
 
   return (
-    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={770} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -102,7 +102,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] retrieveButton[조회].Select (L98) → retrieve(). 초기화는 UX-02 */}
-        <SearchBar onSearch={() => retrieve(baseDate, findText, transName)} onReset={() => sp.setValues(openValues)}>
+        <SearchBar onSearch={() => retrieve(baseDate, findText, transName)}>
           <SearchBar.Field label="기준일">
             <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
               onChange={d => d && sp.set('baseDate', d.format('YYYY-MM-DD'))} />

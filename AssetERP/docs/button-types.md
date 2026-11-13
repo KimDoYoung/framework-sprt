@@ -40,7 +40,7 @@ AS-IS 줄은 `ColorButtonBar.java` 기준. 색 이름은 아래 "색" 표.
 | `move` | red | `SwapOutlined` ← fa-exchange-alt | 문서이동(내부통제) | L272-275 |
 | `upload` | orange | `UploadOutlined` ← fa-upload | 파일업로드, 엑셀업로드, 로고등록 | L156-159 |
 | `download` | orange | `DownloadOutlined` ← fa-download | 다운로드, 엑셀다운로드, 템플릿, 출력/다운로드, 가져오기 | L161-166 |
-| `view` | orange | `EyeOutlined` ← fa-eye | 기록보기, 오타수정, 전표확인, 첨부파일관리, 작성요령, 새로작성 | L168-176 |
+| `view` | lightBlue | `EyeOutlined` ← fa-eye | 기록보기, 오타수정, 전표확인, 첨부파일관리, 작성요령, 새로작성 | L168-176 |
 | `goto` | orange | `ArrowRightOutlined` ← fa-arrow-right | 거래처 관리 바로가기, DART 바로가기 | L178-182 |
 | `group` | orange | `TeamOutlined` ← fa-users | 그룹, 그룹설정, 담당그룹 관리, 운용사코드 등록 | L184-187 |
 | `assign` | orange | `CheckOutlined` ← fa-check | 담당그룹 지정, 엑셀업로드 설정, 커스텀 설정, 담당자 변경 | L189-194 |

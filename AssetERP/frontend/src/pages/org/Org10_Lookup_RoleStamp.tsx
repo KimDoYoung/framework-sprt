@@ -41,7 +41,7 @@ export const Org10_Lookup_RoleStamp: React.FC<Props> = ({ stamp, onSaved, onClos
   const gridRef = useRef<AgGridReact<OrgRoleStamp>>(null);
 
   // buildGrid() grid() L143-149: setChecked(MULTI)
-  const columnDefs = useMemo(() => [gb.text('orgName', 350, '부서')], []);  // L146
+  const columnDefs = useMemo(() => [gb.text('orgName', 300, '부서')], []);  // L146
 
   // retrieve() L205-210: deleteList.clear(), 서비스 org.Org10_RoleStamp.selectByStampId(stampId)
   const retrieve = async () => {
@@ -110,6 +110,7 @@ export const Org10_Lookup_RoleStamp: React.FC<Props> = ({ stamp, onSaved, onClos
         open={!!stamp}
         title="부서별 사용권한"
         width={450}
+        styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
         maskClosable={false}
         onCancel={onClose}
         destroyOnClose

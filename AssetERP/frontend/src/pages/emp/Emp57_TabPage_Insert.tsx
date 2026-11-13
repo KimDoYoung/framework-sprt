@@ -5,7 +5,7 @@
  *   그룹을 고르기 전(parentId 없음)에는 mask()로 가려진다 (L164-170)
  */
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { message } from 'antd';
+import { message,Space } from 'antd';
 import { empAddrBookApi } from '@/api/emp';
 import { EmpAddrBookMember } from '@/types/emp';
 import { Button } from '@/components/button';
@@ -83,10 +83,12 @@ export const Emp57_TabPage_Insert: React.FC<Props> = ({ parentId }) => {
   return (
     <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div>
-        <Button type="register" onClick={insertRow}>등록</Button>
-        {/* [E2] updateButton[저장].Select (L72) → update(). 저장(n)은 UX-03 */}
-        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
+        <Space>
+          <Button type="register" onClick={insertRow}>등록</Button>
+          {/* [E2] updateButton[저장].Select (L72) → update(). 저장(n)은 UX-03 */}
+          <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
+          <Button type="delete" disabled={!crud.hasChecked} onClick={() => crud.deleteChecked()}>삭제</Button>
+        </Space>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<EmpAddrBookMember> crud={crud} columnDefs={columnDefs} />

@@ -86,10 +86,11 @@ export const Apr10_Lookup_Stamp: React.FC<Props> = ({ open, flag = true, checkfl
     <LookupModal
       open={open}
       title="인감종류"
-      width={830}
+      width={870}
       maskClosable={false}
       onCancel={onClose}
       destroyOnClose
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
