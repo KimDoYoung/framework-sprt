@@ -8,7 +8,9 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteItem;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsChecklistWriteService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -27,14 +29,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class IcsChecklistWriteDbTest {
 
     @Autowired IcsChecklistWriteService service;
+    @Autowired JdbcTemplate jdbc;
 
-    /** 체크리스트 담당그룹에 공유된 실제 사원(kfstest) — 2026.09 작성 행이 처음엔 하나도 없다 */
+    /** 체크리스트 담당그룹에 공유된 실제 사원(kfstest) — 2026.09 작성 행은 시험마다 비우고 시작한다(@BeforeEach, 롤백) */
     private static final UserPrincipal ME = UserPrincipal.builder().userId(29049L).companyId(28000L).build();
     private static final LocalDate STD_DATE = LocalDate.of(2026, 9, 30);
     private static final String YYYYMM = "2026.09";
 
     private List<IcsChecklistWriteRes> list(boolean checkBox) {
         return service.list(ME, STD_DATE, "M", null, null, "", checkBox, null);
+    }
+
+    @BeforeEach
+    void 이번_달_내_작성_행을_비운다() {
+        jdbc.update("delete from ics15_checklist_write where ics15_company_id = 28000 and ics15_person_id = ? and ics15_check_yyyymm = ? and ics15_cycle_type = 'M'", ME.getUserId(), YYYYMM);
     }
 
     @Test
@@ -104,8 +112,11 @@ class IcsChecklistWriteDbTest {
 
     @Test
     void 제출여부_콤보는_제출_미제출로_나눈다() {
-        // 원본 2026-11-02(CH-0036·0093·0180): fixYn 'true'(제출)·'false'(미제출)·null(전체). 시험 DB: 29049의 2026.07 작성 3건이 제출
+        // 원본 2026-11-02(CH-0036·0093·0180): fixYn 'true'(제출)·'false'(미제출)·null(전체). 제출 행 하나를 직접 만들어 둔다(롤백)
         LocalDate jul = LocalDate.of(2026, 7, 31);
+        long checklist = service.list(ME, jul, "M", null, null, "", false, null).get(0).checklistId();
+        IcsChecklistWriteItem w = service.updateAnswerCode(ME, new IcsChecklistWriteAnswerReq(checklist, "Y", "2026.07", "M"));
+        service.updateFixYn(ME, new IcsChecklistWriteFixReq(true, List.of(w.checklistWriteId())));
         List<IcsChecklistWriteRes> all = service.list(ME, jul, "M", null, null, "", false, null);
         List<IcsChecklistWriteRes> fixed = service.list(ME, jul, "M", null, null, "", false, "true");
         List<IcsChecklistWriteRes> unfixed = service.list(ME, jul, "M", null, null, "", false, "false");

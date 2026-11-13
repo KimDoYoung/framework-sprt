@@ -36,6 +36,9 @@ class IcsChecklistConfirmDbTest {
     @BeforeEach
     void 작성그룹_확인자를_지정한다() {
         jdbc.update("update sch22_write_group set sch22_confirmer_id = ? where sch22_company_id = 28000", CONFIRMER.getUserId());
+        // 그 달 작성 행도 비우고 시작한다 — DB 사본에 다른 확인자가 확인한 행이 있으면 목록(작성 행의 확인자 우선)과
+        // 상신 조회창(지정 확인자만)의 건수가 달라지고, 작성 전 행이 없어진다(원본 SQL 그대로). 롤백된다
+        jdbc.update("delete from ics15_checklist_write where ics15_company_id = 28000 and ics15_check_yyyymm = '2026.09' and ics15_cycle_type = 'M'");
     }
 
     /** fixYn·confirmYn = 제출구분·확인구분 콤보(원본 2026-11-02) 'true'·'false'·null(전체) */
@@ -45,7 +48,7 @@ class IcsChecklistConfirmDbTest {
 
     @Test
     void 확인자의_확인_대상을_페이지로_읽는다() {
-        PageRes<IcsChecklistConfirmRes> all = search(null, null, 0, 100);
+        PageRes<IcsChecklistConfirmRes> all = search(null, null, 0, 1000);
         long total = all.total();
         assertThat(total).isGreaterThan(5);  // 페이지 시험이 성립하려면 6건 이상
         assertThat(all.rows()).hasSize((int) total);
@@ -56,29 +59,29 @@ class IcsChecklistConfirmDbTest {
 
         // 대분류 조건·검색어
         Long lClassId = all.rows().get(0).checkLClassId();
-        assertThat(service.search(CONFIRMER, STD_DATE, "M", lClassId, null, "", null, null, 0, 100).total()).isBetween(1L, total);
-        assertThat(service.search(CONFIRMER, STD_DATE, "M", null, null, all.rows().get(0).personName(), null, null, 0, 100).total()).isBetween(1L, total);
+        assertThat(service.search(CONFIRMER, STD_DATE, "M", lClassId, null, "", null, null, 0, 1000).total()).isBetween(1L, total);
+        assertThat(service.search(CONFIRMER, STD_DATE, "M", null, null, all.rows().get(0).personName(), null, null, 0, 1000).total()).isBetween(1L, total);
         // 다른 사람은 이 대상의 확인자가 아니다
         UserPrincipal other = UserPrincipal.builder().userId(-28656L).companyId(28000L).build();
-        assertThat(service.search(other, STD_DATE, "M", null, null, "", null, null, 0, 100).total()).isZero();
+        assertThat(service.search(other, STD_DATE, "M", null, null, "", null, null, 0, 1000).total()).isZero();
     }
 
     @Test
     void 작성_행이_없는_행도_확인하고_확인취소한다() {
-        List<IcsChecklistConfirmRes> rows = search(null, null, 0, 100).rows();
+        List<IcsChecklistConfirmRes> rows = search(null, null, 0, 1000).rows();
         List<IcsChecklistConfirmRes> picked = rows.stream().limit(2).toList();
         assertThat(picked).allMatch(r -> r.checklistWriteId() == null);  // 작성 전이라 확인하면 행이 만들어진다
         List<IcsChecklistConfirmReq.Target> targets = picked.stream().map(r -> new IcsChecklistConfirmReq.Target(r.checklistId(), r.personId())).toList();
-        long unconfirmedBefore = search(null, "false", 0, 100).total();
+        long unconfirmedBefore = search(null, "false", 0, 1000).total();
 
         assertThat(service.updateConfirmYn(CONFIRMER, new IcsChecklistConfirmReq(true, "2026.09", "M", targets))).isEqualTo(2);  // INSERT
-        assertThat(search(null, null, 0, 100).rows()).filteredOn(r -> picked.stream().anyMatch(p -> p.checklistId().equals(r.checklistId()) && p.personId().equals(r.personId())))
+        assertThat(search(null, null, 0, 1000).rows()).filteredOn(r -> picked.stream().anyMatch(p -> p.checklistId().equals(r.checklistId()) && p.personId().equals(r.personId())))
                 .hasSize(2).allMatch(r -> r.confirmYn() && r.checklistWriteId() != null);
-        assertThat(search(null, "false", 0, 100).total()).isEqualTo(unconfirmedBefore - 2);  // 확인구분 "미확인"에서 빠진다
+        assertThat(search(null, "false", 0, 1000).total()).isEqualTo(unconfirmedBefore - 2);  // 확인구분 "미확인"에서 빠진다
         assertThat(jdbc.queryForObject("select count(*) from ics15_checklist_write where ics15_company_id = 28000 and ics15_check_yyyymm = '2026.09' and ics15_cycle_type = 'M' and ics15_confirmer_id = 29033 and ics15_confirm_yn = 'true'", Long.class)).isEqualTo(2L);
 
         assertThat(service.updateConfirmYn(CONFIRMER, new IcsChecklistConfirmReq(false, "2026.09", "M", targets))).isEqualTo(2);  // UPDATE
-        assertThat(search(null, "false", 0, 100).total()).isEqualTo(unconfirmedBefore);
+        assertThat(search(null, "false", 0, 1000).total()).isEqualTo(unconfirmedBefore);
         assertThat(jdbc.queryForObject("select count(*) from ics15_checklist_write where ics15_company_id = 28000 and ics15_check_yyyymm = '2026.09' and ics15_cycle_type = 'M' and ics15_confirm_yn = 'true'", Long.class)).isZero();
     }
 
@@ -86,7 +89,7 @@ class IcsChecklistConfirmDbTest {
     void 상신_조회창은_대분류별_건수를_준다() {
         List<IcsChecklistRelateApprRes> list = service.relateApprs(CONFIRMER, STD_DATE, "M");
         assertThat(list).isNotEmpty();
-        assertThat(list.stream().mapToLong(IcsChecklistRelateApprRes::totalCount).sum()).isEqualTo(search(null, null, 0, 100).total());
+        assertThat(list.stream().mapToLong(IcsChecklistRelateApprRes::totalCount).sum()).isEqualTo(search(null, null, 0, 1000).total());
         assertThat(list).allMatch(r -> r.confirmCount() <= r.totalCount());
     }
 
@@ -98,18 +101,18 @@ class IcsChecklistConfirmDbTest {
     @Test
     void 제출구분_확인구분_콤보는_목록을_나눈다() {
         // 원본 2026-11-02(CH-0041·0178): 미체크·미확인 체크박스가 제출구분·확인구분 콤보로 바뀌었다
-        long total = search(null, null, 0, 100).total();
-        PageRes<IcsChecklistConfirmRes> fixed = search("true", null, 0, 100);
-        PageRes<IcsChecklistConfirmRes> unfixed = search("false", null, 0, 100);
+        long total = search(null, null, 0, 1000).total();
+        PageRes<IcsChecklistConfirmRes> fixed = search("true", null, 0, 1000);
+        PageRes<IcsChecklistConfirmRes> unfixed = search("false", null, 0, 1000);
         assertThat(fixed.rows()).allMatch(IcsChecklistConfirmRes::fixYn);
         assertThat(unfixed.rows()).noneMatch(IcsChecklistConfirmRes::fixYn);
         assertThat(fixed.total() + unfixed.total()).isEqualTo(total);
 
-        PageRes<IcsChecklistConfirmRes> confirmed = search(null, "true", 0, 100);
-        PageRes<IcsChecklistConfirmRes> unconfirmed = search(null, "false", 0, 100);
+        PageRes<IcsChecklistConfirmRes> confirmed = search(null, "true", 0, 1000);
+        PageRes<IcsChecklistConfirmRes> unconfirmed = search(null, "false", 0, 1000);
         assertThat(confirmed.rows()).allMatch(IcsChecklistConfirmRes::confirmYn);
         assertThat(unconfirmed.rows()).noneMatch(IcsChecklistConfirmRes::confirmYn);
         assertThat(confirmed.total() + unconfirmed.total()).isEqualTo(total);
-        assertThat(search("아무값", "아무값", 0, 100).total()).isEqualTo(total);   // 모르는 값은 전체
+        assertThat(search("아무값", "아무값", 0, 1000).total()).isEqualTo(total);   // 모르는 값은 전체
     }
 }
