@@ -20,6 +20,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPersonService;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.PageRes;
+import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ class BizPromoDbTest {
     @Autowired BizPromoService promoService;
     @Autowired BizPersonService personService;
     @Autowired JdbcTemplate jdbc;
+    @Autowired SqlSession sqlSession;
 
     /** 법인카드 내역이 22건 있는 사원(kfstest 회사) */
     private final UserPrincipal user = UserPrincipal.builder().userId(202306221546363L).companyId(28000L).roles(List.of("ROLE_USER")).build();
@@ -352,5 +354,22 @@ class BizPromoDbTest {
         assertThat(found.get(0).rowId()).isEqualTo(1L);
         assertThat(promoService.searchProvideCompanies(otherCompany, "zz l09")).isEmpty();
         assertThat(promoService.searchProvideCompanies(user, "")).extracting(BizProvideCompanyRes::provideCompany).doesNotContainNull().contains("Zz L09 Corp");
+    }
+
+    /** CH-0405 (AS-IS selectApprId, 원본 2026-11-13): 내역의 상신 결재상태 코드 — 상신 없으면 null, 다른 회사·없는 내역도 null */
+    @Test
+    void 상신상태는_내역의_문서_결재상태이고_상신이_없거나_다른_회사면_null() {
+        Long promoId = first().promoId();
+        jdbc.update("update biz01_promo set biz01_appr_id = null where biz01_promo_id = ?", promoId);
+        assertThat(promoService.getApprStatusCode(user, promoId)).isNull();
+
+        for (String status : List.of("10", "40")) {
+            Long apprId = jdbc.queryForObject("select min(apr01_appr_id) from apr01_appr where apr01_company_id = 28000 and apr01_status_cd = ?", Long.class, status);
+            jdbc.update("update biz01_promo set biz01_appr_id = ? where biz01_promo_id = ?", apprId, promoId);
+            sqlSession.clearCache();   // jdbc로 바꾼 값 — 같은 트랜잭션의 MyBatis 1차 캐시를 비운다
+            assertThat(promoService.getApprStatusCode(user, promoId)).isEqualTo(status);
+        }
+        assertThat(promoService.getApprStatusCode(otherCompany, promoId)).isNull();
+        assertThat(promoService.getApprStatusCode(user, -1L)).isNull();
     }
 }

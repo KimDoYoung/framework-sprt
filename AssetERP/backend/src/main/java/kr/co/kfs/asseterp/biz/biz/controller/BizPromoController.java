@@ -83,6 +83,12 @@ public class BizPromoController {
         return ApiResponse.ok(cardApprService.linkAppr(principal, req.apprId(), req.promoIds(), req.titleName()));
     }
 
+    /** AS-IS biz.Biz01_Promo.selectApprId (원본 2026-11-13, CH-0405) — 내역의 상신 결재상태 코드(상신 없으면 null) */
+    @GetMapping("/{promoId}/appr-status")
+    public ApiResponse<String> apprStatus(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long promoId) {
+        return ApiResponse.ok(service.getApprStatusCode(principal, promoId));
+    }
+
     /** AS-IS biz.Biz01_Promo.closeCheck → 마감된 내역이 있으면 true */
     @PostMapping("/close-check")
     public ApiResponse<Boolean> closeCheck(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> promoIds) {

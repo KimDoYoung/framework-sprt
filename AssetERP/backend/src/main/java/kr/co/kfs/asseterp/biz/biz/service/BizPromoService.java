@@ -73,6 +73,11 @@ public class BizPromoService {
         return mapper.countTargetInfoMissing(user.getCompanyId(), promoIds);
     }
 
+    /** AS-IS Biz01_Promo.selectApprId(promoId) (IDMS-IC 2026-11-13, CH-0405) — 내역의 상신 결재상태 코드. 상신이 없으면 null */
+    public String getApprStatusCode(UserPrincipal user, Long promoId) {
+        return mapper.selectApprStatusCode(user.getCompanyId(), promoId);
+    }
+
     /** AS-IS closeCheck — 마감된 내역이 하나라도 있으면 true(status -1) */
     public boolean hasClosed(UserPrincipal user, List<Long> promoIds) {
         if (promoIds == null || promoIds.isEmpty()) {
