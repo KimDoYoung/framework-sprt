@@ -27,7 +27,8 @@ public class FndFundService {
     }
 
     /**
-     * AS-IS fnd.Fnd00_Fund.selectBySearchText L32 → orgId가 없으면(openAdmin) selectBySearchTextAdmin (P06 연관펀드 조회창).
+     * AS-IS fnd.Fnd00_Fund.selectBySearchText L32 — orgId가 없으면(openAdmin) 권한 조건 없이 전체 (P06 연관펀드 조회창).
+     * 2026-11-12부터 AS-IS는 selectBySearchTextAdmin 없이 같은 SQL을 쓴다(CH-0404~0406) → TOBE 매퍼 Admin도 차등배분형 제외를 맞춤.
      * 검색어는 서버가 %…%로, 펀드유형은 비면 %. 해지펀드포함이 아니면 closeYn은 'false'
      */
     public List<FundMultiRes> searchMultiAdmin(UserPrincipal user, boolean planYn, String fundType, String searchText,
