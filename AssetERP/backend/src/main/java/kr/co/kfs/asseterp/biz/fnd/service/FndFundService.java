@@ -28,6 +28,8 @@ public class FndFundService {
 
     /**
      * AS-IS fnd.Fnd00_Fund.selectBySearchText L32 → orgId가 없으면(openAdmin) selectBySearchTextAdmin (P06 연관펀드 조회창).
+     * 원본 2026-11-12(6c322f4e5, CH-0413·0414): Admin SQL을 없애고 orgId가 없어도 selectBySearchText(부서 권한 조건만 빠짐)를 쓴다 —
+     * TOBE는 화면별 API를 그대로 두고 매퍼 selectBySearchTextAdmin에 차등배분형 제외를 더해 같은 결과로 맞췄다.
      * 검색어는 서버가 %…%로, 펀드유형은 비면 %. 해지펀드포함이 아니면 closeYn은 'false'
      */
     public List<FundMultiRes> searchMultiAdmin(UserPrincipal user, boolean planYn, String fundType, String searchText,
