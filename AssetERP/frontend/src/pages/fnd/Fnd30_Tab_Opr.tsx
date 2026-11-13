@@ -180,9 +180,9 @@ export const Fnd30_Tab_Opr: React.FC = () => {
     gb.long('qty', 100, '총 배정수량'),
     gb.textCenter('lockPeriod', 75, '확약기간'),
     iconCell<OprSub>('edit', 'editAction', 60, '수정', editRow),
-    iconCell<OprSub>('edit', 'apprAction', 70, '결재요청', row => void requestAppr(row)),
+    iconCell<OprSub>('edit', 'apprAction', 50, '결재요청', row => void requestAppr(row)),
     gb.textCenter('apprStatusName', 100, '결재상태'),
-    iconCell<OprSub>('view', 'viewAction', 80, '상세보기', viewAppr),
+    iconCell<OprSub>('view', 'viewAction', 50, '상세보기', viewAppr),
     gb.text('note', 400, '비고'),
   ], []);
 

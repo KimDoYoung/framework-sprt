@@ -31,7 +31,7 @@ const buildGrid = (states: Code[], viewDocument: (r: Row) => void) => [
   gb.date('regDate', 100, '신청일'),
   gb.text('personNm', 200, '신청자'),
   gb.text('specificWorkNm', 120, '특정업무'),
-  iconCell<Row>('edit', 'actionCell', 80, '문서보기', viewDocument),  // L121-148 actionCell
+  iconCell<Row>('edit', 'actionCell', 50, '문서보기', viewDocument),  // L121-148 actionCell
   gb.textStatus('aprStatusNm', 100, '문서상태'),
   gb.text('confirmNm', 200, '처리자', { editor: 'text' }),
   gb.date('confirmDate', 100, '처리일', { editor: 'date' }),

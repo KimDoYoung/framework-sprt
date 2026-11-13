@@ -85,11 +85,11 @@ export const Emp53_Tab_BizTripManager: React.FC = () => {
     gb.text('companion', 150, '동반인'),
     gb.group('출장품의', [
       gb.textCenter('apprStatusName', 80, '결재상태'),
-      iconCell<BizTrip>('view', 'actionCell', 60, '상세보기', viewAppr),
+      iconCell<BizTrip>('view', 'actionCell', 50, '상세보기', viewAppr),
     ]),
     gb.group('결과보고', [
       gb.textCenter('resultApprStatusName', 80, '결재상태'),
-      iconCell<BizTrip>('view', 'actionCell2', 60, '상세보기', viewResultAppr),
+      iconCell<BizTrip>('view', 'actionCell2', 50, '상세보기', viewResultAppr),
     ]),
     { ...gb.group('결과보고서 면제', [
       editableCol(gb.boolean('resultSkipYn', 50, '여부', { editable: true, headerStyle: BLUE })),

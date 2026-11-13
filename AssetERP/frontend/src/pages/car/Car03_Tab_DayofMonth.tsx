@@ -97,7 +97,7 @@ export const Car03_Tab_DayofMonth = forwardRef<DayofMonthHandle, Props>(({ callb
     gb.textCenter('personNm', 100, '예약자'),  // L205
     gb.text('attendance', 240, '참석자'),  // L206
     // [E4] actionCell (ImageCell "Edit") (L184) → Car03_Popup_BookingReg.retrieve(model, checkYn, cb → retrieve())
-    iconCell<CarBooking>('edit', 'actionCell', 60, '상세보기', row => setPopup({ mode: 'retrieve', row, checkYn: canEdit(row) })),  // L207
+    iconCell<CarBooking>('edit', 'actionCell', 50, '상세보기', row => setPopup({ mode: 'retrieve', row, checkYn: canEdit(row) })),  // L207
     iconCell<CarBooking>('delete', 'cancelCell', 60, '삭제', deleteCheck),  // L208
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [user.userId]);

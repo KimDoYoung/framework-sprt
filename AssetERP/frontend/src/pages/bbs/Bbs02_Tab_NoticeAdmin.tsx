@@ -151,7 +151,7 @@ export const Bbs02_Tab_NoticeAdmin: React.FC = () => {
     iconCell<BbsNoticeAdmin>('view', 'actionCell', 50, '상세보기', row => setEditTarget(row)),
     gb.text('note', 200, '기타메모'),  // L249
     // L250 addCell(actionCell, 100, "문자발송", ImageCell("Send")) → sendMessage("'[공지구분 / 공지번호] 제목' 을 확인부탁드립니다.")
-    iconCell<BbsNoticeAdmin>('send', 'sendCell', 100, '문자발송', row =>
+    iconCell<BbsNoticeAdmin>('send', 'sendCell', 50, '문자발송', row =>
       setSendMsg(`'[${row.noticeDetailFullName} / ${row.noticeNo}] ${row.title}' 을 확인부탁드립니다.`)),
   ], []);
 

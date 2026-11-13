@@ -178,7 +178,7 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
     editableCol(gb.date('closeDate', 100, '종료일', { editor: 'date' })),
     editableCol(gb.text('reason', 500, '사유', { editor: 'text' })),
     gb.textCenter('apprStatusName', 120, '상신상태'),
-    iconCell<JointLeave>('view', 'actionCell', 80, '상세보기', row => viewAppr(row.apprId)),
+    iconCell<JointLeave>('view', 'actionCell', 50, '상세보기', row => viewAppr(row.apprId)),
     gb.text('note', 500, '비고'),
   ], []);
 

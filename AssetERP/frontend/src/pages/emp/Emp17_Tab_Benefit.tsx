@@ -115,7 +115,7 @@ export const Emp17_Tab_Benefit: React.FC = () => {
     gb.date('occDate', 100, '발생일자'),
     gb.text('benefitDetail', 160, '내용'),
     gb.textCenter('apprStatusName', 100, '결재상태'),
-    iconCell<BenefitRow>('view', 'actionCell', 80, '문서보기', viewAppr),
+    iconCell<BenefitRow>('view', 'actionCell', 50, '문서보기', viewAppr),
     gb.textCenter('benefitYnStr', 100, '지급여부'),
     gb.textArea('note', 350, '알림'),
   ], []);

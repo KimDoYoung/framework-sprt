@@ -91,7 +91,7 @@ export const Bmt10_Tab_Info: React.FC = () => {
     // [E5] historyCell (ImageCell "Detail").callbackOnCreate (L153) → Bmt10_Lookup_History.open(infoId, 장비명, callback → selectRetrieve(infoId))
     iconCell<BmtInfo>('view', 'historyAction', 60, 'History', row => setHistoryTarget({ infoId: row.infoId, astClassTreeName: row.astClassTreeName })),  // L196
     // relateAprCell (ImageCell "Detail") → Bmt20_Lookup_RelateAppr.open(infoId)
-    iconCell<BmtInfo>('view', 'relateAction', 60, '연관문서', row => setRelateInfoId(row.infoId)),  // L197
+    iconCell<BmtInfo>('view', 'relateAction', 50, '연관문서', row => setRelateInfoId(row.infoId)),  // L197
   ], []);
 
   return (

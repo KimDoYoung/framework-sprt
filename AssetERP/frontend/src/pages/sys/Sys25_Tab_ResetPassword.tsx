@@ -79,7 +79,7 @@ export const Sys25_Tab_ResetPassword: React.FC = () => {
     gb.text('orgName', 300, '본부(부서)'),  // L129
     gb.textCenter('empKorName', 100, '성명'),  // L130
     gb.booleanIcon('lockYn', 100, '상태'),  // L131 addBooleanIcon
-    iconCell<PasswordPerson>('check', 'actionCell1', 150, '잠금해제', row => confirm(row, '잠금해제', resetLock)),  // L132 actionCell1 → 확인 → resetLock()
+    iconCell<PasswordPerson>('check', 'actionCell1', 50, '잠금해제', row => confirm(row, '잠금해제', resetLock)),  // L132 actionCell1 → 확인 → resetLock()
     iconCell<PasswordPerson>('check', 'actionCell2', 150, '비밀번호 초기화', row => confirm(row, '비밀번호 초기화', resetPassword)),  // L133 actionCell2 → 확인 → resetPassword()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [retrieve]);

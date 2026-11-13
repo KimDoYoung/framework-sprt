@@ -105,7 +105,7 @@ export const Apr01_Tab_Restore: React.FC = () => {
     gb.text('title', 400, '상신제목'),  // L183
     // [E6] actionCell (ImageCell "View").callbackOnCreate (L156) L144-178: ApprCallbackResult(apprId, 로그인 사용자) → 열람권한 없으면 "해당문서의 열람권한이 없습니다",
     //   있으면 Apr01_Edit_ApprDoc.getApprDelModel(model, false, callback → retrieve())
-    iconCell<AprApprDel>('view', 'actionCell', 60, '상세보기', row => { void openDeleted(row.apprId); }),
+    iconCell<AprApprDel>('view', 'actionCell', 50, '상세보기', row => { void openDeleted(row.apprId); }),
     gb.text('aprOrgName', 150, '담당부서'),  // L185
     gb.textCenter('aprPersonName', 100, '담당자'),  // L186
     gb.date('delDate', 100, '폐기일'),  // L187

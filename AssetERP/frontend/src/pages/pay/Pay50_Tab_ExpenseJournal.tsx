@@ -126,7 +126,7 @@ export const Pay50_Tab_ExpenseJournal: React.FC = () => {
     }),  // L246
     gb.textCenter('journalNo', 100, '전표번호'),  // L247
     // modiJournal() L314-333: act.Act02_Journal.selectById(journalId) → Act02_Lookup_CreateJournal.open(전표, "MODI", callback → retrieve()). 전표 읽기는 창이 journalId로 한다
-    iconCell<PayExpenseJournal>('edit', 'editAction', 60, '전표수정', row => {
+    iconCell<PayExpenseJournal>('edit', 'editAction', 50, '전표수정', row => {
       if (row.journalId == null) return;
       setEditTarget({ mode: 'MODI', journalId: row.journalId });
     }),  // L248

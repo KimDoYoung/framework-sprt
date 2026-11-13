@@ -64,7 +64,7 @@ export const Pay32_Tab_InsurePay: React.FC = () => {
     gb.longCenter('payDiv', 150, '분할납부회차'),
     gb.long('remAmt', 200, '잔여 정산보험료'),
     // actionCell(ImageCell "View") L173-181 → Pay32_Lookup_Detail.open(선택한 정산 행)
-    iconCell<PayInsurePay>('view', 'actionCell', 60, '납부상세', row => setDetail({ personId: row.personId, year: row.year ?? '', insureName: row.insureNm ?? '' })),
+    iconCell<PayInsurePay>('view', 'actionCell', 50, '납부상세', row => setDetail({ personId: row.personId, year: row.year ?? '', insureName: row.insureNm ?? '' })),
   ], []);
 
   return (

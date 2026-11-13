@@ -79,7 +79,7 @@ export const Icam55_Tab_UserApprResult: React.FC = () => {
     gb.text('companyName', 300, '회사명'),                                       // L212
     gb.text('userName', 150, '사용자'),                                          // L213
     gb.text('procTypeName', 100, '처리구분'),                                    // L214
-    iconCell<IcamUserResult>('view', 'viewCell', 60, '문서보기', apprView),      // L215
+    iconCell<IcamUserResult>('view', 'viewCell', 50, '문서보기', apprView),      // L215
     gb.text('regEmpName', 80, '등록자'),                                         // L216
     gb.text('procStateName', 100, '처리결과', {                                  // L217
       editor: 'select',

@@ -176,7 +176,7 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
     gb.text('note', 150, '비고', { editor: 'text' }),  // L419
     gb.date('apprRegDate', 90, '상신일'),  // L420
     gb.textCenter('apprStatusName', 80, '상신상태'),  // L421
-    iconCell<FltAccount>('view', 'actionCell', 80, '상세보기', viewAppr),  // L422
+    iconCell<FltAccount>('view', 'actionCell', 50, '상세보기', viewAppr),  // L422
   ], [regReasons, familyRelates]);
 
   const selected = () => (crud.gridRef.current?.api?.getSelectedRows() ?? []) as FltAccount[];

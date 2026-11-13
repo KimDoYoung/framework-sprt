@@ -104,7 +104,7 @@ export const Apr01_Tab_MyAuthList: React.FC = () => {
     gb.textCenter('inOutTypeName', 70, '문서구분'),  // L277
     gb.textHtml('title', 400, '문서명'),  // L278 addTextHtml
     // editDocCell(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 ApprCallbackResult(열람권한 없으면 "해당문서의 열람권한이 없습니다") → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieveOne L309-326)
-    iconCell<AprMyAuth>('view', 'actionCell', 80, '상세보기', row => {
+    iconCell<AprMyAuth>('view', 'actionCell', 50, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       else void viewAppr(row.apprId);
     }),

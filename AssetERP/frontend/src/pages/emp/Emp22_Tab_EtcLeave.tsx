@@ -174,7 +174,7 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
     editableCol(gb.date('startDate', 100, '사용시작일', { editor: 'date' })),
     editableCol(gb.date('closeDate', 100, '사용만료일', { editor: 'date' })),
     gb.textCenter('apprStatusName', 100, '결재상태'),
-    iconCell<EtcLeaveManage>('edit', 'actionCell', 80, '결재요청', row => requestAppr(row)),
+    iconCell<EtcLeaveManage>('edit', 'actionCell', 50, '결재요청', row => requestAppr(row)),
     editableCol(gb.text('note', 400, '비고', { editor: 'text' })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [classTreeId]);

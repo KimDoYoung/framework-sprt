@@ -47,7 +47,7 @@ export const Ics01_Tab_IcsFileUser: React.FC = () => {
     gb.date('regDate', 100, '등록일'),  // L99
     gb.text('fileName', 500, '서식파일'),  // L100
     // L101 downloadCell(Down): FileDownload?fileType=file&fileId=
-    iconCell<IcsFormFile>('down', 'actionCellDown', 80, '다운로드', row => {
+    iconCell<IcsFormFile>('down', 'actionCellDown', 50, '다운로드', row => {
       fileApi.download(row.fileId).catch(err => message.error(errorMessage(err, '다운로드 실패')));
     }),
   ], []);

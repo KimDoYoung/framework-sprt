@@ -106,7 +106,7 @@ export const Bbs02_Tab_NoticeView: React.FC = () => {
     gb.textHtml('noticeDetailFullName', 200, '공지구분'),  // L212
     gb.textHtml('title', 600, '제목'),  // L213
     // L214 addCell(ImageCell("보기")) → viewNotice() L219-242: commentYn이면 openWithComment, 아니면 open (머리글 = title2)
-    iconCell<BbsNoticePerson>('view', 'actionCell', 70, '상세보기', setViewing),
+    iconCell<BbsNoticePerson>('view', 'actionCell', 50, '상세보기', setViewing),
   ], []);
 
   const dateEnabled = noticeType === '%';

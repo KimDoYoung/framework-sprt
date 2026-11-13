@@ -55,10 +55,10 @@ const buildGrid = (startCheck: (row: TdmCheckOrg) => void, cancelCheck: (row: Td
     headerStyle: { color: BLUE, fontWeight: 'bold' },
   },
   gb.textStatus('checkStatusName', 100, '점검상태'),  // L302
-  iconCell<TdmCheckOrg>('edit', 'startCell', 70, '점검시작', startCheck),  // L303 → checkPreStart("P")
-  iconCell<TdmCheckOrg>('delete', 'cancelCell', 70, '시작취소', cancelCheck),  // L304 → checkPreStart("C")
+  iconCell<TdmCheckOrg>('edit', 'startCell', 50, '점검시작', startCheck),  // L303 → checkPreStart("P")
+  iconCell<TdmCheckOrg>('delete', 'cancelCell', 50, '시작취소', cancelCheck),  // L304 → checkPreStart("C")
   gb.textStatus('orgStatusName', 100, '승인상태'),  // L305
-  iconCell<TdmCheckOrg>('view', 'recordCell', 70, '승인이력', openRecord),  // L306 → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
+  iconCell<TdmCheckOrg>('view', 'recordCell', 50, '승인이력', openRecord),  // L306 → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
 ];
 
 export const Tdm52_Tab_CheckManl: React.FC = () => {

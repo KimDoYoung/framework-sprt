@@ -202,7 +202,7 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
     gb.text('benefitDetail', 200, '내용'),  // L481
     gb.textCenter('apprStatusName', 100, '결재상태'),  // L482
     iconCell<Benefit>('view', 'viewAction', 80, '신청문서보기', viewAppr),  // L483 actionCell (ImageCell "View")
-    iconCell<Benefit>('delete', 'discardAction', 80, '문서폐기', discardAppr),  // L484 deleteCell (ImageCell "Trash")
+    iconCell<Benefit>('delete', 'discardAction', 50, '문서폐기', discardAppr),  // L484 deleteCell (ImageCell "Trash")
     // [E22] 알림 아이콘 noticeCell (L486-): Emp17_Edit_Note.open(선택한 행)
     iconCell<Benefit>('edit', 'noteAction', 80, '알림', row => setNoteTarget(row)),  // L485 noticeCell (ImageCell "Edit")
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -54,7 +54,7 @@ export const Fnd25_Tab_FundTerms: React.FC = () => {
     gb.text('termsTypeName', 150, '구분'),
     // 원본 2026-10-28(CH-0176): 펀드규약명 열 주석 처리, 펀드명 = 정식명(폭 450)
     // viewCell (ImageCell "view") → viewContent() L145-149: Fnd25_Lookup_Content.open(termsId)
-    iconCell<TermsView>('view', 'actionCell', 55, '내용보기', row => setContentTermsId(row.termsId)),
+    iconCell<TermsView>('view', 'actionCell', 50, '내용보기', row => setContentTermsId(row.termsId)),
     gb.text('ksdFundCode', 120, '예탁원코드'),
     gb.text('fundFullName', 450, '펀드명'),
     gb.text('trustBankName', 120, '수탁은행'),

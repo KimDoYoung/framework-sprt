@@ -102,7 +102,7 @@ export const Ics01_Tab_PeriodList: React.FC = () => {
     gb.text('level2Name', 200, '중분류'),  // L233
     gb.textHtml('classTreeNameAddAppr', 500, '법규명'),  // L234 addTextAreaHtml
     // L235 actionCell(Detail) → Ics01_Lookup_ClassTreeDetail.open(realClassTreeId)
-    iconCell<IcsLawPeriod>('view', 'actionCellDetail', 80, '상세보기', row => setDetailId(row.realClassTreeId)),
+    iconCell<IcsLawPeriod>('view', 'actionCellDetail', 50, '상세보기', row => setDetailId(row.realClassTreeId)),
     gb.textArea('submitTo', 200, '제출처'),  // L236
     gb.text('cycleName', 100, '주기'),  // L237
     gb.textArea('relatedLaw', 200, '관련조문'),  // L238

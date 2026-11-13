@@ -163,7 +163,7 @@ export const Sch10_Tab_Ipo: React.FC = () => {
     gb.textCenter('priceBracket', 120, '희망공모가'),                                    // L301
     gb.long('price', 80, '공모가', { cellStyle: { fontWeight: 'bold' } }),               // L302 addLongBold
     gb.textArea('note', 250, '주간사'),                                                  // L303
-    iconCell<Sch10IpoUser>('view', 'siteAction', 60, '바로가기', row => void openSite(row)),  // siteCell
+    iconCell<Sch10IpoUser>('view', 'siteAction', 50, '바로가기', row => void openSite(row)),  // siteCell
     gb.double('subscriptionRate', 80, 'ICAM<br>청약률(%)'),                              // L305 addDoubleHtml
     gb.text('shareInfo', 150, '일정공유', { headerClass: ['gb-hdr', 'sch10-share-hdr'] }),  // L306 addText(…, "0069B4")
     iconCell<Sch10IpoUser>('edit', 'shareAction', 30, '', row => setShareIpoId(row.ipoId)),  // shareCell → lookupShare()

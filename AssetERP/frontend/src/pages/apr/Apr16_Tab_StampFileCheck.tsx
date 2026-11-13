@@ -150,7 +150,7 @@ export const Apr16_Tab_StampFileCheck: React.FC = () => {
     gb.longCenter('stampQty', 70, '날인부수'),  // L156
     gb.text('provideCo', 250, '제출처'),  // L157
     gb.textHtml('purpose', 250, '내용'),  // L158
-    dynamicIconCell<AprStampCheck>('view', 'actionCell', 70, '연관문서', lookupAppr, row => row.apprStatusName != null),  // L159 addDynamicCell(…, true)
+    dynamicIconCell<AprStampCheck>('view', 'actionCell', 50, '연관문서', lookupAppr, row => row.apprStatusName != null),  // L159 addDynamicCell(…, true)
     gb.date('stampDate', 90, '날인일자'),  // L160
     gb.textCenter('stampFileChk', 70, '날인본<br>첨부여부'),  // L161
     gb.date('confirmDate', 90, '확인일자'),  // L162

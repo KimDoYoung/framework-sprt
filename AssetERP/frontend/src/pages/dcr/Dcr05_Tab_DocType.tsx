@@ -68,7 +68,7 @@ export const Dcr05_Tab_DocType: React.FC = () => {
     gb.text('docFormClassName', 200, '구분'),  // L225
     gb.text('title', 450, '양식 제목'),  // L226
     // L227 actionCell(Edit) → Dcr05_Edit_Update.retrieveApproval(docTypeModel, 닫히면 retrieve())
-    iconCell<DcrDocType>('edit', 'actionCell', 80, '상세보기', row => setEditRow(row)),
+    iconCell<DcrDocType>('edit', 'actionCell', 50, '상세보기', row => setEditRow(row)),
     gb.text('note', 1000, '비고'),  // L228
   ], []);
 

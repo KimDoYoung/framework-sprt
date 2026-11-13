@@ -142,14 +142,14 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
     gb.textCenter('fileCntStr', 80, '첨부자료'),  // L194
     iconCell<IcsExtrActivity>('view', 'actionCellFile', 30, '', row => setFileParentId(row.extrActivityId)),  // L195 actionCell02 → Sys10_Lookup_File.open(extrActivityId)
     gb.group('활동신청', [  // HeaderGroupMap(0, 9, "활동신청", 1, 3)
-      iconCell<IcsExtrActivity>('edit', 'actionCellAppr', 80, '결재요청', row => dcrChk('B15', row)),  // L196 actionCell03
+      iconCell<IcsExtrActivity>('edit', 'actionCellAppr', 50, '결재요청', row => dcrChk('B15', row)),  // L196 actionCell03
       gb.textStatus('apprStatusNm', 100, '결재상태'),  // L197
-      iconCell<IcsExtrActivity>('view', 'actionCellApprView', 80, '문서보기', row => viewAppr(row.apprId)),  // L198 actionCell04
+      iconCell<IcsExtrActivity>('view', 'actionCellApprView', 50, '문서보기', row => viewAppr(row.apprId)),  // L198 actionCell04
     ]),
     gb.group('결과보고', [  // HeaderGroupMap(0, 12, "결과보고", 1, 3)
-      iconCell<IcsExtrActivity>('edit', 'actionCellResult', 80, '결재요청', row => dcrChk('B16', row)),  // L199 actionCell05
+      iconCell<IcsExtrActivity>('edit', 'actionCellResult', 50, '결재요청', row => dcrChk('B16', row)),  // L199 actionCell05
       gb.textStatus('resultApprStatusNm', 100, '결재상태'),  // L200
-      iconCell<IcsExtrActivity>('view', 'actionCellResultView', 80, '문서보기', row => viewAppr(row.resultApprId)),  // L201 actionCell06
+      iconCell<IcsExtrActivity>('view', 'actionCellResultView', 50, '문서보기', row => viewAppr(row.resultApprId)),  // L201 actionCell06
     ]),
   ], []);
 

@@ -67,7 +67,7 @@ export const Emp41_Tab_EvalList: React.FC = () => {
   const columnDefs01 = useMemo(() => [
     gb1.date('startDate', 100, '기준 적용일'),  // L283
     // L276-281 viewCell(ImageCell "Edit") → Emp42_Lookup_EvalGrade.open(evalListStdId, fixYn)
-    iconCell<EvalListStd>('edit', 'actionCell', 80, '평가등급', row => setGradeTarget({ evalListStdId: row.evalListStdId, fixYn: row.fixYn === 'true' })),  // L284
+    iconCell<EvalListStd>('edit', 'actionCell', 50, '평가등급', row => setGradeTarget({ evalListStdId: row.evalListStdId, fixYn: row.fixYn === 'true' })),  // L284
     gb1.booleanYn('fixYn', 50, '확정'),  // L285
   ], []);
   const columnDefs02 = useMemo(() => buildGrid02(classCodes), [classCodes]);

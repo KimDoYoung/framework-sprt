@@ -113,7 +113,7 @@ export const Mrb01_Tab_DayofMonth = forwardRef<DayofMonthHandle, Props>(({ callb
     gb.text('roomNm', 160, '회의실명'),  // L242
     gb.text('attendance', 260, '참석자'),  // L243
     // [E4] actionCell (ImageCell "Edit") (L221) → Mrb01_Popup_MeetingRoomReg.retrieve(model, checkYn, cb → retrieve())
-    iconCell<MrbBooking>('edit', 'actionCell', 60, '상세보기', row => setPopup({ mode: 'retrieve', row, checkYn: canEdit(row) })),  // L244
+    iconCell<MrbBooking>('edit', 'actionCell', 50, '상세보기', row => setPopup({ mode: 'retrieve', row, checkYn: canEdit(row) })),  // L244
     iconCell<MrbBooking>('delete', 'cancelCell', 60, '삭제', deleteCheck),  // L245
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [user.userId]);

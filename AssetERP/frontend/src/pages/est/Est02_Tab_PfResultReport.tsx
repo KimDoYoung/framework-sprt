@@ -131,7 +131,7 @@ export const Est02_Tab_PfResultReport: React.FC = () => {
     gb.date('closeDate', 100, '수행종료일'),                                                     // L185
     iconCell<PfContract>('edit', 'apprAction', 50, '결재', row => void requestAppr(row)),        // L186 actionCell01
     gb.textCenter('resultApprStatusName', 100, '결재상태'),                                      // L187
-    iconCell<PfContract>('view', 'viewAction', 100, '문서보기', viewAppr),                       // L188 actionCell02
+    iconCell<PfContract>('view', 'viewAction', 50, '문서보기', viewAppr),                       // L188 actionCell02
   ], [myOrgId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

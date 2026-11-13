@@ -221,7 +221,7 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
   const columnDefs = useMemo(() => [
     gb.text('className', 120, '분류'),
     gb.text('title', 500, '체크항목'),
-    iconCell<Sch04DailyCheck>('view', 'actionCell', 80, '상세보기', view),   // → view()
+    iconCell<Sch04DailyCheck>('view', 'actionCell', 50, '상세보기', view),   // → view()
     gb.group('체크', [
       gb.boolean('yes', 100, '처리완료', { editable: true, ...checkValue('1') }),
       gb.boolean('not', 100, '해당없음', { editable: true, ...checkValue('5') }),

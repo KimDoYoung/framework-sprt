@@ -97,7 +97,7 @@ export const Bbs11_Tab_Application: React.FC = () => {
     gb.textCenter('appStatusName', 100, '신청상태'),  // L182
     gb.date('closeDate', 100, '완료일'),  // L183
     // [E5] actionCell01 (ImageCell "View").callbackOnCreate (L142) → Bbs11_Edit_Application.edit(선택 행, callback → retrieve())
-    iconCell<BbsApplicationMine>('view', 'actionCell', 70, '상세보기', row => setEditTarget(row)),  // L184
+    iconCell<BbsApplicationMine>('view', 'actionCell', 50, '상세보기', row => setEditTarget(row)),  // L184
     gb.text('note', 250, '비고'),  // L186
   ], []);
 

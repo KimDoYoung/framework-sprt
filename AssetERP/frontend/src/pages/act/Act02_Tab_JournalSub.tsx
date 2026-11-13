@@ -193,7 +193,7 @@ export const Act02_Tab_JournalSub: React.FC = () => {
     gb.text('drAstName', 150, '관리계좌'),  // L510
     gb.text('drNote', 200, '전표적요'),  // L511
     // L512 addCell(ImageCell "View") → Act80_Lookup_RelateAppr.open(제목, "journalId", journalId): 제목 = 일자 + " 거래처" + " 적요". 전월이월 줄(journalId 0)은 연관문서가 없다
-    iconCell<JournalSub>('view', 'viewAction', 60, '연관문서', row => {
+    iconCell<JournalSub>('view', 'viewAction', 50, '연관문서', row => {
       if (!row.journalId) return;
       setRelateTarget({
         title: `${row.date}${row.corpName ? ' ' + row.corpName : ''}${row.note ? ' ' + row.note : ''}`,

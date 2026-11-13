@@ -163,7 +163,7 @@ export const Act02_Tab_ForJournal: React.FC = () => {
       setModiJournalId(row.journalId);
     }),
     // addCell(ImageCell "View") → Act80_Lookup_RelateAppr.open(제목, "journalId", journalId): 제목 = 일자 + " 거래처" + " 적요"
-    iconCell<Row>('view', 'viewAction', 60, '연관문서', row => {
+    iconCell<Row>('view', 'viewAction', 50, '연관문서', row => {
       setRelateTarget({
         title: `${row.date}${row.corpName ? ' ' + row.corpName : ''}${row.note ? ' ' + row.note : ''}`,
         code: 'journalId', relateId: row.journalId,

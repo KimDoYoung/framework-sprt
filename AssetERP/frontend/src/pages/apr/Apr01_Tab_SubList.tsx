@@ -130,7 +130,7 @@ export const Apr01_Tab_SubList: React.FC = () => {
     gb.text('aprPersonName', 100, '업무담당자'),  // L173
     gb.text('statusName', 100, '처리현황'),  // L174
     {
-      ...iconCell<AprSubList>('view', 'actionCell', 100, '문서조회', lookupAppr),  // L175 addCell(View)
+      ...iconCell<AprSubList>('view', 'actionCell', 50, '문서조회', lookupAppr),  // L175 addCell(View)
       cellRendererSelector: (p: { node: { rowPinned?: string | null } }) => (p.node.rowPinned ? { component: () => null } : undefined),  // 건수 행에는 아이콘 없음
     },
   ], []);

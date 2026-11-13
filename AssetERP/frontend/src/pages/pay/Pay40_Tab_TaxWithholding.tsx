@@ -166,9 +166,9 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
     gb.text('submitTo', 250, '제출처', { editor: 'text' }),
     gb.long('cnt', 120, '소요수량(통)', { editor: 'number' }),
     gb.long('issueNo', 100, '발급번호'),
-    iconCell<PayTaxWithholding>('edit', 'actionCell1', 100, '결재요청', requestAppr),
+    iconCell<PayTaxWithholding>('edit', 'actionCell1', 50, '결재요청', requestAppr),
     gb.textCenter('statusName', 100, '결재상태'),
-    iconCell<PayTaxWithholding>('view', 'actionCell2', 100, '상세보기', viewAppr),
+    iconCell<PayTaxWithholding>('view', 'actionCell2', 50, '상세보기', viewAppr),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [purUseCodes, classTreeId]);
 

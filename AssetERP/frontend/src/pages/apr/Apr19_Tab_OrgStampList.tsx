@@ -142,7 +142,7 @@ export const Apr19_Tab_OrgStampList: React.FC = () => {
     gb.text('provideCo', 300, '제출처'),  // L271
     gb.textHtml('purpose', 350, '내용'),  // L272
     gb.text('note', 250, '비고<br>(날인요청서류)', { cellStyle: { color: '#404040' } }),  // L273
-    iconCell<AprRelateStampList>('view', 'actionCell', 55, '문서확인', viewAppr),  // L274 addCell(actionCell, 55, "문서확인", actionCell)
+    iconCell<AprRelateStampList>('view', 'actionCell', 50, '문서확인', viewAppr),  // L274 addCell(actionCell, 55, "문서확인", actionCell)
     gb.text('apprCntStr', 80, ''),  // L275
     gb.textCenter('stampSeq', 100, '대외문서번호'),  // L277 (L276 대장번호는 주석 처리)
     gb.date('stampDate', 100, '날인일자'),  // L278

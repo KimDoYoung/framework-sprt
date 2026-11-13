@@ -78,7 +78,7 @@ export const Mrb01_Tab_List: React.FC = () => {
     gb.text('roomNm', 160, '회의실명'),  // L145
     gb.text('attendance', 320, '참석자'),  // L146
     // actionCell (ImageCell "Edit") L107-127 → Mrb01_Popup_MeetingRoomReg.getList(model, checkYn, cb → retrieve() + dayofMonthGrid.retrieve())
-    iconCell<MrbBooking>('edit', 'actionCell', 60, '상세보기', row => setPopup({ mode: 'list', row, checkYn: canEdit(row) })),  // L147
+    iconCell<MrbBooking>('edit', 'actionCell', 50, '상세보기', row => setPopup({ mode: 'list', row, checkYn: canEdit(row) })),  // L147
     iconCell<MrbBooking>('delete', 'cancelCell', 60, '삭제', deleteCheck),  // L148
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [user.userId]);

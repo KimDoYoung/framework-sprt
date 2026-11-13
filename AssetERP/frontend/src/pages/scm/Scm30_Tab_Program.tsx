@@ -93,9 +93,9 @@ export const Scm30_Tab_Program: React.FC = () => {
     gb.text('programCd', 250, '프로그램ID'),                                                         // L206
     gb.text('programNm', 350, '프로그램명'),                                                         // L207
     // [E6] sourceViewCell (L165) → Scm30_Edit_Program.edit(grid, selectModel, callback)
-    iconCell<Program>('view', 'sourceViewCell', 70, '소스보기', row => setEditTarget({ mode: 'edit', program: row })),  // L208
+    iconCell<Program>('view', 'sourceViewCell', 50, '소스보기', row => setEditTarget({ mode: 'edit', program: row })),  // L208
     // downloadCell (L173-185): FileDownload?fileType=file&fileId
-    iconCell<Program>('down', 'downloadCell', 70, '파일다운', row => {                               // L209
+    iconCell<Program>('down', 'downloadCell', 50, '파일다운', row => {                               // L209
       if (row.fileId == null) return;
       fileApi.download(row.fileId).catch(err => message.error(errorMessage(err, '다운로드 실패')));
     }),
