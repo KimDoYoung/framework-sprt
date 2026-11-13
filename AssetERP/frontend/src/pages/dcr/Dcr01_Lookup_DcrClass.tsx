@@ -29,7 +29,7 @@ interface Props {
   /** [선택]의 callback.execute(classTreeModel) */
   onResult: (result: DcrClassResult) => void;
   /** [전체]의 callback.execute(null) */
-  onAll: () => void;
+  onAll: () => void;가
   onClose: () => void;
 }
 
@@ -113,15 +113,18 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
         </div>
       }
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <SearchBar onSearch={search} searchText="찾기">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
+        <div style={{ flex: 1, minWidth: 0, paddingBottom: 8,  borderBottom: '1px solid #d9d9d9' }}>
+          <SearchBar
+            onSearch={search}
+            searchText="찾기"
+            extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />}
+          >
             <SearchBar.Field label="문서분류">
               <SearchBar.Input style={{ width: 130 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
             </SearchBar.Field>
           </SearchBar>
         </div>
-        <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
       </div>
       {/* getMenuTree() L171-208: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick) */}
       <div style={{ height: 560, overflow: view === 'list' ? 'hidden' : 'auto', marginTop: 8 }}>
