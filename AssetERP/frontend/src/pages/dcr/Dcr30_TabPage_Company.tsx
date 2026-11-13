@@ -3,6 +3,8 @@
  * AS-IS: myApp/client/vi/dcr/Dcr30_TabPage_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃: west = 회사 툴바(회사명 180 · 조회) + 회사 MultiGrid(고객명 180 · Sub-Domain 105), center = 고른 회사의 Link SingleGrid
  *   (Link명 400 · 문서분류명 450(조회창) · 데이터연결(양식) 95 · 비고 550 · 비고 아이콘 60)
+ * 원본 2026-11-13(8e79aa2d0, 대장 CH-0410): 회사명 앞에 상품 콤보(ErpProductCode 폭 90, 처음 "전체" — 고르면 retrieve()), 검색칸 180 → 110,
+ *   그리드 첫 열 "상품" 50, west 360 → 420(TOBE 330 → 390), 회사 조회 서비스 selectByName → selectByErpProductCode(사용 고객만)
  * 부모(Dcr30_Tab_LinkAdmin)가 forwardRef 핸들로 open(searchText)·retrieveLinks(searchText)·retrieve()·getModels()를 부른다
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -21,6 +23,7 @@ import { FormMapping } from '@/types/com';
 import { MultiGrid, SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { Com10_Lookup_CommonMapping } from '@/pages/com/Com10_Lookup_CommonMapping';
 import { Dcr30_Lookup_LinkNote } from './Dcr30_Lookup_LinkNote';
@@ -28,10 +31,11 @@ import { Dcr30_Lookup_LinkNote } from './Dcr30_Lookup_LinkNote';
 const gbCompany = gbFor<Company>();
 const gbLink = gbFor<DcrLink>();
 
-/** AS-IS buildGrid() L123-132 (setChecked MULTI) */
+/** AS-IS buildGrid() L137-147 (setChecked MULTI) */
 const buildGrid = (): ColDef<Company>[] => [
-  gbCompany.text('companyNm', 180, '고객명'),  // L129
-  gbCompany.text('locNm', 105, 'Sub-Domain'),  // L130
+  gbCompany.textCenter('erpProductCd', 50, '상품'),  // L143
+  gbCompany.text('companyNm', 180, '고객명'),  // L144
+  gbCompany.text('locNm', 105, 'Sub-Domain'),  // L145
 ];
 
 export interface Dcr30CompanyHandle {
@@ -53,6 +57,8 @@ interface Props {
 export const Dcr30_TabPage_Company = forwardRef<Dcr30CompanyHandle, Props>(({ initialSearch = '' }, ref) => {
   const columnDefs = useMemo(buildGrid, []);
   const [searchText, setSearchText] = useState('');
+  // erpProductComboBox L61: ComboBoxField("ErpProductCode", "%", "전체")
+  const [erpProductCd, setErpProductCd] = useState('%');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [links, setLinks] = useState<DcrLink[]>([]);
@@ -78,11 +84,11 @@ export const Dcr30_TabPage_Company = forwardRef<Dcr30CompanyHandle, Props>(({ in
     }
   }, []);
 
-  // retrieve() L204-220: sys.Sys01_Company.selectByName("%x%") 뒤 retrieve(고른 회사, search)
-  const retrieve = useCallback(async () => {
+  // retrieve() L219-242: sys.Sys01_Company.selectByErpProductCode(erpProductCode 없으면 '%', searchText "%x%") 뒤 retrieve(고른 회사, search)
+  const retrieve = useCallback(async (code: string = erpProductCd) => {
     setLoading(true);
     try {
-      const list = await sysApi.searchCompanies(searchText, true);
+      const list = await sysApi.searchCompaniesByErpProduct(code, searchText);
       setCompanies(list);
       const keep = list.find(c => c.companyId === selected.current?.companyId) ?? null;
       selected.current = keep;
@@ -94,7 +100,7 @@ export const Dcr30_TabPage_Company = forwardRef<Dcr30CompanyHandle, Props>(({ in
     } finally {
       setLoading(false);
     }
-  }, [searchText, retrieveLinks]);
+  }, [searchText, erpProductCd, retrieveLinks]);
 
   useImperativeHandle(ref, () => ({
     open: (text: string) => { search.current = text; },
@@ -151,12 +157,15 @@ export const Dcr30_TabPage_Company = forwardRef<Dcr30CompanyHandle, Props>(({ in
   return (
     <>
       <Splitter style={{ height: '100%', background: '#fff' }}>
-        <Splitter.Panel defaultSize={330} min={250}>
+        <Splitter.Panel defaultSize={390} min={250}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>
             {/* [E1] searchText.KeyPress [Enter] (L100), [E2] retrieveButton[조회].Select (L108) → retrieve() */}
-            <SearchBar onSearch={retrieve} loading={loading} style={{ flexWrap: 'nowrap' }}>
+            <SearchBar onSearch={() => retrieve()} loading={loading} style={{ flexWrap: 'nowrap' }}>
               <SearchBar.Field label="회사명">
-                <SearchBar.Input style={{ width: 180 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
+                {/* [E4] erpProductComboBox[ErpProductCode].Collapse (L116) → retrieve() */}
+                <SystemCodeComboBox kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
+                  onChange={v => { const code = v ?? '%'; setErpProductCd(code); void retrieve(code); }} />
+                <SearchBar.Input style={{ width: 110 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>
