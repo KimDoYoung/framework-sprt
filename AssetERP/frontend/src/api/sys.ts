@@ -84,6 +84,12 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sys.Sys01_Company.selectByErpProductCode (원본 2026-11-13, CH-0406) — 사용 고객 중 상품(없으면 '%')·고객명+서브도메인 '%x%'. #1001·#1280 */
+  searchCompaniesByErpProduct: async (erpProductCd: string, searchText: string): Promise<Company[]> => {
+    const res = await apiClient.get<ApiResponse<Company[]>>('v1/sys/companies/by-erp-product', { params: { erpProductCd, searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS sys.Sys01_Company.update(신규) → 등록 + 회사 초기화 후 등록된 회사 */
   createCompany: async (req: CompanyCreateReq): Promise<Company> => {
     const res = await apiClient.post<ApiResponse<Company>>('v1/sys/companies', req);

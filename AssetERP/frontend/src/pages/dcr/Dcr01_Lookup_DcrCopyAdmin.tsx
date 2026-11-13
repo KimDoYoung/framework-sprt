@@ -2,6 +2,7 @@
  * 운용사별 문서분류 반영 창 (E16) — Dcr01_Tab_ClassTree의 [문서분류복사]에서 연다 (관리자 회사만)
  * AS-IS: myApp/client/vi/dcr/Dcr01_Lookup_DcrCopyAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * Dcr01_Lookup_DcrCopyAdmin() L61-67·open() L69-114: 모달 900×700 "운용사별 문서분류 반영", 왼쪽 55% (문서분류 + 검색 250 + [찾기] / 트리), 오른쪽 45% ([문서분류복사] / 체크 그리드 운용사 200 · " " 100), 아래 가운데 [닫기]
+ * 원본 2026-11-13(8e79aa2d0, 대장 CH-0409): 모달 920, 왼쪽 53%·오른쪽 47%, 오른쪽 위에 상품 콤보(ErpProductCode, 처음 "전체") → 고르면 retrieveCompany(), 그리드 첫 열 "상품" 50
  * 스타일: MFG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,15 +10,18 @@ import { Input, message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
+import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { DcrClassTree, DcrCopyCompany } from '@/types/dcr';
+import { DcrClassTree } from '@/types/dcr';
+import { Company } from '@/types/sys';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { toTree, dcrTreeIcon, DcrTree } from './dcr01Tree';
 import { DcrClassSearchList } from './DcrClassSearchList';
 import { TreeListControlButtons } from '@/components/button/TreeListControlButtons';
 
-const gb = gbFor<DcrCopyCompany>();
+const gb = gbFor<Company>();
 
 interface Props {
   /** open() L69 — 값이 true면 열린다 */
@@ -27,37 +31,46 @@ interface Props {
 
 export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) => {
   const [rows, setRows] = useState<DcrClassTree[]>([]);
-  const [companies, setCompanies] = useState<DcrCopyCompany[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrClassTree | null>(null);
   const [searchText, setSearchText] = useState('');
+  // erpProductComboBox L65: ComboBoxField("ErpProductCode", "%", "전체") 폭 90, 처음 "전체"
+  const [erpProductCd, setErpProductCd] = useState('%');
   // 보기 방식: 트리(열 때) / 리스트([찾기] 결과 — UX보강)
   const [view, setView] = useState<'tree' | 'list'>('tree');
   const [loadingTree, setLoadingTree] = useState(false);
-  const gridRef = useRef<AgGridReact<DcrCopyCompany>>(null);
+  const gridRef = useRef<AgGridReact<Company>>(null);
   const treeData = useMemo(() => toTree(rows), [rows]);
 
-  // buildGrid() L151-158: setChecked(MULTI)
+  // buildGrid() L168-177: setChecked(MULTI)
   const columnDefs = useMemo(() => [
-    gb.text('companyName', 200, '운용사'),  // L155
-    gb.text('locationName', 100, ' '),  // L156
+    gb.textCenter('erpProductCd', 50, '상품'),  // L173
+    gb.text('companyNm', 200, '운용사'),  // L174
+    gb.text('locNm', 100, ' '),  // L175
   ], []);
 
-  // [E0] 화면 열림 (생성자 L61-67, open() L69-114) → retrieveCompany() L270-273 · retrieve() L237-268
+  // retrieveCompany() L289-309: sys.Sys01_Company.selectByErpProductCode(erpProductCode 없으면 '%', searchText '%')
+  const retrieveCompany = (code: string) => {
+    sysApi.searchCompaniesByErpProduct(code, '')
+      .then(setCompanies)
+      .catch(err => message.error(errorMessage(err, '조회 실패')));
+  };
+
+  // [E0] 화면 열림 (생성자 L67-74, open() L75-123) → retrieveCompany() · retrieve()
   useEffect(() => {
     if (!open) return;
     setSearchText('');
     setView('tree');
     setSelected(null);
     setExpanded([]);
+    setErpProductCd('%');
     setLoadingTree(true);
     dcrApi.searchClassTree('%')
       .then(setRows)
       .catch(err => message.error(errorMessage(err, '매뉴조회 오류')))
       .finally(() => setLoadingTree(false));
-    dcrApi.searchCopyCompanies()
-      .then(setCompanies)
-      .catch(err => message.error(errorMessage(err, '조회 실패')));
+    retrieveCompany('%');
   }, [open]);
 
   // [E1] searchText.KeyPress [Enter] (L122) · [E2] searchButton[찾기].Select (L131) → search() L285-303: 닫고(collapseAll) 이름에 검색어가 든 분류의 부모를 펼치고 고른다
@@ -90,7 +103,7 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
     <LookupModal
       open={open}
       title="운용사별 문서분류 반영"
-      width={900}
+      width={920}
       maskClosable={false}
       onCancel={onClose}
       destroyOnClose
@@ -102,7 +115,7 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
       }
     >
       <div style={{ height: 560, display: 'flex', gap: 0 }}>
-        <div style={{ width: '55%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+        <div style={{ width: '53%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
           <Space style={{ height: 50, padding: '0 8px', flex: 'none' }}>
             <span>문서분류</span>
             <Input style={{ width: 130 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
@@ -129,12 +142,15 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
             )}
           </div>
         </div>
-        <div style={{ width: '45%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', borderLeft: 0, boxSizing: 'border-box' }}>
+        <div style={{ width: '47%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', borderLeft: 0, boxSizing: 'border-box' }}>
           <Space style={{ height: 50, padding: '0 8px', flex: 'none' }}>
+            {/* [E5] erpProductComboBox[ErpProductCode].Collapse (L160) → retrieveCompany() */}
+            <SystemCodeComboBox kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
+              onChange={v => { const code = v ?? '%'; setErpProductCd(code); retrieveCompany(code); }} />
             <Button type="change" onClick={update}>문서분류복사</Button>
           </Space>
           <div style={{ flex: 1, minHeight: 0, borderTop: '1px solid #d9d9d9' }}>
-            <MultiGrid<DcrCopyCompany> rowClick gridRef={gridRef} rowData={companies} columnDefs={columnDefs} getRowId={p => String(p.data.companyId)} />
+            <MultiGrid<Company> rowClick gridRef={gridRef} rowData={companies} columnDefs={columnDefs} getRowId={p => String(p.data.companyId)} />
           </div>
         </div>
       </div>

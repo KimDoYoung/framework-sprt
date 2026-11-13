@@ -45,6 +45,8 @@ export interface Company {
   icsGuideYn?: string;
   noticeDate?: string | null;
   startDate?: string | null;
+  /** 상품(ERP 상품코드) — by-erp-product 조회(CH-0404)만 채운다 */
+  erpProductCd?: string | null;
 }
 
 /** 신규고객사 등록 (POST /api/v1/sys/companies, AS-IS Sys01_Edit_Company) */
