@@ -44,8 +44,9 @@ class EmpSmsNoticeMailDefaultDbTest {
 
         // 설정 창: 필수알림 탭(M) — 저장행이 없으면 메일 false / 선택알림 탭 — 모두 true
         List<SmsNoticeRes> must = noticeMapper.selectByPersonId(PERSON, "M");
-        assertThat(must).extracting(SmsNoticeRes::smsNoticeCode).containsExactly("M91");
-        assertThat(must.get(0).mailNoticeYn()).isFalse();
+        // 필수알림(M) 코드는 DB 사본마다 다르다 — 넣은 M91이 있고, 모두 M코드이며 메일은 모두 false
+        assertThat(must).extracting(SmsNoticeRes::smsNoticeCode).contains("M91").allMatch(c -> c.startsWith("M"));
+        assertThat(must).allMatch(r -> Boolean.FALSE.equals(r.mailNoticeYn()));
         List<SmsNoticeRes> optional = noticeMapper.selectByPersonId(PERSON, "");
         assertThat(optional).isNotEmpty().allMatch(r -> !r.smsNoticeCode().startsWith("M") && Boolean.TRUE.equals(r.mailNoticeYn()));
     }

@@ -62,7 +62,8 @@ class DcrMailSenderDbTest {
     void 열때_본인메일_공용메일권한_첨부를_읽는다() {
         Long apprId = apprWithFile();
         DcrMailSenderInitRes init = service.init(user(), apprId);
-        assertThat(init.senderEmail()).isEqualTo("yichun@k-fstest.co.kr");
+        // 본인 메일 = 사원 정보의 메일 주소(DB 사본마다 다르니 DB에서 읽는다)
+        assertThat(init.senderEmail()).isEqualTo(jdbc.queryForObject("select emp01_email_addr from emp01_person where emp01_person_id = ?", String.class, user().getUserId()));
         assertThat(init.files()).isNotEmpty();
         assertThat(init.files().get(0).fileNm()).isNotNull();
         // 다른 회사 문서의 첨부는 내려주지 않는다

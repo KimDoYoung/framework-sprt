@@ -39,7 +39,7 @@ class EmpPersonMailDbTest {
     @Test
     void 메일을_바꾸고_초기화한다() {
         EmpPersonMailRes before = service.get(user());
-        assertThat(before.mailAddress()).isEqualTo("yichun@k-fstest.co.kr");
+        assertThat(before.mailAddress()).isEqualTo(jdbc.queryForObject("select emp01_email_addr from emp01_person where emp01_person_id = 29049", String.class));
         assertThat(service.change(user(), new EmpPersonMailSaveReq("zz@k-fstest.co.kr", "pw1234!"))).isEqualTo(1);
         EmpPersonMailRes changed = service.get(user());
         assertThat(changed.mailAddress()).isEqualTo("zz@k-fstest.co.kr");
