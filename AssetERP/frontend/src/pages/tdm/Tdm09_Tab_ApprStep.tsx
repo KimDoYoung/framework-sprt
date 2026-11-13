@@ -239,8 +239,8 @@ export const Tdm09_Tab_ApprStep: React.FC = () => {
   ], [stepRows, selectedId]);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex' }}>
-      <div style={{ width: 650, flexShrink: 0, height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', background: '#fff', display: 'flex' }}>
+      <div style={{ width: 650, flexShrink: 0, height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] searchText.KeyPress [Enter] (L133)·[E3] retrieveButton[조회].Select (L142) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}

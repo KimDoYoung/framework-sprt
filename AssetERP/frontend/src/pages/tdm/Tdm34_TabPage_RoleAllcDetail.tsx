@@ -248,8 +248,8 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
-      <div style={{ padding: '10px 10px 8px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      <div style={{ padding: '0px 10px 8px' }}>
         <Space>
           {/* [E1] retrieveButton[조회].Select (L106) → retrieve() */}
           <Button type="search" onClick={retrieve}>조회</Button>
