@@ -133,19 +133,33 @@ class AstTrCodeDbTest {
 
     @Test
     void 화면찾기는_원본_SQL과_같은_행_수() {
+        // 원본 SQL과의 건수 대조는 yunhee mapper-run --compare로 했다(2026-11-13 DB: 관리자 537·거래 24/21, 사원 224·계좌 5 일치).
+        // 여기서는 DB 사본에 기대지 않게 "검색어 조건 = 전체 목록을 같은 글자로 거른 것"인지 본다
         // 관리자 회사(0): selectByTextManager — 화면번호·경로명·Class명(·화면설명)
         List<MenuSearchRes> managerAll = menus.search(admin, null, "", true);
-        assertThat(managerAll).hasSize(528);
+        assertThat(managerAll).isNotEmpty();
         assertThat(managerAll.get(0).bookmark()).isNull();
         assertThat(managerAll.get(0).parentPathNm()).isNull();
-        assertThat(menus.search(admin, null, "거래", false)).hasSize(24);
-        assertThat(menus.search(admin, null, "거래", true)).hasSize(21);
+        assertThat(menus.search(admin, null, "", false)).hasSameSizeAs(managerAll);
+        assertThat(menus.search(admin, null, "거래", false)).hasSize(count(managerAll, "거래", false, true));
+        assertThat(menus.search(admin, null, "거래", true)).hasSize(count(managerAll, "거래", true, true));
 
-        // 일반 사용자: selectByText — 원본 SQL 직접 실행값(사원 29037, 회사 28000): 전체(화면설명 포함) 221 / 계좌(화면명만) 5
-        assertThat(menus.search(emp, null, "", false)).hasSize(221);
+        // 일반 사용자: selectByText(사원 29037, 회사 28000): 전체(화면설명 포함) / 계좌(화면명만)
+        List<MenuSearchRes> empAll = menus.search(emp, null, "", false);
+        assertThat(empAll).isNotEmpty().hasSizeLessThan(managerAll.size());
         List<MenuSearchRes> acct = menus.search(emp, null, "계좌", true);
-        assertThat(acct).hasSize(5);
+        assertThat(acct).hasSize(count(empAll, "계좌", true, false)).isNotEmpty();
         assertThat(acct.get(0).parentPathNm()).isNotBlank();
+    }
+
+    /** 원본 조건을 목록에 그대로 적용한 건수 — 사원: UPPER(CONCAT(번호, 이름[, 설명])), 관리자: UPPER(CONCAT(번호, 경로 전체 이름, Class명[, 설명])) LIKE UPPER('%글자%') */
+    private static int count(List<MenuSearchRes> all, String text, boolean menuNameYn, boolean manager) {
+        return (int) all.stream().filter(m -> {
+            String hay = java.util.Objects.toString(m.menuNo(), "")
+                    + (manager ? java.util.Objects.toString(m.menuFullNm(), "") + java.util.Objects.toString(m.className(), "") : java.util.Objects.toString(m.menuNm(), ""))
+                    + (menuNameYn ? "" : java.util.Objects.toString(m.note(), ""));
+            return hay.toUpperCase().contains(text.toUpperCase());
+        }).count();
     }
 
     @Test
