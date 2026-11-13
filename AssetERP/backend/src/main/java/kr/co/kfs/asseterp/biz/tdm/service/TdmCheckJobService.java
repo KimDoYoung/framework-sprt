@@ -40,7 +40,11 @@ public class TdmCheckJobService {
         return dashboardMapper.selectRcntCheckYm(user.getCompanyId());
     }
 
-    /** AS-IS tdm.Tdm50_ChckJob.selectByCheckYm (defaultYn=true) — 한 건 */
+    /**
+     * AS-IS tdm.Tdm50_ChckJob.selectByCheckYm (defaultYn=true) — 한 건.
+     * 없는 달이면 SQL이 f_create_seq()로 새 작업 ID를 만든다 → nextval이 필요해 읽기전용 트랜잭션이면 ID가 null이 된다(함수가 예외를 삼킴)
+     */
+    @Transactional
     public CheckJobRes search(UserPrincipal user, String checkYm) {
         return mapper.selectByCheckYm(user.getCompanyId(), checkYm);
     }
