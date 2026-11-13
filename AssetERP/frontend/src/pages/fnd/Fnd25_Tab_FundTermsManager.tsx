@@ -148,7 +148,7 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
                   onChange={code => { const v = code ?? '%'; setTermsType(v); void retrieve({ termsType: v }); }} />
               </SearchBar.Field>
               <SearchBar.Field label="검색">
-                <SearchBar.Input style={{ width: 220 }} placeholder="펀드규약명/펀드명/예탁원코드" value={searchText} onChange={e => setSearchText(e.target.value)} />
+                <SearchBar.Input style={{ width: 180 }} placeholder="펀드규약명/펀드명/예탁원코드" value={searchText} onChange={e => setSearchText(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
             <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
