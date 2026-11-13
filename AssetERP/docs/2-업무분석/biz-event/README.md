@@ -241,6 +241,15 @@ FND-BZ-0001~0011 모두 실행했다(2026-11-13, API — kalpa에 펀드관리 �
 
 시작 점검: `yunhee biz-endpoints fnd` — API 99개 중 로그인·회사 검사 `⚠없음` 10개(`GET accounts/template`·`book-extrs/template`·`fund-codes/plans/overlap`·`fund-codes/template`·`issuing-entities`·`issuing-entities/search`·`PUT issuing-entities`·`DELETE opr-funds`·`GET opr-funds/template`·`terms/next-id`)를 먼저 사원 401로 시험한다.
 
+### CRD — 법인카드·일일자금 (자금관리 메뉴의 나머지) → [흐름도](CRD/CRD-업무흐름.md)
+
+| ID | 사건 | 누가 | 얼마나 자주 | 먼저 | 주요 화면 | 상세 | TOBE 확인 |
+|:---|:---|:---|:---|:---|:---|:---|:---|
+| CRD-BZ-0001 | 법인카드를 등록하고 사용자를 지정한다 | 경영관리팀 | 카드 발급·해지 때 | EMP-BZ-0001 | #1038 | [상세](CRD/CRD-BZ-0001-법인카드등록.md) | 실행(API, 신한카드·사용자 2, ⚠#181·#182) |
+| CRD-BZ-0002 | 카드 사용내역을 입력(업로드)하고 확정한다 | 경영관리팀 | 매월 | 0001 | #1039 | [상세](CRD/CRD-BZ-0002-카드사용내역입력확정.md) | 실행(API 직접 입력 3건·확정, 엑셀 빼고, ⚠#183·#184) |
+
+0003~0006(배분·회계처리·현황·일일자금)은 [흐름도](CRD/CRD-업무흐름.md)의 1차 목록이다.
+
 ## 자동 시험
 
 이벤트 상세 끝의 `시나리오 데이터`(yaml)와 같은 순서로 서비스를 부르는 시험이 `backend/src/test/java/kr/co/kfs/asseterp/biz/scenario/`에 있다. asseterpdb에서 실제로 쓰고 끝나면 롤백한다.
