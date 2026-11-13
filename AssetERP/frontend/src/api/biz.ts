@@ -76,6 +76,11 @@ export const bizPromoApi = {
     const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/cards/appr-link', { apprId, promoIds, titleName });
     return res.data.data ?? 0;
   },
+  /** AS-IS biz.Biz01_Promo.selectApprId (원본 2026-11-13, CH-0405) — 내역의 상신 결재상태 코드, 상신 없으면 null */
+  getApprStatus: async (promoId: number): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>(`v1/biz/promos/${promoId}/appr-status`);
+    return res.data.data ?? null;
+  },
   /** AS-IS biz.Biz01_Promo.closeCheck — 마감된 내역이 있으면 true (status -1) */
   hasClosed: async (promoIds: number[]): Promise<boolean> => {
     const res = await apiClient.post<ApiResponse<boolean>>('v1/biz/promos/close-check', promoIds);

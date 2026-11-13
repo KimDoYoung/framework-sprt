@@ -8,6 +8,8 @@
  *   그리드 첫 열 상신상태·[보기](그 행의 문서). RD 첨부 PDF(createRd → Sys99_Print.insertRdCardSimple, Biz01_Rd_CardSimple)는 결재 저장 뒤
  *   서버(appr-link, BizCardRdPdfService)가 만들어 "(요약) 제목.pdf"로 붙인다(CH-0112, 사용자 결정 2026-11-11). RD가 꺼졌거나 실패하면 원본 개발계처럼 첨부 없이 간다.
  *   RD 출력은 `rdApi`로 주소를 받아 `RdViewer`에 띄운다(docs/RD-대책.md).
+ * 원본 2026-11-13(2e053393e, 대장 CH-0407): 버튼을 막는 기준이 "내역 마감 또는 그 달 상신"(checkClose, 주석 처리됨)에서
+ *   "그 내역의 상신 결재상태"(selectApprId: 상신 없음·40 반려가 아니면 막음)로 바뀌었다. 제공목적 11이면 직원 칸 버튼은 늘 숨긴다.
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
  * 스타일: SGHF (견본 — docs/page-style.md)
  */
@@ -15,7 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Checkbox, DatePicker, message, Modal, Select, Splitter } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
-import { bizPromoApi, bizRelateApprApi } from '@/api/biz';
+import { bizPromoApi } from '@/api/biz';
 import { rdApi } from '@/api/rd';
 import { errorMessage } from '@/api/client';
 import { BizCodeOption, BizPromoCard } from '@/types/biz';
@@ -43,7 +45,6 @@ const ALL = '%';
 const IN_APPR = ['10', '20', '30'];
 
 const fmtDate = (d: Dayjs) => d.format('YYYY-MM-DD');
-const fmtYm = (d: Dayjs) => d.format('YYYY.MM');
 
 export const Biz01_Tab_Card: React.FC = () => {
   const gridRef = useRef<AgGridReact<BizPromoCard>>(null);
@@ -122,20 +123,19 @@ export const Biz01_Tab_Card: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L106-176) → setting(), defaultName(). 원본 2026-11-04부터 생성자 끝의 retrieve()는 주석 처리됨 — 열면 빈 그리드, [조회]로 읽는다
 
-  // checkClose() L358-397: 마감 여부 = 내역의 마감(closeYn·closeName) 또는 이번 달 상신이 진행 중(상태가 없지 않고 40 반려가 아님)
-  //   (AS-IS는 상신 조회 결과를 다음 호출에서야 쓴다 — 여기서는 그 자리에서 읽는다)
-  const checkClose = useCallback(async (model: BizPromoCard): Promise<boolean> => {
-    let relateClosed = false;
+  // retrieveTabpage() L393-416 · [일괄저장] closeCheck() L918~(L928)의 서비스 biz.Biz01_Promo.selectApprId(promoId) 판정: 결과가 한 건이고 결재상태가 있고 40(반려)이 아니면 막는다(apprCloseYn)
+  //   (원본 2026-11-13. 그 전의 checkClose()—내역 마감·그 달 상신—는 주석 처리됨. 마감은 [일괄저장]의 closeCheck가 서버에서 본다)
+  const checkApprClose = useCallback(async (promoId: number): Promise<boolean> => {
     try {
-      const r = await bizRelateApprApi.getByPerson(fmtYm(sp.current.current.startDate), LINK_CODE);
-      if (r && r.statusCode != null && r.statusCode !== '40') relateClosed = true;
+      const status = await bizPromoApi.getApprStatus(promoId);
+      return status != null && status !== '40';
     } catch {
-      relateClosed = false;
+      return false;
     }
-    return !!model.closeYn || !!model.closeName || relateClosed;
-  }, [sp]);
+  }, []);
 
-  // [E3] grid.SelectionChanged [선택>0] (L191) → retrieveTabpage() L335-356: 마감 여부로 편집 칸·인원 칸 버튼을 켜고 끄고, 고른 내역을 편집 칸·인원 칸에 넘긴다
+  // [E3] grid.SelectionChanged [선택>0] (L191) → retrieveTabpage() L393-416 → retrieveTabpage2(apprCloseYn) L419-442: 상신 결재상태로 편집 칸·인원 칸 버튼을 켜고 끄고,
+  //   제공목적 11이면 직원 칸 버튼만 숨긴다(setButtonVisibleProvidePurCode(false)), 고른 내역을 편집 칸·인원 칸에 넘긴다
   const onCheckedChange = useCallback(async (list: BizPromoCard[]) => {
     setChecked(list);
     const ids = list.map(r => r.promoId);
@@ -148,12 +148,12 @@ export const Biz01_Tab_Card: React.FC = () => {
       return;
     }
     const cur = list.find(r => r.promoId === curId) ?? list[list.length - 1];
-    const closeYn = await checkClose(cur);
-    setClosed(closeYn);
+    const apprCloseYn = await checkApprClose(cur.promoId);
+    setClosed(apprCloseYn);
     num.current = rows.findIndex(r => r.promoId === cur.promoId);
     if (num.current < 0) num.current = 0;
     setCurrent(cur);
-  }, [checkClose, rows]);
+  }, [checkApprClose, rows]);
 
   // [E4] downLoadButton[출력/다운로드].Select → 서비스 sys.Sys99_Print.insertRdCard(companyId, personId, "Biz01_Tab_Card", startDate, closeDate, searchText, apprCheck) → 성공이면 RDViewer.viewer(dns admin · CommonViewer.html · mrd Biz01_Rd_Card · options "/rhtmlimportopt [2]" · rv rdGroupId·companyId·personId·startDate·closeDate)
   //   (원본 2026-11-04: [미상신건만 조회]도 넘긴다. 계정과목은 넘기지 않는다)
@@ -186,8 +186,9 @@ export const Biz01_Tab_Card: React.FC = () => {
       return;
     }
     try {
+      // 원본은 고른 행마다 부르지만 grid의 선택 행(마지막 행) ID를 넘기고, 비동기라 메시지만 띄우고 막지 못한다 — 여기서는 고른 행마다 그 행 ID로 보고 막는다(docs/원본-이상한점.md)
       for (const model of checked) {
-        if (await checkClose(model)) {
+        if (await checkApprClose(model.promoId)) {
           message.warning('마감 또는 상신된 내역이 있습니다. 다시 확인바랍니다');
           return;
         }
@@ -349,7 +350,7 @@ export const Biz01_Tab_Card: React.FC = () => {
               <Biz01_Edit_Card promo={current} closed={closed} onSaved={() => void retrieve()} onEmpAdded={() => setPersonRefresh(n => n + 1)} />
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
-              <Biz02_Grid_PersonList promo={current} closed={closed} refreshKey={personRefresh} onChanged={() => void retrieve()} />
+              <Biz02_Grid_PersonList promo={current} closed={closed} internalClosed={closed || current?.providePurCode === '11'} refreshKey={personRefresh} onChanged={() => void retrieve()} />
             </div>
           </div>
         </Splitter.Panel>
