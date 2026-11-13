@@ -32,6 +32,8 @@ class FltPreApproveSendDbTest {
 
     @Test
     void 협의승인자가_지정된_승인대기_건만_사원별로_센다() {
+        // 출발점: 승인대기(20) 건의 협의승인자를 모두 비운다(DB 사본에 이미 지정된 건이 있을 수 있다, 롤백)
+        jdbc.update("update flt10_tr set flt10_add_confirmer_id = null where flt10_company_id = 28000 and coalesce(flt10_status_cd, '00') = '20'");
         // 처음 확인은 jdbc로 — 매퍼를 먼저 부르면 같은 세션의 MyBatis 1차 캐시가 jdbc 수정 뒤에도 빈 결과를 돌려준다
         assertThat(jdbc.queryForList(ASIS, 28000L)).isEmpty();
 
