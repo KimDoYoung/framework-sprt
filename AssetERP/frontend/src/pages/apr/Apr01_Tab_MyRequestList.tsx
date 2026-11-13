@@ -177,7 +177,7 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
             <SystemCodeComboBox kindCd="AprStatusCode" altCode={ALL_CODE} style={{ width: 132 }} value={statusCode} onChange={c => setStatusCode(c ?? ALL)} />
           </SearchBar.Field>
           <SearchBar.Field label="검색">
-            <SearchBar.Input style={{ width: 481 }} placeholder="문서명/문서분류/비고" value={searchText} onChange={e => setSearchText(e.target.value)} />
+            <SearchBar.Input style={{ width: 200 }} placeholder="문서명/문서분류/비고" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
           <Checkbox checked={aprYn} onChange={e => setAprYn(e.target.checked)}>완료/반려건 포함</Checkbox>
         </SearchBar>

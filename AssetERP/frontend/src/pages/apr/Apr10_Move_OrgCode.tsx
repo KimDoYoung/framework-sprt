@@ -66,6 +66,7 @@ export const Apr10_Move_OrgCode: React.FC<Props> = ({ baseDate, onSelect, onClos
       title="부서 선택"
       width={400}
       maskClosable={false}
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10, marginBottom: 10 } }}
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>

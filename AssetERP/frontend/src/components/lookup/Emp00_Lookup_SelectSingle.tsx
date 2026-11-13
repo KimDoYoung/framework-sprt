@@ -104,7 +104,7 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
           <Space>
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E2]·[E7] nullButton[전체].Select [callback != null] (L127·L212) → callback.execute(null), hide() */}
-            {noneLabel !== null && <Button type="select" onClick={() => onResult(null)}>{noneLabel}</Button>}
+            {noneLabel !== null && <Button type="selectNone" onClick={() => onResult(null)}>{noneLabel}</Button>}
             {/* [E8] cancelButton[취소].Select (L221) → hide() */}
             <Button type="cancel" onClick={onClose}>취소</Button>
           </Space>

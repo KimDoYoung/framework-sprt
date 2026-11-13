@@ -142,7 +142,7 @@ export const Apr10_Tab_Stamp: React.FC = () => {
     gb.boolean('corpStampYn', 70, '법인인감', { editable: true }),  // L217
     gb.boolean('stepUseYn', 70, '결재선<br>필수추가', { editable: true }),  // L218
     gb.boolean('allUseYn', 70, '전체사용', { editable: true }),  // L219
-    gb.text('roleName', 140, '(전체사용이 아닌 경우)<br>사용가능 부서'),  // L220
+    gb.text('roleName', 145, '(전체사용이 아닌 경우)<br>사용가능 부서'),  // L220
     // L221 actionCell02(Edit) → Org10_Lookup_RoleStamp.open(selectModel, callback: roleName ← msg)
     iconCell<AprStampManage>('edit', 'actionCell02', 30, ' ', row => { if (checkSaved()) setRoleStamp(row); }),
     gb.textCenter('stampAuthCntStr', 70, '미사용<br>문서분류'),  // L222
