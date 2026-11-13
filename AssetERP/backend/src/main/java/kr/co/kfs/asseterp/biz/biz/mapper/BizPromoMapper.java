@@ -44,6 +44,9 @@ public interface BizPromoMapper {
     List<BizCodeOptionRes> selectCardAccountNames(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                                   @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
 
+    /** AS-IS biz01_promo.selectApprId (CH-0403) — 내역의 상신 문서 결재상태 코드. 상신이 없으면 null(행이 없어도 null) */
+    String selectApprStatusCode(@Param("companyId") Long companyId, @Param("promoId") Long promoId);
+
     /** AS-IS biz01_promo.closeCheck — 마감된 내역의 개수 */
     int countClosed(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
 

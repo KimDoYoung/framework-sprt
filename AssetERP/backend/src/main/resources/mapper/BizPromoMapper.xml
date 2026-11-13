@@ -98,6 +98,16 @@
          ORDER BY biz01_provide_date
     </select>
 
+    <!-- AS-IS biz01_promo.selectApprId (IDMS-IC 2026-11-13 2e053393e, CH-0403) — 내역 하나의 상신 문서 결재상태 코드(상신 없으면 null).
+         원본은 a.* + 상태 코드·이름을 돌려주지만 화면(retrieveTabpage·[일괄저장])은 상태 코드만 쓴다. 로그인 회사 조건은 보안 보강 -->
+    <select id="selectApprStatusCode" resultType="string">
+        SELECT e.apr01_status_cd
+          FROM biz01_promo a
+               LEFT OUTER JOIN apr01_appr e ON e.apr01_appr_id = a.biz01_appr_id
+         WHERE a.biz01_promo_id = #{promoId}
+           AND a.biz01_company_id = #{companyId}
+    </select>
+
     <!-- AS-IS biz01_promo.selectTargetInfoReqYn (IDMS-IC 2026-11-12, CH-0010·CH-0355) — 고른 내역 중 '거래상대방 필수입력' 한도인데 거래상대방(직원 아님)이 없는 건수.
          제공목적 10·11만 검사(CH-0355). 로그인 회사 조건은 보안 보강 -->
     <select id="countTargetInfoMissing" resultType="int">
