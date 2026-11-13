@@ -87,6 +87,14 @@ class TdmCheckApprDbTest {
         session.clearCache();
     }
 
+    /** 출발점: SELF 대기(10), 하위 부서 SUB 하나는 승인(20)·하나는 대기(10), 모두 미제출 — DB 사본마다 상태가 달라 직접 맞춘다(롤백) */
+    @org.junit.jupiter.api.BeforeEach
+    void 승인_행_상태를_맞춘다() {
+        setApprRow(SELF_ID, "10", "false");
+        setApprRow(SUB_APPROVED_ID, "20", "false");
+        setApprRow(SUB_WAITING_ID, "10", "false");
+    }
+
     @Test
     void 승인현황을_조회하고_다른_사람과_다른_회사는_막는다() {
         List<CheckApprListRes> list = service.search(USER, YM, ROLE);
@@ -236,10 +244,13 @@ class TdmCheckApprDbTest {
 
     @Test
     void 승인시작과_일괄승인과_점검항목_승인은_상태와_이력을_바꾼다() {
+        // 이 승인자의 점검항목 승인 행(tdm60)이 있는 점검항목 두 개 — 승인시작 이력은 점검일자 기준으로 남아 점검일자가 비면 안 생긴다.
+        // 점검일자는 DB 사본마다 비어 있을 수 있어 직접 넣는다(롤백)
         List<CheckApprManlRes> manls = service.searchManls(USER, SUB_APPROVED_ID, false, null, null);
-        List<Long> ids = manls.stream().map(CheckApprManlRes::chckManlId).limit(2).toList();
+        List<Long> ids = manls.stream().filter(m -> m.chckManlApprId() != null).map(CheckApprManlRes::chckManlId).limit(2).toList();
+        assertThat(ids).hasSize(2);
         // 승인요청(20) 상태로 맞춰 놓고 승인시작
-        jdbc.update("UPDATE tdm52_chck_manl SET tdm52_check_status_cd = '20' WHERE tdm52_chck_manl_id IN (?, ?)", ids.get(0), ids.get(1));
+        jdbc.update("UPDATE tdm52_chck_manl SET tdm52_check_status_cd = '20', tdm52_check_date = COALESCE(tdm52_check_date, DATE '2026-10-15') WHERE tdm52_chck_manl_id IN (?, ?)", ids.get(0), ids.get(1));
         session.clearCache();
         long recordBefore = count("SELECT COUNT(*) FROM tdm55_chck_record");
         service.apprStart(USER, SUB_APPROVED_ID, new CheckApprStartReq("P", ids, List.of()));
@@ -297,6 +308,9 @@ class TdmCheckApprDbTest {
         // 조치내역(2026.07 발생, 승인완료 25)은 SUB_WAITING 행(하위 부서 202308141568403)의 목록에 나온다 — 단, 조치승인년월에 따라.
         // AS-IS 규칙(TdmCheckApprMapper.xml selectInsuffs): 승인완료(25)이고 조치승인년월이 점검년월보다 이전이면 목록에서 뺀다.
         // DB 값은 바뀔 수 있으므로(2026-10-26 일괄 UPDATE로 '2026.09'가 채워져 이 테스트가 깨졌었다) 조건을 테스트가 직접 만든다(롤백됨).
+        // 발생년월도 직접 둔다 — DB 사본에 비어 있으면(NULL) 어느 달 목록에도 안 나온다
+        jdbc.update("UPDATE tdm54_chck_insuff SET tdm54_occ_ym = '2026.07', tdm54_status_cd = '25' WHERE tdm54_chck_insuff_id = ?", INSUFF_ID);
+        jdbc.update("UPDATE tdm61_chck_insuff_appr SET tdm61_appr_status_cd = '20' WHERE tdm61_chck_insuff_id = ? AND tdm61_appr_emp_id = ?", INSUFF_ID, APPR);
         setInsuffApprYm("2026.09");     // 이전 달에 승인완료 → 이번 달(2026.10) 목록에 없다
         assertThat(service.searchInsuffs(USER, SUB_WAITING_ID, false, null)).isEmpty();
         setInsuffApprYm(YM);            // 이번 점검월에 승인완료 → 목록에 나온다

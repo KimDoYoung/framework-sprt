@@ -48,20 +48,22 @@ class TdmChckInsuffDbTest {
 
     @Test
     void 저장은_조치결과만_바꾸고_상태는_그대로다() {
-        ChckInsuffListRes before = service.search(USER, "2025-01-01", "2026-10-25", false, null, null, "%").stream()
-                .filter(r -> r.chckInsuffId() == INSUFF).findFirst().orElseThrow();
-        long recordsBefore = count("SELECT COUNT(*) FROM tdm55_chck_record WHERE tdm55_relate_table_id = ?", INSUFF);
-        ChckInsuffListRes saved = service.updateResult(USER, INSUFF, new ChckInsuffResultReq("U", "2026-12-31", "2026-02-01", 29037L, "조치했음"));
-        assertThat(saved.statusCode()).isEqualTo(before.statusCode()).isEqualTo("10");
+        // 미완료(발생·조치중·승인반려) 건을 하나 고른다 — 현재 상태는 승인 이력으로 정해져 DB 사본마다 달라 고정 번호(INSUFF)를 쓰지 않는다
+        ChckInsuffListRes before = service.search(USER, "2020-01-01", "2030-12-31", true, null, null, "%").stream()
+                .findFirst().orElseThrow();
+        long id = before.chckInsuffId();
+        long recordsBefore = count("SELECT COUNT(*) FROM tdm55_chck_record WHERE tdm55_relate_table_id = ?", id);
+        ChckInsuffListRes saved = service.updateResult(USER, id, new ChckInsuffResultReq("U", "2026-12-31", "2026-02-01", 29037L, "조치했음"));
+        assertThat(saved.statusCode()).isEqualTo(before.statusCode());
         assertThat(saved.dueDate()).isEqualTo("2026-12-31");
         assertThat(saved.actionDate()).isEqualTo("2026-02-01");
         assertThat(saved.actionEmpId()).isEqualTo(29037L);
         assertThat(saved.actionCmnt()).isEqualTo("조치했음");
         assertThat(saved.actionEmpName()).isNotBlank();
-        assertThat(count("SELECT COUNT(*) FROM tdm55_chck_record WHERE tdm55_relate_table_id = ?", INSUFF)).isEqualTo(recordsBefore);   // 저장은 이력을 만들지 않는다
-        assertThatThrownBy(() -> service.updateResult(OTHER, INSUFF, new ChckInsuffResultReq("U", null, null, null, null)))
+        assertThat(count("SELECT COUNT(*) FROM tdm55_chck_record WHERE tdm55_relate_table_id = ?", id)).isEqualTo(recordsBefore);   // 저장은 이력을 만들지 않는다
+        assertThatThrownBy(() -> service.updateResult(OTHER, id, new ChckInsuffResultReq("U", null, null, null, null)))
                 .isInstanceOf(BusinessException.class);
-        assertThatThrownBy(() -> service.updateResult(USER, INSUFF, new ChckInsuffResultReq("X", null, null, null, null)))
+        assertThatThrownBy(() -> service.updateResult(USER, id, new ChckInsuffResultReq("X", null, null, null, null)))
                 .isInstanceOf(BusinessException.class);
     }
 
