@@ -332,6 +332,7 @@ BIZ 1차 목록 0001~0011 끝(2026-11-14).
 | ICAM-BZ-0001 | ADMIN이 ICAM 펀드정보를 가져온다 | ADMIN | 매일(배치)·수시 | 고객사 ICAM 회사코드 | #1096 | [상세](ICAM/ICAM-BZ-0001-ICAM펀드정보가져오기.md) | 실행(API, 28000 최근 펀드 AS-IS 4=4·변경이력 6=6, ⚠#241 [ICAM Get] 늘 400 — 화면 버튼이 배치에 안 이어짐) |
 | ICAM-BZ-0002 | ADMIN이 ICAM 연계 자료(종목·원장·시세·펀드원장·공모주·알람 등)를 일괄로 가져온다 | ADMIN | 수시(cron 재실행) | 0001 | #1097 | [상세](ICAM/ICAM-BZ-0002-ICAM연계자료일괄.md) | 실행(API, [조회] AS-IS 0=0, 작업 버튼 400(#241), ⚠#242 사원이 배치 실행 API 통과) |
 | ICAM-BZ-0003 | ADMIN이 회사별 ICAM 발생보수(사무관리·운용)를 가져온다 | ADMIN | 매일(배치)·수시 | 0001 | #1203 | [상세](ICAM/ICAM-BZ-0003-회사별발생보수가져오기.md) | 실행(API, 28000 사무관리보수 2026.04 AS-IS 14,669=14,669, 가져오기 400(#241), 타사 사원 403) |
+| ICAM-BZ-0004 | 사무관리사가 펀드별 사무보수 입금계좌를 등록한다 | KFS(사무관리) | 펀드 생길 때·계좌 바뀔 때 | 0003, AST-BZ-0001 | #1204 | [상세](ICAM/ICAM-BZ-0004-사무보수입금계좌등록.md) | 실행(API, 목록 AS-IS 591=591·이력 3=3, 등록·삭제, 타사 사원 수정 404·삭제 0, ⚠#243 남의 회사 계좌 ID 저장) |
 
 시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인.
 
