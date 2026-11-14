@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
@@ -15,14 +16,41 @@ NC='\033[0m'
 info()   { echo -e "${GREEN}[INFO]${NC}  $*"; }
 header() { echo -e "\n${CYAN}${BOLD}══ $* ══${NC}\n"; }
 
+REQUIRED_NODE_MIN=20   # Vite 6 기준 (Node 18은 EOL)
+
+check_node() {
+    if ! command -v node &>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} node가 존재하지 않습니다. Node ${REQUIRED_NODE_MIN} 이상을 설치하세요."
+        exit 1
+    fi
+    if ! command -v npm &>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} npm이 존재하지 않습니다."
+        exit 1
+    fi
+
+    # 예: v22.23.5
+    local ver major
+    ver="$(node -v)"
+    major="${ver#v}"
+    major="${major%%.*}"
+
+    if [[ ! "$major" =~ ^[0-9]+$ ]] || (( major < REQUIRED_NODE_MIN )); then
+        echo -e "${RED}[ERROR]${NC} Node ${REQUIRED_NODE_MIN} 이상이 필요합니다. 현재: ${ver:-알 수 없음} ($(command -v node))"
+        echo "        nvm 등으로 Node ${REQUIRED_NODE_MIN} 이상으로 바꾼 뒤 다시 실행하세요."
+        exit 1
+    fi
+}
+
 do_run() {
     header "Frontend - Vite 개발 서버 실행"
+    check_node
     cd "$FRONTEND_DIR"
     npm run dev
 }
 
 do_compile() {
     header "Frontend - 빌드 및 컴파일 (TypeScript + Vite)"
+    check_node
     cd "$FRONTEND_DIR"
     npm run build
     info "컴파일 및 빌드 완료: $FRONTEND_DIR/dist"

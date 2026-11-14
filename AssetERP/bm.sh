@@ -17,7 +17,32 @@ NC='\033[0m'
 info()   { echo -e "${GREEN}[INFO]${NC}  $*"; }
 header() { echo -e "\n${CYAN}${BOLD}══ $* ══${NC}\n"; }
 
+REQUIRED_JAVA=21
+
+check_java() {
+    local java_bin="java"
+    if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/java" ]]; then
+        java_bin="$JAVA_HOME/bin/java"
+    elif ! command -v java &>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} java가 존재하지 않습니다. Java ${REQUIRED_JAVA}를 설치하세요."
+        exit 1
+    fi
+
+    # 예: openjdk version "21.0.2" / java version "1.8.0_392"
+    local ver major
+    ver="$("$java_bin" -version 2>&1 | awk -F'"' '/version/ {print $2; exit}')"
+    major="${ver%%.*}"
+    [[ "$major" == "1" ]] && major="$(echo "$ver" | cut -d. -f2)"
+
+    if [[ "$major" != "$REQUIRED_JAVA" ]]; then
+        echo -e "${RED}[ERROR]${NC} Java ${REQUIRED_JAVA}가 필요합니다. 현재: ${ver:-알 수 없음} ($java_bin)"
+        echo "        JAVA_HOME 또는 PATH를 Java ${REQUIRED_JAVA}로 맞춘 뒤 다시 실행하세요."
+        exit 1
+    fi
+}
+
 check_tool() {
+    check_java
     if [[ -f "$BACKEND_DIR/gradlew" ]]; then
         GRADLE_CMD="$BACKEND_DIR/gradlew"
     elif ! command -v gradle &>/dev/null; then
