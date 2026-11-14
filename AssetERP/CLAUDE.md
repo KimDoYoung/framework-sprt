@@ -65,11 +65,13 @@ ID별 교훈은 쓰지 않는다. 같은 실수가 있으면 새로 쓰지 말�
 
 - `yunhee mapper-run`·`compare`에 `-p flag=false`(불리언)를 주지 않는다 → 글자라 `<if>`가 늘 참. 분기 있는 조회는 `yunhee api`로 확인.
 - `yunhee grep`에 `-n -r --max-count`가 없고(`-l`·`-m`은 있음), 패턴은 ERE라 `a\|b`는 아무것도 못 찾는다 → `a|b`. 모르는 옵션은 `--help`부터.
-- `yunhee api`를 `-u` 없이(=`admin` → `YUNHEE_TEST_ADMIN_USER` 104)로 다른 회사(`-c kalpa`·`-c admin`)에 부르거나 로그인이 틀린 채 반복하지 않는다 → kfstest 104가 5회 실패로 잠긴다(2026-11-10 두 번). 회사 관리자는 `YUNHEE_TEST_ADMIN_USER=admin YUNHEE_TEST_ADMIN_PASS=1111 yunhee api … -u admin -c <회사>`, 잠기면 그 회사 관리자로 `PUT /api/v1/sys/passwords/persons/{id}/unlock`. 로그인 실패가 한 번 나면 같은 계정으로 다시 부르지 않는다.
+- `yunhee api`를 `-u` 없이(=`admin` → `YUNHEE_TEST_ADMIN_USER` 104)로 다른 회사(`-c kalpa`·`-c admin`)에 부르거나 로그인이 틀린 채 반복하지 않는다 → kfstest 104가 5회 실패로 잠긴다(2026-11-10 두 번). 회사 관리자는 `YUNHEE_TEST_ADMIN_USER=admin YUNHEE_TEST_ADMIN_PASS=1111 yunhee api … -u admin -c <회사>`, 잠기면 그 회사 관리자로 `PUT /api/v1/sys/passwords/persons/{id}/unlock`. 로그인 실패가 한 번 나면 같은 계정으로 다시 부르지 않는다. KFS(28000) 기본 계정 104는 **admin 서브도메인**으로 로그인한다(`yunhee api` 인자 없음 = `tenant=admin … company=28000`) → `-c kfstest`로 부르지 않는다(2026-11-14 `biz-appr -u 104 -c kfstest` 실패 1/5). `biz-appr`는 104를 못 쓰므로 KFS 결재는 `GET /apr/apprs/new` → `PUT /apr/apprs/{id}`(mode request, `effectDate` 필수)를 `yunhee api`로(수정사항066 #6).
 - `sleep N` 뒤 `tail` 같은 대기는 훅이 막는다 → 배포는 `run_in_background` 완료 알림을 기다린다.
-- 한 줄 수정에 `sed -i`를 쓰지 않는다 → `Edit`.
+- 한 줄 수정에 `sed -i`를 쓰지 않는다 → `Edit`(2026-11-14에도 README 한 줄을 `sed -i`로 고쳤다).
+- 문서·TOBE 소스를 `cat`·`sed -n`·`grep`으로 읽지 않는다(훅이 호출을 통째로 막는다 — 2026-11-14 3번) → `yunhee cat <파일>:a-b`·`--head/--tail N`, `yunhee grep <패턴> <파일>`. 저장소 안 찾기도 셸 `find`·`grep -rn`보다 `yunhee grep -l`.
+- `mapper-run`·`compare`에 빈 값 `-p key=`를 주지 않는다 → 빈 글자라 `=` 비교가 늘 거짓, 0=0 ✅로 헛시험(2026-11-14 `fundType=`). 값이 정해진 파라미터는 실제 코드값(`1`·`2`)으로, 검색어는 `%%`.
 - `yunhee port-save` 결과의 열 이름을 믿지 않는다 → `yunhee table`로 열을 보고 손으로 맞춘다.
-- 로컬 DB에 테이블·열이 있는지는 `yunhee table`(오래된 스냅샷)이 아니라 `yunhee sql`(information_schema)로 본다. **테이블·열 이름을 추측해 쿼리·`--track`에 쓰지 않는다**(`act07_gen_ledger_close_tmp`↔`act07_gen_ledger_closetmp`처럼 틀린다) → 쓰기 전에 `information_schema`로 먼저 확인.
+- 로컬 DB에 테이블·열이 있는지는 `yunhee table`(오래된 스냅샷)이 아니라 `yunhee sql`(information_schema)로 본다. **테이블·열 이름을 추측해 쿼리·`--track`에 쓰지 않는다**(`act07_gen_ledger_close_tmp`↔`act07_gen_ledger_closetmp`, 2026-11-14 ICAM에서만 5번: `icam03_company_id`·`icam06_company_id`(회사 열 없음 — ICAM 회사코드로 JOIN)·`ast30_std_date`(`ast30_hold_date`)·`sys15_icam_company_cd`·`ifi29_fund_type`) → **새 표를 처음 쿼리하기 전에 반드시** `yunhee sql "select column_name from information_schema.columns where table_name='…' order by ordinal_position" -o tsv --no-header | tr '\n' ' '` 한 번. "회사별로 센다" 전에 회사 열이 있는지부터 본다.
 - `yunhee analysis screen`을 필터 없이 부르지 않는다 → 연결 조회창·팝업까지 한꺼번에 길게 나온다(DCR 화면). `--class <하위클래스>`·`--section events|methods|services`로 필요한 절만.
 - 문서·주석에 쓰는 API·함수 이름은 쓰기 전에 실제 이름을 확인한다(추측해서 쓰지 않는다).
 - 문서를 일괄 치환·삭제할 때는 먼저 백업(스크래치패드)하고, 행 앞 ID 칸 같은 구조가 같이 지워지지 않았는지 결과를 확인한다.
