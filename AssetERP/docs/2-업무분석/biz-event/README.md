@@ -323,6 +323,16 @@ BIZ 1차 목록 0001~0011 끝(2026-11-14).
 
 시작 점검(2026-11-14): `yunhee biz-endpoints biz` — API 159개 중 검사 `⚠없음` 31개(ERP 계약사·사용료·기본설정 21개, 그 밖에 `PUT card-user-allocations`·`POST·DELETE cont-corps/relate-apprs`·`GET limit-checks/excel` 등 10개). `yunhee biz-authz biz -u 401 -c kalpa`(조회만)에서 **KFS 전용 ERP 계약사 자료를 kalpa 사원이 받음**(⚠#232), 준감인 화면 자료(한도·카드사용내역·관리자 목록) 사원 조회 9건.
 
+### ICAM — ICAM 연계(펀드·보수·운용현황·ICAM 사용자ID) → [흐름도](ICAM/ICAM-업무흐름.md)
+
+가상 회사에는 ICAM 메뉴·ICAM 회사코드가 없어 KFS(28000, 기본 계정 104)와 ADMIN(회사 0)에서 실행한다. ICAM 접속은 시뮬레이터(`data/icam-simulator/`)다.
+
+| ID | 사건 | 누가 | 얼마나 자주 | 먼저 | 주요 화면 | 상세 | TOBE 확인 |
+|:---|:---|:---|:---|:---|:---|:---|:---|
+| ICAM-BZ-0001 | ADMIN이 ICAM 펀드정보를 가져온다 | ADMIN | 매일(배치)·수시 | 고객사 ICAM 회사코드 | #1096 | [상세](ICAM/ICAM-BZ-0001-ICAM펀드정보가져오기.md) | 실행(API, 28000 최근 펀드 AS-IS 4=4·변경이력 6=6, ⚠#241 [ICAM Get] 늘 400 — 화면 버튼이 배치에 안 이어짐) |
+
+시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인.
+
 ## 자동 시험
 
 이벤트 상세 끝의 `시나리오 데이터`(yaml)와 같은 순서로 서비스를 부르는 시험이 `backend/src/test/java/kr/co/kfs/asseterp/biz/scenario/`에 있다. asseterpdb에서 실제로 쓰고 끝나면 롤백한다.
