@@ -334,6 +334,7 @@ BIZ 1차 목록 0001~0011 끝(2026-11-14).
 | ICAM-BZ-0003 | ADMIN이 회사별 ICAM 발생보수(사무관리·운용)를 가져온다 | ADMIN | 매일(배치)·수시 | 0001 | #1203 | [상세](ICAM/ICAM-BZ-0003-회사별발생보수가져오기.md) | 실행(API, 28000 사무관리보수 2026.04 AS-IS 14,669=14,669, 가져오기 400(#241), 타사 사원 403) |
 | ICAM-BZ-0004 | 사무관리사가 펀드별 사무보수 입금계좌를 등록한다 | KFS(사무관리) | 펀드 생길 때·계좌 바뀔 때 | 0003, AST-BZ-0001 | #1204 | [상세](ICAM/ICAM-BZ-0004-사무보수입금계좌등록.md) | 실행(API, 목록 AS-IS 591=591·이력 3=3, 등록·삭제, 타사 사원 수정 404·삭제 0, ⚠#243 남의 회사 계좌 ID 저장) |
 | ICAM-BZ-0005 | 사무관리사가 ICAM 사무보수 발생내역을 가져오고 보수원장·인출거래를 만든다 | KFS(사무관리) | 매일·재생성 때 | 0003·0004 | #1199 (`Icam10_Lookup_getICAM`) | [상세](ICAM/ICAM-BZ-0005-사무보수발생내역보수원장인출거래.md) | 실행(API, AS-IS 754=754, 금액 수정·되돌림, 보수원장 재생성 `ast30` +208, 인출거래 재생성 변화 없음, 가져오기 400(#241)) |
+| ICAM-BZ-0006 | 사무관리사가 사무보수 월말잔액을 보고 ICAM과 대사한다 | KFS(사무관리) | 매월 말 | 0005 | #1200 (`Icam13_Lookup_FeeBookCheck`) | [상세](ICAM/ICAM-BZ-0006-사무보수월말잔액대사.md) | 실행(API, 2026.03 AS-IS 774=774·대사 결과 46=46, [대사] 400(#241)·지운 것 되돌아감) |
 
 시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인.
 
