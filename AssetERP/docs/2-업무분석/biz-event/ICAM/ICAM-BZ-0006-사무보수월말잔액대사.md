@@ -8,7 +8,7 @@
 | 언제 | 매월 말 결산 |
 | 먼저 있어야 하는 것 | 0005(보수원장), ICAM 말일 잔액 |
 | 다음 이벤트 | ACT 결산 |
-| 실제 실행 | 2026-11-14, API(104). 2026-03-31 월말잔액 AS-IS total 774 = 774(첫 100행, 그리드 11열). 대사 결과 2023-02-28 AS-IS 46 = 46(그리드 5열). **[대사] `POST /icam/fee-books/checks {stdDate:2026-03-31}` → 400 "ICAM 연동…월말잔액을 가져오지 않았습니다"**(⚠#241). 앞서 지운 `icam12`·`icam13`은 같은 트랜잭션이라 되돌아감(4,491·47 그대로) |
+| 실제 실행 | 2026-11-14, API(104). 2026-03-31 월말잔액 AS-IS total 774 = 774(첫 100행, 그리드 11열). 대사 결과 2023-02-28 AS-IS 46 = 46(그리드 5열). **[대사] `POST /icam/fee-books/checks {stdDate:2026-03-31}` → 400 "ICAM 연동…월말잔액을 가져오지 않았습니다"**(⚠#179). 앞서 지운 `icam12`·`icam13`은 같은 트랜잭션이라 되돌아감(4,491·47 그대로) |
 | 메뉴 | #1200 관리회계 > 30. 사무보수관리 > ICAM 펀드보수 월말잔액 (10개 회사). 화면 눈 확인 `대기(일괄)` |
 
 ## 따라 하기
@@ -29,7 +29,7 @@
 ## 업무 규칙 · 주의
 
 - 대사는 "지우고 다시 넣기"다. TOBE는 ICAM 읽기가 실패하면 지운 것도 되돌린다(한 트랜잭션).
-- ICAM 읽기와 계약·이관 펀드 거르기(원본 L24-50)는 TOBE에서 `IcamBatchRunner.runLastDayFeeBook`에 들어 있다. 이것이 꺼져 있어 대사가 안 된다 → [#241](../../보안_및_버그_의심.md). 배치 쪽에는 `icam12_fee_book.selectLastDayFeeIcamData.csv` 시뮬레이터 자료가 있다.
+- ICAM 읽기와 계약·이관 펀드 거르기(원본 L24-50)는 TOBE에서 `IcamBatchRunner.runLastDayFeeBook`에 들어 있다. 이것이 꺼져 있어 대사가 안 된다 → [#179](../../보안_및_버그_의심.md). 배치 쪽에는 `icam12_fee_book.selectLastDayFeeIcamData.csv` 시뮬레이터 자료가 있다.
 - 회사는 로그인 회사로 고정.
 
 <details><summary>시나리오 데이터 (자동 시험용)</summary>
@@ -47,7 +47,7 @@ steps:
   - no: 3
     api: POST /api/v1/icam/fee-books/checks
     body: {stdDate: 2026-03-31}
-    expect: 400 (#241), icam12·icam13 그대로
+    expect: 400 (#179), icam12·icam13 그대로
 ```
 </details>
 

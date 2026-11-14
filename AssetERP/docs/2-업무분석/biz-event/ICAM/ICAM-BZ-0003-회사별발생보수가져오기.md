@@ -8,7 +8,7 @@
 | 언제 | 매일(cron), 빠진 날을 다시 가져올 때 |
 | 먼저 있어야 하는 것 | 0001(ICAM 펀드), 고객사 ICAM 회사코드 |
 | 다음 이벤트 | 0005·0008 발생내역, 0006·0009 월말잔액, 0010 발생보수현황 |
-| 실제 실행 | 2026-11-14, API. 회사 28000 사무관리보수 2026-04-01~04-19 AS-IS total 14,669 = 14,669(첫 100행 일치, 그리드 10열). **[ICAM 발생보수 가져오기] `POST /icam/fees/batch` → 400 "ICAM 연동…발생보수를 가져오지 않았습니다"**(⚠#241). kalpa 401의 28000 조회·가져오기는 403 |
+| 실제 실행 | 2026-11-14, API. 회사 28000 사무관리보수 2026-04-01~04-19 AS-IS total 14,669 = 14,669(첫 100행 일치, 그리드 10열). **[ICAM 발생보수 가져오기] `POST /icam/fees/batch` → 400 "ICAM 연동…발생보수를 가져오지 않았습니다"**(⚠#179). kalpa 401의 28000 조회·가져오기는 403 |
 | 메뉴 | #1203 I/F > 10. ICAM > ICAM 보수(관리자용) (ADMIN만). 화면 눈 확인 `대기(일괄)` |
 
 ## 따라 하기
@@ -28,7 +28,7 @@
 
 - 보수구분 콤보를 바꾸면 배치 actionCode가 바뀐다(20407 → `icamOfficeMngFee`, 20402 → `icamFundMngFee`, E1 L129-140).
 - 전체(`ALL`)는 ADMIN만, 그 밖은 자기 회사만(`IcamFeeService.runBatch` L83-95). 조회도 자기 회사만(`allowedCompany`).
-- 배치 본체 `IcamOfficeMngFeeAction`·`IcamFundMngFeeAction`은 있다(서블릿 변환). 화면 버튼은 [#241](../../보안_및_버그_의심.md).
+- 배치 본체 `IcamOfficeMngFeeAction`·`IcamFundMngFeeAction`은 있다(서블릿 변환). 화면 버튼은 [#179](../../보안_및_버그_의심.md).
 
 <details><summary>시나리오 데이터 (자동 시험용)</summary>
 
@@ -42,7 +42,7 @@ steps:
   - no: 2
     api: POST /api/v1/icam/fees/batch
     body: {actionCode: icamOfficeMngFee, companyId: "28000", startDate: 2026-04-18, closeDate: 2026-04-19}
-    expect: 400 (#241)
+    expect: 400 (#179)
 ```
 </details>
 

@@ -8,7 +8,7 @@
 | 언제 | 매일(원래는 cron 배치 `icamFund`), 고객사가 새로 생기거나 펀드가 바뀔 때 화면에서 다시 |
 | 먼저 있어야 하는 것 | 고객사의 `sys01_icam_company_cd`(ICAM 회사코드). KFS 28000은 `2018` |
 | 다음 이벤트 | 0003 발생보수 가져오기, FND 펀드 화면(#1327 펀드 조회(변경이력) 등) |
-| 실제 실행 | 2026-11-14, API. 회사 28000 최근 펀드 AS-IS 4 = 4(그리드 5열), 펀드 322004 변경이력 AS-IS 6 = 6·total 6(그리드 33열). **[ICAM Get] `POST /icam/funds/batch` → 400 "ICAM 연동(외부 ICAM DB)이 아직 없어…"**(⚠#241 — 화면 버튼이 배치에 연결돼 있지 않다). kalpa 401의 전체(`ALL`) 가져오기는 403 |
+| 실제 실행 | 2026-11-14, API. 회사 28000 최근 펀드 AS-IS 4 = 4(그리드 5열), 펀드 322004 변경이력 AS-IS 6 = 6·total 6(그리드 33열). **[ICAM Get] `POST /icam/funds/batch` → 400 "ICAM 연동(외부 ICAM DB)이 아직 없어…"**(⚠#179 — 화면 버튼이 배치에 연결돼 있지 않다). kalpa 401의 전체(`ALL`) 가져오기는 403 |
 | 메뉴 | #1096 I/F > 10. ICAM > ICAM 펀드정보 (ADMIN·DEMO·PTR·TWO·TEST 회사). 화면 눈 확인 `대기(일괄)` |
 
 ## 따라 하기
@@ -30,7 +30,7 @@
 ## 업무 규칙 · 주의
 
 - 전체(`ALL`)는 ADMIN만(TOBE `IcamFundService.runBatch` L43, 비관리자는 자기 회사만 — `allowedCompany`).
-- 배치 본체 `IcamFundAction`(SB13, ICAM 시뮬레이터 `data/icam-simulator/icam/icam03_fund.selectIcamFund.csv`)은 있다. cron 진입점 `/api/v1/batch/icamFund`(API key·IP 제한)로만 돈다. 화면은 `IcamBatchRunner` 구현이 `DisabledIcamBatchRunner` 하나뿐이라 늘 거절한다 → [의심 #241](../../보안_및_버그_의심.md).
+- 배치 본체 `IcamFundAction`(SB13, ICAM 시뮬레이터 `data/icam-simulator/icam/icam03_fund.selectIcamFund.csv`)은 있다. cron 진입점 `/api/v1/batch/icamFund`(API key·IP 제한)로만 돈다. 화면은 `IcamBatchRunner` 구현이 `DisabledIcamBatchRunner` 하나뿐이라 늘 거절한다 → [의심 #179](../../보안_및_버그_의심.md).
 - KFS 104(회사 28000, #1096 메뉴 없음)도 `GET /icam/funds/recent`로 자기 회사 펀드를 본다(자기 회사 자료라 문제 삼지 않음).
 
 <details><summary>시나리오 데이터 (자동 시험용)</summary>
@@ -48,7 +48,7 @@ steps:
   - no: 3
     api: POST /api/v1/icam/funds/batch
     body: {actionCode: icamFund, companyId: "28000"}
-    expect: 400 (#241 — 연결되면 200)
+    expect: 400 (#179 — 연결되면 200)
 ```
 </details>
 
