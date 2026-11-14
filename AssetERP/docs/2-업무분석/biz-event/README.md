@@ -339,8 +339,9 @@ BIZ 1차 목록 0001~0011 끝(2026-11-14).
 | ICAM-BZ-0008 | 운용사가 ICAM 운용보수 발생내역을 가져오고 본다 | 운용사 | 매일·월말 | 0003·0007 | #1214 | [상세](ICAM/ICAM-BZ-0008-운용보수발생내역.md) | 실행(API, AS-IS 215=215·펀드 조회창 703=703, 출력 `sys99_print` +215, RD 확인 대기) |
 | ICAM-BZ-0009 | 운용사가 운용보수 월말잔액을 본다 | 운용사 | 매월 말 | 0006 | #1215 | [상세](ICAM/ICAM-BZ-0009-운용보수월말잔액.md) | 실행(API, 펀드 19001A AS-IS 3=3, 보수구분 없이 #1200과 같은 표) |
 | ICAM-BZ-0010 | 운용현황(펀드합계·기준가·발생보수)을 본다 | 운용사·사무관리사 | 수시·월말 | 0002·0003 | #1323, #1475, #1268·#1494 | [상세](ICAM/ICAM-BZ-0010-운용현황조회.md) | 실행(펀드원장은 회사 100 매퍼 DB 실행 AS-IS 6=6·4=4·기준가 4=4, #1268 28000 API 716=716·출력 716, FND-BZ-0011과 겹침) |
+| ICAM-BZ-0011 | KFS가 ICAM 사용자ID 신청서를 작성해 상신한다(A33) | KFS → 결재자 | 신청 때 | 문서분류 A33 | #1314 | [상세](ICAM/ICAM-BZ-0011-ICAM사용자ID신청서.md) | 실행(API, AS-IS 13=13, 저장→A33 상신(10)→연결, 결재 중 수정·삭제 400, KFS A33·A34 문서분류 지정, ⚠#244 타사 사원이 KFS 신청서 수정·연결 끊기·결재문서 폐기) |
 
-시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인.
+시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인(⚠#244).
 
 ## 자동 시험
 
