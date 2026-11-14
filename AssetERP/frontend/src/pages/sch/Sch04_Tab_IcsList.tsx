@@ -174,7 +174,7 @@ export const Sch04_Tab_IcsList: React.FC = () => {
     }),
     gb.date('manageDate', 90, '처리일', { editor: 'date', editable: notEditable }),  // L304 편집: MyDateField
     // L305 actionCell(Edit) → editResult()
-    iconCell<Sch04List>('edit', 'actionCellResult', 70, '처리결과', editResult),
+    iconCell<Sch04List>('edit', 'actionCellResult', 50, '처리결과', editResult),
     gb.booleanYn2('confirmYn', 70, '확인여부'),  // L306
     gb.textArea('title', 350, '법규명'),  // L307
     iconCell<Sch04List>('view', 'actionCellLaw', 30, '', viewLaw),  // L308 → viewLaw()

@@ -293,9 +293,9 @@ export const Biz55_Tab_ErpFeeCharge: React.FC = () => {
     gb.group('서버 추가', [gb.long('serverUsage', 80, '사용량(GB)'), gb.long('addServerFee', 100, '추가요금')]),
     gb.group('사용자 추가', [gb.long('userCount', 80, '사용인원(명)'), gb.long('addUserFee', 100, '추가요금')]),
     gb.long('chargeAmt', 100, '청구금액'),
-    iconCell<BizErpFeeCharge>('edit', 'apprCell', 70, '결재요청', row => { void apprClick(row); }),
+    iconCell<BizErpFeeCharge>('edit', 'apprCell', 50, '결재요청', row => { void apprClick(row); }),
     gb.textCenter('apprStatusNm', 90, '결재상태'),
-    iconCell<BizErpFeeCharge>('view', 'viewCell', 70, '문서보기', row => { void viewDoc(row); }),   // [E11] viewCell
+    iconCell<BizErpFeeCharge>('view', 'viewCell', 50, '문서보기', row => { void viewDoc(row); }),   // [E11] viewCell
     iconCell<BizErpFeeCharge>('send', 'mailCell', 80, '메일보내기', row => { void sendMail(row); }),
     gb.textCenter('mailYn', 70, '송신여부'),
   // eslint-disable-next-line react-hooks/exhaustive-deps

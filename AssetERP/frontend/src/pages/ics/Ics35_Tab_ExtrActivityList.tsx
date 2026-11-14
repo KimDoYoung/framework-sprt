@@ -74,11 +74,11 @@ export const Ics35_Tab_ExtrActivityList: React.FC = () => {
     gb.text('activityPeriod', 280, '활동기간'),  // L127
     gb.group('활동신청', [  // HeaderGroupMap(0, 8, "활동신청", 1, 2)
       gb.textStatus('apprStatusNm', 100, '결재상태'),  // L128
-      iconCell<IcsExtrActivity>('view', 'actionCellApprView', 80, '문서보기', row => viewAppr(row.apprId)),  // L129 actionCell01
+      iconCell<IcsExtrActivity>('view', 'actionCellApprView', 50, '문서보기', row => viewAppr(row.apprId)),  // L129 actionCell01
     ]),
     gb.group('결과보고', [  // HeaderGroupMap(0, 10, "결과보고", 1, 2)
       gb.textStatus('resultApprStatusNm', 100, '결재상태'),  // L130
-      iconCell<IcsExtrActivity>('view', 'actionCellResultView', 80, '문서보기', row => viewAppr(row.resultApprId)),  // L131 actionCell02
+      iconCell<IcsExtrActivity>('view', 'actionCellResultView', 50, '문서보기', row => viewAppr(row.resultApprId)),  // L131 actionCell02
     ]),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);

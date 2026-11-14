@@ -90,7 +90,7 @@ export const Ast01_Lookup_CorpAccount: React.FC<Props> = ({ open, stdDate, mode,
           <Space>
             <Button type="save" onClick={() => confirm()}>확인</Button>
             {/* [E3] selectAllButton[전체].Select (L135) / [E4] selectNotButton[선택안함].Select (L142) → callback(null), hide() */}
-            {notMode ? <Button type="select" onClick={() => onResult(null)}>선택안함</Button> : <Button type="select" onClick={() => onResult(null)}>전체</Button>}
+            {notMode ? <Button type="selectNone" onClick={() => onResult(null)}>선택안함</Button> : <Button type="selectNone" onClick={() => onResult(null)}>전체</Button>}
             {/* [E5] cancleButton[닫기].Select (L149) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

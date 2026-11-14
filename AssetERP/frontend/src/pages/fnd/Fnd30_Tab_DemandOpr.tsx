@@ -158,9 +158,9 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
     gb.textHtml('priceAcceptStr', 100, '확정공모가액<br>-10% 변동수용', { cellStyle: { textAlign: 'center' } }),  // addTextCenterHtml
     gb.textCenter('lockPeriod', 75, '확약기간'),
     iconCell<OprDemand>('edit', 'editAction', 40, '수정', editRow),
-    iconCell<OprDemand>('edit', 'apprAction', 60, '결재요청', row => void requestAppr(row)),
+    iconCell<OprDemand>('edit', 'apprAction', 50, '결재요청', row => void requestAppr(row)),
     gb.textCenter('apprStatusName', 70, '결재상태'),
-    iconCell<OprDemand>('view', 'viewAction', 60, '상세보기', viewAppr),
+    iconCell<OprDemand>('view', 'viewAction', 50, '상세보기', viewAppr),
     gb.textCenter('cancelName', 60, '참여취소'),
     gb.text('note', 400, '비고'),
   ], []);

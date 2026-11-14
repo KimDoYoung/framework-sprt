@@ -285,9 +285,9 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
     iconCell<TdmRoleDigmCompany>('view', 'actionCell', 80, '책무체계도', row => { void onView(row); }),  // L399 actionCell01
     fileStateCell('upload', 'fileUpload', false, row => { void fileUploadChk(row); }),  // L400 addDynamicCell(fileTypeName02, 40, "", actionCell02, false) — 올린 파일이 없는 행에만 올리기 아이콘
     fileStateCell('delete', 'fileDelete', true, fileDelete),  // L401 addDynamicCell(fileTypeName02, 40, "", actionCell05, true) — 올린 파일이 있는 행에만 삭제 아이콘
-    dynamicIconCell<TdmRoleDigmCompany>('edit', 'apprStatusCode', 'apprRequest', 80, '결재요청', ['00', '40', '99'], apprRequest),  // L402 actionCell03
+    dynamicIconCell<TdmRoleDigmCompany>('edit', 'apprStatusCode', 'apprRequest', 50, '결재요청', ['00', '40', '99'], apprRequest),  // L402 actionCell03
     gb.textStatus('apprStatusName', 80, '결재상태'),  // L403
-    dynamicIconCell<TdmRoleDigmCompany>('view', 'apprStatusCode', 'apprView', 80, '문서보기', APPR_SENT, viewAppr),  // L404 actionCell04
+    dynamicIconCell<TdmRoleDigmCompany>('view', 'apprStatusCode', 'apprView', 50, '문서보기', APPR_SENT, viewAppr),  // L404 actionCell04
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [reasonCodes]);
 

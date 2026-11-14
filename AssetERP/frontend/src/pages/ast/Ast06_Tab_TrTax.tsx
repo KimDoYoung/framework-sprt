@@ -212,9 +212,9 @@ export const Ast06_Tab_TrTax: React.FC = () => {
     gb.text('note', 300, '적요'),  // L348
     gb.long('amt', 150, '납부(환불)금액'),  // L349
     iconCell<AstTr>('edit', 'modiAction', 50, '변경', openModi),  // L350 actionCell
-    iconCell<AstTr>('edit', 'apprAction', 70, '결재요청', row => void requestAppr(row)),  // L351 actionCell2
+    iconCell<AstTr>('edit', 'apprAction', 50, '결재요청', row => void requestAppr(row)),  // L351 actionCell2
     gb.textCenter('apprStatusName', 100, '결재상태'),  // L352
-    iconCell<AstTr>('view', 'viewAction', 80, '상세보기', row => void viewAppr(row)),  // L353 viewCell
+    iconCell<AstTr>('view', 'viewAction', 50, '상세보기', row => void viewAppr(row)),  // L353 viewCell
     gb.textCenter('personName', 80, '등록자'),  // L354
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);

@@ -251,16 +251,16 @@ export const Tdm59_Tab_CheckAppr: React.FC = () => {
       gb.textStatus('nextApprStatusName', 80, '상위부서'),  // L340
     ]), headerStyle: { color: GRAY, fontWeight: 'bold' } },
     // L341 apprCmntCell → lookupApprCmnt() (DynamicCell: apprButtonEnable가 없으면 금지 표시)
-    dynamicIconCell<TdmCheckApprCmnt>('edit', 'apprCell', 70, '승인의견', row => {
+    dynamicIconCell<TdmCheckApprCmnt>('edit', 'apprCell', 50, '승인의견', row => {
       const ro = isReadOnlyRow(row, endYnRef.current);
       setCmntWin({ mode: ro ? 'view' : 'edit', model: row });
     }, row => row.apprButtonEnable != null),
     // L342 reportCmntCell → lookupReportCmnt()
-    dynamicIconCell<TdmCheckApprCmnt>('edit', 'reportCell', 70, '보고의견', row => {
+    dynamicIconCell<TdmCheckApprCmnt>('edit', 'reportCell', 50, '보고의견', row => {
       const ro = isReadOnlyRow(row, endYnRef.current);
       setReportWin({ mode: ro ? 'view' : 'edit', model: row });
     }, row => row.reportButtonEnable != null),
-    iconCell<TdmCheckApprCmnt>('view', 'historyCell', 70, '승인이력', row => setRecordRow(row)),  // L343 historyCell → Tdm55_Lookup_ChckRecord2.open(선택행, 점검년월 첫날)
+    iconCell<TdmCheckApprCmnt>('view', 'historyCell', 50, '승인이력', row => setRecordRow(row)),  // L343 historyCell → Tdm55_Lookup_ChckRecord2.open(선택행, 점검년월 첫날)
   ], []);
 
   const reload = () => { void retrieve(latest.current.ym, latest.current.role.id); };

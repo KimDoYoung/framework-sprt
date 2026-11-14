@@ -50,10 +50,10 @@ export const Emp10_Lookup_List: React.FC<Props> = ({ open, onResult, onClose }) 
   // buildGrid() L71-82 / buildPublicGrid() L96-107
   const addrCols = useMemo(() => [
     gbAddr.text('companyName', 120, '회사이름'),
-    gbAddr.text('contactName', 120, '담당자명'),
+    gbAddr.text('contactName', 100, '담당자명'),
     gbAddr.text('emailAddress', 120, '이메일'),
     gbAddr.text('mobileTelNo', 120, '핸드폰 번호'),
-    gbAddr.text('officeTelNo', 120, '사무실 번호'),
+    gbAddr.text('officeTelNo', 100, '사무실 번호'),
   ], []);
   // buildEmpGrid() L84-94
   const personCols = useMemo(() => [
@@ -132,6 +132,7 @@ export const Emp10_Lookup_List: React.FC<Props> = ({ open, onResult, onClose }) 
       maskClosable={false}
       onCancel={onClose}
       destroyOnHidden
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>

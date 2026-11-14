@@ -164,7 +164,7 @@ export const Emp15_Tab_Cert: React.FC = () => {
     gb.text('certUseName', 400, '용도'), // L205
     gb.textCenter('stampSeqText', 250, '발급번호'), // L206
     gb.text('apprStatusName', 80, '결재상태', { cellStyle: statusStyle }), // L207 addTextColor
-    iconCell<Cert>('edit', 'actionCell', 100, '결재요청', checkAppr), // L208 ImageCell("Edit") → checkAppr()
+    iconCell<Cert>('edit', 'actionCell', 50, '결재요청', checkAppr), // L208 ImageCell("Edit") → checkAppr()
     iconCell<Cert>('send', 'sendMailCell', 80, '메일보내기', sendMail), // L209 ImageCell("Send") → sendMail()
   ];
 

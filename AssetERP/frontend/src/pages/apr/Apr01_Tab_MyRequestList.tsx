@@ -108,7 +108,7 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
     gb.textCenter('inOutTypeName', 70, '문서구분'),  // L350
     gb.textHtml('title', 360, '문서명'),  // L351 addTextHtml
     // actionCell01(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieveOne)
-    iconCell<AprMyRequest>('view', 'actionCell', 80, '상세보기', row => {
+    iconCell<AprMyRequest>('view', 'actionCell', 50, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       else setViewApprId(row.apprId);
     }),
@@ -177,7 +177,7 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
             <SystemCodeComboBox kindCd="AprStatusCode" altCode={ALL_CODE} style={{ width: 132 }} value={statusCode} onChange={c => setStatusCode(c ?? ALL)} />
           </SearchBar.Field>
           <SearchBar.Field label="검색">
-            <SearchBar.Input style={{ width: 481 }} placeholder="문서명/문서분류/비고" value={searchText} onChange={e => setSearchText(e.target.value)} />
+            <SearchBar.Input style={{ width: 200 }} placeholder="문서명/문서분류/비고" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
           <Checkbox checked={aprYn} onChange={e => setAprYn(e.target.checked)}>완료/반려건 포함</Checkbox>
         </SearchBar>

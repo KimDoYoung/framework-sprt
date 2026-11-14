@@ -6,7 +6,7 @@
  * 스타일: GG (yunhee page-style 판별 — docs/page-style.md)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Splitter, message } from 'antd';
+import { Modal, Splitter, message, Space } from 'antd';
 import { cmpMailBookApi } from '@/api/cmp';
 import { errorMessage } from '@/api/client';
 import { CmpMailBook } from '@/types/cmp';
@@ -79,23 +79,25 @@ export const Cmp10_Tab_MailBook: React.FC = () => {
 
   // buildGrid() L111-131 (단일 선택)
   const columnDefs = useMemo(() => [
+    iconCell<CmpMailBook>('edit', 'actionCell', 60, '수정', row => setEditing({ open: true, mailBook: row })),
     gb.text('emailAddr', 220, '이메일'),  // L125
     gb.text('note', 500, '비고'),  // L126
     // L127 actionCell(Edit) → Cmp10_Edit_Tab_MailBook.edit(선택한 행, callback → retrieve())
-    iconCell<CmpMailBook>('edit', 'actionCell', 60, '수정', row => setEditing({ open: true, mailBook: row })),
   ], []);
 
   return (
     <>
-    <Splitter style={{ height: '100%' }}>
-      <Splitter.Panel defaultSize={1000} max={1000} min={300}>
+    <Splitter style={{ height: '100%', background: '#fff' }}>
+      <Splitter.Panel defaultSize={900} max={1000} min={300}>
         <div style={{ height: '100%', padding: '20px 0 22px 20px', boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
             <div>
               {/* [E1] retrieveButton[조회].Select (L85) → retrieve() */}
-              <Button type="search" onClick={retrieve}>조회</Button>
-              <Button type="register" onClick={insert}>등록</Button>
-              <Button type="delete" onClick={deleteCheck}>삭제</Button>
+              <Space>
+                <Button type="search" onClick={retrieve}>조회</Button>
+                <Button type="register" onClick={insert}>등록</Button>
+                <Button type="delete" onClick={deleteCheck}>삭제</Button>
+              </Space>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <SingleGrid<CmpMailBook>
@@ -112,8 +114,8 @@ export const Cmp10_Tab_MailBook: React.FC = () => {
         </div>
       </Splitter.Panel>
       <Splitter.Panel min={200}>
-        <div style={{ height: '100%', padding: '20px 20px 22px 0', boxSizing: 'border-box' }}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
+        <div style={{ height: '100%', padding: '20px 0 22px 20px', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', padding: 8, boxSizing: 'border-box' }}>
             <Cmp10_Tab_MailBookList mailBookId={mailBookId} />
           </div>
         </div>

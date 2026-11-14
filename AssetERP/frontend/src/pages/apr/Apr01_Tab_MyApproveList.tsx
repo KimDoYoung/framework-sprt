@@ -114,7 +114,7 @@ export const Apr01_Tab_MyApproveList: React.FC = () => {
     gb.date('effectDate', 100, '시행일'),  // L303
     gb.text('classTreeName', 170, '문서분류'),  // L304
     // L305 actionCell01(View) → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback → retrieve())
-    iconCell<AprMyApprove>('view', 'actionCell', 80, '상세보기', row => {
+    iconCell<AprMyApprove>('view', 'actionCell', 50, '상세보기', row => {
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       else setViewApprId(row.apprId);
     }),

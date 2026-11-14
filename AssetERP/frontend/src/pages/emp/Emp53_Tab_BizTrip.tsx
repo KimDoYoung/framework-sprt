@@ -176,14 +176,14 @@ export const Emp53_Tab_BizTrip: React.FC = () => {
     gb.text('companion', 150, '동반인'),  // L257
     iconCell<MyBizTrip>('edit', 'editCell', 60, '수정', editRow),  // L258
     gb.group('출장품의', [
-      iconCell<MyBizTrip>('edit', 'apprCell', 60, '결재요청', r => checkAppr(r, false)),  // L259
+      iconCell<MyBizTrip>('edit', 'apprCell', 50, '결재요청', r => checkAppr(r, false)),  // L259
       gb.textCenter('apprStatusName', 80, '결재상태'),  // L260
-      iconCell<MyBizTrip>('view', 'viewCell', 60, '상세보기', viewRow),  // L261
+      iconCell<MyBizTrip>('view', 'viewCell', 50, '상세보기', viewRow),  // L261
     ]),
     { ...gb.group('결과보고', [
-      { ...iconCell<MyBizTrip>('edit', 'resultApprCell', 60, '결재요청', r => checkAppr(r, true)), headerStyle: BLUE },  // L262
+      { ...iconCell<MyBizTrip>('edit', 'resultApprCell', 50, '결재요청', r => checkAppr(r, true)), headerStyle: BLUE },  // L262
       gb.textCenter('resultApprStatusName', 80, '결재상태', { headerStyle: BLUE }),  // L263
-      { ...iconCell<MyBizTrip>('view', 'resultViewCell', 60, '상세보기', viewResultRow), headerStyle: BLUE },  // L264
+      { ...iconCell<MyBizTrip>('view', 'resultViewCell', 50, '상세보기', viewResultRow), headerStyle: BLUE },  // L264
     ]), headerStyle: BLUE },
     gb.text('shareInfo', 150, '공유'),  // L265
     iconCell<MyBizTrip>('view', 'shareCell', 60, '', r => { select(r); setShareTrip(r); }),  // L266 shareViewCell L238-244

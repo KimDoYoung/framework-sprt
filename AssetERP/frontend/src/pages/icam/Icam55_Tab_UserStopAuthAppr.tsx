@@ -173,7 +173,7 @@ export const Icam55_Tab_UserStopAuthAppr: React.FC = () => {
     gb.text('userName', 150, '사용자명', { editor: 'text' }),                    // L273
     gb.text('email', 150, '이메일', { editor: 'text' }),                         // L274
     gb.text('apprStatusName', 80, '결재상태'),                                   // L275
-    iconCell<IcamStop>('view', 'viewCell', 60, '문서보기', apprView),            // L276
+    iconCell<IcamStop>('view', 'viewCell', 50, '문서보기', apprView),            // L276
     gb.text('regEmpName', 80, '등록자'),                                         // L277
     gb.text('procStateName', 100, '처리결과'),                                   // L278
     gb.date('procDate', 90, '처리일자'),                                         // L279 (UX-08)

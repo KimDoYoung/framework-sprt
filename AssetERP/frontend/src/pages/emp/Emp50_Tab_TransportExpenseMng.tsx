@@ -134,7 +134,7 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
     gb.text('apprTitle', 300, '문서명'),  // L283
     gb.long('regAmt', 120, '금액'),  // L284
     gb.textCenter('statusName', 100, '결재상태'),  // L285
-    iconCell<RelateAppr>('view', 'viewAction', 80, '문서보기', viewAppr),  // L286 viewCell (ImageCell "Detail")
+    iconCell<RelateAppr>('view', 'viewAction', 50, '문서보기', viewAppr),  // L286 viewCell (ImageCell "Detail")
   ], []);
 
   // [E8]·[E9] closeButton[마감]·closeCancelButton[취소].Select (L187·L194) → closeYn(true|false) L500-551

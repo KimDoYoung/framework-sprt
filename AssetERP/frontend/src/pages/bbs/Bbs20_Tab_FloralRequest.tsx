@@ -104,7 +104,7 @@ export const Bbs20_Tab_FloralRequest: React.FC = () => {
     gb.textCenter('statusName', 80, '신청상태'),  // L206
     gb.date('endDate', 90, '완료일'),  // L207
     // L208 sendCell → sendMessage() L221-224: Bbs20_Lookup_Message.open("01", 선택한 행)
-    iconCell<BbsFloralRequest>('send', 'sendCell', 80, '문자발송', row => setMessageModel(row)),
+    iconCell<BbsFloralRequest>('send', 'sendCell', 50, '문자발송', row => setMessageModel(row)),
   ], []);
 
   // [E5] grid.CellClick (L140): 신청상태 칸(13번째)을 눌렀을 때 상태가 95(반려)면 반려사유를 보여 준다. 사유가 없으면 "반려사유가 존재하지 않습니다"

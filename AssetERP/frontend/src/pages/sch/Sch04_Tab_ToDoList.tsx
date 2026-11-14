@@ -147,7 +147,7 @@ export const Sch04_Tab_ToDoList: React.FC = () => {
     gb.text('className', 150, '분류'),
     gb.text('title', 500, '일정명'),
     gb.textCenter('cycleName', 100, '주기구분'),
-    iconCell<Sch04Todo>('view', 'actionCell', 80, '상세보기', view),   // → view()
+    iconCell<Sch04Todo>('view', 'actionCell', 50, '상세보기', view),   // → view()
     gb.textCenter('statusName', 100, '처리여부', {   // 편집: ScheduleStatusCode 콤보. [E9] statusComboBox.Collapse (L270) → statusCode·statusName 둘 다 바꾼다
       editor: 'select',
       values: [...new Set(statusCodes.map(c => c.name))],

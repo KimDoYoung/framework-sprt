@@ -162,7 +162,7 @@ export const Est02_Tab_PfContract: React.FC = () => {
     gb.text('managerInfo', 350, '담당자'),                                                       // L236
     iconCell<PfContract>('edit', 'apprAction', 50, '결재', requestAppr),                         // L237 actionCell02
     gb.textCenter('planApprStatusName', 100, '결재상태'),                                        // L238
-    iconCell<PfContract>('view', 'viewAction', 100, '문서보기', viewAppr),                       // L239 actionCell03
+    iconCell<PfContract>('view', 'viewAction', 50, '문서보기', viewAppr),                       // L239 actionCell03
   ], [myOrgId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

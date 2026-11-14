@@ -33,13 +33,13 @@ const buildGrid = (openAction: (row: TdmChckInsuffRow) => void, openRecord: (row
   gb.text('orgName', 150, '담당부서'),  // L223
   gb.text('actionName', 400, '조치명'),  // L225
   // [E7] actionCell01 (ImageCell).callbackOnCreate (L203) → Tdm54_Lookup_ChckInsuff.open(선택 행, cb) L198-209
-  iconCell<TdmChckInsuffRow>('edit', 'actionCell', 80, '조치등록', openAction),  // L226
+  iconCell<TdmChckInsuffRow>('edit', 'actionCell', 50, '조치등록', openAction),  // L226
   gb.textStatus('statusName', 80, '조치상태'),  // L227
   gb.textCenter('planActionEmpName', 85, '조치예정자'),  // L228
   gb.textCenter('actionEmpName', 100, '조치자'),  // L229
   gb.date('dueDate', 90, '완료예정일'),  // L230
   gb.date('actionDate', 90, '완료일'),  // L231
-  iconCell<TdmChckInsuffRow>('view', 'recordCell', 75, '승인이력', openRecord),  // L232 → Tdm55_Lookup_ChckRecord.open(chckInsuffId, "TDM54")
+  iconCell<TdmChckInsuffRow>('view', 'recordCell', 50, '승인이력', openRecord),  // L232 → Tdm55_Lookup_ChckRecord.open(chckInsuffId, "TDM54")
 ];
 
 export const Tdm54_Tab_CheckInsuff: React.FC = () => {

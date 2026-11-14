@@ -66,7 +66,7 @@ const buildGrid = (openRecord: (row: TdmCheckOrg) => void) => [
   cnt('insuffCnt', 80, '진행중 또는<br>완료된<br>미흡/개선'),  // L312
   gb.booleanYn2('checkEndYn', 80, '점검<br>완료'),  // L313
   gb.textStatus('orgStatusName', 100, '승인상태'),  // L317
-  iconCell<TdmCheckOrg>('view', 'actionCell', 80, '승인이력', openRecord),  // L318 → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
+  iconCell<TdmCheckOrg>('view', 'actionCell', 50, '승인이력', openRecord),  // L318 → Tdm55_Lookup_ChckRecord.open(chckOrgId, "TDM51")
 ];
 
 export const Tdm51_Tab_CheckOrg: React.FC = () => {

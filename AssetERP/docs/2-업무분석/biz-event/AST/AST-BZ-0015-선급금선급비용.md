@@ -1,66 +1,74 @@
-# AST-BZ-0015 경영관리가 선급금·선급비용을 등록하고 잔액을 본다
+# AST-BZ-0015 경영관리가 선급금·선급비용을 처리하고 잔액을 본다
 
-> **한 줄 요약** — 보험료·회원권·선납 통신비처럼 미리 낸 돈은 고유자산 종목(소분류가 공통코드 묶음 `ItemSClassCode005`에 속한 것 — 903001 선급금·903002 선급비용 등)으로 두고, #1091 고유자산 거래처리에서 거래유형 **선급처리(9010)**로 등록한다. 분개는 차 선급비용(3804000000) / 대 보통예금(또는 미지급금). 저장 뒤 예금잔고정리가 원장(`ast09_book`)을 만들면 #1342 선급금/선급비용 조회에 보유일자 기준 **자산별 잔액**이 나오고, 줄을 누르면 아래에 그 자산의 분개 이력이 보인다. 비용으로 대체(상각)하는 거래유형은 고유자산에 없다 — 회사 28000에도 이 종목의 거래는 9010뿐이다(대체는 회계 수기전표로 보임, 미확인).
+> **한 줄 요약** — 보험료·통신비처럼 **미리 낸 돈**은 #1091 고유자산 거래처리에서 거래유형 **선급처리(9010)**로 등록한다. 종목은 고유자산 분류의 **선급금(903001)·선급비용(903002)** 소분류 종목(예: `선급비용-현대해상(…)`, `SK브로드밴드`)이고, 분개는 차 선급(자산계정) / 대 보통예금(바로 지급) 또는 미지급금(나중에 지급 — #1092 미수/미지급에서 결제)이다. #1342 선급금/선급비용 조회는 보유일자 기준으로 선급 종목별 **잔액**(예금원장 정리가 만드는 `ast09_book`)을 보여 주고 줄을 고르면 그 종목의 **분개 이력**을 아래에 보여 준다. 선급이 줄어드는(비용으로 넘어가는) 전용 거래유형은 없다 — 수동 분개로 한다.
 
 | 항목 | 내용 |
 |:---|:---|
 | 누가 | 경영관리(kalpa 과장 301) |
-| 언제 | 선급할 때, 월말 잔액 확인 |
-| 먼저 있어야 하는 것 | AST-BZ-0002(선급금·선급비용 종목), AST-BZ-0001(#1091 화면별 거래유형 9010), ACT 분개맵핑 |
-| 다음 이벤트 | ACT 결산(선급비용 → 비용 대체) |
-| 실제 실행 | kalpa, 2026-11-14, API. ⓪ 11-13에 이미 있던 것: `선급비용-현대해상` 9010 1,200,000(11-12, 자동차보험료 1년), `SK브로드밴드` 9010 600,000(11-13, 미지급). #1342 11-14 조회 2행(AS-IS 2 = 2). ① #1091 [등록] 선급처리 9010 · `선급비용-현대해상` · 840,000 · 출금 `신한은행#011` · "자동차보험료 선급(차량 2호, 1년)" → 거래 `202611149150067`, 분개 차 선급비용 3804000000 / 대 보통예금 3101030000 840,000. ② 예금잔고정리 → **400 "처리(취소)일 이후 환평가내역이 존재합니다"**(AST-BZ-0013의 11-14 환평가 때문, 화면은 이 실패를 버림) → #1342 잔액이 1,200,000에 머묾. ③ #1174 환평가 취소 → 정리 → 재평가(174,900) → #1342 `선급비용-현대해상` **2,040,000**. ④ 줄 클릭 분개 이력 `GET /act/journals/history` 2행(AS-IS 2 = 2) |
-| 메뉴 | #1342 관리회계 > 21. 회계장부 > 선급금/선급비용 조회, 등록은 #1091 관리회계 > 11. 특수회계처리 > 고유자산 거래처리. kalpa 메뉴 없음. 화면 눈 확인 `대기` |
+| 언제 | 보험료·통신비 등을 선납할 때, 월말 선급 잔액 확인 때 |
+| 먼저 있어야 하는 것 | AST-BZ-0001(거래유형 9010 + 화면별 거래유형 `Ast06_Tab_TrIntrinsic`에 9010), AST-BZ-0002(선급 종목 — 회사 0 분류의 `선급금/선급비용` 분류), 회사 계좌, ACT 분개맵핑(9010 → 901001) |
+| 다음 이벤트 | 선급의 비용 대체(수동 분개), ACT 결산 |
+| 실제 실행 | kalpa, 2026-11-13, API(과장 301). 먼저 `Ast06_Tab_TrIntrinsic`에 9010이 없어(회사 0 기초에 없음 — 의심 #121) KFS 관리자가 넣었다. ① 선급처리 11-12 `선급비용-현대해상(24.04.25~25.04.24)` 1,200,000, 우리은행 즉시 지급 → 분개 차 3804000000(선급) / 대 보통예금 1,200,000 ② 선급처리 11-13 `SK브로드밴드` 600,000, 미지급(settleMng) → 분개 차 선급 / 대 미지급금 → #1092 목록에 나오고 [결제](9003, 우리은행 600,000) → 차 미지급금 / 대 보통예금 ③ 예금잔고정리 → #1342 11-13: 선급비용 2줄(현대해상 1,200,000·SK브로드밴드 600,000), 보유일자 11-11은 0줄, 검색어 `현대`는 1줄, 줄별 분개 이력(11-12 선급처리 1,200,000). AS-IS 대조: 선급 조회 1 = 1. 사원 401도 같은 조회를 받음(의심 #122) |
+| 메뉴 | #1342 관리회계 > 21. 회계장부 > 선급금/선급비용 조회 (등록은 #1091 고유자산 거래처리, 결제는 #1092 미수/미지급). kalpa 메뉴 없음. 화면 눈 확인 `대기` |
 
 ## 따라 하기
 
 | 단계 | 누가 | 화면 | 누르는 것 · 입력하는 것 | 화면에 보이는 결과 |
 |:---:|:---|:---|:---|:---|
-| 1 | 경영관리 | #1091 | [등록] → 거래유형 선급처리 → 선급 종목 → 금액 → 출금계좌(또는 미수/미지급 체크) → 적요 → [저장] | 거래·분개 자동 생성(뒤에서 예금잔고정리) |
-| 2 | 〃 | #1342 | 보유일자 → 검색(구분/자산명/거래처) → [조회] / Enter | 일자·구분·자산명·거래처·잔액 |
-| 3 | 〃 | 〃 | 줄 클릭 | 아래에 그 자산의 분개 이력 |
+| 1 | 경영관리 | #1091 | [등록] → 거래유형 선급처리 · 선급 종목 · 금액 · 출금계좌(또는 미지급 체크) → [저장] | 거래·분개(차 선급 / 대 보통예금 또는 미지급금) |
+| 2 | 〃 | #1092 | (미지급으로 등록했다면) 줄 선택 → [결제등록] → 결제일 · 예금계좌 · 금액 | 결제 분개(차 미지급금 / 대 보통예금), 미지급 목록에서 사라짐 |
+| 3 | 〃 | #1342 | 보유일자 → [조회] | 선급 종목별 잔액(일자·구분·자산명·거래처·잔액, 합계 "계") |
+| 4 | 〃 | #1342 | 위 그리드의 줄 선택 | 아래에 그 종목의 분개 이력(일자·거래유형·금액·적요) |
 
 ## DB에 남는 것
 
 | 테이블 | 무엇 | 실행 |
 |:---|:---|:---|
-| `ast06_tr` | 선급처리 9010 | +1 |
-| `act02`·`act06`·`act03` | 선급 전표 | +1 |
-| `ast09_book` | 선급 종목·출금 계좌 11-14 원장 | 갱신(환평가 취소 뒤) |
-| `ast06_tr`(3700·3701) | 환평가 취소 −2 → 재평가 +2 | 순 0 |
+| `ast06_tr` | 선급처리 9010 | +2 (1,200,000 / 600,000) |
+| `ast07_settle` | 미지급 결제(9003) | +1 (600,000) |
+| `act02_journal`·`act03_journal_dtl` | 거래·결제 전표 | 3건 |
+| `ast09_book` | 선급 종목 원장(예금잔고정리가 같이 만든다) | 선급 종목 2개의 보유 줄 |
 
 ## 업무 규칙 · 주의
 
-- #1342는 조회 전용이다. 대상은 고유자산(`ast01_asset_type = '1'`) 중 소분류가 `ItemSClassCode005` 묶음인 종목이고, 잔액은 보유일자의 원장 수량(`ast09_hold_qty`)이다. 원장이 정리되지 않으면 등록한 거래가 잔액에 안 나온다.
-- **환평가가 고유자산 잔고정리를 회사 전체로 막는다**: 같은 날·이전 날짜에 외화예금 환평가가 있으면, 외화와 상관없는 원화 선급 거래도 저장·분개는 되는데 잔고정리가 실패하고 화면은 그 실패를 버린다 → [의심 #118 보강](../../보안_및_버그_의심.md). 업무 순서로는 **환평가를 월말 마지막**에 하고, 뒤에 거래를 넣어야 하면 [평가취소] → 거래 → [평가처리].
-- 분개 이력 `GET /act/journals/history?astClassTreeId=`는 회사 조건이 있다 — 사원 401이 회사 28000 선급 자산 ID로 불러도 0행(남은 문제 없음).
-- 사원도 #1091로 선급 거래를 등록할 수 있다(권한 검사 없음 — #105와 같은 모양, 이번엔 시험 안 함).
+- 목록은 소분류가 공통코드 그룹 `ItemSClassCode005`(903001 선급금·903002 선급비용)인 **고유자산** 종목의 보유 원장이다. 보유수량(잔액)은 원화 금액과 같다. 거래처는 거래의 거래처가 아니라 **종목에 지정한 거래처**(`ast01_corp_id`)를 보여 준다.
+- 선급 원장(`ast09_book`)은 **예금잔고정리**(`POST /ast/books/deposits/clean`)가 만든다 — 거래만 저장하면 #1342에 안 나오고, 화면은 저장 뒤 정리를 이어 부른다. **환평가(3700)가 정리 대상 날짜 이후에 있으면 정리가 막힌다**("처리(취소)일 이후 환평가내역이 존재합니다") — AST-BZ-0013의 규칙이 그대로 이어진다(이 시험에서도 환평가를 취소 → 정리 → 다시 환평가했다).
+- 선급이 줄어드는 거래유형은 없다(차대 모두 자산계정을 대변에 두는 유형은 금융상품 매도·비품 폐기 등뿐). 월말에 선급을 비용으로 넘기려면 수동 분개를 해야 하고, 그러면 #1342 잔액은 줄지 않는다(원장은 거래 기준) — 업무 확인 필요.
+- 회사 0 기초에는 `Ast06_Tab_TrIntrinsic`에 9010이 없다(회사 28000에는 있음) → [의심 #121](../../보안_및_버그_의심.md).
+- #1092 미수/미지급 목록에 **이관(출) 9924의 미수보수**도 함께 나오는데 거래처 칸이 "EMP_NAME을 찾을 수 없습니다."로 보인다(AST-BZ-0014에서 만든 이관 거래) → [의심 #122](../../보안_및_버그_의심.md).
+- #1342·분개 이력 API는 메뉴 권한을 보지 않는다(다른 회사 종목은 안 보임 — 회사 조건은 있음) → [의심 #123](../../보안_및_버그_의심.md).
 
 <details>
 <summary>시나리오 데이터 (자동 시험용)</summary>
 
 ```yaml
 id: AST-BZ-0015
-needs: [AST-BZ-0002]
+needs: [AST-BZ-0001, AST-BZ-0002]
 steps:
+  - no: 0
+    actor: { company: admin, user: admin, password: "1111" }
+    api: PUT /api/v1/ast/tr-code-windows
+    body: { companyId: <kalpa>, className: Ast06_Tab_TrIntrinsic, items: [<기존 11개>, { trCode: "9010" }] }
   - no: 1
     actor: { company: kalpa, user: "301", password: "1111" }
     api: [PUT /api/v1/ast/trs/intrinsic, POST /api/v1/act/journals/create, POST /api/v1/ast/books/deposits/clean]
-    body: [{ trId: null, date: "2026-11-14", trCode: "9010", astClassTreeId: <선급비용-현대해상>, contAmt: 840000, amt: 840000, settleMngYn: false,
-             depositId: <신한은행#011>, note: "자동차보험료 선급(차량 2호, 1년)", curCode: KRW, itemLClassCode: "90", itemSClassCode: "903002", selfPur: true },
-           { trId: <거래>, trCode: "9010", procType: P, exceptYn: true }, { stdDate: "2026-11-14" }]
-    expect: { journal: { D: { 3804000000: 840000 }, C: { 3101030000: 840000 } }, clean: "그날 이후 환평가가 없어야 200" }
+    body: [{ date: "2026-11-12", trCode: "9010", astClassTreeId: <선급비용-현대해상>, contAmt: 1200000, amt: 1200000, settleMngYn: false, depositId: <우리은행>, note: 자동차보험료 선급(1년), curCode: KRW },
+           { trId: <1>, trCode: "9010", procType: P, exceptYn: true }, { stdDate: "2026-11-12" }]
+    expect: { journal: { 차 선급 1200000 / 대 보통예금 1200000 } }
   - no: 2
-    api: [GET /api/v1/ast/books/pre-deposits?holdDate=2026-11-14&searchText=]
-    expect: { row: { astClassTreeName: "선급비용-현대해상(24.04.25~25.04.24)", holdQty: 2040000 } }
+    api: [PUT /api/v1/ast/trs/intrinsic, POST /api/v1/act/journals/create, POST /api/v1/ast/settles, POST /api/v1/ast/books/deposits/clean]
+    body: [{ date: "2026-11-13", trCode: "9010", astClassTreeId: <SK브로드밴드>, amt: 600000, settleMngYn: true, … },
+           { trId: <2>, settleDate: "2026-11-13", depositId: <우리은행>, trCode: "9003", settleAmt: 600000 }]
+    expect: { journal: { 결제: 차 미지급금 600000 / 대 보통예금 600000 } }
   - no: 3
-    api: [GET /api/v1/act/journals/history?astClassTreeId=<선급비용-현대해상>]
-    expect: { rows: 2 }
+    api: [GET /api/v1/ast/books/pre-deposits?holdDate=2026-11-13, GET /api/v1/act/journals/history?astClassTreeId=<현대해상>]
+    expect: { rows: 2, items: { 현대해상: 1200000, SK브로드밴드: 600000 }, history: { rows: 1, trName: 선급처리, amt: 1200000 } }
 ```
 </details>
 
 <details>
 <summary>근거 (AS-IS · TOBE)</summary>
 
-- AS-IS: `Ast09_Tab_PreDepositBook`(#1342 E0~E3, `Ast09_Book.selectPreDepositByHoldDate` L52 → `ast09_book.selectPreDepositByHoldDate`(`ItemSClassCode005`)), `Act02_Grid_History`(`Act02_Journal.selectByAstClassTreeId` L55), 등록은 `Ast06_Tab_TrIntrinsic`·`Ast06_Lookup_TrIntrinsic`(#1091, AST-BZ-0007·0011과 같은 창).
-- TOBE: `AstBookController` `GET /api/v1/ast/books/pre-deposits`, `ActJournalController` `GET /api/v1/act/journals/history`, 프론트 `Ast09_Tab_PreDepositBook.tsx`·`pages/act/Act02_Grid_History.tsx`, 등록 `Ast06_Lookup_TrIntrinsic.tsx` L201(잔고정리 `.catch(() => undefined)`)·L228-249.
+- AS-IS: `Ast09_Tab_PreDepositBook`(#1342 E0~E3, 서버 `Ast09_Book.selectPreDepositByHoldDate` — `ast09_book.selectPreDepositByHoldDate`: 고유자산·`ItemSClassCode005` 소분류, 검색어는 구분·자산명·거래처 연결), `Act02_Grid_History`(`act02_journal.selectByAstClassTreeId`), 등록은 `Ast06_Tab_TrIntrinsic`(거래유형 9010 선급처리 → 분개그룹 901001: 차 자산계정 1100 / 대 미지급금 2200).
+- TOBE: `AstBookController`(`GET /api/v1/ast/books/pre-deposits`)·`AstBookService.searchPreDeposits`, 매퍼 `AstBookMapper.xml#selectPreDepositByHoldDate`, `ActJournalController`(`GET /api/v1/act/journals/history`)·`ActJournalService.searchHistory`·`ActJournalMapper.xml#selectByAstClassTreeId`, 화면 `Ast09_Tab_PreDepositBook.tsx`·`Act02_Grid_History.tsx`.
 </details>

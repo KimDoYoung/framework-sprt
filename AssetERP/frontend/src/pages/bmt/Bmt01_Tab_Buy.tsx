@@ -215,7 +215,7 @@ export const Bmt01_Tab_Buy: React.FC = () => {
       ),
     }),
     gb.textCenter('apprStatusName', 100, '상신상태'),  // L219
-    iconCell<BmtBuy>('edit', 'actionCell', 80, '결재요청', updateCheck),  // L220 actionCell
+    iconCell<BmtBuy>('edit', 'actionCell', 50, '결재요청', updateCheck),  // L220 actionCell
   ], [contents, updateCheck]);
 
   return (

@@ -124,8 +124,8 @@ export const Tdm30_Tab_RoleAllc: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-      <div style={{ margin: '20px 20px 0 20px', minHeight: 50 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ margin: '15px 20px 0 20px', minHeight: 50 }}>
         {/* [E3] retrieveButton[조회].Select (L194) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}
@@ -152,9 +152,9 @@ export const Tdm30_Tab_RoleAllc: React.FC = () => {
         </SearchBar>
       </div>
       <Splitter style={{ flex: 1, minHeight: 0, padding: '0 20px', boxSizing: 'border-box' }}>
-        <Splitter.Panel defaultSize={670} min={300} max={1000}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
-            <div style={{ padding: '10px 10px 8px' }}>
+        <Splitter.Panel defaultSize={700} min={300} max={1000}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
+            <div style={{ padding: '0px 10px 8px' }}>
               <Space>
                 {/* [E4] insertButton[등록].Select (L200) → insertRow() L370-378: Tdm30_Edit_RoleAllc.insert(기준일, 저장하면 retrieve()) */}
                 <Button type="register" onClick={() => setInsertOpen(true)}>등록</Button>
@@ -173,11 +173,11 @@ export const Tdm30_Tab_RoleAllc: React.FC = () => {
             </div>
           </div>
         </Splitter.Panel>
-        <Splitter.Panel>
+        <Splitter.Panel style={{ background: '#fff' }}>
           <Tdm34_TabPage_RoleAllcDetail roleAllc={selected} nonce={nonce} />
         </Splitter.Panel>
       </Splitter>
-      <div style={{ margin: '-2px 20px 20px 20px', height: 50, border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: '15px 0 0 10px', fontSize: 12 }}>
+      <div style={{ margin: '-2px 20px 20px 20px', height: 50, background: '#fff', boxSizing: 'border-box', padding: '15px 0 0 10px', fontSize: 12 }}>
         ※ 대외겸직은 "임원 등록(#1411)" 화면에서 등록하세요
       </div>
       <Tdm30_Edit_RoleAllc open={insertOpen} baseDate={baseDate.format(FORMAT)} onSaved={() => { void retrieve(); }} onClose={() => setInsertOpen(false)} />

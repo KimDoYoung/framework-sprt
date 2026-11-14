@@ -37,7 +37,7 @@ const buildGrid = (works: Code[], requestApproval: (r: Row) => void) => [
       return true;
     },
   }),
-  iconCell<Row>('edit', 'actionCell', 80, '결재요청', requestApproval),  // L145-173 actionCell
+  iconCell<Row>('edit', 'actionCell', 50, '결재요청', requestApproval),  // L145-173 actionCell
   gb.textStatus('aprStatusNm', 100, '문서상태'),
   gb.text('confirmNm', 200, '처리담당자'),
   gb.textStatus('stateNm', 100, '처리상태'),

@@ -102,7 +102,7 @@ export const Bbs20_Tab_FloralRequestMng: React.FC = () => {
       },
     }),
     gb.date('endDate', 90, '완료일', { editor: 'date' }),  // L194
-    iconCell<BbsFloralRequest>('send', 'sendCell', 70, '문자발송', row => setMessageTarget({ option: '02', model: row })),  // L195 sendCell → sendMessage() L202-205: Bbs20_Lookup_Message.open("02", model)
+    iconCell<BbsFloralRequest>('send', 'sendCell', 50, '문자발송', row => setMessageTarget({ option: '02', model: row })),  // L195 sendCell → sendMessage() L202-205: Bbs20_Lookup_Message.open("02", model)
     gb.text('note', 150, '비고', { editor: 'text' }),  // L196
     gb.text('rejectReason', 250, '반려사유', { editor: 'text' }),  // L197
   ], [statuses]);

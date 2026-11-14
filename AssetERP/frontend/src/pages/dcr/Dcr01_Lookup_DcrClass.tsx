@@ -79,14 +79,15 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
   const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   // [E3] okButton[선택].Select (L125) → confirm() L284-296: 고른 것이 없으면 "분류를 선택해주세요"
-  const confirm = () => {
-    if (selected == null) {
+  const pick = (node: DcrClassTree | null) => {
+    if (node == null) {
       message.warning('분류를 선택해주세요');
       return;
     }
-    onResult({ classTreeId: selected.classTreeId, classTreeFullName: fullName(rows, selected.classTreeId) });
+    onResult({ classTreeId: node.classTreeId, classTreeFullName: fullName(rows, node.classTreeId) });
     onClose();
   };
+  const confirm = () => pick(selected);
 
   // [E4] selectAllButton[전체].Select (L131) → confirmAll() L298-301: callback.execute(null) 뒤 닫는다
   const confirmAll = () => {
@@ -106,27 +107,30 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
         <div style={{ textAlign: 'center' }}>
           <Space>
             <Button type="select" onClick={confirm}>선택</Button>
-            <Button type="select" onClick={confirmAll}>전체</Button>
+            <Button type="selectNone" onClick={confirmAll}>전체</Button>
             {/* [E5] cancleButton[닫기].Select (L137) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
         </div>
       }
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <SearchBar onSearch={search} searchText="찾기">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
+        <div style={{ flex: 1, minWidth: 0, paddingBottom: 8,  borderBottom: '1px solid #d9d9d9' }}>
+          <SearchBar
+            onSearch={search}
+            searchText="찾기"
+            extra={<TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />}
+          >
             <SearchBar.Field label="문서분류">
               <SearchBar.Input style={{ width: 130 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
             </SearchBar.Field>
           </SearchBar>
         </div>
-        <TreeListControlButtons value={view} onChange={setView} onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} expandDisabled={treeData.length === 0} />
       </div>
       {/* getMenuTree() L171-208: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick) */}
       <div style={{ height: 560, overflow: view === 'list' ? 'hidden' : 'auto', marginTop: 8 }}>
         {view === 'list' ? (
-          <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} />
+          <DcrClassSearchList rows={rows} query={docSearch} onSelect={setSelected} onDoubleClick={pick} />
         ) : treeData.length > 0 && (
           <DcrTree
             showIcon
@@ -137,6 +141,8 @@ export const Dcr01_Lookup_DcrClass: React.FC<Props> = ({ open, onResult, onAll, 
             expandedKeys={expanded}
             onExpand={keys => setExpanded(keys)}
             selectedKeys={selected == null ? [] : [selected.classTreeId]}
+            // 더블클릭 = [선택] (두 번 눌러 펼침이 원위치로 돌아가므로 접힘 상태는 그대로)
+            onDoubleClick={(_, node) => pick(rows.find(r => r.classTreeId === Number(node.key)) ?? null)}
             onSelect={(keys, info) => {
               const id = keys.length ? Number(keys[0]) : Number(info.node.key);
               setSelected(rows.find(r => r.classTreeId === id) ?? null);

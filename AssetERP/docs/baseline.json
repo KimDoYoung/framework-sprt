@@ -5402,8 +5402,8 @@
     ]
   },
   "Dcr10_Tab_MailHistory": {
-    "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
-    "commit_short": "ecfa0f1",
+    "commit": "592ed6568758bbdb5d55709160ada124b7879e55",
+    "commit_short": "592ed65",
     "branch": "ioc",
     "commit_date": "2026-11-12",
     "repo_name": "IDMS-IC",
@@ -5424,7 +5424,7 @@
       "Apr01_Edit_ApprDoc",
       "Fnd01_Lookup_SelectSingle"
     ],
-    "recorded_at": "2026-11-12T19:46:11+09:00",
+    "recorded_at": "2026-11-13T09:14:49+09:00",
     "recorded_by": "kdy987",
     "note": "docs/1-변환/work/G/G14-작업기록.md",
     "history": [
@@ -5447,8 +5447,29 @@
           "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
         },
         "note": "docs/1-변환/work/G/G14-작업기록.md"
+      },
+      {
+        "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
+        "commit_short": "ecfa0f1",
+        "recorded_at": "2026-11-12T19:46:11+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailViwer.java": "7f960c9c5bb1d8f7441cb77596358f8012ebcec9",
+          "application/src/main/java/myApp/client/vi/dcr/Dcr10_Tab_MailHistory.java": "a2cc4098f74660f5c79638a9cffc0d4aebbbccdd",
+          "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModel.java": "4aecb536396d30a96087bd8d9fb6bf9ba83baac8",
+          "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModelProperties.java": "8dfe666f1b285ad9f9c7a3aa4d740ec4339482c1",
+          "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "525e61aec9607c08a29dc01f9c74194f94ef6d1d",
+          "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "4a5738f95b98ec3e02a91661f6444b51ce40c670",
+          "application/src/main/java/myApp/server/dcr/Dcr10_MailHistory.java": "aa6c3232ca95e2c647cae071008f19caa1c1e3b2",
+          "application/src/main/java/myApp/server/dcr/mapper/dcr10_mail_history.xml": "ac5ac17dad7d420ae46b56752f656bd6f2aaa388",
+          "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+          "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+          "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+        },
+        "note": "docs/1-변환/work/G/G14-작업기록.md"
       }
-    ]
+    ],
+    "id": "CH-0411-0414"
   },
   "Apr01_Tab_TotalList": {
     "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
@@ -13300,29 +13321,29 @@
     "id": "P05"
   },
   "Fnd08_Tab_OrgAuth": {
-    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
-    "commit_short": "d538228",
+    "commit": "592ed6568758bbdb5d55709160ada124b7879e55",
+    "commit_short": "592ed65",
     "branch": "ioc",
-    "commit_date": "2026-10-23",
+    "commit_date": "2026-11-12",
     "repo_name": "IDMS-IC",
     "files": {
-      "application/src/main/java/myApp/client/vi/fnd/Fnd00_Lookup_FundCode.java": "84eeb15d77e1a0b432bae8b1ade37798540b127f",
-      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgAuth.java": "53e976c7ef7cd67c9fa617d1915b7701dde48633",
-      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgCode.java": "362248c9e3c79b6883559b26ad3a1c7ac201603e",
-      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Page_OrgAuth.java": "206540b6a49829665d525eda3529270e35ae4723",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd00_Lookup_FundCode.java": "94de26cb6fad6412db48c92b45ab418b2f094497",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgAuth.java": "8c5b4fbc9e06d5ab95ee41d68e360e8c4aaeabc8",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgCode.java": "4b77b7ef0346b4976d3eaaeb1805dcf911bc6060",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Page_OrgAuth.java": "be304de58e927cada19a3dab4bb24751eae67284",
       "application/src/main/java/myApp/client/vi/fnd/Fnd08_Tab_OrgAuth.java": "5340e88236035b01d6adcd91336d8c42c3908ee2",
       "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModel.java": "fdff888d8bf9032fea0f195e1a45c8009e58a647",
       "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModelProperties.java": "ac8fd8d5a7056bbdc0612d2e39dfc74b506703c7",
       "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
       "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
       "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
-      "application/src/main/java/myApp/server/fnd/Fnd00_Fund.java": "79d6f410c2f785d1dac7851d6984c1b759e7567d",
+      "application/src/main/java/myApp/server/fnd/Fnd00_Fund.java": "f843c0688fdbe4a5a571bf005eb6e1e8a5e4f6da",
       "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
-      "application/src/main/java/myApp/server/fnd/Fnd08_OrgAuth.java": "6673cd72186e6381f62dfc3253e9afc8f52858ac",
-      "application/src/main/java/myApp/server/fnd/mapper/fnd00_fund.xml": "37146e07cb6e3fc9b138d7e60aa68ee39fd6a096",
+      "application/src/main/java/myApp/server/fnd/Fnd08_OrgAuth.java": "7aa3bbd67b9d0a8ac57e0bca6c352b5ee3d3c2b6",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd00_fund.xml": "0224fd6b17503d3aa22fa3c6af996665ad000c58",
       "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
-      "application/src/main/java/myApp/server/fnd/mapper/fnd08_org_auth.xml": "c019511575673b13ce069371f7eae2a98c9c4f87",
-      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd08_org_auth.xml": "40422b3623e59c08571b9d73fe546c7e497e7b7e",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "66d9cb130ac7f580db55fe1ab0e284c58f7b3d42",
       "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
       "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
     },
@@ -13330,11 +13351,40 @@
       "Fnd01_Lookup_SelectMulti",
       "Org00_Lookup_SelectMulti"
     ],
-    "recorded_at": "2026-10-26T14:37:55+09:00",
+    "recorded_at": "2026-11-13T09:14:49+09:00",
     "recorded_by": "kdy987",
     "note": "docs/1-변환/work/P/P06-작업기록.md",
-    "history": [],
-    "id": "P06"
+    "history": [
+      {
+        "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+        "commit_short": "d538228",
+        "recorded_at": "2026-10-26T14:37:55+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/fnd/Fnd00_Lookup_FundCode.java": "84eeb15d77e1a0b432bae8b1ade37798540b127f",
+          "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgAuth.java": "53e976c7ef7cd67c9fa617d1915b7701dde48633",
+          "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgCode.java": "362248c9e3c79b6883559b26ad3a1c7ac201603e",
+          "application/src/main/java/myApp/client/vi/fnd/Fnd08_Page_OrgAuth.java": "206540b6a49829665d525eda3529270e35ae4723",
+          "application/src/main/java/myApp/client/vi/fnd/Fnd08_Tab_OrgAuth.java": "5340e88236035b01d6adcd91336d8c42c3908ee2",
+          "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModel.java": "fdff888d8bf9032fea0f195e1a45c8009e58a647",
+          "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModelProperties.java": "ac8fd8d5a7056bbdc0612d2e39dfc74b506703c7",
+          "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+          "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+          "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+          "application/src/main/java/myApp/server/fnd/Fnd00_Fund.java": "79d6f410c2f785d1dac7851d6984c1b759e7567d",
+          "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+          "application/src/main/java/myApp/server/fnd/Fnd08_OrgAuth.java": "6673cd72186e6381f62dfc3253e9afc8f52858ac",
+          "application/src/main/java/myApp/server/fnd/mapper/fnd00_fund.xml": "37146e07cb6e3fc9b138d7e60aa68ee39fd6a096",
+          "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+          "application/src/main/java/myApp/server/fnd/mapper/fnd08_org_auth.xml": "c019511575673b13ce069371f7eae2a98c9c4f87",
+          "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+          "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+          "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+        },
+        "note": "docs/1-변환/work/P/P06-작업기록.md"
+      }
+    ],
+    "id": "CH-0411-0414"
   },
   "Fnd01_Tab_FundSearch": {
     "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
@@ -24148,8 +24198,8 @@
     "id": "EE08"
   },
   "Dcr10_Tab_MailHistory_Manager": {
-    "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
-    "commit_short": "ecfa0f1",
+    "commit": "592ed6568758bbdb5d55709160ada124b7879e55",
+    "commit_short": "592ed65",
     "branch": "ioc",
     "commit_date": "2026-11-12",
     "repo_name": "IDMS-IC",
@@ -24170,7 +24220,7 @@
       "Apr01_Edit_ApprDoc",
       "Fnd01_Lookup_SelectSingle"
     ],
-    "recorded_at": "2026-11-12T19:46:11+09:00",
+    "recorded_at": "2026-11-13T09:14:49+09:00",
     "recorded_by": "kdy987",
     "note": "docs/1-변환/work/EE/EE09-작업기록.md",
     "history": [
@@ -24193,8 +24243,29 @@
           "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
         },
         "note": "docs/1-변환/work/EE/EE09-작업기록.md"
+      },
+      {
+        "commit": "ecfa0f17bdb6ba969f0d9c7128b515c94132b906",
+        "commit_short": "ecfa0f1",
+        "recorded_at": "2026-11-12T19:46:11+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailViwer.java": "7f960c9c5bb1d8f7441cb77596358f8012ebcec9",
+          "application/src/main/java/myApp/client/vi/dcr/Dcr10_Tab_MailHistory_Manager.java": "8de5164f5462e1e233d57edd05589bbb06e4e9c3",
+          "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModel.java": "4aecb536396d30a96087bd8d9fb6bf9ba83baac8",
+          "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModelProperties.java": "8dfe666f1b285ad9f9c7a3aa4d740ec4339482c1",
+          "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "525e61aec9607c08a29dc01f9c74194f94ef6d1d",
+          "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "4a5738f95b98ec3e02a91661f6444b51ce40c670",
+          "application/src/main/java/myApp/server/dcr/Dcr10_MailHistory.java": "aa6c3232ca95e2c647cae071008f19caa1c1e3b2",
+          "application/src/main/java/myApp/server/dcr/mapper/dcr10_mail_history.xml": "ac5ac17dad7d420ae46b56752f656bd6f2aaa388",
+          "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+          "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+          "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+        },
+        "note": "docs/1-변환/work/EE/EE09-작업기록.md"
       }
-    ]
+    ],
+    "id": "CH-0411-0414"
   },
   "Act09_Tab_AccountNum": {
     "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
@@ -25911,5 +25982,59 @@
       "note": "#1131",
       "commit": "3aabbd415d3c1f21ea946a416a0dff41613e0d92"
     }
+  },
+  "Crm09_Tab_ContactPointTreeGrid": {
+    "commit": "592ed6568758bbdb5d55709160ada124b7879e55",
+    "commit_short": "592ed65",
+    "branch": "ioc",
+    "commit_date": "2026-11-12",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/crm/Crm09_Lookup_ContactPoint.java": "ece8109d314d355efee6abd556446bf99b612957",
+      "application/src/main/java/myApp/client/vi/crm/Crm09_Tab_ContactPoint.java": "2fcf9112b99f7ad31d8fcce7d79e5e9d3f27e693",
+      "application/src/main/java/myApp/client/vi/crm/Crm09_Tab_ContactPointTreeGrid.java": "9cc724527575b8ce3b8f246211bfb34c40ec1e73",
+      "application/src/main/java/myApp/client/vi/crm/Crm12_Grid_WorkDetail.java": "110f8319d3ead448a0b005459d1e4a74637a08b0",
+      "application/src/main/java/myApp/client/vi/crm/Crm12_Lookup_WorkDetail.java": "910e04ca84281cc7e714a1d38f0f0f783d36ce55",
+      "application/src/main/java/myApp/client/vi/crm/Crm14_Lookup_ShareDefault.java": "9075677bbc0f6f77134f8092e5b62cec8203584a",
+      "application/src/main/java/myApp/client/vi/crm/Crm15_Lookup_Share.java": "8e54917fffdae9c6085e34053c9af6d67fd75385",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm09_ContactModel.java": "969a527d9c77274657d7d0703f9f307702b5b760",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm09_ContactModelProperties.java": "509fa200bf7d431157b68ca53711bc1c7ea6c1da",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm12_WorkDetailModel.java": "213da8a98028c11d5d99db3d967ca8428ebc8f03",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm12_WorkDetailModelProperties.java": "b159c61e0e150e566aeb8752105230620e4a51fd",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm13_RelateFundModel.java": "1f2411a340d817912b282a9aca673f525a77d757",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm13_RelateFundModelProperties.java": "89043eb8acffd837c8f144f7d1f232bbd7130ba2",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm14_ShareDefaultModel.java": "2817388e473fbace9aacc42606f79bce179a2105",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm14_ShareDefaultModelProperties.java": "a91a8411fd11844cabcca452ffcc5f009ceafcfd",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm15_ShareModel.java": "4a623903a9a204be3f111ce9d590994fb2175adf",
+      "application/src/main/java/myApp/client/vi/crm/model/Crm15_ShareModelProperties.java": "30a305aa22d87bc934924cfd50cc0f0f9cc6153a",
+      "application/src/main/java/myApp/server/crm/Crm09_Contact.java": "f53af8317c66d2f1088cd6e861088d56524bdf37",
+      "application/src/main/java/myApp/server/crm/Crm12_WorkDetail.java": "d110819d431583c331f1809d32a9a08df7c00d98",
+      "application/src/main/java/myApp/server/crm/Crm13_RelateFund.java": "1bf40d3731453811f59a3c81ed029db9f4ef7a71",
+      "application/src/main/java/myApp/server/crm/Crm14_ShareDefault.java": "bf477337d4a9c0d6cda6cab7eb15e6e5fb4ce260",
+      "application/src/main/java/myApp/server/crm/Crm15_Share.java": "bd4d0a9ea7cf9cce3b87213beea3a7e72b5f9916",
+      "application/src/main/java/myApp/server/crm/mapper/crm09_contact.xml": "152c6155b1134e7e050d9a07cae10758ff7e1739",
+      "application/src/main/java/myApp/server/crm/mapper/crm12_work_detail.xml": "42476af9b49a0ad1d7e311d510b8f7ba69af9a1f",
+      "application/src/main/java/myApp/server/crm/mapper/crm13_relate_fund.xml": "b26536a1566d65c3e4ad79dc95045095fcca23ce",
+      "application/src/main/java/myApp/server/crm/mapper/crm14_share_default.xml": "1ecbf4b5d66f8bc1b0d0cec7d5ec14bf067b2335",
+      "application/src/main/java/myApp/server/crm/mapper/crm15_share.xml": "bf09935f2661db8a00378d1dd1b62fc1c1f007aa",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Fnd01_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti",
+      "Sys09_Tree_Code",
+      "Sys10_Lookup_File",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-11-13T09:14:49+09:00",
+    "recorded_by": "kdy987",
+    "note": null,
+    "history": [],
+    "id": "CH-0411-0414"
   }
 }

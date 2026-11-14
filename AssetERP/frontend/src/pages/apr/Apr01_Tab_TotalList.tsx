@@ -95,7 +95,7 @@ export const Apr01_Tab_TotalList: React.FC = () => {
       gb.long('unProcTotalCnt', 100, '계', unprocStyle),  // L126
     ]), headerStyle: { color: UNPROC_COLOR } },
     {
-      ...iconCell<AprTotalList>('view', 'actionCell', 100, '건별명세', openSubList),  // L127 addCell
+      ...iconCell<AprTotalList>('view', 'actionCell', 50, '건별명세', openSubList),  // L127 addCell
       cellRendererSelector: (p: { node: { rowPinned?: string | null } }) => (p.node.rowPinned ? { component: () => null } : undefined),  // 합계 행에는 아이콘 없음
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

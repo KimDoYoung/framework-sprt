@@ -292,9 +292,9 @@ export const Tdm42_Tab_ManlManager: React.FC = () => {
     gb.date('endDate', 90, '적용종료일', { editor: 'date' }),  // L306
     gb.booleanYn2('lockYn', 55, '잠금'),  // L307
     dynamicViewCell<Row>('startDateYnStr', 'startDateYnStr', 60, '부서책무<br>매뉴얼', row => { void onViewManl(row); }),  // L308 addDynamicCell(viewCell, true)
-    dynamicIconCell<Row>('edit', 'apprStatusCode', 'apprRequest', 60, '결재요청', ['00', '99', '40'], onApprRequest),  // L310 addDynamicCell(actionCell, {00,99,40})
+    dynamicIconCell<Row>('edit', 'apprStatusCode', 'apprRequest', 50, '결재요청', ['00', '99', '40'], onApprRequest),  // L310 addDynamicCell(actionCell, {00,99,40})
     gb.textStatus('apprStatusName', 80, '결재상태'),  // L311
-    dynamicIconCell<Row>('view', 'apprStatusCode', 'apprView', 60, '문서보기', ['10', '20', '30'], onViewAppr),  // L312 addDynamicCell(apprCell, {10,20,30})
+    dynamicIconCell<Row>('view', 'apprStatusCode', 'apprView', 50, '문서보기', ['10', '20', '30'], onViewAppr),  // L312 addDynamicCell(apprCell, {10,20,30})
     gb.text('jobName', 200, '작업명'),  // L313
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);

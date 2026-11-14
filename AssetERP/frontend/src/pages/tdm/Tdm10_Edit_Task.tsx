@@ -175,6 +175,7 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
       width={630}
       closable={false}
       onCancel={onClose}
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -191,20 +192,20 @@ export const Tdm10_Edit_Task: React.FC<Props> = ({ mode, task, onSaved, onClose 
         <SystemCodeComboBox kindCd="TdmTaskClassCode" placeholder="선택하세요" style={{ width: '100%' }} value={classCode} onChange={code => changeClass(code)} />
       </EditField>
       <EditField label={lb('책무유형', true)} labelWidth={70}>
-        <LookupInput value={typeName ?? ''} width={470} onOpen={lookupTaskType} />
+        <LookupInput value={typeName ?? ''} width={520} onOpen={lookupTaskType} />
       </EditField>
       <EditField label={lb('책무', true)} labelWidth={70}>
         <Input.TextArea value={taskName} onChange={e => setTaskName(e.target.value)} style={{ height: 100, resize: 'none' }} />
       </EditField>
       <EditRow>
-        <EditField label={lb('공통책무')} labelWidth={70} width={350}><Checkbox checked={commonYn} onChange={e => setCommonYn(e.target.checked)} /></EditField>
-        <EditField label={lb('사용시작일', true)} labelWidth={70} width={232}>
+        <EditField label={lb('공통책무')} labelWidth={70} width={110}><Checkbox checked={commonYn} onChange={e => setCommonYn(e.target.checked)} /></EditField>
+        <EditField label={lb('사용시작일', true)} labelWidth={100} width={240}>
           <DatePicker value={startDate} format={FORMAT} allowClear={false} onChange={d => setStartDate(d)} style={{ width: 140 }} />
         </EditField>
       </EditRow>
       <EditRow>
-        <EditField label={lb('CEO책무')} labelWidth={70} width={350}><Checkbox checked={ceoYn} onChange={e => setCeoYn(e.target.checked)} /></EditField>
-        <EditField label={lb('사용종료일')} labelWidth={70} width={232}>
+        <EditField label={lb('CEO책무')} labelWidth={70} width={110}><Checkbox checked={ceoYn} onChange={e => setCeoYn(e.target.checked)} /></EditField>
+        <EditField label={lb('사용종료일')} labelWidth={100} width={240}>
           <DatePicker value={endDate} format={FORMAT} onChange={d => setEndDate(d)} style={{ width: 140 }} />
         </EditField>
       </EditRow>

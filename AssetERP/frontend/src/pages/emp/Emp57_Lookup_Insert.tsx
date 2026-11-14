@@ -6,7 +6,7 @@
  * 스타일: MG (임시 스크립트 판별 — docs/modal-style.md 모달 SID)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, message } from 'antd';
+import { Modal, Space, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { empAddrBookApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -105,12 +105,12 @@ export const Emp57_Lookup_Insert: React.FC<Props> = ({ open, onClose }) => {
       }
     >
       <div style={{ height: 480, display: 'flex' }}>
-        <div style={{ width: 500, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
-          <div>
+        <div style={{ width: 500, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, borderRight: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
+          <Space>
             {/* [E1] insertButton[등록].Select (L84) → insertRow() L145-153: Emp57_Edit_GroupName.insert(retrieve) */}
             <Button type="register" onClick={() => setEditing({ group: null })}>등록</Button>
             <Button type="delete" onClick={deleteRow}>삭제</Button>
-          </div>
+          </Space>
           <div style={{ flex: 1, minHeight: 0 }}>
             <SingleGrid<EmpAddrBookGroup>
               gridRef={gridRef}
@@ -122,7 +122,7 @@ export const Emp57_Lookup_Insert: React.FC<Props> = ({ open, onClose }) => {
             />
           </div>
         </div>
-        <div style={{ flex: 1, minWidth: 0, border: '1px solid #d9d9d9', borderLeft: 'none', padding: 8, boxSizing: 'border-box' }}>
+        <div style={{ flex: 1, minWidth: 0,  borderLeft: 'none', padding: 8, boxSizing: 'border-box' }}>
           <Emp57_TabPage_Insert parentId={parentId} />
         </div>
       </div>

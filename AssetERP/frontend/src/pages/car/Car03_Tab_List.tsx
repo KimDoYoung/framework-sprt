@@ -78,7 +78,7 @@ export const Car03_Tab_List: React.FC = () => {
     gb.textCenter('personNm', 100, '예약자'),  // L144
     gb.text('attendance', 240, '참석자'),  // L145
     // actionCell (ImageCell "Edit") L107-127 → Car03_Popup_BookingReg.getList(model, checkYn, cb → retrieve() + dayofMonthGrid.retrieve())
-    iconCell<CarBooking>('edit', 'actionCell', 60, '상세보기', row => setPopup({ mode: 'list', row, checkYn: canEdit(row) })),  // L146
+    iconCell<CarBooking>('edit', 'actionCell', 50, '상세보기', row => setPopup({ mode: 'list', row, checkYn: canEdit(row) })),  // L146
     iconCell<CarBooking>('delete', 'cancelCell', 60, '삭제', deleteCheck),  // L147
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [user.userId]);

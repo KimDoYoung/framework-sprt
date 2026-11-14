@@ -24,8 +24,8 @@ export const GRID_COLORS = {
 
 /** density: normal = AS-IS GridBuilder 기본에 가까운 36/32, compact = 28/24 */
 export const GRID_DENSITY = {
-  normal: { headerHeight: 36, rowHeight: 32 },
-  compact: { headerHeight: 28, rowHeight: 24 },
+  normal: { headerHeight: 32, rowHeight: 32 },
+  compact: { headerHeight: 26, rowHeight: 24 },
 } as const;
 
 export type GridDensity = keyof typeof GRID_DENSITY;

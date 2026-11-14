@@ -23,7 +23,7 @@ const buildGrid = (openHistory: (r: SmsHistoryTotal) => void) => [
   gb.text('locNm', 80, '서브도메인'),  // L99
   gb.long('runningTotalCount', 200, '누적사용건수'),  // L100
   // L101 addCell(actionCell, 80, "발신기록", ImageCell("View")) → Sms02_Lookup_History.open(companyId)
-  iconCell<SmsHistoryTotal>('view', 'actionCell', 80, '발신기록', openHistory),
+  iconCell<SmsHistoryTotal>('view', 'actionCell', 50, '발신기록', openHistory),
 ];
 
 export const Sms02_Tab_TotalCount: React.FC = () => {

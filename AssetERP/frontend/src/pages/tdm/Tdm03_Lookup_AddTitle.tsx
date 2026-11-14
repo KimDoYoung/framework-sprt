@@ -130,6 +130,7 @@ export const Tdm03_Lookup_AddTitle: React.FC<Props> = ({ person, onClose }) => {
       closable={false}
       maskClosable={false}
       onCancel={onClose}
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 10 } }}
       footer={
         <div style={{ textAlign: 'center' }}>
           {/* [E7] closeButton[닫기].Select [callback != null] (L162) → hide() — callback.execute() 뒤 (L162-169) */}

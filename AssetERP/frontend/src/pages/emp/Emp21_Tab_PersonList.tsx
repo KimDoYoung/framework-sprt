@@ -112,10 +112,10 @@ export const Emp21_Tab_PersonList: React.FC = () => {
     gb.text('unLeaveName', 240, '구분'),   // L184
     gb.double('remainDays', 60, '잔여휴가'),   // L185
     gb.textCenter('apprStatusName', 180, '지정통보문서'),   // L186
-    iconCell<MyUnLeave>('view', 'apprView', 60, '상세보기', row => view(row.apprId)),   // L187 actionCell2
+    iconCell<MyUnLeave>('view', 'apprView', 50, '상세보기', row => view(row.apprId)),   // L187 actionCell2
     iconCell<MyUnLeave>('edit', 'apply', 60, '상신', apply),   // L188 actionCell1
     gb.textCenter('expectApprStatusName', 180, '결재상태'),   // L189
-    iconCell<MyUnLeave>('view', 'expectView', 60, '상세보기', row => view(row.expectApprId)),   // L190 actionCell3
+    iconCell<MyUnLeave>('view', 'expectView', 50, '상세보기', row => view(row.expectApprId)),   // L190 actionCell3
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 

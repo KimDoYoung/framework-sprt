@@ -110,7 +110,7 @@ export const Sch04_Tab_DailyCheckListStatus: React.FC = () => {
     gb.date('closeDate', 100, '마감일'),
     gb.text('className', 150, '분류'),
     gb.text('title', 500, '체크항목'),
-    iconCell<Sch04CheckStatus>('view', 'actionCell', 80, '상세보기', view),   // → view()
+    iconCell<Sch04CheckStatus>('view', 'actionCell', 50, '상세보기', view),   // → view()
     gb.textCenter('statusName', 100, '체크상태'),
     gb.textArea('note', 300, '체크내용'),
     gb.text('apprStatusName', 80, '결재상태'),

@@ -865,7 +865,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     gb.date('apprRegDate', 90, '상신일'),
     gb.textCenter('apprStatusName', 100, '상신상태'),
     // 상세보기 L920-948: 상신문서 보기(Apr01_Edit_ApprDoc)
-    iconCell<FltRealTr>('view', 'detailCell', 60, '상세보기', row => {
+    iconCell<FltRealTr>('view', 'detailCell', 50, '상세보기', row => {
       if (row.apprId == null) message.warning('상신문서가 없습니다. 먼저 상신을 진행해주세요');
       else setViewApprId(row.apprId);
     }),

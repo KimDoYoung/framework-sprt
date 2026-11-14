@@ -177,7 +177,7 @@ export const Ast05_Lookup_TrCode: React.FC<Props> = ({ open, mode, assetType, fi
             {edit && <Button type="save" count={{ ...crud.changes, modified: crud.changes.modified + deleteList.length }} onClick={update}>저장</Button>}
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E3] selectAllButton[전체].Select (L170) → callbackResult.execute(null), hide() */}
-            {!edit && <Button type="select" onClick={() => onResult(null)}>전체</Button>}
+            {!edit && <Button type="selectNone" onClick={() => onResult(null)}>전체</Button>}
             {/* [E4] cancleButton[닫기].Select (L177) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

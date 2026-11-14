@@ -118,7 +118,7 @@ export const Apr01_Tab_StampSeq: React.FC = () => {
     gb.text('receiveName', 300, '제출처'),  // L230
     // [E3] editDocCell (ImageCell).callbackOnCreate (L185) → 인라인 L185-190: 문서 창을 닫으면 grid.unmask() — TOBE는 마스크가 없어 창 닫기만
     // editDocCell(View) L167-199 → 폐기 문서면 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 ApprCallbackResult(열람권한 없으면 "해당문서의 열람권한이 없습니다") → Apr01_Edit_ApprDoc.retrieveApproval(model, false, callback)
-    iconCell<AprStampSeq>('view', 'actionCell', 80, '문서확인', row => {  // L231
+    iconCell<AprStampSeq>('view', 'actionCell', 50, '문서확인', row => {  // L231
       if ((row.title ?? '').includes(DISPOSED_VIEW)) message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       else if (row.apprId != null) void openPermitted(row.apprId);
     }),

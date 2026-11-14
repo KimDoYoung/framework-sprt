@@ -42,7 +42,7 @@ export const Bbs15_Tab_CompanyRule: React.FC = () => {
     gb.textCenter('companyRuleCode', 100, '규정코드'),  // L114
     gb.text('title', 650, '회사규정명'),  // L115
     // L116 addCell(ImageCell("보기")) → viewContent() L141-145: 선택한 규정의 내용 조회창
-    iconCell<BbsCompanyRule>('view', 'actionCell', 55, '상세보기', setViewing),
+    iconCell<BbsCompanyRule>('view', 'actionCell', 50, '상세보기', setViewing),
     gb.text('note', 350, '비고'),  // L117
     gb.date('revisionDate', 100, '제개정일'),  // L118
     gb.longCenter('revisionNo', 70, '개정회차'),  // L119

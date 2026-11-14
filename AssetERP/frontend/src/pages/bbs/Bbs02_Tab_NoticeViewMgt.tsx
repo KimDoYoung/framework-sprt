@@ -74,7 +74,7 @@ export const Bbs02_Tab_NoticeViewMgt: React.FC = () => {
     gb.textHtml('title', 800, '제목'),  // L124
     gb.textCenter('publicYnName', 70, '공개여부'),  // L125
     // L116-119 editCell("보기") → viewNotice() L134-152: commentYn이면 openWithComment, 아니면 open
-    iconCell<BbsNotice>('view', 'actionCell', 70, '상세보기', setViewing),  // L126
+    iconCell<BbsNotice>('view', 'actionCell', 50, '상세보기', setViewing),  // L126
   ], []);
 
   return (

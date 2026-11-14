@@ -114,7 +114,7 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
     gb.double('officeWorkRate', 110, '사무수탁보수율(bp)'),
     gb.date('revisionDate', 90, '최종<br>규약일자'),
     gb.longCenter('revisionNo', 70, '최종<br>개정회차'),
-    iconCell<FundSearch>('view', 'actionCell', 70, '규약보기', row => {
+    iconCell<FundSearch>('view', 'actionCell', 50, '규약보기', row => {
       if (row.termsId != null) setTermsId(row.termsId);  // 규약이 없는 펀드는 termsId가 null → 원본은 서버 호출 없이 빈 창
     }),
     gb.text('note', 300, '비고'),

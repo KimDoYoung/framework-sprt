@@ -115,7 +115,7 @@ export const Apr01_Tab_ExternalBiz: React.FC = () => {
     gb.text('title', 600, '문서명'),  // L174
     gb.textCenter('statusName', 100, '결재상태'),  // L175
     // actionCell(Detail) L176 → 선택 행으로 Apr01_Edit_ApprDoc.retrieveApproval(model, isAdmin, callback → retrieve())  [E4] callbackOnCreate (L159)
-    iconCell<AprPreProvide>('view', 'actionCell', 70, '상세보기', row => setViewApprId(row.apprId)),
+    iconCell<AprPreProvide>('view', 'actionCell', 50, '상세보기', row => setViewApprId(row.apprId)),
   ], []);
 
   const labelStyle: React.CSSProperties = { width: 95, fontWeight: 600, whiteSpace: 'nowrap' };

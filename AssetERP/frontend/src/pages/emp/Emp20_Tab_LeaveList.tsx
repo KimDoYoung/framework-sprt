@@ -92,7 +92,7 @@ export const Emp20_Tab_LeaveList: React.FC = () => {
     gb.double('leaveCount', 60, '휴가기간'),   // L240
     gb.text('leaveName', 150, '휴가구분'),   // L241
     // [E4] actionCell (ImageCell).callbackOnCreate (L193) → 인라인 L193-198: ApprCallbackResult(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, …)
-    iconCell<LeaveListRow>('view', 'apprView', 80, '상세보기', row => {   // L243
+    iconCell<LeaveListRow>('view', 'apprView', 50, '상세보기', row => {   // L243
       if (row.apprId == null) { message.warning('해당문서의 열람권한이 없습니다'); return; }
       setViewApprId(row.apprId);
     }),

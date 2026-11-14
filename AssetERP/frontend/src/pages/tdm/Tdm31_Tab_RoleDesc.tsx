@@ -247,9 +247,9 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
     gb.text('roleName', 200, '(본)직책'),  // L347
     gb.text('addTitle', 300, '겸직사항'),  // L350
     iconCell<TdmRoleDescCompany>('view', 'actionCell', 80, '책무기술서', onView),  // L353 actionCell01
-    dynamicIconCell<TdmRoleDescCompany>('edit', 'apprStatusCode', 'apprRequest', 60, '결재요청', ['00', '40', '99'], row => { void apprRequest(row); }),  // L354 actionCell02
+    dynamicIconCell<TdmRoleDescCompany>('edit', 'apprStatusCode', 'apprRequest', 50, '결재요청', ['00', '40', '99'], row => { void apprRequest(row); }),  // L354 actionCell02
     gb.textStatus('apprStatusName', 80, '결재상태'),  // L355
-    dynamicIconCell<TdmRoleDescCompany>('view', 'apprStatusCode', 'apprView', 60, '문서보기', APPR_SENT, viewAppr),  // L356 actionCell03
+    dynamicIconCell<TdmRoleDescCompany>('view', 'apprStatusCode', 'apprView', 50, '문서보기', APPR_SENT, viewAppr),  // L356 actionCell03
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [reasonCodes]);
 

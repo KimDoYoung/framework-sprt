@@ -58,7 +58,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
   const viewColumns = useMemo(() => [
     gb.textCenter('taskClassName', 120, '책무구분'),  // L256
     gb.textCenter('taskTypeCode', 100, '책무유형코드'),  // L257
-    gb.text('taskTypeName', 350, '책무유형명'),  // L258
+    gb.text('taskTypeName', 450, '책무유형명'),  // L258
   ], []);
 
   const crud = useGridCrud<TdmTaskType>({
@@ -125,7 +125,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
     <LookupModal
       open={!!mode}
       title="책무유형"
-      width={830}
+      width={800}
       closable={false}
       maskClosable={false}
       onCancel={close}
@@ -135,7 +135,7 @@ export const Tdm14_Lookup_TaskType: React.FC<Props> = ({ mode, taskClassCode, on
             {/* [E8] selectButton[확인].Select (L201) → selectClose() — 고르기 */}
             {!edit && <Button type="save" onClick={() => selectClose()}>확인</Button>}
             {/* [E9] selectAllButton[전체].Select [callback != null] (L207) → callback(null), hide() — allButtonYn(onAll)일 때만 */}
-            {!edit && onAll && <Button type="select" onClick={() => { onAll(); onClose(); }}>전체</Button>}
+            {!edit && onAll && <Button type="selectNone" onClick={() => { onAll(); onClose(); }}>전체</Button>}
             {/* [E10] closeButton[닫기].Select (L216) → hide(), [E11] messageBox.DialogHide (L221) */}
             <Button type="close" onClick={close}>닫기</Button>
           </Space>

@@ -37,7 +37,7 @@ const TYPES = {
   move: ['red', <SwapOutlined />],
   upload: ['orange', <UploadOutlined />],
   download: ['orange', <DownloadOutlined />],
-  view: ['orange', <EyeOutlined />],
+  view: ['lightBlue', <EyeOutlined />],
   goto: ['orange', <ArrowRightOutlined />],
   group: ['orange', <TeamOutlined />],
   assign: ['orange', <CheckOutlined />],
@@ -50,6 +50,7 @@ const TYPES = {
   register: ['green', <EditOutlined />],
   generate: ['green', <AimOutlined />],
   select: ['green', <LeftCircleOutlined />],
+  selectNone: ['darkGray', <LeftCircleOutlined />],
   settings: ['dark', <SettingOutlined />],
   shortcut: ['mainTheme', <ArrowRightOutlined />, true],
 } satisfies Record<string, [Color, React.ReactNode, iconOnly?: boolean]>;

@@ -119,7 +119,7 @@ export const Sch01_Tab_ListOrg: React.FC = () => {
     gb.text('title', 300, '일정명'),
     gb.textArea('content', 400, '상세내용'),
     gb.text('deadlineName', 150, '주기'),
-    iconCell<Sch01Org>('view', 'actionCell', 80, '상세보기', lookupSch),   // → lookupSch()
+    iconCell<Sch01Org>('view', 'actionCell', 50, '상세보기', lookupSch),   // → lookupSch()
     gb.textCenter('statusName', 80, '처리여부'),
     gb.textCenter('personName', 80, '처리자'),
     gb.text('managerOrgInfo', 200, '등록자'),   // SQL에 없는 열 — 원본도 빈 칸

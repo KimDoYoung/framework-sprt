@@ -189,8 +189,8 @@ export const Icam55_Tab_UserRegAppr: React.FC = () => {
       gb.textCenter('procdelYnStr', 80, '삭제'),                            // L256
     ]),
     gb.textCenter('apprStatusName', 100, '결재상태'),                        // L257
-    iconCell<IcamUser>('edit', 'apprCell', 60, '결재요청', insertLinkApproval),   // L258
-    iconCell<IcamUser>('view', 'viewCell', 60, '문서보기', apprView),             // L259
+    iconCell<IcamUser>('edit', 'apprCell', 50, '결재요청', insertLinkApproval),   // L258
+    iconCell<IcamUser>('view', 'viewCell', 50, '문서보기', apprView),             // L259
     gb.textCenter('regEmpName', 80, '등록자'),                              // L260
     gb.textCenter('procStateName', 100, '처리결과'),                         // L261
     gb.date('procDate', 90, '처리일자'),                                    // L262 (UX-08)

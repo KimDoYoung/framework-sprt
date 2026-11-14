@@ -87,7 +87,7 @@ export const Sch01_Tab_List: React.FC = () => {
     gb.text('title', 250, '일정명'),  // L190
     gb.textArea('contentLimit', 350, '상세내용'),  // L191
     gb.text('deadlineName', 150, '주기'),  // L192
-    iconCell<Sch01Period>('view', 'actionCell', 80, '상세보기', lookupSch),  // L193 → lookupSch()
+    iconCell<Sch01Period>('view', 'actionCell', 50, '상세보기', lookupSch),  // L193 → lookupSch()
     gb.textCenter('statusName', 80, '처리여부'),  // L194
     gb.textCenter('personName', 80, '처리자'),  // L195
     gb.text('managerOrgInfo', 200, '등록자'),  // L196 (SQL에 없는 열 — 원본도 빈 칸)

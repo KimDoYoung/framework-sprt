@@ -157,7 +157,7 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
           <Space>
             <Button type="save" onClick={update}>확인</Button>
             {/* [E4] nullButton[선택안함].Select (L142) → 전체이름·ID를 null로 callback·hide */}
-            {!authCheck && !hideNull && <Button type="select" style={{ background: '#a6a6a6' }} onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
+            {!authCheck && !hideNull && <Button type="selectNone" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
             {/* [E5] cancleButton[닫기].Select (L151) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
