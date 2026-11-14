@@ -342,6 +342,7 @@ BIZ 1차 목록 0001~0011 끝(2026-11-14).
 | ICAM-BZ-0011 | KFS가 ICAM 사용자ID 신청서를 작성해 상신한다(A33) | KFS → 결재자 | 신청 때 | 문서분류 A33 | #1314 | [상세](ICAM/ICAM-BZ-0011-ICAM사용자ID신청서.md) | 실행(API, AS-IS 13=13, 저장→A33 상신(10)→연결, 결재 중 수정·삭제 400, KFS A33·A34 문서분류 지정, ⚠#244 타사 사원이 KFS 신청서 수정·연결 끊기·결재문서 폐기) |
 | ICAM-BZ-0012 | KFS가 사용자ID 신청 처리결과를 등록한다 | KFS | 처리 뒤 | 0011·0013 | #1316 | [상세](ICAM/ICAM-BZ-0012-사용자ID처리결과등록.md) | 실행(API, AS-IS 7=7, 일괄저장 완료·검사 400, ⚠#244 보강 타사 사원이 처리결과·처리자 변경) |
 | ICAM-BZ-0013 | KFS가 미사용 사용자ID 권한정지 신청서를 올린다(엑셀·A34) | KFS → 결재자 | 분기마다 | A34 문서분류 | #1315 | [상세](ICAM/ICAM-BZ-0013-미사용ID권한정지신청.md) | 실행(API, 템플릿·엑셀 2행 업로드 AS-IS 2=2·A34 상신·연결, ⚠#245 재업로드가 결재 중 행을 지우고 연결 끊음, 이상한점 #196 재현) |
+| ICAM-BZ-0014 | KFS가 미사용ID 처리(삭제·정지해제) 기록을 관리한다 | KFS | 처리 뒤 | 0012 | #1317 | [상세](ICAM/ICAM-BZ-0014-미사용ID기록관리.md) | 실행(API, AS-IS 13=13, 개별·일괄 저장, 날짜 비우면 관리자 비움) |
 
 시작 점검(2026-11-14): `yunhee biz-endpoints icam` — API 48개 중 검사 `⚠없음` 12개(쓰기 4: `PUT users/{id}/appr-id`·`PUT users/results`·`PUT users/stops/appr-id`·`POST sources/fetch`, 조회 8: `users*`·`sources`·`prices/*`). `yunhee biz-authz icam -u 401 -c kalpa`(조회만)에서 kalpa 사원이 **KFS의 ICAM 사용자ID 신청 목록 13행**(`GET /icam/users`, 회사 열 없는 테이블)을 받음 — 0011에서 확인(⚠#244).
 
